@@ -22,6 +22,16 @@
 #define WIFIINIT_OPTION_USECUSTOMALLOC 0x4000
 #define WIFIINIT_OPTION_HEAPMASK       0xF000
 
+#ifndef WIRELESS_DEFINES
+enum WIRELESS_MODE {
+  WIRELESS_MODE_WIFI,
+  WIRELESS_MODE_NIFI,
+};
+extern enum WIRELESS_MODE wirelessMode;
+inline void setWirelessMode(enum WIRELESS_MODE mode);
+#define WIRELESS_DEFINES
+#endif
+
 #ifdef WIFI_USE_TCP_SGIP
 
 #ifdef __cplusplus
