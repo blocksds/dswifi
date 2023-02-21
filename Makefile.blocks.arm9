@@ -18,7 +18,7 @@ endif
 # Libraries
 # ---------
 
-LIBDIRS		:= $(BLOCKSDS)/libs/libnds
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/libc
 
 # Build artifacts
 # ---------------
