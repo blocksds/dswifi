@@ -9,8 +9,8 @@ endif
 # Source code paths
 # -----------------
 
-SOURCEDIRS	:= arm9/source common/source
-INCLUDEDIRS	:= include common/source include
+SOURCEDIRS	:= source/arm7 source/common
+INCLUDEDIRS	:= include source/common
 
 # Defines passed to all files
 # ---------------------------
@@ -22,17 +22,17 @@ endif
 # Libraries
 # ---------
 
-LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/libc9
+LIBDIRS		:= $(BLOCKSDS)/libs/libnds $(BLOCKSDS)/libs/libc7
 
 # Build artifacts
 # ---------------
 
 ifeq ($(DEBUG),1)
-NAME		:= libdswifi9d
-BUILDDIR	:= build/debug/arm9
+NAME		:= libdswifi7d
+BUILDDIR	:= build/debug/arm7
 else
-NAME		:= libdswifi9
-BUILDDIR	:= build/release/arm9
+NAME		:= libdswifi7
+BUILDDIR	:= build/release/arm7
 endif
 
 ARCHIVE		:= lib/$(NAME).a
@@ -66,11 +66,11 @@ SOURCES_CPP	:= $(shell find -L $(SOURCEDIRS) -name "*.cpp")
 # Compiler and linker flags
 # -------------------------
 
-DEFINES		+= -D__NDS__ -DARM9
+DEFINES		+= -D__NDS__ -DARM7
 
-ARCH		:= -march=armv5te -mtune=arm946e-s
+ARCH		:= -mcpu=arm7tdmi -mtune=arm7tdmi
 
-WARNFLAGS	:= -Wall -Wno-unused-but-set-variable -Wno-unused-value
+WARNFLAGS	:= -Wall
 
 INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
 		   $(foreach path,$(LIBDIRS),-I$(path)/include)
@@ -107,29 +107,29 @@ DEPS		:= $(OBJS:.o=.d)
 all: $(ARCHIVE)
 
 $(ARCHIVE): $(OBJS)
-	@echo "  AR.9    $@"
+	@echo "  AR.7    $@"
 	@$(MKDIR) -p $(@D)
 	$(V)$(AR) rcs $@ $(OBJS)
 
 clean:
-	@echo "  CLEAN.9"
+	@echo "  CLEAN.7"
 	$(V)$(RM) $(ARCHIVE) $(BUILDDIR)
 
 # Rules
 # -----
 
 $(BUILDDIR)/%.s.o : %.s
-	@echo "  AS.9    $<"
+	@echo "  AS.7    $<"
 	@$(MKDIR) -p $(@D)
 	$(V)$(CC) $(ASFLAGS) -MMD -MP -c -o $@ $<
 
 $(BUILDDIR)/%.c.o : %.c
-	@echo "  CC.9    $<"
+	@echo "  CC.7    $<"
 	@$(MKDIR) -p $(@D)
 	$(V)$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
 
 $(BUILDDIR)/%.cpp.o : %.cpp
-	@echo "  CXX.9   $<"
+	@echo "  CXX.7   $<"
 	@$(MKDIR) -p $(@D)
 	$(V)$(CXX) $(CXXFLAGS) -MMD -MP -c -o $@ $<
 

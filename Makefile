@@ -1,20 +1,30 @@
-ifeq ($(strip $(DEVKITPRO)),)
-$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro")
-endif
+# SPDX-License-Identifier: Zlib
+#
+# Copyright (c) 2023 Antonio Niño Díaz
 
-export TOPDIR	:=	$(CURDIR)
+# Defines
+# -------
 
-export DSWIFI_MAJOR	:= 0
-export DSWIFI_MINOR	:= 4
-export DSWIFI_REVISION	:= 2
+DSWIFI_MAJOR	:= 0
+DSWIFI_MINOR	:= 4
+DSWIFI_REVISION	:= 2
+VERSION		:= $(DSWIFI_MAJOR).$(DSWIFI_MINOR).$(DSWIFI_REVISION)
+VERSION_HEADER	:= include/dswifi_version.h
 
-VERSION	:=	$(DSWIFI_MAJOR).$(DSWIFI_MINOR).$(DSWIFI_REVISION)
+# Tools
+# -----
 
-.PHONY: release debug clean all
+MAKE		:= make
+RM		:= rm -rf
 
-all: include/dswifi_version.h release debug
+# Targets
+# -------
 
-include/dswifi_version.h : Makefile
+.PHONY: all arm7 arm9 clean docs
+
+all: $(VERSION_HEADER) arm9 arm7
+
+$(VERSION_HEADER): Makefile
 	@echo "#ifndef _dswifi_version_h_" > $@
 	@echo "#define _dswifi_version_h_" >> $@
 	@echo >> $@
@@ -26,46 +36,18 @@ include/dswifi_version.h : Makefile
 	@echo >> $@
 	@echo "#endif // _dswifi_version_h_" >> $@
 
+arm9:
+	@+$(MAKE) -f Makefile.arm9 --no-print-directory
+	@+$(MAKE) -f Makefile.arm9 --no-print-directory DEBUG=1
 
-#-------------------------------------------------------------------------------
-release: lib
-#-------------------------------------------------------------------------------
-	$(MAKE) -C arm9 BUILD=release
-	$(MAKE) -C arm7 BUILD=release
+arm7:
+	@+$(MAKE) -f Makefile.arm7 --no-print-directory
+	@+$(MAKE) -f Makefile.arm7 --no-print-directory DEBUG=1
 
-#-------------------------------------------------------------------------------
-debug: lib
-#-------------------------------------------------------------------------------
-	$(MAKE) -C arm9 BUILD=debug
-	$(MAKE) -C arm7 BUILD=debug
-
-#-------------------------------------------------------------------------------
-lib:
-#-------------------------------------------------------------------------------
-	mkdir lib
-
-#-------------------------------------------------------------------------------
 clean:
-#-------------------------------------------------------------------------------
-	@$(MAKE) -C arm9 clean
-	@$(MAKE) -C arm7 clean
-	@$(RM) -r dswifi-src-*.tar.bz2 dswifi-*.tar.bz2 include/dswifi_version.h lib
+	@echo "  CLEAN"
+	@$(RM) $(VERSION_HEADER) lib build
 
-#-------------------------------------------------------------------------------
-dist-src:
-#-------------------------------------------------------------------------------
-	@tar --exclude=*CVS* --exclude=.svn -cjf dswifi-src-$(VERSION).tar.bz2 arm7/source arm7/Makefile arm9/source arm9/Makefile common include Makefile dswifi_license.txt
-
-#-------------------------------------------------------------------------------
-dist-bin: all
-#-------------------------------------------------------------------------------
-	@tar --exclude=*CVS* --exclude=.svn -cjf dswifi-$(VERSION).tar.bz2 include lib dswifi_license.txt
-
-dist: dist-bin dist-src
-
-#-------------------------------------------------------------------------------
-install: dist-bin
-#-------------------------------------------------------------------------------
-	mkdir -p $(DESTDIR)$(DEVKITPRO)/libnds
-	bzip2 -cd dswifi-$(VERSION).tar.bz2 | tar -x -C $(DESTDIR)$(DEVKITPRO)/libnds
-
+docs:
+	@echo "  DOXYGEN"
+	doxygen Doxyfile
