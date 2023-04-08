@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+//
+// Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+
 #ifdef ARM7
 	.arch	armv4t
 	.cpu	arm7tdmi
