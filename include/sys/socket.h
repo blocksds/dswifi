@@ -7,6 +7,10 @@
 #ifndef SYS_SOCKET_H
 #define SYS_SOCKET_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/time.h>
 
 /*
@@ -85,43 +89,36 @@ struct sockaddr {
 #define ntohl(num) htonl(num)
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+extern int socket(int domain, int type, int protocol);
+extern int bind(int socket, const struct sockaddr * addr, int addr_len);
+extern int connect(int socket, const struct sockaddr * addr, int addr_len);
+extern int send(int socket, const void * data, int sendlength, int flags);
+extern int recv(int socket, void * data, int recvlength, int flags);
+extern int sendto(int socket, const void * data, int sendlength, int flags, const struct sockaddr * addr, int addr_len);
+extern int recvfrom(int socket, void * data, int recvlength, int flags, struct sockaddr * addr, int * addr_len);
+extern int listen(int socket, int max_connections);
+extern int accept(int socket, struct sockaddr * addr, int * addr_len);
+extern int shutdown(int socket, int shutdown_type);
+extern int closesocket(int socket);
 
-	extern int socket(int domain, int type, int protocol);
-	extern int bind(int socket, const struct sockaddr * addr, int addr_len);
-	extern int connect(int socket, const struct sockaddr * addr, int addr_len);
-	extern int send(int socket, const void * data, int sendlength, int flags);
-	extern int recv(int socket, void * data, int recvlength, int flags);
-	extern int sendto(int socket, const void * data, int sendlength, int flags, const struct sockaddr * addr, int addr_len);
-	extern int recvfrom(int socket, void * data, int recvlength, int flags, struct sockaddr * addr, int * addr_len);
-	extern int listen(int socket, int max_connections);
-	extern int accept(int socket, struct sockaddr * addr, int * addr_len);
-	extern int shutdown(int socket, int shutdown_type);
-	extern int closesocket(int socket);
+extern int ioctl(int socket, long cmd, void * arg);
 
-	extern int ioctl(int socket, long cmd, void * arg);
+extern int setsockopt(int socket, int level, int option_name, const void * data, int data_len);
+extern int getsockopt(int socket, int level, int option_name, void * data, int * data_len);
 
-	extern int setsockopt(int socket, int level, int option_name, const void * data, int data_len);
-	extern int getsockopt(int socket, int level, int option_name, void * data, int * data_len);
+extern int getpeername(int socket, struct sockaddr *addr, int * addr_len);
+extern int getsockname(int socket, struct sockaddr *addr, int * addr_len);
 
-	extern int getpeername(int socket, struct sockaddr *addr, int * addr_len);
-	extern int getsockname(int socket, struct sockaddr *addr, int * addr_len);
+extern int gethostname(char *name, size_t len);
+extern int sethostname(const char *name, size_t len);
 
-    extern int gethostname(char *name, size_t len);
-    extern int sethostname(const char *name, size_t len);
+unsigned short htons(unsigned short num);
+unsigned long htonl(unsigned long num);
 
-	unsigned short htons(unsigned short num);
-	unsigned long htonl(unsigned long num);
-
-
-	extern int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout);
-
+extern int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout);
 
 #ifdef __cplusplus
-};
+}
 #endif
-
 
 #endif
