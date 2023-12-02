@@ -235,13 +235,6 @@ volatile Wifi_MainStruct * WifiData = 0;
 WifiPacketHandler packethandler = 0;
 WifiSyncHandler synchandler = 0;
 
-void erasemem(void * mem, int length) {
-	int i;
-	char * m = (char *)mem;
-	for(i=0;i<length;i++)
-		m[i]=0;
-}
-
 void Wifi_CopyMacAddr(volatile void * dest, volatile void * src) {
 	((u16 *)dest)[0]=((u16 *)src)[0];
 	((u16 *)dest)[1]=((u16 *)src)[1];
@@ -777,7 +770,7 @@ void Wifi_Timer(int num_ms) {
 #endif
 
 unsigned long Wifi_Init(int initflags) {
-	erasemem(&Wifi_Data_Struct,sizeof(Wifi_Data_Struct));
+	memset(&Wifi_Data_Struct,0,sizeof(Wifi_Data_Struct));
     DC_FlushAll();
 	WifiData = (Wifi_MainStruct *) memUncached(&Wifi_Data_Struct); // should prevent the cache from eating us alive.
 

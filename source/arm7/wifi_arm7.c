@@ -851,14 +851,6 @@ void Wifi_Update() {
 //
 //  Wifi User-called Functions
 //
-void erasemem(void * mem, int length) {
-	int i;
-	char * m = (char *)mem;
-	for(i=0;i<length;i++)
-		m[i]=0;
-}
-
-
 void Wifi_Init(u32 wifidata) {
 	WifiData = (Wifi_MainStruct *)wifidata;
 
