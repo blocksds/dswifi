@@ -26,8 +26,9 @@ char             ipaddr_alias[256];
 unsigned long    ipaddr_ip;
 volatile sgIP_DNS_Hostent dnsrecord_hostent;
 
-unsigned char querydata[512];
-unsigned char responsedata[512];
+#define MAX_DOMAIN_LENGTH 256
+#define QUERY_DATA_MAX_SIZE (MAX_DOMAIN_LENGTH + 32)
+#define RESPONSE_DATA_MAX_SIZE 512
 
 void sgIP_DNS_Init() {
    int i;
@@ -222,8 +223,8 @@ sgIP_DNS_Hostent * sgIP_DNS_GenerateHostent(sgIP_DNS_Record * dnsrec) {
 }
 
 static
-int sgIP_DNS_genquery(const char * name) {
-   int i,j,c,l;
+int sgIP_DNS_genquery(void * querydata, const char * name) {
+   int name_pos,querydata_len,name_len,querydata_name_len_pos;
    unsigned short * querydata_s = (unsigned short *) querydata;
    unsigned char * querydata_c = querydata;
    // header section
@@ -236,34 +237,32 @@ int sgIP_DNS_genquery(const char * name) {
    querydata_s[5]=0; // no additional records
    // question section
    
-   querydata_c+=12;
-   querydata_s+=6;
-   j=0;
-   i=0;
+   querydata_len=12;
+   name_pos=0;
    while(1) {
-      l=j;
-      j++;
-      c=0;
-      while(name[i]!=0 && name[i]!='.' && i<255) {
-         querydata_c[j++]=name[i++]; c++;
+      querydata_name_len_pos=querydata_len;
+      querydata_len++;
+      name_len=0;
+      while(name[name_pos]!=0 && name[name_pos]!='.' && name_pos<MAX_DOMAIN_LENGTH) {
+         querydata_c[querydata_len++]=name[name_pos++]; name_len++;
       }
-      querydata_c[l]=c;
-      if(name[i]==0 || i>=255) break;
-      if(c==0) return 0; // this should never happen (unless there's really invalid input with 2 dots next to each other.)
-      i++;
+      querydata_c[querydata_name_len_pos]=name_len;
+      if(name[name_pos]==0 || name_pos>=MAX_DOMAIN_LENGTH) return 0;
+      if(name_len==0) return 0; // this should never happen (unless there's really invalid input with 2 dots next to each other.)
+      name_pos++;
    }
-   querydata_c[j++]=0; // terminating zero length
+   querydata_c[querydata_len++]=0; // terminating zero length
    // qtype
-   querydata_c[j++]=0;
-   querydata_c[j++]=1; // 00 01 "A" (address)
+   querydata_c[querydata_len++]=0;
+   querydata_c[querydata_len++]=1; // 00 01 "A" (address)
    // qclass
-   querydata_c[j++]=0;
-   querydata_c[j++]=1; // 00 01 "IN" (internet)
+   querydata_c[querydata_len++]=0;
+   querydata_c[querydata_len++]=1; // 00 01 "IN" (internet)
 
-   return j+12; // length
+   return querydata_len; // length
 }
 
-void sgIP_DNS_CopyAliasAt(char * deststr,int offset) {
+void sgIP_DNS_CopyAliasAt(void * responsedata, char * deststr,int offset) {
    char * c;
    int i,j;
    i=0;
@@ -296,6 +295,8 @@ sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name) {
    unsigned long serverip;
    struct sockaddr_in sain;
    unsigned long IP;
+   unsigned char querydata[QUERY_DATA_MAX_SIZE];
+   unsigned char responsedata[RESPONSE_DATA_MAX_SIZE];
    SGIP_INTR_PROTECT();
 
    // is name an IP address?
@@ -313,7 +314,7 @@ sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name) {
    }
 
    // not in cache? generate a query...
-   len=sgIP_DNS_genquery(name);
+   len=sgIP_DNS_genquery(querydata, name);
 
    // send off the query, handle retransmit and trying other dns servers.
    if(dns_sock==-1) {
@@ -333,7 +334,7 @@ sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name) {
 dns_listenonly:
 
          do {
-            i=recvfrom(dns_sock,responsedata,512,0,(struct sockaddr *)&sain,&sainlen);
+            i=recvfrom(dns_sock,responsedata,RESPONSE_DATA_MAX_SIZE,0,(struct sockaddr *)&sain,&sainlen);
             if(i!=-1) break;
             dtime=sgIP_timems-query_time_start;
             if(dtime>SGIP_DNS_TIMEOUTMS) break;
@@ -396,7 +397,7 @@ dns_listenonly:
             rec=sgIP_DNS_GetUnusedRecord();
             rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY;
             while(a) { 
-               if(nalias<SGIP_DNS_MAXALIASES) sgIP_DNS_CopyAliasAt(rec->aliases[nalias++],resdata_c-responsedata);
+               if(nalias<SGIP_DNS_MAXALIASES) sgIP_DNS_CopyAliasAt(responsedata,rec->aliases[nalias++],resdata_c-responsedata);
                do {
                   j=resdata_c[0];
                   if(j>63) { resdata_c+=2; break; }
