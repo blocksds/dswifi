@@ -472,8 +472,8 @@ void sgIP_DNS_Record_Localhost()
 {
     sgIP_DNS_Record *rec;
     const unsigned char * resdata_c = (unsigned char *)&(wifi_hw->ipaddr);
-    rec = sgIP_DNS_GetUnusedRecord();
-    rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY;
+    rec = sgIP_DNS_AllocUnusedRecord();
+    rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY | SGIP_DNS_FLAG_PERMANENT;
     
     rec->addrlen    = 4;
     rec->numalias   = 1;
@@ -485,9 +485,8 @@ void sgIP_DNS_Record_Localhost()
     rec->addrdata[2] = resdata_c[2];
     rec->addrdata[3] = resdata_c[3];
     rec->addrclass = AF_INET;
-    rec->TTL = 0;
 
-    rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY|SGIP_DNS_FLAG_RESOLVED;
+    rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY | SGIP_DNS_FLAG_RESOLVED | SGIP_DNS_FLAG_PERMANENT;
 }
 
 int Wifi_AssocStatus() {

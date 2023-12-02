@@ -4,6 +4,9 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sgIP_DNS.h"
 #include "sgIP_Hub.h"
 #include "netinet/in.h"
@@ -16,7 +19,7 @@ int   query_time_start;
 extern unsigned long volatile sgIP_timems;
 
 // cache record data
-sgIP_DNS_Record dnsrecords[SGIP_DNS_MAXRECORDSCACHE];
+sgIP_DNS_Record *dnsrecords[SGIP_DNS_MAXRECORDSCACHE];
 
 // data to return via hostent
 volatile sgIP_DNS_Record  dnsrecord_return;
@@ -31,8 +34,9 @@ volatile sgIP_DNS_Hostent dnsrecord_hostent;
 #define RESPONSE_DATA_MAX_SIZE 512
 
 void sgIP_DNS_Init() {
-   int i;
-   for(i=0;i<SGIP_DNS_MAXRECORDSCACHE;i++) dnsrecords[i].flags=0;
+   for (int i = 0; i < SGIP_DNS_MAXRECORDSCACHE; i++) {
+      dnsrecords[i] = NULL;
+   }
    dns_sock=-1;
    time_count=0;
 }
@@ -41,10 +45,10 @@ void sgIP_DNS_Timer1000ms() {
    int i;
    time_count++;
    for(i=0;i<SGIP_DNS_MAXRECORDSCACHE;i++) {
-      if(dnsrecords[i].flags & SGIP_DNS_FLAG_RESOLVED) {
-         dnsrecords[i].TTL-=1;
-         if(dnsrecords[i].TTL<=0) {
-            dnsrecords[i].flags=0;
+      if(dnsrecords[i] != NULL && ((dnsrecords[i]->flags & (SGIP_DNS_FLAG_RESOLVED | SGIP_DNS_FLAG_PERMANENT)) == SGIP_DNS_FLAG_RESOLVED)) {
+         if(dnsrecords[i]->expiry_time_count == time_count) {
+            free(dnsrecords[i]);
+            dnsrecords[i] = NULL;
          }
       }
    }
@@ -118,27 +122,14 @@ int sgIP_DNS_isipaddress(const char * name, unsigned long * ipdest) {
 }
 
 sgIP_DNS_Record * sgIP_DNS_FindDNSRecord(const char * name) {
-   int i,j,k,n,c,c2;
+   int rec,ali;
    SGIP_INTR_PROTECT();
-   for(i=0;i<SGIP_DNS_MAXRECORDSCACHE;i++) {
-      if((dnsrecords[i].flags&(SGIP_DNS_FLAG_ACTIVE|SGIP_DNS_FLAG_RESOLVED)) == (SGIP_DNS_FLAG_ACTIVE|SGIP_DNS_FLAG_RESOLVED)) {
-         for(j=0;j<dnsrecords[i].numalias;j++) {
-            k=0;
-            for(n=0;name[n] && dnsrecords[i].aliases[j][n]; n++) { // obscure and complex case-insensitive string compare.
-               c=name[n];
-               c2=dnsrecords[i].aliases[j][n];
-               if(c>='a' && c<='z') c+='A'-'a';
-               if(c2>='a' && c2<='z') c2+='A'-'a';
-               if(c==c2) {
-                  k++;
-               } else {
-                  k=0; break;
-               }
-            }
-            if(name[n] || dnsrecords[i].aliases[j][n]) k=0;
-            if(k) {
+   for(rec=0;rec<SGIP_DNS_MAXRECORDSCACHE;rec++) {
+      if(dnsrecords[rec] != NULL && (dnsrecords[rec]->flags&(SGIP_DNS_FLAG_ACTIVE|SGIP_DNS_FLAG_RESOLVED)) == (SGIP_DNS_FLAG_ACTIVE|SGIP_DNS_FLAG_RESOLVED)) {
+         for(ali=0;ali<dnsrecords[rec]->numalias;ali++) {
+            if (!strcasecmp(name, dnsrecords[rec]->aliases[ali])) {
                SGIP_INTR_UNPROTECT();
-               return dnsrecords+i;
+               return dnsrecords[rec];
             }
          }
       }
@@ -148,25 +139,56 @@ sgIP_DNS_Record * sgIP_DNS_FindDNSRecord(const char * name) {
    return 0;
 }
 
-sgIP_DNS_Record * sgIP_DNS_GetUnusedRecord() {
-   int i,j,minttl;
+sgIP_DNS_Record * sgIP_DNS_AllocUnusedRecord() {
+   int i;
+   int minTTL = 2147483647;
+   int minTTLIdx = -1;
+   int unallocatedIdx = -1;
+   int resultIdx = -1;
    SGIP_INTR_PROTECT();
    for(i=0;i<SGIP_DNS_MAXRECORDSCACHE;i++) {
-      if(!(dnsrecords[i].flags&SGIP_DNS_FLAG_ACTIVE))  {
+      if (dnsrecords[i] == NULL) {
+         // Keep track of unallocated records.
+         if (unallocatedIdx < 0)
+            unallocatedIdx = i;
+         continue;
+      }
+      // First, try fetching an allocated, but unused record.
+      if (!(dnsrecords[i]->flags&SGIP_DNS_FLAG_ACTIVE)) {
+         resultIdx = i;
+         break;
+      }
+      // Ignore permanent records.
+      if (dnsrecords[i]->flags&SGIP_DNS_FLAG_PERMANENT) {
+         continue;
+      }
+      // Keep track of low-TTL records.
+      int ttl = dnsrecords[i]->expiry_time_count - time_count;
+      if (ttl < 0) {
+         resultIdx = i;
+         break;
+      }
+      if (ttl < minTTL) {
+         minTTLIdx = i;
+      }
+   }
+   if (resultIdx >= 0) {
+      SGIP_INTR_UNPROTECT();
+      return dnsrecords[resultIdx];
+   }
+   if (unallocatedIdx >= 0) {
+      dnsrecords[unallocatedIdx] = malloc(sizeof(sgIP_DNS_Record));
+      if (dnsrecords[unallocatedIdx] != NULL) {
          SGIP_INTR_UNPROTECT();
-         return dnsrecords+i;
+         return dnsrecords[unallocatedIdx];
       }
    }
-   minttl=dnsrecords[0].TTL; j=0;
-   for(i=1;i<SGIP_DNS_MAXRECORDSCACHE;i++) {
-      if(dnsrecords[i].TTL<minttl && !(dnsrecords[i].flags&SGIP_DNS_FLAG_BUSY)) {
-         j=i;
-         minttl=dnsrecords[i].TTL;
-      }
+   if (minTTLIdx >= 0) {
+      SGIP_INTR_UNPROTECT();
+      return dnsrecords[minTTLIdx];
    }
-   dnsrecords[j].flags=0;
    SGIP_INTR_UNPROTECT();
-   return dnsrecords+j;
+   return NULL;
 }
 
 static
@@ -394,7 +416,7 @@ dns_listenonly:
 
             nalias=0;
             naddr=0;
-            rec=sgIP_DNS_GetUnusedRecord();
+            rec=sgIP_DNS_AllocUnusedRecord();
             rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY;
             while(a) { 
                if(nalias<SGIP_DNS_MAXALIASES) sgIP_DNS_CopyAliasAt(responsedata,rec->aliases[nalias++],resdata_c-responsedata);
@@ -406,7 +428,9 @@ dns_listenonly:
                // CNAME=5, A=1
                j=resdata_c[1];
                rec->addrclass=(resdata_c[2]<<8)|resdata_c[3];
-               rec->TTL = (resdata_c[4]<<24)|(resdata_c[5]<<16)|(resdata_c[6]<<8)|resdata_c[7];
+               int ttl = (resdata_c[4]<<24)|(resdata_c[5]<<16)|(resdata_c[6]<<8)|resdata_c[7];
+               if (ttl < 0) ttl = 0;
+               rec->expiry_time_count = time_count + ttl;
                if(j==1) { // A
                   if(naddr<SGIP_DNS_MAXRECORDADDRS) {
                      rec->addrdata[naddr*4] = resdata_c[10];

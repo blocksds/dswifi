@@ -12,6 +12,7 @@
 #define SGIP_DNS_FLAG_ACTIVE     1
 #define SGIP_DNS_FLAG_RESOLVED   2
 #define SGIP_DNS_FLAG_BUSY       4
+#define SGIP_DNS_FLAG_PERMANENT  8
 
 typedef struct SGIP_DNS_RECORD {
    char              name [256];
@@ -20,7 +21,7 @@ typedef struct SGIP_DNS_RECORD {
    short             addrlen;
    short             addrclass;
    int               numaddr,numalias;
-   int               TTL;
+   int               expiry_time_count;
    int               flags;
 } sgIP_DNS_Record;
 
@@ -40,7 +41,7 @@ extern void sgIP_DNS_Init();
 extern void sgIP_DNS_Timer1000ms();
 
 extern sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name);
-extern sgIP_DNS_Record  * sgIP_DNS_GetUnusedRecord();
+extern sgIP_DNS_Record  * sgIP_DNS_AllocUnusedRecord();
 extern sgIP_DNS_Record  * sgIP_DNS_FindDNSRecord(const char * name);
 
 #ifdef __cplusplus
