@@ -226,9 +226,7 @@ void ethhdr_print(char f, void * d) {
 }
 
 
-
-
-Wifi_MainStruct Wifi_Data_Struct;
+Wifi_MainStruct *Wifi_Data_Struct = NULL;
 
 volatile Wifi_MainStruct * WifiData = 0;
 
@@ -769,9 +767,15 @@ void Wifi_Timer(int num_ms) {
 #endif
 
 unsigned long Wifi_Init(int initflags) {
-	memset(&Wifi_Data_Struct,0,sizeof(Wifi_Data_Struct));
+	if (Wifi_Data_Struct == NULL) {
+		Wifi_Data_Struct = malloc(sizeof(Wifi_MainStruct));
+		if (Wifi_Data_Struct == NULL) {
+			return 0;
+		}
+	}
+	memset(Wifi_Data_Struct,0,sizeof(Wifi_MainStruct));
     DC_FlushAll();
-	WifiData = (Wifi_MainStruct *) memUncached(&Wifi_Data_Struct); // should prevent the cache from eating us alive.
+	WifiData = (Wifi_MainStruct *) memUncached(Wifi_Data_Struct); // should prevent the cache from eating us alive.
 
 #ifdef WIFI_USE_TCP_SGIP
     switch(initflags & WIFIINIT_OPTION_HEAPMASK) {
@@ -795,7 +799,7 @@ unsigned long Wifi_Init(int initflags) {
 #endif
     
 	WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK) ;
-	return (u32) &Wifi_Data_Struct;
+	return (u32) Wifi_Data_Struct;
 }
 
 int Wifi_CheckInit() {
