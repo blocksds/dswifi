@@ -854,14 +854,13 @@ void Wifi_Update() {
 void Wifi_Init(u32 wifidata) {
 	WifiData = (Wifi_MainStruct *)wifidata;
 
-#define REG_GPIOWTF (*(vu16*)0x4004C04)
-	if (isDSiMode() & !(REG_GPIOWTF & BIT(8))) {
-		REG_GPIOWTF = (REG_GPIOWTF&1) | BIT(8);
-		swiDelay(0xA3A47); //5ms
-	}
+	// Initialize NTR WiFi on DSi.
+	gpioSetWifiMode(GPIO_WIFI_MODE_NTR);
+	if (REG_GPIO_WIFI)
+		swiDelay(5/*ms*/ * 134056);
 
 	POWERCNT7 |= 2; // enable power for the wifi
-	*((volatile u16 *)0x04000206) = 0x30; // ???
+	WIFIWAITCNT = WIFI_RAM_N_10_CYCLES | WIFI_RAM_S_6_CYCLES | WIFI_IO_N_6_CYCLES | WIFI_IO_S_4_CYCLES;
 
 	InitFlashData();
 
