@@ -16,6 +16,23 @@
 // keepalive set for 2 minutes.
 #define WIFI_KEEPALIVE_COUNT		(60*60*2)
 
+#define WIFIWAITCNT           (*((volatile u16 *)(0x04000206)))
+#define WIFI_RAM_N_10_CYCLES  (0)
+#define WIFI_RAM_N_8_CYCLES   (1)
+#define WIFI_RAM_N_6_CYCLES   (2)
+#define WIFI_RAM_N_18_CYCLES  (3)
+#define WIFI_RAM_N_MASK       (3)
+#define WIFI_RAM_S_6_CYCLES   (0)
+#define WIFI_RAM_S_4_CYCLES   (1<<2)
+#define WIFI_RAM_S_MASK       (1<<2)
+#define WIFI_IO_N_10_CYCLES   (0)
+#define WIFI_IO_N_8_CYCLES    (1<<3)
+#define WIFI_IO_N_6_CYCLES    (2<<3)
+#define WIFI_IO_N_18_CYCLES   (3<<3)
+#define WIFI_IO_N_MASK        (3<<3)
+#define WIFI_IO_S_6_CYCLES    (0)
+#define WIFI_IO_S_4_CYCLES    (1<<5)
+#define WIFI_IO_S_MASK        (1<<5)
 
 #define WIFI_REG(ofs) (*((volatile u16 *)(0x04800000+(ofs))))
 // Wifi regs
