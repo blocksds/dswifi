@@ -1,8 +1,5 @@
-arm7/debug
-arm7/release
-arm9/debug
-arm9/release
-build
+build/
 include/dswifi_version.h
-lib
-*.bz2
+lib/
+docs/
+warn.log
