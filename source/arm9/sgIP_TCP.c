@@ -17,14 +17,14 @@ sgIP_TCP_SYNCookie synlist[SGIP_TCP_MAXSYNS];
 
 int numsynlist; // number of active entries in synlist (earliest first)
 
-void sgIP_TCP_Init() {
+void sgIP_TCP_Init(void) {
 	tcprecords=0;
    numsynlist=0;
 	port_counter=SGIP_TCP_FIRSTOUTGOINGPORT;
 	lasttime=sgIP_timems;
 }
 
-void sgIP_TCP_Timer() { // scan through tcp records and resend anything necessary
+void sgIP_TCP_Timer(void) { // scan through tcp records and resend anything necessary
    sgIP_Record_TCP * rec;
    int time,i,j;
    time=sgIP_timems-lasttime;
@@ -167,7 +167,7 @@ unsigned long sgIP_TCP_support_seqhash(unsigned long srcip, unsigned long destip
 	hash ^= destip * (0x04020108+(sgIP_timems<<5));
 	return hash;
 }
-int sgIP_TCP_GetUnusedOutgoingPort() {
+int sgIP_TCP_GetUnusedOutgoingPort(void) {
 	int myport,clear;
 	sgIP_Record_TCP * rec;
    port_counter+=(sgIP_timems&1023); // semi-random
@@ -672,7 +672,7 @@ int sgIP_TCP_SendSynReply(int flags,unsigned long seq, unsigned long ack, unsign
    return 0;
 }
 
-sgIP_Record_TCP * sgIP_TCP_AllocRecord() {
+sgIP_Record_TCP * sgIP_TCP_AllocRecord(void) {
 	SGIP_INTR_PROTECT();
 	sgIP_Record_TCP * rec;
 	rec = sgIP_malloc(sizeof(sgIP_Record_TCP));

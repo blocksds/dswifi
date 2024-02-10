@@ -22,7 +22,7 @@ int numused, numfree;
 void * pool_link;
 
 
-sgIP_memblock * sgIP_memblock_getunused() {
+sgIP_memblock * sgIP_memblock_getunused(void) {
 	int i;
 	sgIP_memblock * mb;
 	SGIP_INTR_PROTECT();
@@ -40,7 +40,7 @@ sgIP_memblock * sgIP_memblock_getunused() {
 }
 #endif  //SGIP_MEMBLOCK_DYNAMIC_MALLOC_ALL
 
-void sgIP_memblock_Init() {
+void sgIP_memblock_Init(void) {
 #ifndef SGIP_MEMBLOCK_DYNAMIC_MALLOC_ALL
 	int i;
 #ifdef SGIP_USEDYNAMICMEMORY

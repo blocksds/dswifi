@@ -24,7 +24,7 @@ int dhcp_state; // 0== send DHCPDISCOVER wait for DHCPOFFER, 1== send DHCPREQUES
 unsigned long dhcp_rcvd_ip, dhcp_rcvd_gateway, dhcp_rcvd_snmask, dhcp_rcvd_dns[3], dhcp_serverip;
 
 
-void sgIP_DHCP_Init() {
+void sgIP_DHCP_Init(void) {
    dhcp_socket=0;
    dhcp_p=0;
    dhcp_int=0;
@@ -40,7 +40,7 @@ int sgIP_DHCP_IsDhcpIp(unsigned long ip) { // check if the IP address was assign
 	return ip==dhcp_rcvd_ip;
 }
 
-void sgIP_DHCP_SendDgram() {
+void sgIP_DHCP_SendDgram(void) {
    struct sockaddr_in sain;
    int len_dhcp;
    sain.sin_port=htons(67); // bootp server port
@@ -162,7 +162,7 @@ void sgIP_DHCP_Start(sgIP_Hub_HWInterface * interface, int getDNS) { // begin dh
    sgIP_DHCP_BeginDgram(DHCP_TYPE_DISCOVER);
    sgIP_DHCP_SendDgram();
 }
-void sgIP_DHCP_Release() { // call to dump our DHCP address and leave.
+void sgIP_DHCP_Release(void) { // call to dump our DHCP address and leave.
    if(dhcp_status==SGIP_DHCP_STATUS_WORKING) {
       sgIP_DHCP_Terminate();
    } else {
@@ -172,7 +172,7 @@ void sgIP_DHCP_Release() { // call to dump our DHCP address and leave.
 
    }
 }
-int  sgIP_DHCP_Update() { // MUST be called periodicly; returns status - call until it returns SGIP_DHCP_STATUS_SUCCESS or _FAILED.
+int  sgIP_DHCP_Update(void) { // MUST be called periodicly; returns status - call until it returns SGIP_DHCP_STATUS_SUCCESS or _FAILED.
 	sgIP_DHCP_Packet * p;
 	struct sockaddr_in * sain;
 	int i,j,n,l;
@@ -304,7 +304,7 @@ int  sgIP_DHCP_Update() { // MUST be called periodicly; returns status - call un
 
 	return dhcp_status;
 }
-void sgIP_DHCP_Terminate() { // kill the process where it stands; deallocate all DHCP resources.
+void sgIP_DHCP_Terminate(void) { // kill the process where it stands; deallocate all DHCP resources.
    if(dhcp_socket) closesocket(dhcp_socket);
    dhcp_socket=0;
    if(dhcp_p) sgIP_free(dhcp_p);

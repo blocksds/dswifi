@@ -26,17 +26,17 @@ typedef struct SGIP_MEMBLOCK {
 extern "C" {
 #endif
 
-	extern void sgIP_memblock_Init();
-	extern sgIP_memblock * sgIP_memblock_alloc(int packetsize);
-	extern sgIP_memblock * sgIP_memblock_allocHW(int headersize, int packetsize);
-	extern void sgIP_memblock_free(sgIP_memblock * mb);
-	extern void sgIP_memblock_exposeheader(sgIP_memblock * mb, int change);
-	extern void sgIP_memblock_trimsize(sgIP_memblock * mb, int newsize);
+	void sgIP_memblock_Init(void);
+	sgIP_memblock * sgIP_memblock_alloc(int packetsize);
+	sgIP_memblock * sgIP_memblock_allocHW(int headersize, int packetsize);
+	void sgIP_memblock_free(sgIP_memblock * mb);
+	void sgIP_memblock_exposeheader(sgIP_memblock * mb, int change);
+	void sgIP_memblock_trimsize(sgIP_memblock * mb, int newsize);
 
-	extern int sgIP_memblock_IPChecksum(sgIP_memblock * mb, int startbyte, int chksum_length);
-	extern int sgIP_memblock_CopyToLinear(sgIP_memblock * mb, void * dest_buf, int startbyte, int copy_length);
-	extern int sgIP_memblock_CopyFromLinear(sgIP_memblock * mb, void * src_buf, int startbyte, int copy_length);
-	extern int sgIP_memblock_CopyBlock(sgIP_memblock * mb_src, sgIP_memblock * mb_dest, int start_src, int start_dest, int copy_length);
+	int sgIP_memblock_IPChecksum(sgIP_memblock * mb, int startbyte, int chksum_length);
+	int sgIP_memblock_CopyToLinear(sgIP_memblock * mb, void * dest_buf, int startbyte, int copy_length);
+	int sgIP_memblock_CopyFromLinear(sgIP_memblock * mb, void * src_buf, int startbyte, int copy_length);
+	int sgIP_memblock_CopyBlock(sgIP_memblock * mb_src, sgIP_memblock * mb_dest, int start_src, int start_dest, int copy_length);
 #ifdef __cplusplus
 };
 #endif

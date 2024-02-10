@@ -12,13 +12,13 @@ sgIP_Record_UDP * udprecords;
 int udpport_counter;
 extern unsigned long volatile sgIP_timems;
 
-void sgIP_UDP_Init() {
+void sgIP_UDP_Init(void) {
 	udprecords=0;
    udpport_counter=SGIP_UDP_FIRSTOUTGOINGPORT;
 }
 
 
-int sgIP_UDP_GetUnusedOutgoingPort() {
+int sgIP_UDP_GetUnusedOutgoingPort(void) {
    int myport,clear;
    sgIP_Record_UDP * rec;
    udpport_counter+=(sgIP_timems&1023); // semi-random
@@ -128,7 +128,7 @@ int sgIP_UDP_SendPacket(sgIP_Record_UDP * rec, const char * data, int datalen, u
 	return datalen;
 }
 
-sgIP_Record_UDP * sgIP_UDP_AllocRecord() {
+sgIP_Record_UDP * sgIP_UDP_AllocRecord(void) {
 	SGIP_INTR_PROTECT();
 	sgIP_Record_UDP * rec;
 	rec = (sgIP_Record_UDP *)sgIP_malloc(sizeof(sgIP_Record_UDP));

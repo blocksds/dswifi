@@ -71,7 +71,7 @@ extern volatile Wifi_MainStruct * WifiData;
 
 // Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to synchronize with new fifo data.
 // If this callback is used (see Wifi_SetSyncHandler()), it should send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.
-typedef void (*WifiSyncHandler)();
+typedef void (*WifiSyncHandler)(void);
 
 
 #ifdef __cplusplus
@@ -80,49 +80,49 @@ extern "C" {
 
 
 
-extern void Read_Flash(int address, char * destination, int length);
-extern void InitFlashData();
-extern int ReadFlashByte(int address);
-extern int ReadFlashHWord(int address);
-extern int ReadFlashBytes(int address, int numbytes);
+void Read_Flash(int address, char * destination, int length);
+void InitFlashData(void);
+int ReadFlashByte(int address);
+int ReadFlashHWord(int address);
+int ReadFlashBytes(int address, int numbytes);
 
-extern int Wifi_BBRead(int a);
-extern int Wifi_BBWrite(int a, int b);
-extern void Wifi_RFWrite(int writedata);
+int Wifi_BBRead(int a);
+int Wifi_BBWrite(int a, int b);
+void Wifi_RFWrite(int writedata);
 
-extern void Wifi_RFInit();
-extern void Wifi_BBInit();
-extern void Wifi_WakeUp();
-extern void Wifi_Shutdown();
-extern void Wifi_MacInit();
-extern void Wifi_Interrupt();
-extern void Wifi_Update();
+void Wifi_RFInit(void);
+void Wifi_BBInit(void);
+void Wifi_WakeUp(void);
+void Wifi_Shutdown(void);
+void Wifi_MacInit(void);
+void Wifi_Interrupt(void);
+void Wifi_Update(void);
 
-extern void Wifi_CopyMacAddr(volatile void * dest, volatile void * src);
-extern int Wifi_CmpMacAddr(volatile void * mac1, volatile void * mac2);
+void Wifi_CopyMacAddr(volatile void * dest, volatile void * src);
+int Wifi_CmpMacAddr(volatile void * mac1, volatile void * mac2);
 
-extern void Wifi_Init(u32 WifiData);
-extern void Wifi_Deinit();
-extern void Wifi_Start();
-extern void Wifi_Stop();
-extern void Wifi_SetChannel(int channel);
-extern void Wifi_SetWepKey(void * wepkey);
-extern void Wifi_SetWepMode(int wepmode);
-extern void Wifi_SetBeaconPeriod(int beacon_period);
-extern void Wifi_SetMode(int wifimode);
-extern void Wifi_SetPreambleType(int preamble_type);
-extern void Wifi_TxSetup();
-extern void Wifi_RxSetup();
-extern void Wifi_DisableTempPowerSave();
+void Wifi_Init(u32 WifiData);
+void Wifi_Deinit(void);
+void Wifi_Start(void);
+void Wifi_Stop(void);
+void Wifi_SetChannel(int channel);
+void Wifi_SetWepKey(void * wepkey);
+void Wifi_SetWepMode(int wepmode);
+void Wifi_SetBeaconPeriod(int beacon_period);
+void Wifi_SetMode(int wifimode);
+void Wifi_SetPreambleType(int preamble_type);
+void Wifi_TxSetup(void);
+void Wifi_RxSetup(void);
+void Wifi_DisableTempPowerSave(void);
 
-extern int Wifi_SendOpenSystemAuthPacket();
-extern int Wifi_SendAssocPacket();
-extern int Wifi_SendNullFrame();
-extern int Wifi_SendPSPollFrame();
-extern int Wifi_ProcessReceivedFrame(int macbase, int framelen);
+int Wifi_SendOpenSystemAuthPacket(void);
+int Wifi_SendAssocPacket(void);
+int Wifi_SendNullFrame(void);
+int Wifi_SendPSPollFrame(void);
+int Wifi_ProcessReceivedFrame(int macbase, int framelen);
 
-extern void Wifi_Sync();
-extern void Wifi_SetSyncHandler(WifiSyncHandler sh);
+void Wifi_Sync(void);
+void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 
 #ifdef __cplusplus

@@ -18,7 +18,7 @@ int sgIP_FindArpSlot(sgIP_Hub_HWInterface * hw, unsigned long destip) {
 	}
 	return -1;
 }
-int sgIP_GetArpSlot() {
+int sgIP_GetArpSlot(void) {
 	int i,m,midle;
 	m=0;
 	midle=0;
@@ -50,7 +50,7 @@ int sgIP_ARP_Check_isok(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb, sgIP_Head
 	return 1; // doesn't do anything yet ;)
 }
 
-void	sgIP_ARP_Init() {
+void sgIP_ARP_Init(void) {
 	int i;
 	for(i=0;i<SGIP_ARP_MAXENTRIES;i++) {
 		ArpRecords[i].flags=0;
@@ -58,7 +58,7 @@ void	sgIP_ARP_Init() {
 		ArpRecords[i].queued_packet=0;
 	}
 }
-void sgIP_ARP_Timer100ms() {
+void sgIP_ARP_Timer100ms(void) {
 	int i;
 	for(i=0;i<SGIP_ARP_MAXENTRIES;i++) {
 		if(ArpRecords[i].flags & SGIP_ARP_FLAG_ACTIVE) {

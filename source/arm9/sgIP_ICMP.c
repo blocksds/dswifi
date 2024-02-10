@@ -8,7 +8,7 @@
 #include "sgIP_IP.h"
 #include "sgIP_Hub.h"
 
-void sgIP_ICMP_Init() {
+void sgIP_ICMP_Init(void) {
 
 }
 

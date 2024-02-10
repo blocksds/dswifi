@@ -37,12 +37,12 @@ typedef struct SGIP_DNS_HOSTENT {
 extern "C" {
 #endif
 
-extern void sgIP_DNS_Init();
-extern void sgIP_DNS_Timer1000ms();
+void sgIP_DNS_Init(void);
+void sgIP_DNS_Timer1000ms(void);
 
-extern sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name);
-extern sgIP_DNS_Record  * sgIP_DNS_AllocUnusedRecord();
-extern sgIP_DNS_Record  * sgIP_DNS_FindDNSRecord(const char * name);
+sgIP_DNS_Hostent * sgIP_DNS_gethostbyname(const char * name);
+sgIP_DNS_Record  * sgIP_DNS_AllocUnusedRecord(void);
+sgIP_DNS_Record  * sgIP_DNS_FindDNSRecord(const char * name);
 
 #ifdef __cplusplus
 };

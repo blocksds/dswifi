@@ -21,7 +21,7 @@ int chdata_save5 = 0;
 //
 char FlashData[512];
 
-void InitFlashData() {
+void InitFlashData(void) {
 	readFirmware(0,FlashData,512);
 }
 
@@ -75,7 +75,7 @@ int crc16_slow(u8 * data, int length) {
 	return crc;
 }
 
-void GetWfcSettings() {
+void GetWfcSettings(void) {
 	u8 data[256];
 	int i,n, c;
 	unsigned long s;
@@ -182,7 +182,7 @@ void ProxySetLedState(int state) {
 
 int RF_Reglist[] = { 0x146, 0x148, 0x14A, 0x14C, 0x120, 0x122, 0x154, 0x144, 0x130, 0x132, 0x140, 0x142, 0x38, 0x124, 0x128, 0x150 };
 
-void Wifi_RFInit() {
+void Wifi_RFInit(void) {
 	int i,j;
 	int channel_extrabits;
 	int numchannels;
@@ -217,7 +217,7 @@ void Wifi_RFInit() {
 	}
 }
 
-void Wifi_BBInit() {
+void Wifi_BBInit(void) {
 	int i;
 	WIFI_REG(0x160)=0x0100;
 	for(i=0;i<0x69;i++) {
@@ -228,7 +228,7 @@ void Wifi_BBInit() {
 // 22 entry list
 int MAC_Reglist[] = { 0x04, 0x08, 0x0A, 0x12, 0x10, 0x254, 0xB4, 0x80, 0x2A, 0x28, 0xE8, 0xEA, 0xEE, 0xEC, 0x1A2, 0x1A0, 0x110, 0xBC, 0xD4, 0xD8, 0xDA, 0x76 };
 int MAC_Vallist[] = { 0, 0, 0, 0, 0xffff, 0, 0xffff, 0, 0, 0, 0, 0, 1, 0x3F03, 1, 0, 0x0800, 1, 3, 4, 0x0602, 0};
-void Wifi_MacInit() {
+void Wifi_MacInit(void) {
 	int i;
 	for(i=0;i<22;i++) {
 		WIFI_REG(MAC_Reglist[i]) = MAC_Vallist[i];
@@ -236,7 +236,7 @@ void Wifi_MacInit() {
 }
 
 
-void Wifi_TxSetup() {
+void Wifi_TxSetup(void) {
 	/*	switch(WIFI_REG(0x8006)&7) {
 	case 0: //
 	// 4170,  4028, 4000
@@ -284,7 +284,7 @@ void Wifi_TxSetup() {
 	//	}
 }
 
-void Wifi_RxSetup() {
+void Wifi_RxSetup(void) {
 	WIFI_REG(0x8030) = 0x8000;
 	/*	switch(WIFI_REG(0x8006)&7) {
 	case 0:
@@ -319,7 +319,7 @@ void Wifi_RxSetup() {
 }
 
 
-void Wifi_WakeUp() {
+void Wifi_WakeUp(void) {
 	u32 i;
 	WIFI_REG(0x8036)=0;
 
@@ -335,7 +335,7 @@ void Wifi_WakeUp() {
 
 	Wifi_RFInit();
 }
-void Wifi_Shutdown() {
+void Wifi_Shutdown(void) {
 	int a;
 	if(ReadFlashByte(0x40)==2) {
 		Wifi_RFWrite(0xC008);
@@ -479,7 +479,7 @@ void Wifi_TxRaw(u16 * data, int datalen) {
 	WifiData->stats[WSTAT_TXDATABYTES]+=datalen-12;
 }
 
-int Wifi_TxCheck() {
+int Wifi_TxCheck(void) {
 	if(WIFI_REG(0xB6)&0x0008) return 0;
 	return 1;
 }
@@ -538,7 +538,7 @@ void Wifi_SetBeaconChannel(int channel) {
 //  Wifi Interrupts
 //
 
-void Wifi_Intr_RxEnd() {
+void Wifi_Intr_RxEnd(void) {
 	int base;
 	int packetlen;
 	int full_packetlen;
@@ -580,7 +580,7 @@ void Wifi_Intr_RxEnd() {
 u16 count_ofs_list[CNT_STAT_NUM] = {
 	0x1B0, 0x1B2, 0x1B4, 0x1B6, 0x1B8, 0x1BA, 0x1BC, 0x1BE, 0x1C0, 0x1C4, 0x1D0, 0x1D2, 0x1D4, 0x1D6, 0x1D8, 0x1DA, 0x1DC, 0x1DE
 };
-void Wifi_Intr_CntOverflow() {
+void Wifi_Intr_CntOverflow(void) {
 	int i;
 	int s,d;
 	s=CNT_STAT_START;
@@ -591,7 +591,7 @@ void Wifi_Intr_CntOverflow() {
 	}
 }
 
-void Wifi_Intr_TxEnd() { 
+void Wifi_Intr_TxEnd(void) {
 	WifiData->stats[WSTAT_DEBUG]=((WIFI_REG(0xA8)&0x8000)|(WIFI_REG(0xB6)&0x7FFF));
 	if(!Wifi_TxCheck()) {
 		return;
@@ -623,12 +623,12 @@ void Wifi_Intr_TxEnd() {
 }
 
 
-void Wifi_Intr_DoNothing() {
+void Wifi_Intr_DoNothing(void) {
 }
 
 
 
-void Wifi_Interrupt() {
+void Wifi_Interrupt(void) {
 	int wIF;
 	if(!WifiData) { W_IF = W_IF; return; }
 	if(!(WifiData->flags7&WFLAG_ARM7_RUNNING)) { W_IF = W_IF; return; }
@@ -671,7 +671,7 @@ static u8 scanlist[] = {
 static int scanlist_size = sizeof(scanlist)/sizeof(scanlist[0]);
 static int scanIndex = 0;
 
-void Wifi_Update() {
+void Wifi_Update(void) {
 	int i;
 	if(!WifiData) return;
 	WifiData->random ^=(W_RANDOM ^ (W_RANDOM<<11) ^ (W_RANDOM<<22));
@@ -917,12 +917,12 @@ void Wifi_Init(u32 wifidata) {
 	WifiData->flags7 |= WFLAG_ARM7_ACTIVE;
 }
 
-void Wifi_Deinit() {
+void Wifi_Deinit(void) {
 	Wifi_Stop();
 	POWERCNT7 &= ~2;
 }
 
-void Wifi_Start() {
+void Wifi_Start(void) {
 	int i, tIME;
 	tIME=REG_IME;
 	REG_IME=0;
@@ -1012,7 +1012,7 @@ void Wifi_Start() {
 	REG_IME=tIME;
 }
 
-void Wifi_Stop() {
+void Wifi_Stop(void) {
 	int tIME;
 	tIME=REG_IME;
 	REG_IME=0;
@@ -1106,11 +1106,13 @@ void Wifi_SetMode(int wifimode) {
 	if(wifimode>3 || wifimode<0) return;
 	W_MODE_WEP = (W_MODE_WEP& 0xfff8) | wifimode;
 }
+
 void Wifi_SetPreambleType(int preamble_type) {
 	if(preamble_type>1 || preamble_type<0) return;
 	WIFI_REG(0x80BC) = (WIFI_REG(0x80BC) & 0xFFBF) | (preamble_type<<6);
 }
-void Wifi_DisableTempPowerSave() {
+
+void Wifi_DisableTempPowerSave(void) {
 	WIFI_REG(0x8038) &= ~2;
 	WIFI_REG(0x8048) = 0;
 }
@@ -1176,7 +1178,7 @@ int Wifi_GenMgtHeader(u8 * data, u16 headerflags) {
 	}
 }
 
-int Wifi_SendOpenSystemAuthPacket() {
+int Wifi_SendOpenSystemAuthPacket(void) {
 	// max size is 12+24+4+6 = 46
 	u8 data[64];
 	int i;
@@ -1192,7 +1194,7 @@ int Wifi_SendOpenSystemAuthPacket() {
 	return Wifi_TxQueue((u16 *)data, i+6);
 }
 
-int Wifi_SendSharedKeyAuthPacket() {
+int Wifi_SendSharedKeyAuthPacket(void) {
 	// max size is 12+24+4+6 = 46
 	u8 data[64];
 	int i;
@@ -1231,7 +1233,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 * challenge_Text) {
 }
 
 
-int Wifi_SendAssocPacket() { // uses arm7 data in our struct
+int Wifi_SendAssocPacket(void) { // uses arm7 data in our struct
 	u8 data[96];
 	int i,j,numrates;
 
@@ -1274,7 +1276,7 @@ int Wifi_SendAssocPacket() { // uses arm7 data in our struct
 	return Wifi_TxQueue((u16 *)data, i);
 }
 
-int Wifi_SendNullFrame() {  // Fix: Either sent ToDS properly or drop ToDS flag. Also fix length (16+4) 
+int Wifi_SendNullFrame(void) {  // Fix: Either sent ToDS properly or drop ToDS flag. Also fix length (16+4) 
 	// max size is 12+16 = 28
 	u16 data[16];
 	// tx header
@@ -1293,7 +1295,7 @@ int Wifi_SendNullFrame() {  // Fix: Either sent ToDS properly or drop ToDS flag.
 	return Wifi_TxQueue(data, 30);
 }
 
-int Wifi_SendPSPollFrame() {
+int Wifi_SendPSPollFrame(void) {
 	// max size is 12+16 = 28
 	u16 data[16];
 	// tx header
@@ -1692,7 +1694,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen) {
 //////////////////////////////////////////////////////////////////////////
 // sync functions
 
-void Wifi_Sync() {
+void Wifi_Sync(void) {
 	Wifi_Update();
 }
 
@@ -1723,12 +1725,12 @@ static void wifiValue32Handler(u32 value, void* data) {
 }
 
 // callback to allow wifi library to notify arm9
-static void arm7_synctoarm9() { 
+static void arm7_synctoarm9(void) {
 	fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
 }
 
 
-void installWifiFIFO() {
+void installWifiFIFO(void) {
 	irqSet(IRQ_WIFI, Wifi_Interrupt); // set up wifi interrupt
 	Wifi_SetSyncHandler(arm7_synctoarm9); // allow wifi lib to notify arm9
 	fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);

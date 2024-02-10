@@ -244,19 +244,19 @@ typedef void (*WifiSyncHandler)();
 ///
 /// @param initflags Set up some optional things, like controlling the LED blinking.
 /// @return          A 32bit value that *must* be passed to ARM7.
-extern unsigned long Wifi_Init(int initflags);
+unsigned long Wifi_Init(int initflags);
 
 /// Verifies when the ARM7 has been successfully initialized.
 ///
 /// @return 1 if the ARM7 is ready for WiFi, 0 otherwise
-extern int Wifi_CheckInit();
+int Wifi_CheckInit();
 
 /// Instructs the ARM7 to disengage wireless and stop receiving or transmitting.
-extern void Wifi_DisableWifi();
+void Wifi_DisableWifi();
 
 /// Instructs the ARM7 to go into a basic "active" mode, not actually associated
 /// to an AP, but actively receiving and potentially transmitting.
-extern void Wifi_EnableWifi();
+void Wifi_EnableWifi();
 
 /// Allows the DS to enter or leave a "promsicuous" mode.
 ///
@@ -266,29 +266,29 @@ extern void Wifi_EnableWifi();
 /// otherwise.)
 ///
 /// @param enable 0 to disable promiscuous mode, nonzero to engage.
-extern void Wifi_SetPromiscuousMode(int enable);
+void Wifi_SetPromiscuousMode(int enable);
 
 /// Instructs the ARM7 to periodically rotate through the channels to pick up
 /// and record information from beacons given off by APs.
-extern void Wifi_ScanMode();
+void Wifi_ScanMode();
 
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.
 ///
 /// @param channel The channel to change to, in the range of 1-13.
-extern void Wifi_SetChannel(int channel);
+void Wifi_SetChannel(int channel);
 
 /// Returns the current number of APs that are known and tracked internally.
 ///
 /// @return The number of APs.
-extern int Wifi_GetNumAP();
+int Wifi_GetNumAP();
 
 /// Grabs data from internal structures for user code (always succeeds).
 ///
 /// @param apnum  The 0-based index of the access point record to fetch.
 /// @param apdata Pointer to the location to store the retrieved data.
 /// @return WIFI_RETURN enumeration value.
-extern int Wifi_GetAPData(int apnum, Wifi_AccessPoint * apdata);
+int Wifi_GetAPData(int apnum, Wifi_AccessPoint * apdata);
 
 /// Determines whether various APs exist in the local area.
 ///
@@ -303,7 +303,7 @@ extern int Wifi_GetAPData(int apnum, Wifi_AccessPoint * apdata);
 ///                   record.
 /// @return           -1 for none found, or a positive/zero integer index into
 ///                   the array
-extern int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint * apdata, Wifi_AccessPoint * match_dest);
+int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint * apdata, Wifi_AccessPoint * match_dest);
 
 /// Connect to an Access Point.
 ///
@@ -313,10 +313,10 @@ extern int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint * apdata, Wifi_Acces
 /// @param wepkey   The WEP key, to be used in all 4 key slots (should make this
 ///                 more flexible in the future).
 /// @return         0 for ok, -1 for error with input data.
-extern int Wifi_ConnectAP(Wifi_AccessPoint * apdata, int wepmode, int wepkeyid, unsigned char * wepkey);
+int Wifi_ConnectAP(Wifi_AccessPoint * apdata, int wepmode, int wepkeyid, unsigned char * wepkey);
 
 /// Connect to an Access Point specified by the WFC data in the firmware.
-extern void Wifi_AutoConnect();
+void Wifi_AutoConnect();
 
 /// Returns information about the status of connection to an AP.
 ///
@@ -324,12 +324,12 @@ extern void Wifi_AutoConnect();
 /// ASSOCSTATUS_CANNOTCONNECT.
 ///
 /// @return A value from the WIFI_ASSOCSTATUS enum.
-extern int Wifi_AssocStatus();
+int Wifi_AssocStatus();
 
 /// Disassociate from the Access Point
 ///
 /// @return It returns 0 on success.
-extern int Wifi_DisconnectAP();
+int Wifi_DisconnectAP();
 
 /// This function should be called in a periodic interrupt.
 ///
@@ -339,7 +339,7 @@ extern int Wifi_DisconnectAP();
 ///
 /// @param num_ms The number of milliseconds since the last time this function
 ///               was called.
-extern void Wifi_Timer(int num_ms);
+void Wifi_Timer(int num_ms);
 
 /// It returns the current IP address of the DS.
 ///
@@ -347,7 +347,7 @@ extern void Wifi_Timer(int num_ms);
 /// manually.
 ///
 /// @return The current IP address of the DS
-extern unsigned long Wifi_GetIP();
+unsigned long Wifi_GetIP();
 
 /// Returns IP information.
 ///
@@ -361,7 +361,7 @@ extern unsigned long Wifi_GetIP();
 /// @param pDns2    Pointer to receive the currently configured secondary DNS
 ///                 server IP.
 /// @return         The current IP address of the DS
-extern struct in_addr Wifi_GetIPInfo(struct in_addr * pGateway,struct in_addr * pSnmask,struct in_addr * pDns1,struct in_addr * pDns2);
+struct in_addr Wifi_GetIPInfo(struct in_addr * pGateway,struct in_addr * pSnmask,struct in_addr * pDns1,struct in_addr * pDns2);
 
 /// Set the DS's IP address and other IP configuration information.
 ///
@@ -373,7 +373,7 @@ extern struct in_addr Wifi_GetIPInfo(struct in_addr * pGateway,struct in_addr * 
 ///                   AND the IPaddr value is zero, dns1 and dns2 will be
 ///                   allocated via DHCP).
 /// @param dns2       The new secondary dns server
-extern void Wifi_SetIP(unsigned long IPaddr, unsigned long gateway, unsigned long subnetmask, unsigned long dns1, unsigned long dns2);
+void Wifi_SetIP(unsigned long IPaddr, unsigned long gateway, unsigned long subnetmask, unsigned long dns1, unsigned long dns2);
 
 /// Retrieve an arbitrary or misc. piece of data from the WiFi hardware.
 ///
@@ -385,14 +385,14 @@ extern void Wifi_SetIP(unsigned long IPaddr, unsigned long gateway, unsigned lon
 /// @param buffer    Buffer to copy element data to (not always used)
 /// @return          -1 for failure, the number of bytes written to the buffer,
 ///                  or the value requested if the buffer isn't used.
-extern int Wifi_GetData(int datatype, int bufferlen, unsigned char * buffer);
+int Wifi_GetData(int datatype, int bufferlen, unsigned char * buffer);
 
 /// Retreive an element of the WiFi statistics gathered
 ///
 /// @param statnum Element from the WIFI_STATS enum, indicating what statistic
 ///                to return.
 /// @return        The requested stat, or 0 for failure.
-extern u32 Wifi_GetStats(int statnum);
+u32 Wifi_GetStats(int statnum);
 
 //////////////////////////////////////////////////////////////////////////
 // Raw Send/Receive functions
@@ -404,12 +404,12 @@ extern u32 Wifi_GetStats(int statnum);
 ///                 1mbit=0x000A, 2mbit=0x0014)
 /// @param data     Pointer to the data to send (should be halfword-aligned)
 /// @return         Nothing of interest.
-extern int Wifi_RawTxFrame(unsigned short datalen, unsigned short rate, unsigned short * data);
+int Wifi_RawTxFrame(unsigned short datalen, unsigned short rate, unsigned short * data);
 
 /// Set a handler to process all raw incoming packets.
 ///
 /// @param wphfunc Pointer to packet handler (see WifiPacketHandler for info).
-extern void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
+void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
 /// Allows user code to read a packet from within the WifiPacketHandler function.
 ///
@@ -419,22 +419,22 @@ extern void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 ///                   ((number + 1) & ~1) bytes
 /// @param data       Location for the data to be read into
 /// @return           Number of bytes read.
-extern int Wifi_RxRawReadPacket(long packetID, long readlength, unsigned short * data);
+int Wifi_RxRawReadPacket(long packetID, long readlength, unsigned short * data);
 
 //////////////////////////////////////////////////////////////////////////
 // Fast transfer support - update functions
 
 /// Checks for new data from the ARM7 and initiates routing if data is available.
-extern void Wifi_Update();
+void Wifi_Update();
 
 /// Call this function when requested to sync by the ARM7 side of the WiFi lib.
-extern void Wifi_Sync();
+void Wifi_Sync();
 
 /// Call this function to request notification of when the ARM7-side Wifi_Sync()
 /// function should be called.
 ///
 /// @param sh Pointer to the function to be called for notification.
-extern void Wifi_SetSyncHandler(WifiSyncHandler sh);
+void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
 #define WFC_CONNECT	true
@@ -453,7 +453,7 @@ extern void Wifi_SetSyncHandler(WifiSyncHandler sh);
 ///                            initialize the library.  You can use WFC_CONNECT
 ///                            and INIT_ONLY.
 /// @return It returns true on success, false on failure.
-extern bool Wifi_InitDefault(bool useFirmwareSettings);
+bool Wifi_InitDefault(bool useFirmwareSettings);
 
 #ifdef __cplusplus
 }

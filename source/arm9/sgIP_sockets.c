@@ -15,7 +15,7 @@ sgIP_socket_data socketlist[SGIP_SOCKET_MAXSOCKETS];
 extern unsigned long sgIP_timems;
 
 
-void sgIP_sockets_Init() {
+void sgIP_sockets_Init(void) {
 	int i;
 	for(i=0;i<SGIP_SOCKET_MAXSOCKETS;i++) {
 		socketlist[i].conn_ptr=0;
@@ -24,7 +24,7 @@ void sgIP_sockets_Init() {
 }
 
 // Additional timer routine that cleans up after half-closed sockets.
-void sgIP_sockets_Timer1000ms() {
+void sgIP_sockets_Timer1000ms(void) {
 	int i;
 	SGIP_INTR_PROTECT();
 	for(i=0;i<SGIP_SOCKET_MAXSOCKETS;i++) {
@@ -465,7 +465,7 @@ struct hostent * gethostbyname(const char * name) {
 };
 
 
-extern int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout) {
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout) {
 	// 31 days = 2678400 seconds
 	unsigned long timeout_ms, lasttime, temp;
 	sgIP_Record_TCP * rec;
@@ -569,22 +569,22 @@ extern int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds,
 
 
 /*
-extern void FD_CLR(int fd, fd_set * fdset) {
+void FD_CLR(int fd, fd_set * fdset) {
 	if(fd<1 || fd>FD_SETSIZE || !fdset) return;
 	fd--;
 	fdset->fdbits[fd>>5] &= ~(1<<(fd&31));
 }
-extern int FD_ISSET(int fd, fd_set * fdset) {
+int FD_ISSET(int fd, fd_set * fdset) {
 	if(fd<1 || fd>FD_SETSIZE || !fdset) return 0;
 	fd--;
 	return (fdset->fdbits[fd>>5] & 1<<(fd&31))?1:0;
 }
-extern void FD_SET(int fd, fd_set * fdset) {
+void FD_SET(int fd, fd_set * fdset) {
 	if(fd<1 || fd>FD_SETSIZE || !fdset) return;
 	fd--;
 	fdset->fdbits[fd>>5] |= 1<<(fd&31);
 }
-extern void FD_ZERO(fd_set * fdset) {
+void FD_ZERO(fd_set * fdset) {
 	int i;
 	if(!fdset) return;
 	for(i=0;i<(FD_SETSIZE+31)/32;i++) {

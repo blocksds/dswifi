@@ -70,7 +70,7 @@ int sgIP_IP_ReceivePacket(sgIP_memblock * mb) {
 int sgIP_IP_MaxContentsSize(unsigned long destip) {
 	return sgIP_Hub_IPMaxMessageSize(destip)-sgIP_IP_RequiredHeaderSize();
 }
-int sgIP_IP_RequiredHeaderSize() {
+int sgIP_IP_RequiredHeaderSize(void) {
 	return 5*4; // we'll not include zeroed options.
 }
 int sgIP_IP_SendViaIP(sgIP_memblock * mb, int protocol, unsigned long srcip, unsigned long destip) {

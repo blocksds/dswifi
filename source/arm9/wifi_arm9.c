@@ -32,7 +32,7 @@ const char * ASSOCSTATUS_STRINGS[] = {
 };
 
 
-void sgIP_IntrWaitEvent() {
+void sgIP_IntrWaitEvent(void) {
  //  __asm( ".ARM\n swi 0x060000\n" );
 	int i,j;
 	j=0;
@@ -245,7 +245,7 @@ int Wifi_CmpMacAddr(volatile void * mac1,volatile  void * mac2) {
 
 
 
-u32 Wifi_TxBufferWordsAvailable() {
+u32 Wifi_TxBufferWordsAvailable(void) {
 	s32 size=WifiData->txbufIn-WifiData->txbufOut-1;
 	if(size<0) size += WIFI_TXBUFFER_SIZE/2;
 	return size;
@@ -323,11 +323,11 @@ void Wifi_SetSyncHandler(WifiSyncHandler wshfunc) {
    synchandler=wshfunc;
 }
 
-void Wifi_DisableWifi() {
+void Wifi_DisableWifi(void) {
 	WifiData->reqMode=WIFIMODE_DISABLED;
 	WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
-void Wifi_EnableWifi() {
+void Wifi_EnableWifi(void) {
 	WifiData->reqMode=WIFIMODE_NORMAL;
 	WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
@@ -336,7 +336,7 @@ void Wifi_SetPromiscuousMode(int enable) {
 	else WifiData->reqReqFlags &= ~WFLAG_REQ_PROMISC;
 }
 
-void Wifi_ScanMode() {
+void Wifi_ScanMode(void) {
 	WifiData->reqMode=WIFIMODE_SCAN;
 	WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
@@ -348,7 +348,7 @@ void Wifi_SetChannel(int channel) {
 }
 
 
-int Wifi_GetNumAP() {
+int Wifi_GetNumAP(void) {
 	int i,j;
 	j=0;
 	for(i=0;i<WIFI_MAX_AP;i++) if(WifiData->aplist[i].flags&WFLAG_APDATA_ACTIVE) j++;
@@ -456,7 +456,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint * apdata, int wepmode, int wepkeyid, u8 * we
 	}
 	return 0;
 }
-void Wifi_AutoConnect() {
+void Wifi_AutoConnect(void) {
 	if(!(WifiData->wfc_enable[0]&0x80)) {
 		wifi_connect_state=-1;
 	} else {
@@ -466,7 +466,7 @@ void Wifi_AutoConnect() {
 }
 
 static
-void sgIP_DNS_Record_Localhost()
+void sgIP_DNS_Record_Localhost(void)
 {
     sgIP_DNS_Record *rec;
     const unsigned char * resdata_c = (unsigned char *)&(wifi_hw->ipaddr);
@@ -487,7 +487,7 @@ void sgIP_DNS_Record_Localhost()
     rec->flags=SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY | SGIP_DNS_FLAG_RESOLVED | SGIP_DNS_FLAG_PERMANENT;
 }
 
-int Wifi_AssocStatus() {
+int Wifi_AssocStatus(void) {
 	switch(wifi_connect_state) {
 		case -1: // error
 			return ASSOCSTATUS_CANNOTCONNECT;
@@ -631,7 +631,7 @@ int Wifi_AssocStatus() {
 }
 
 
-int Wifi_DisconnectAP() {
+int Wifi_DisconnectAP(void) {
 	WifiData->reqMode=WIFIMODE_NORMAL;
 	WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 	WifiData->flags9&=~WFLAG_ARM9_NETREADY;
@@ -802,13 +802,13 @@ unsigned long Wifi_Init(int initflags) {
 	return (u32) Wifi_Data_Struct;
 }
 
-int Wifi_CheckInit() {
+int Wifi_CheckInit(void) {
 	if(!WifiData) return 0;
 	return ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) && (WifiData->flags9 & WFLAG_ARM9_ARM7READY));
 }
 
 
-void Wifi_Update() {
+void Wifi_Update(void) {
 	int cnt;
 	int base, base2, len, fulllen;
 	if(!WifiData) return;
@@ -904,7 +904,7 @@ void Wifi_Update() {
 // Ip addr get/set functions
 #ifdef WIFI_USE_TCP_SGIP
 
-u32 Wifi_GetIP() {
+u32 Wifi_GetIP(void) {
 	if(wifi_hw) return wifi_hw->ipaddr;
 	return 0;
 }
@@ -937,7 +937,7 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2) {
 	}
 }
 
-void Wifi_SetDHCP() {
+void Wifi_SetDHCP(void) {
 
 
 }
@@ -970,7 +970,7 @@ u32 Wifi_GetStats(int statnum) {
 // sync functions
 
 //---------------------------------------------------------------------------------
-void Wifi_Sync() {
+void Wifi_Sync(void) {
 //---------------------------------------------------------------------------------
 	int oldIE = REG_IE;
 	REG_IE &= ~IRQ_TIMER3;
@@ -991,7 +991,7 @@ void Timer_50ms(void) {
 
 // notification function to send fifo message to arm7
 //---------------------------------------------------------------------------------
-void arm9_synctoarm7() { 
+void arm9_synctoarm7(void) {
 //---------------------------------------------------------------------------------
 	fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
 }
@@ -1044,7 +1044,7 @@ bool Wifi_InitDefault(bool useFirmwareSettings) {
 			if(wifiStatus == ASSOCSTATUS_CANNOTCONNECT) return false;
 			swiWaitForVBlank();
 
-		}  
+		}
 	}
 
 	return true;

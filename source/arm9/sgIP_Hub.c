@@ -29,7 +29,7 @@ sgIP_Hub_HWInterface HWInterfaces[SGIP_HUB_MAXHWINTERFACES];
 // Public functions
 
 
-void sgIP_Hub_Init() {
+void sgIP_Hub_Init(void) {
 	NumHWInterfaces=0;
 	NumProtocolInterfaces=0;
 
@@ -67,7 +67,7 @@ sgIP_Hub_HWInterface * sgIP_Hub_AddHardwareInterface(int (*TransmitFunction)(sgI
 	return HWInterfaces+n;
 }
 
-extern void sgIP_Hub_RemoveProtocolInterface(sgIP_Hub_Protocol * protocol) {
+void sgIP_Hub_RemoveProtocolInterface(sgIP_Hub_Protocol * protocol) {
 	int n;
 	for(n=0;n<SGIP_HUB_MAXPROTOCOLINTERFACES;n++) {
 		if(ProtocolInterfaces+n ==protocol) break;
@@ -76,7 +76,7 @@ extern void sgIP_Hub_RemoveProtocolInterface(sgIP_Hub_Protocol * protocol) {
 	protocol->flags=0;
 	NumProtocolInterfaces--;
 }
-extern void sgIP_Hub_RemoveHardwareInterface(sgIP_Hub_HWInterface * hw) {
+void sgIP_Hub_RemoveHardwareInterface(sgIP_Hub_HWInterface * hw) {
 	int n;
 	for(n=0;n<SGIP_HUB_MAXHWINTERFACES;n++) {
 		if(HWInterfaces+n == hw) break;
@@ -164,7 +164,7 @@ unsigned long sgIP_Hub_GetCompatibleIP(unsigned long destIP) {
 	return 0;
 }
 
-extern sgIP_Hub_HWInterface * sgIP_Hub_GetDefaultInterface() {
+sgIP_Hub_HWInterface * sgIP_Hub_GetDefaultInterface(void) {
    int n;
    for(n=0;n<SGIP_HUB_MAXHWINTERFACES;n++) {
       if((HWInterfaces[n].flags&SGIP_FLAG_HWINTERFACE_IN_USE)) {

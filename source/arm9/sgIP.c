@@ -10,7 +10,7 @@ unsigned long volatile sgIP_timems;
 int sgIP_errno;
 
 // sgIP_Init(): Initializes sgIP hub and sets up a default surrounding interface (ARP and IP)
-void sgIP_Init() {
+void sgIP_Init(void) {
 	sgIP_timems = 0;
 	sgIP_memblock_Init();
 	sgIP_Hub_Init();

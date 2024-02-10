@@ -40,8 +40,8 @@
 extern "C" {
 #endif
 
-extern u32 SLasm_Acquire(volatile u32 * lockaddr, u32 lockvalue);
-extern u32 SLasm_Release(volatile u32 * lockaddr, u32 lockvalue);
+u32 SLasm_Acquire(volatile u32 * lockaddr, u32 lockvalue);
+u32 SLasm_Release(volatile u32 * lockaddr, u32 lockvalue);
 
 #ifdef __cplusplus
 };

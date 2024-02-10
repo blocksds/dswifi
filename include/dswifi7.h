@@ -30,7 +30,7 @@ typedef void (*WifiSyncHandler)();
 /// @param address     Offset to start reading from in the flash chip.
 /// @param destination Pointer to a memory buffer to hold incoming data.
 /// @param length      The number of bytes to read.
-extern void Read_Flash(int address, char * destination, int length);
+void Read_Flash(int address, char * destination, int length);
 
 /// Reads or writes a value to the DS's power chip.
 ///
@@ -40,18 +40,18 @@ extern void Read_Flash(int address, char * destination, int length);
 ///             this should be zero)
 /// @return     The data read returned by the serial connection; only really
 ///             useful when reading.
-extern int PowerChip_ReadWrite(int cmd, int data);
+int PowerChip_ReadWrite(int cmd, int data);
 
 /// Handler for the ARM7 WiFi interrupt.
 ///
 /// It should be called by the interrupt handler on ARM7, and should *not* have
 /// multiple interrupts enabled.
-extern void Wifi_Interrupt();
+void Wifi_Interrupt();
 
 /// Sync function to ensure data continues to flow between the two CPUs smoothly.
 ///
 /// It Should be called at a periodic interval, such as in VBlank.
-extern void Wifi_Update();
+void Wifi_Update();
 
 /// Requires the data returned by the ARM9 WiFi init call.
 ///
@@ -63,24 +63,24 @@ extern void Wifi_Update();
 ///
 /// @param WifiData You must pass the 32bit value returned by the call to
 ///                 Wifi_Init on the ARM9.
-extern void Wifi_Init(unsigned long WifiData);
+void Wifi_Init(unsigned long WifiData);
 
 /// In case it is necessary, this function cuts power to the WiFi system.
 ///
 /// After this WiFi will be unusable until Wifi_Init() is called again.
-extern void Wifi_Deinit();
+void Wifi_Deinit();
 
 /// Call this function when requested to sync by the ARM9 side of the WiFi lib.
-extern void Wifi_Sync();
+void Wifi_Sync();
 
 /// Call this function to request notification of when the ARM9-side Wifi_Sync()
 /// function should be called.
 ///
 /// @param sh Pointer to the function to be called for notification.
-extern void Wifi_SetSyncHandler(WifiSyncHandler sh);
+void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// Setup system FIFO handler for WiFi library messages.
-extern void installWifiFIFO();
+void installWifiFIFO(void);
 
 #ifdef __cplusplus
 }

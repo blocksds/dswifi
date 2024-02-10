@@ -209,7 +209,7 @@ extern int sgIP_errno;
 #ifdef __cplusplus
 extern "C" {
 #endif
-   void sgIP_IntrWaitEvent();
+   void sgIP_IntrWaitEvent(void);
 #ifdef __cplusplus
 };
 #endif
@@ -233,7 +233,7 @@ extern "C" {
 #ifdef __cplusplus
 extern "C" {
 #endif
-	extern void sgIP_dbgprint(char *, ...);
+	void sgIP_dbgprint(char *, ...);
 #ifdef __cplusplus
 };
 #endif
@@ -243,8 +243,8 @@ extern "C" {
 #ifdef __cplusplus
 extern "C" {
 #endif
-	extern void * sgIP_malloc(int);
-	extern void sgIP_free(void *);
+	void * sgIP_malloc(int);
+	void sgIP_free(void *);
 #ifdef __cplusplus
 };
 #endif

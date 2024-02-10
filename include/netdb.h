@@ -19,7 +19,7 @@ struct hostent {
    char **h_addr_list;
 };
 
-extern struct hostent *gethostbyname(const char *name);
+struct hostent *gethostbyname(const char *name);
 
 #ifdef __cplusplus
 }

@@ -63,22 +63,22 @@ extern "C" {
 #endif
 
 
-extern void sgIP_Hub_Init();
+void sgIP_Hub_Init(void);
 
 
-extern sgIP_Hub_Protocol * sgIP_Hub_AddProtocolInterface(int protocolID, int (*ReceivePacket)(sgIP_memblock *), int (*InterfaceInit)(sgIP_Hub_Protocol *));
-extern sgIP_Hub_HWInterface * sgIP_Hub_AddHardwareInterface(int (*TransmitFunction)(sgIP_Hub_HWInterface *, sgIP_memblock *), int (*InterfaceInit)(sgIP_Hub_HWInterface *));
-extern void sgIP_Hub_RemoveProtocolInterface(sgIP_Hub_Protocol * protocol);
-extern void sgIP_Hub_RemoveHardwareInterface(sgIP_Hub_HWInterface * hw);
+sgIP_Hub_Protocol * sgIP_Hub_AddProtocolInterface(int protocolID, int (*ReceivePacket)(sgIP_memblock *), int (*InterfaceInit)(sgIP_Hub_Protocol *));
+sgIP_Hub_HWInterface * sgIP_Hub_AddHardwareInterface(int (*TransmitFunction)(sgIP_Hub_HWInterface *, sgIP_memblock *), int (*InterfaceInit)(sgIP_Hub_HWInterface *));
+void sgIP_Hub_RemoveProtocolInterface(sgIP_Hub_Protocol * protocol);
+void sgIP_Hub_RemoveHardwareInterface(sgIP_Hub_HWInterface * hw);
 
-extern int sgIP_Hub_ReceiveHardwarePacket(sgIP_Hub_HWInterface * hw, sgIP_memblock * packet);
-extern int sgIP_Hub_SendProtocolPacket(int protocol, sgIP_memblock * packet, unsigned long dest_address, unsigned long src_address);
-extern int sgIP_Hub_SendRawPacket(sgIP_Hub_HWInterface * hw, sgIP_memblock * packet);
+int sgIP_Hub_ReceiveHardwarePacket(sgIP_Hub_HWInterface * hw, sgIP_memblock * packet);
+int sgIP_Hub_SendProtocolPacket(int protocol, sgIP_memblock * packet, unsigned long dest_address, unsigned long src_address);
+int sgIP_Hub_SendRawPacket(sgIP_Hub_HWInterface * hw, sgIP_memblock * packet);
 
-extern int sgIP_Hub_IPMaxMessageSize(unsigned long ipaddr);
+int sgIP_Hub_IPMaxMessageSize(unsigned long ipaddr);
 unsigned long sgIP_Hub_GetCompatibleIP(unsigned long destIP);
 
-extern sgIP_Hub_HWInterface * sgIP_Hub_GetDefaultInterface();
+sgIP_Hub_HWInterface * sgIP_Hub_GetDefaultInterface(void);
 
 unsigned short htons(unsigned short num);
 unsigned long htonl(unsigned long num);

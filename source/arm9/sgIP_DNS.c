@@ -32,7 +32,7 @@ volatile sgIP_DNS_Hostent dnsrecord_hostent;
 unsigned char querydata[512];
 unsigned char responsedata[512];
 
-void sgIP_DNS_Init() {
+void sgIP_DNS_Init(void) {
    for (int i = 0; i < SGIP_DNS_MAXRECORDSCACHE; i++) {
       dnsrecords[i] = NULL;
    }
@@ -40,7 +40,7 @@ void sgIP_DNS_Init() {
    time_count=0;
 }
 
-void sgIP_DNS_Timer1000ms() {
+void sgIP_DNS_Timer1000ms(void) {
    int i;
    time_count++;
    for(i=0;i<SGIP_DNS_MAXRECORDSCACHE;i++) {
@@ -138,7 +138,7 @@ sgIP_DNS_Record * sgIP_DNS_FindDNSRecord(const char * name) {
    return 0;
 }
 
-sgIP_DNS_Record * sgIP_DNS_AllocUnusedRecord() {
+sgIP_DNS_Record * sgIP_DNS_AllocUnusedRecord(void) {
    int i;
    int minTTL = 2147483647;
    int minTTLIdx = -1;

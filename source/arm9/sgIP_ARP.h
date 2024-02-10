@@ -40,18 +40,18 @@ typedef struct SGIP_HEADER_ARP {
 extern "C" {
 #endif
 
-	extern void	sgIP_ARP_Init();
-	extern void sgIP_ARP_Timer100ms();
-	extern void sgIP_ARP_FlushInterface(sgIP_Hub_HWInterface * hw);
+	void sgIP_ARP_Init(void);
+	void sgIP_ARP_Timer100ms(void);
+	void sgIP_ARP_FlushInterface(sgIP_Hub_HWInterface * hw);
 
-	extern int sgIP_ARP_ProcessIPFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
-	extern int sgIP_ARP_ProcessARPFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
-	extern int sgIP_ARP_SendProtocolFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb, unsigned short protocol, unsigned long destaddr);
-	
-	extern int sgIP_ARP_SendARPResponse(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
-	extern int sgIP_ARP_SendGratARP(sgIP_Hub_HWInterface * hw);
-	extern int sgIP_ARP_SendARPRequest(sgIP_Hub_HWInterface * hw, int protocol, unsigned long protocol_addr);
-	
+	int sgIP_ARP_ProcessIPFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
+	int sgIP_ARP_ProcessARPFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
+	int sgIP_ARP_SendProtocolFrame(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb, unsigned short protocol, unsigned long destaddr);
+
+	int sgIP_ARP_SendARPResponse(sgIP_Hub_HWInterface * hw, sgIP_memblock * mb);
+	int sgIP_ARP_SendGratARP(sgIP_Hub_HWInterface * hw);
+	int sgIP_ARP_SendARPRequest(sgIP_Hub_HWInterface * hw, int protocol, unsigned long protocol_addr);
+
 
 
 #ifdef __cplusplus
