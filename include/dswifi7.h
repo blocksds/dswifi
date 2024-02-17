@@ -23,7 +23,7 @@ extern "C" {
 /// synchronize with new fifo data. If this callback is used (see
 /// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM9,
 /// which will call Wifi_Sync() on ARM9.
-typedef void (*WifiSyncHandler)();
+typedef void (*WifiSyncHandler)(void);
 
 /// Reads an arbitrary amount of data from the firmware flash chip.
 ///
@@ -46,12 +46,12 @@ int PowerChip_ReadWrite(int cmd, int data);
 ///
 /// It should be called by the interrupt handler on ARM7, and should *not* have
 /// multiple interrupts enabled.
-void Wifi_Interrupt();
+void Wifi_Interrupt(void);
 
 /// Sync function to ensure data continues to flow between the two CPUs smoothly.
 ///
 /// It Should be called at a periodic interval, such as in VBlank.
-void Wifi_Update();
+void Wifi_Update(void);
 
 /// Requires the data returned by the ARM9 WiFi init call.
 ///
@@ -68,10 +68,10 @@ void Wifi_Init(unsigned long WifiData);
 /// In case it is necessary, this function cuts power to the WiFi system.
 ///
 /// After this WiFi will be unusable until Wifi_Init() is called again.
-void Wifi_Deinit();
+void Wifi_Deinit(void);
 
 /// Call this function when requested to sync by the ARM9 side of the WiFi lib.
-void Wifi_Sync();
+void Wifi_Sync(void);
 
 /// Call this function to request notification of when the ARM9-side Wifi_Sync()
 /// function should be called.

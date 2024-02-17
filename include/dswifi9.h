@@ -235,7 +235,7 @@ typedef void (*WifiPacketHandler)(int, int);
 /// synchronize with new fifo data.  If this callback is used (see
 /// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM7,
 /// which will call Wifi_Sync() on ARM7.
-typedef void (*WifiSyncHandler)();
+typedef void (*WifiSyncHandler)(void);
 
 //////////////////////////////////////////////////////////////////////////
 // Init/update/state management functions
@@ -249,14 +249,14 @@ unsigned long Wifi_Init(int initflags);
 /// Verifies when the ARM7 has been successfully initialized.
 ///
 /// @return 1 if the ARM7 is ready for WiFi, 0 otherwise
-int Wifi_CheckInit();
+int Wifi_CheckInit(void);
 
 /// Instructs the ARM7 to disengage wireless and stop receiving or transmitting.
-void Wifi_DisableWifi();
+void Wifi_DisableWifi(void);
 
 /// Instructs the ARM7 to go into a basic "active" mode, not actually associated
 /// to an AP, but actively receiving and potentially transmitting.
-void Wifi_EnableWifi();
+void Wifi_EnableWifi(void);
 
 /// Allows the DS to enter or leave a "promsicuous" mode.
 ///
@@ -270,7 +270,7 @@ void Wifi_SetPromiscuousMode(int enable);
 
 /// Instructs the ARM7 to periodically rotate through the channels to pick up
 /// and record information from beacons given off by APs.
-void Wifi_ScanMode();
+void Wifi_ScanMode(void);
 
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.
@@ -281,7 +281,7 @@ void Wifi_SetChannel(int channel);
 /// Returns the current number of APs that are known and tracked internally.
 ///
 /// @return The number of APs.
-int Wifi_GetNumAP();
+int Wifi_GetNumAP(void);
 
 /// Grabs data from internal structures for user code (always succeeds).
 ///
@@ -316,7 +316,7 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint * apdata, Wifi_AccessPoint 
 int Wifi_ConnectAP(Wifi_AccessPoint * apdata, int wepmode, int wepkeyid, unsigned char * wepkey);
 
 /// Connect to an Access Point specified by the WFC data in the firmware.
-void Wifi_AutoConnect();
+void Wifi_AutoConnect(void);
 
 /// Returns information about the status of connection to an AP.
 ///
@@ -324,12 +324,12 @@ void Wifi_AutoConnect();
 /// ASSOCSTATUS_CANNOTCONNECT.
 ///
 /// @return A value from the WIFI_ASSOCSTATUS enum.
-int Wifi_AssocStatus();
+int Wifi_AssocStatus(void);
 
 /// Disassociate from the Access Point
 ///
 /// @return It returns 0 on success.
-int Wifi_DisconnectAP();
+int Wifi_DisconnectAP(void);
 
 /// This function should be called in a periodic interrupt.
 ///
@@ -347,7 +347,7 @@ void Wifi_Timer(int num_ms);
 /// manually.
 ///
 /// @return The current IP address of the DS
-unsigned long Wifi_GetIP();
+unsigned long Wifi_GetIP(void);
 
 /// Returns IP information.
 ///
@@ -425,10 +425,10 @@ int Wifi_RxRawReadPacket(long packetID, long readlength, unsigned short * data);
 // Fast transfer support - update functions
 
 /// Checks for new data from the ARM7 and initiates routing if data is available.
-void Wifi_Update();
+void Wifi_Update(void);
 
 /// Call this function when requested to sync by the ARM7 side of the WiFi lib.
-void Wifi_Sync();
+void Wifi_Sync(void);
 
 /// Call this function to request notification of when the ARM7-side Wifi_Sync()
 /// function should be called.
