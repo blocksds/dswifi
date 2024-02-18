@@ -129,11 +129,14 @@ enum WIFIGETDATA {
 	MAX_WIFIGETDATA
 };
 
-
+/// Supported WEP modes.
+///
+/// - 64 bit (40 bit) WEP mode:   5 ASCII characters (or 10 hex numbers).
+/// - 128 bit (104 bit) WEP mode: 13 ASCII characters (or 26 hex numbers).
 enum WEPMODES {
-	WEPMODE_NONE = 0,
-	WEPMODE_40BIT = 1,
-	WEPMODE_128BIT = 2
+	WEPMODE_NONE = 0,   ///< No WEP security is used.
+	WEPMODE_40BIT = 1,  ///< 5 ASCII characters.
+	WEPMODE_128BIT = 2  ///< 13 ASCII characters.
 };
 
 /// Returned by Wifi_AssocStatus() after calling Wifi_ConnectAPk
@@ -308,8 +311,8 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint * apdata, Wifi_AccessPoint 
 /// Connect to an Access Point.
 ///
 /// @param apdata   Basic data on the AP.
-/// @param wepmode  Indicates whether wep is used, and what kind.
-/// @param wepkeyid Indicates which wep key ID to use for transmitting.
+/// @param wepmode  Indicates whether WEP is used, and what kind (WEPMODES).
+/// @param wepkeyid Indicates which WEP key ID to use for transmitting.
 /// @param wepkey   The WEP key, to be used in all 4 key slots (should make this
 ///                 more flexible in the future).
 /// @return         0 for ok, -1 for error with input data.
