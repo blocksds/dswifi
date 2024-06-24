@@ -10,25 +10,23 @@
 #include "sgIP_Config.h"
 #include "sgIP_memblock.h"
 
-typedef struct SGIP_HEADER_ICMP {
-	unsigned char type,code;
-	unsigned short checksum;
-	unsigned long xtra;
+typedef struct SGIP_HEADER_ICMP
+{
+    unsigned char type, code;
+    unsigned short checksum;
+    unsigned long xtra;
 } sgIP_Header_ICMP;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-   void sgIP_ICMP_Init(void);
+void sgIP_ICMP_Init(void);
 
-   int sgIP_ICMP_ReceivePacket(sgIP_memblock * mb, unsigned long srcip, unsigned long destip);
-
-
+int sgIP_ICMP_ReceivePacket(sgIP_memblock *mb, unsigned long srcip, unsigned long destip);
 
 #ifdef __cplusplus
 };
 #endif
-
 
 #endif

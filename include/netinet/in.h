@@ -13,19 +13,21 @@ extern "C" {
 
 #include "sys/socket.h"
 
-#define INADDR_ANY			0x00000000
-#define INADDR_BROADCAST	0xFFFFFFFF
-#define INADDR_NONE			0xFFFFFFFF
+#define INADDR_ANY       0x00000000
+#define INADDR_BROADCAST 0xFFFFFFFF
+#define INADDR_NONE      0xFFFFFFFF
 
-struct in_addr {
-	unsigned long s_addr;
+struct in_addr
+{
+    unsigned long s_addr;
 };
 
-struct sockaddr_in {
-	unsigned short		sin_family;
-	unsigned short		sin_port;
-	struct in_addr		sin_addr;
-	unsigned char		sin_zero[8];
+struct sockaddr_in
+{
+    unsigned short sin_family;
+    unsigned short sin_port;
+    struct in_addr sin_addr;
+    unsigned char sin_zero[8];
 };
 
 // actually from arpa/inet.h - but is included through netinet/in.h

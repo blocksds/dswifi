@@ -30,7 +30,7 @@ typedef void (*WifiSyncHandler)(void);
 /// @param address     Offset to start reading from in the flash chip.
 /// @param destination Pointer to a memory buffer to hold incoming data.
 /// @param length      The number of bytes to read.
-void Read_Flash(int address, char * destination, int length);
+void Read_Flash(int address, char *destination, int length);
 
 /// Reads or writes a value to the DS's power chip.
 ///

@@ -34,8 +34,7 @@ __asm (
 "   cmp r2,r1					\n"
 "   moveq r0,#0	                \n"
 "   movne r0,#2                 \n"
-"   bx lr		                \n"	  
+"   bx lr		                \n"
 );
 
 */
-
