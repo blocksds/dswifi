@@ -22,6 +22,12 @@
 
 extern volatile Wifi_MainStruct *WifiData;
 
+enum WIRELESS_MODE
+{
+    WIRELESS_MODE_WIFI,
+    WIRELESS_MODE_NIFI,
+};
+
 enum WIFIGETDATA
 {
     WIFIGETDATA_MACADDRESS, // MACADDRESS: returns data in the buffer, requires at least 6 bytes
@@ -43,6 +49,9 @@ typedef void (*WifiSyncHandler)(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void Wifi_SetWirelessMode(enum WIRELESS_MODE mode);
+enum WIRELESS_MODE Wifi_GetWirelessMode(void);
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
@@ -79,7 +88,6 @@ void Wifi_Sync(void);
 void Wifi_Timer(int num_ms);
 void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 u32 Wifi_GetIP(void);
-
 #endif
 
 #ifdef __cplusplus
