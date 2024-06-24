@@ -12,7 +12,6 @@
 
 #include <nds.h>
 
-#include "dsregs.h"
 #include "wifi_arm9.h"
 
 #ifdef WIFI_USE_TCP_SGIP

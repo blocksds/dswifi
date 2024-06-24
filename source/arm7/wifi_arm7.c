@@ -6,7 +6,6 @@
 
 #include <nds.h>
 
-#include "dsregs.h"
 #include "spinlock.h" // .h file with code for spinlocking in it.
 #include "wifi_arm7.h"
 
@@ -192,19 +191,23 @@ int PowerChip_ReadWrite(int cmd, int data)
 {
     if (cmd & 0x80)
         data = 0;
-    while (SPI_CR & 0x80)
+
+    while (REG_SPICNT & 0x80)
         ;
-    SPI_CR   = 0x8802;
-    SPI_DATA = cmd;
-    while (SPI_CR & 0x80)
+
+    REG_SPICNT  = 0x8802;
+    REG_SPIDATA = cmd;
+    while (REG_SPICNT & 0x80)
         ;
-    SPI_CR   = 0x8002;
-    SPI_DATA = data;
-    while (SPI_CR & 0x80)
+
+    REG_SPICNT  = 0x8002;
+    REG_SPIDATA = data;
+    while (REG_SPICNT & 0x80)
         ;
-    data   = SPI_DATA;
-    SPI_CR = 0;
-    return data;
+
+    int read_data = REG_SPIDATA;
+    REG_SPICNT    = 0;
+    return read_data;
 }
 
 #define LED_LONGBLINK  1
@@ -1124,7 +1127,7 @@ void Wifi_Init(u32 wifidata)
     if (REG_GPIO_WIFI)
         swiDelay(5 /*ms*/ * 134056);
 
-    POWERCNT7 |= 2; // enable power for the wifi
+    REG_POWERCNT |= 2; // enable power for the wifi
     WIFIWAITCNT =
         WIFI_RAM_N_10_CYCLES | WIFI_RAM_S_6_CYCLES | WIFI_IO_N_6_CYCLES | WIFI_IO_S_4_CYCLES;
 
@@ -1184,7 +1187,7 @@ void Wifi_Init(u32 wifidata)
 void Wifi_Deinit(void)
 {
     Wifi_Stop();
-    POWERCNT7 &= ~2;
+    REG_POWERCNT &= ~2;
 }
 
 void Wifi_Start(void)
