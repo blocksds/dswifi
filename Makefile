@@ -2,15 +2,6 @@
 #
 # SPDX-FileContributor: Antonio Niño Díaz, 2023
 
-# Defines
-# -------
-
-DSWIFI_MAJOR	:= 0
-DSWIFI_MINOR	:= 4
-DSWIFI_REVISION	:= 2
-VERSION		:= $(DSWIFI_MAJOR).$(DSWIFI_MINOR).$(DSWIFI_REVISION)
-VERSION_HEADER	:= include/dswifi_version.h
-
 # Tools
 # -----
 
@@ -33,19 +24,7 @@ endif
 
 .PHONY: all arm7 arm9 clean docs install
 
-all: $(VERSION_HEADER) arm9 arm7
-
-$(VERSION_HEADER): Makefile
-	@echo "#ifndef _dswifi_version_h_" > $@
-	@echo "#define _dswifi_version_h_" >> $@
-	@echo >> $@
-	@echo "#define DSWIFI_MAJOR    $(DSWIFI_MAJOR)" >> $@
-	@echo "#define DSWIFI_MINOR    $(DSWIFI_MINOR)" >> $@
-	@echo "#define DSWIFI_REVISION $(DSWIFI_REVISION)" >> $@
-	@echo >> $@
-	@echo '#define DSWIFI_VERSION "'$(DSWIFI_MAJOR).$(DSWIFI_MINOR).$(DSWIFI_REVISION)'"' >> $@
-	@echo >> $@
-	@echo "#endif // _dswifi_version_h_" >> $@
+all: arm9 arm7
 
 arm9:
 	@+$(MAKE) -f Makefile.arm9 --no-print-directory
@@ -57,7 +36,7 @@ arm7:
 
 clean:
 	@echo "  CLEAN"
-	@$(RM) $(VERSION_HEADER) lib build
+	@$(RM) lib build
 
 docs:
 	@echo "  DOXYGEN"
