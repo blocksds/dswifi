@@ -1,5 +1,4 @@
 build/
-include/dswifi_version.h
 lib/
 docs/
 warn.log
