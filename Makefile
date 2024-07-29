@@ -2,14 +2,6 @@
 #
 # SPDX-FileContributor: Antonio Niño Díaz, 2023
 
-# Defines
-# -------
-
-DSWIFI_MAJOR	:= 0
-DSWIFI_MINOR	:= 4
-DSWIFI_REVISION	:= 2
-VERSION		:= $(DSWIFI_MAJOR).$(DSWIFI_MINOR).$(DSWIFI_REVISION)
-
 # Tools
 # -----
 
