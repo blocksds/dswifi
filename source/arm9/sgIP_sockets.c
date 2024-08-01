@@ -364,6 +364,8 @@ int recv(int socket, void *data, int recvlength, int flags)
 int sendto(int socket, const void *data, int sendlength, int flags, const struct sockaddr *addr,
            int addr_len)
 {
+    (void)addr_len;
+
     if (socket < 1 || socket > SGIP_SOCKET_MAXSOCKETS)
         return -1;
     if (!addr)
@@ -519,6 +521,8 @@ int accept(int socket, struct sockaddr *addr, int *addr_len)
 
 int shutdown(int socket, int shutdown_type)
 {
+    (void)shutdown_type;
+
     if (socket < 1 || socket > SGIP_SOCKET_MAXSOCKETS)
         return SGIP_ERROR(EINVAL);
 
@@ -604,8 +608,11 @@ int ioctl(int socket, long cmd, void *arg)
                     retval = SGIP_ERROR(EINVAL);
                 }
             }
+            // TODO: Check if this needs to fall through
+            // fallthrough
         default:
             retval = SGIP_ERROR(EINVAL);
+            break;
     }
     SGIP_INTR_UNPROTECT();
     return retval;
@@ -613,11 +620,23 @@ int ioctl(int socket, long cmd, void *arg)
 
 int setsockopt(int socket, int level, int option_name, const void *data, int data_len)
 {
+    (void)socket;
+    (void)level;
+    (void)option_name;
+    (void)data;
+    (void)data_len;
+
     return 0;
 }
 
 int getsockopt(int socket, int level, int option_name, void *data, int *data_len)
 {
+    (void)socket;
+    (void)level;
+    (void)option_name;
+    (void)data;
+    (void)data_len;
+
     return 0;
 }
 

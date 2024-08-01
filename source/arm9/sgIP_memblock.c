@@ -358,5 +358,11 @@ int sgIP_memblock_CopyFromLinear(sgIP_memblock *mb, void *src_buf, int startbyte
 int sgIP_memblock_CopyBlock(sgIP_memblock *mb_src, sgIP_memblock *mb_dest, int start_src,
                             int start_dest, int copy_length)
 {
+    (void)mb_src;
+    (void)mb_dest;
+    (void)start_src;
+    (void)start_dest;
+    (void)copy_length;
+
     return 0;
 }

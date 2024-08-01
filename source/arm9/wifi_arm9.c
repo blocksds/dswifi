@@ -812,6 +812,8 @@ int Wifi_DisconnectAP(void)
 
 int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
+    (void)hw;
+
     // convert ethernet frame into wireless frame and output.
     // ethernet header: 6byte dest, 6byte src, 2byte protocol_id
     // assumes individual pbuf len is >=14 bytes, it's pretty likely ;) - also hopes pbuf len is a
@@ -1254,6 +1256,8 @@ void arm9_synctoarm7(void)
 
 void wifiValue32Handler(u32 value, void *data)
 {
+    (void)data;
+
     switch (value)
     {
         case WIFI_SYNC:

@@ -1650,6 +1650,8 @@ int Wifi_SendPSPollFrame(void)
 
 int Wifi_ProcessReceivedFrame(int macbase, int framelen)
 {
+    (void)framelen;
+
     Wifi_RxHeader packetheader;
     u16 control_802;
     Wifi_MACCopy((u16 *)&packetheader, macbase, 0, 12);
@@ -2207,12 +2209,16 @@ void Wifi_SetSyncHandler(WifiSyncHandler sh)
 
 static void wifiAddressHandler(void *address, void *userdata)
 {
+    (void)userdata;
+
     irqEnable(IRQ_WIFI);
     Wifi_Init((u32)address);
 }
 
 static void wifiValue32Handler(u32 value, void *data)
 {
+    (void)data;
+
     switch (value)
     {
         case WIFI_DISABLE:

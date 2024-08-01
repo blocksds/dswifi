@@ -242,6 +242,8 @@ int sgIP_UDP_Bind(sgIP_Record_UDP *rec, int srcport, unsigned long srcip)
 int sgIP_UDP_RecvFrom(sgIP_Record_UDP *rec, char *destbuf, int buflength, int flags,
                       unsigned long *sender_ip, unsigned short *sender_port)
 {
+    (void)flags;
+
     if (!rec || !destbuf || !sender_ip || !sender_port || buflength == 0)
         return SGIP_ERROR(EINVAL);
 
@@ -289,5 +291,7 @@ int sgIP_UDP_RecvFrom(sgIP_Record_UDP *rec, char *destbuf, int buflength, int fl
 int sgIP_UDP_SendTo(sgIP_Record_UDP *rec, const char *buf, int buflength, int flags,
                     unsigned long dest_ip, int dest_port)
 {
+    (void)flags;
+
     return sgIP_UDP_SendPacket(rec, buf, buflength, dest_ip, dest_port);
 }

@@ -1104,6 +1104,8 @@ int sgIP_TCP_Connect(sgIP_Record_TCP *rec, unsigned long destip, int destport)
 
 int sgIP_TCP_Send(sgIP_Record_TCP *rec, const char *datatosend, int datalength, int flags)
 {
+    (void)flags;
+
     if (!rec || !datatosend)
         return SGIP_ERROR(EINVAL);
     if (rec->want_shutdown)

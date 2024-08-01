@@ -63,6 +63,10 @@ int sgIP_is_broadcast_address(sgIP_Hub_HWInterface *hw, unsigned long ipaddr)
 // this function will protect against malformed packets that could cause internal problems.
 int sgIP_ARP_Check_isok(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb, sgIP_Header_ARP *arp)
 {
+    (void)hw;
+    (void)mb;
+    (void)arp;
+
     return 1; // doesn't do anything yet ;)
 }
 
@@ -123,6 +127,9 @@ void sgIP_ARP_FlushInterface(sgIP_Hub_HWInterface *hw)
 // don't *really* need to process this, but it helps.
 int sgIP_ARP_ProcessIPFrame(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
+    (void)hw;
+    (void)mb;
+
     return 0;
 }
 

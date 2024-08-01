@@ -202,6 +202,8 @@ int sgIP_Hub_SendRawPacket(sgIP_Hub_HWInterface *hw, sgIP_memblock *packet)
 
 int sgIP_Hub_IPMaxMessageSize(unsigned long ipaddr)
 {
+    (void)ipaddr;
+
     return SGIP_MTU_OVERRIDE; // hack - make this more accurate soon!
 }
 

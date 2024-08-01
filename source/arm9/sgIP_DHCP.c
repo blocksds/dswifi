@@ -338,9 +338,12 @@ int sgIP_DHCP_Update(void)
                             i += j - 4 * n;
                             break;
                         }
+                        // TODO: Check if this should fall through or not
+                        // fallthrough
                     default:
                         j = p->options[i++];
                         i += j;
+                        break;
                 }
             }
             if (l == -1)
