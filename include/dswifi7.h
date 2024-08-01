@@ -27,19 +27,26 @@ typedef void (*WifiSyncHandler)(void);
 
 /// Reads an arbitrary amount of data from the firmware flash chip.
 ///
-/// @param address     Offset to start reading from in the flash chip.
-/// @param destination Pointer to a memory buffer to hold incoming data.
-/// @param length      The number of bytes to read.
+/// @param address
+///     Offset to start reading from in the flash chip.
+/// @param destination
+///     Pointer to a memory buffer to hold incoming data.
+/// @param length
+///     The number of bytes to read.
 void Read_Flash(int address, char *destination, int length);
 
 /// Reads or writes a value to the DS's power chip.
 ///
-/// @param cmd  The byte-long command to send to the chip (top bit 1=read,
-///             0=write - other bits = register ID to read/write)
-/// @param data The data to write to the chip (if sending a read command,
-///             this should be zero)
-/// @return     The data read returned by the serial connection; only really
-///             useful when reading.
+/// @param cmd
+///     The byte-long command to send to the chip (top bit 1=read, 0=write -
+///     other bits = register ID to read/write)
+/// @param data
+///     The data to write to the chip (if sending a read command, this should be
+///     zero)
+///
+/// @return
+///     The data read returned by the serial connection; only really useful when
+///     reading.
 int PowerChip_ReadWrite(int cmd, int data);
 
 /// Handler for the ARM7 WiFi interrupt.
@@ -61,8 +68,9 @@ void Wifi_Update(void);
 /// This function also enables power to the WiFi system, which will shorten
 /// battery life.
 ///
-/// @param WifiData You must pass the 32bit value returned by the call to
-///                 Wifi_Init on the ARM9.
+/// @param WifiData
+///     You must pass the 32bit value returned by the call to Wifi_Init() on the
+///     ARM9.
 void Wifi_Init(unsigned long WifiData);
 
 /// In case it is necessary, this function cuts power to the WiFi system.
@@ -76,7 +84,8 @@ void Wifi_Sync(void);
 /// Call this function to request notification of when the ARM9-side Wifi_Sync()
 /// function should be called.
 ///
-/// @param sh Pointer to the function to be called for notification.
+/// @param sh
+///     Pointer to the function to be called for notification.
 void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// Setup system FIFO handler for WiFi library messages.
