@@ -278,7 +278,7 @@ int connect(int socket, const struct sockaddr *addr, int addr_len)
                 if (socketlist[socket].flags & SGIP_SOCKET_FLAG_NONBLOCKING)
                 {
                     retval = -1;
-                    SGIP_ERROR(EINPROGRESS);
+                    (void)SGIP_ERROR(EINPROGRESS);
                     break;
                 }
                 SGIP_INTR_UNPROTECT();
