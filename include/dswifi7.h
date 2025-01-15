@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 #include "dswifi_version.h"
 
 /// Wifi Sync Handler function.
@@ -71,7 +72,7 @@ void Wifi_Update(void);
 /// @param WifiData
 ///     You must pass the 32bit value returned by the call to Wifi_Init() on the
 ///     ARM9.
-void Wifi_Init(unsigned long WifiData);
+void Wifi_Init(uint32_t WifiData);
 
 /// In case it is necessary, this function cuts power to the WiFi system.
 ///

@@ -203,22 +203,22 @@ extern const char *ASSOCSTATUS_STRINGS[];
 // most user code will never need to know about the WIFI_TXHEADER or WIFI_RXHEADER
 typedef struct WIFI_TXHEADER
 {
-    u16 enable_flags;
-    u16 unknown;
-    u16 countup;
-    u16 beaconfreq;
-    u16 tx_rate;
-    u16 tx_length;
+    uint16_t enable_flags;
+    uint16_t unknown;
+    uint16_t countup;
+    uint16_t beaconfreq;
+    uint16_t tx_rate;
+    uint16_t tx_length;
 } Wifi_TxHeader;
 
 typedef struct WIFI_RXHEADER
 {
-    u16 a;
-    u16 b;
-    u16 c;
-    u16 d;
-    u16 byteLength;
-    u16 rssi_;
+    uint16_t a;
+    uint16_t b;
+    uint16_t c;
+    uint16_t d;
+    uint16_t byteLength;
+    uint16_t rssi_;
 } Wifi_RxHeader;
 
 /// Structure that defines how to connect to an access point.
@@ -236,34 +236,34 @@ typedef struct WIFI_ACCESSPOINT
     char ssid_len;
     /// BSSID is the AP's SSID. Setting it to all 00's indicates this is not
     /// known and it will be ignored [REQUIRED]
-    u8 bssid[6];
+    uint8_t bssid[6];
     /// MAC address of the "AP" is only necessary in ad-hoc mode. [generally not
     /// required to connect].
-    u8 macaddr[6];
+    uint8_t macaddr[6];
     /// Max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented
     /// as 11, or 0x0B [not required to connect]
-    u16 maxrate;
+    uint16_t maxrate;
     // Internal information about how recently a beacon has been received [not
     // required to connect].
-    u32 timectr;
+    uint32_t timectr;
     /// Running average of the recent RSSI values for this AP, will be set to 0
     /// after not receiving beacons for a while. [not required to connect]
-    u16 rssi;
+    uint16_t rssi;
     /// Flags indicating various parameters for the AP. [not required, but the
     /// WFLAG_APDATA_ADHOC flag will be used]
-    u16 flags;
+    uint16_t flags;
     /// Internal data word used to lock the record to guarantee data coherence.
     /// [not required to connect]
-    u32 spinlock;
+    uint32_t spinlock;
     /// Valid channels are 1-13, setting the channel to 0 will indicate the
     /// system should search. [REQUIRED]
-    u8 channel;
+    uint8_t channel;
     /// rssi_past indicates the RSSI values for the last 8 beacons received ([7]
     /// is the most recent) [not required to connect]
-    u8 rssi_past[8];
+    uint8_t rssi_past[8];
     /// List of the base rates "required" by the AP (same format as maxrate).
     /// Zero-terminated list [not required to connect]
-    u8 base_rates[16];
+    uint8_t base_rates[16];
 } Wifi_AccessPoint;
 
 /// Wifi Packet Handler function
@@ -293,7 +293,7 @@ typedef void (*WifiSyncHandler)(void);
 ///
 /// @return
 ///     A 32bit value that *must* be passed to ARM7.
-unsigned long Wifi_Init(int initflags);
+uint32_t Wifi_Init(int initflags);
 
 /// Verifies when the ARM7 has been successfully initialized.
 ///
@@ -477,7 +477,7 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
 ///
 /// @return
 ///     The requested stat, or 0 for failure.
-u32 Wifi_GetStats(int statnum);
+uint32_t Wifi_GetStats(int statnum);
 
 //////////////////////////////////////////////////////////////////////////
 // Raw Send/Receive functions

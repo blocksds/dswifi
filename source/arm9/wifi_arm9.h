@@ -47,7 +47,7 @@ extern "C" {
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
 
-unsigned long Wifi_Init(int initflags);
+uint32_t Wifi_Init(int initflags);
 bool Wifi_InitDefault(bool useFirmwareSettings);
 int Wifi_CheckInit(void);
 

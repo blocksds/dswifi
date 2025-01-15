@@ -957,7 +957,7 @@ void Wifi_Timer(int num_ms)
 
 #endif
 
-unsigned long Wifi_Init(int initflags)
+u32 Wifi_Init(int initflags)
 {
     if (Wifi_Data_Struct == NULL)
     {
