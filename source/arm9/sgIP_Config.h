@@ -7,6 +7,10 @@
 #ifndef SGIP_CONFIG_H
 #define SGIP_CONFIG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define __LINUX_ERRNO_EXTENSIONS__
 #include <errno.h>
 
@@ -198,10 +202,6 @@ extern int sgIP_errno;
 //////////////////////////////////////////////////////////////////////////
 // External option-based dependencies
 #include <nds/interrupts.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #ifdef SGIP_INTERRUPT_THREADING_MODEL
 void sgIP_IntrWaitEvent(void);

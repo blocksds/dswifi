@@ -7,6 +7,10 @@
 #ifndef SGIP_DHCP_H
 #define SGIP_DHCP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_Hub.h"
 
@@ -46,10 +50,6 @@ enum SGIP_DHCP_STATUS
 #define DHCP_TYPE_REQUEST  3
 #define DHCP_TYPE_ACK      5
 #define DHCP_TYPE_RELEASE  7
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_DHCP_Init(void);
 

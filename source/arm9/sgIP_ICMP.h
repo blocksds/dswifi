@@ -7,6 +7,10 @@
 #ifndef SGIP_ICMP_H
 #define SGIP_ICMP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_memblock.h"
 
@@ -16,10 +20,6 @@ typedef struct SGIP_HEADER_ICMP
     unsigned short checksum;
     unsigned long xtra;
 } sgIP_Header_ICMP;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_ICMP_Init(void);
 

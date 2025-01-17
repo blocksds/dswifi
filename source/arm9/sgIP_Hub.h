@@ -7,6 +7,10 @@
 #ifndef SGIP_HUB_H
 #define SGIP_HUB_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_memblock.h"
 
@@ -57,10 +61,6 @@ typedef struct SGIP_HEADER_ETHERNET
 
 #define ntohs(num) htons(num)
 #define ntohl(num) htonl(num)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_Hub_Init(void);
 

@@ -7,6 +7,10 @@
 #ifndef SGIP_TCP_H
 #define SGIP_TCP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_memblock.h"
 
@@ -88,10 +92,6 @@ typedef struct SGIP_TCP_SYNCOOKIE
     unsigned long timenext, timebackoff;
     sgIP_Record_TCP *linked; // parent listening connection
 } sgIP_TCP_SYNCookie;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_TCP_Init(void);
 void sgIP_TCP_Timer(void);

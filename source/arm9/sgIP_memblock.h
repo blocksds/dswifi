@@ -7,6 +7,10 @@
 #ifndef SGIP_MEMBLOCK_H
 #define SGIP_MEMBLOCK_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 
 typedef struct SGIP_MEMBLOCK
@@ -23,10 +27,6 @@ typedef struct SGIP_MEMBLOCK
 #define SGIP_MEMBLOCK_HEADERSIZE        16
 #define SGIP_MEMBLOCK_INTERNALSIZE      (SGIP_MEMBLOCK_DATASIZE - 16)
 #define SGIP_MEMBLOCK_FIRSTINTERNALSIZE (SGIP_MEMBLOCK_DATASIZE - 16 - SGIP_MAXHWHEADER)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_memblock_Init(void);
 sgIP_memblock *sgIP_memblock_alloc(int packetsize);

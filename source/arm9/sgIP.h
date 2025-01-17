@@ -7,6 +7,10 @@
 #ifndef SGIP_H
 #define SGIP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_ARP.h"
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_DHCP.h"
@@ -20,10 +24,6 @@
 #include "arm9/sgIP_sockets.h"
 
 extern volatile unsigned long sgIP_timems;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_Init(void);
 void sgIP_Timer(int num_ms);

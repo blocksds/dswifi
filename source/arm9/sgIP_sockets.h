@@ -7,6 +7,10 @@
 #ifndef SGIP_SOCKETS_H
 #define SGIP_SOCKETS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -33,10 +37,6 @@ typedef struct SGIP_SOCKET_DATA
     unsigned int flags;
     void *conn_ptr;
 } sgIP_socket_data;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_sockets_Init(void);
 void sgIP_sockets_Timer1000ms(void);

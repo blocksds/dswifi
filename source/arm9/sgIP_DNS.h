@@ -7,6 +7,10 @@
 #ifndef SGIP_DNS_H
 #define SGIP_DNS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 
 #define SGIP_DNS_FLAG_ACTIVE    1
@@ -34,10 +38,6 @@ typedef struct SGIP_DNS_HOSTENT
     int h_length;
     char **h_addr_list;
 } sgIP_DNS_Hostent;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_DNS_Init(void);
 void sgIP_DNS_Timer1000ms(void);

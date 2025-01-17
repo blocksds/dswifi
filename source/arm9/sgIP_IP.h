@@ -7,6 +7,10 @@
 #ifndef SGIP_IP_H
 #define SGIP_IP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_memblock.h"
 
 #define PROTOCOL_IP_ICMP 1
@@ -36,10 +40,6 @@ typedef struct SGIP_HEADER_IP
     unsigned long dest_address;     // dest address is 32bit IP address
     unsigned char options[4];       // optional options come here.
 } sgIP_Header_IP;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int sgIP_IP_ReceivePacket(sgIP_memblock *mb);
 int sgIP_IP_MaxContentsSize(unsigned long destip);

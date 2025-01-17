@@ -8,6 +8,10 @@
 #ifndef WIFI_ARM9_H
 #define WIFI_ARM9_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <nds/ndstypes.h>
 
 #include "common/wifi_shared.h"
@@ -39,10 +43,6 @@ typedef void (*WifiPacketHandler)(int, int);
 // synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
 // send a message via the fifo to the arm7, which will call Wifi_Sync() on arm7.
 typedef void (*WifiSyncHandler)(void);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);

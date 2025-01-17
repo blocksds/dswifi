@@ -11,7 +11,13 @@
 #    error Wifi is only accessible from the ARM7
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <nds.h>
+
+#include "common/wifi_shared.h"
 
 // keepalive updated in the update handler, which should be called in vblank
 // keepalive set for 2 minutes.
@@ -61,16 +67,10 @@
 #define W_RFSIODATA1 (*((volatile u16 *)(0x0480017E)))
 #define W_RFSIOBUSY  (*((volatile u16 *)(0x04800180)))
 
-#include "common/wifi_shared.h"
-
 // Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to
 // synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
 // send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.
 typedef void (*WifiSyncHandler)(void);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 int Wifi_BBRead(int a);
 int Wifi_BBWrite(int a, int b);

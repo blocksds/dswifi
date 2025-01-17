@@ -7,6 +7,10 @@
 #ifndef SGIP_ARP_H
 #define SGIP_ARP_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "arm9/sgIP_Config.h"
 #include "arm9/sgIP_Hub.h"
 #include "arm9/sgIP_memblock.h"
@@ -36,10 +40,6 @@ typedef struct SGIP_HEADER_ARP
 } sgIP_Header_ARP;
 
 #define SGIP_HEADER_ARP_BASESIZE 8
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void sgIP_ARP_Init(void);
 void sgIP_ARP_Timer100ms(void);
