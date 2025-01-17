@@ -214,34 +214,34 @@ void Wifi_RxSetup(void)
     switch(W_MODE_WEP & 7)
     {
         case 0:
-            WIFI_REG(0x8050) = 0x4794;
-            WIFI_REG(0x8056) = 0x03CA;
+            W_RXBUF_BEGIN = 0x4794;
+            W_RXBUF_WR_ADDR = 0x03CA;
             // 17CC ?
             break;
         case 1:
-            WIFI_REG(0x8050) = 0x50C4;
-            WIFI_REG(0x8056) = 0x0862;
+            W_RXBUF_BEGIN = 0x50C4;
+            W_RXBUF_WR_ADDR = 0x0862;
             // 0E9C ?
             break;
         case 2:
-            WIFI_REG(0x8050) = 0x4BFC;
-            WIFI_REG(0x8056) = 0x05FE;
+            W_RXBUF_BEGIN = 0x4BFC;
+            W_RXBUF_WR_ADDR = 0x05FE;
             // 1364 ?
             break;
         case 3:
-            WIFI_REG(0x8050) = 0x4794;
-            WIFI_REG(0x8056) = 0x03CA;
+            W_RXBUF_BEGIN = 0x4794;
+            W_RXBUF_WR_ADDR = 0x03CA;
             // 17CC ?
             break;
     }
 #endif
-    WIFI_REG(0x8050) = 0x4C00;
-    WIFI_REG(0x8056) = 0x0600;
+    W_RXBUF_BEGIN    = 0x4C00;
+    W_RXBUF_WR_ADDR  = 0x0600;
 
-    WIFI_REG(0x8052) = 0x5F60;
-    WIFI_REG(0x805A) = (WIFI_REG(0x8050) & 0x3FFF) >> 1;
-    WIFI_REG(0x8062) = 0x5F5E;
-    W_RXCNT          = 0x8001;
+    W_RXBUF_END     = 0x5F60;
+    W_RXBUF_READCSR = (W_RXBUF_BEGIN & 0x3FFF) >> 1;
+    W_RXBUF_GAP     = 0x5F5E;
+    W_RXCNT         = 0x8001;
 }
 
 void Wifi_WakeUp(void)
@@ -294,8 +294,8 @@ int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
 u16 Wifi_MACRead(u32 MAC_Base, u32 MAC_Offset)
 {
     MAC_Base += MAC_Offset;
-    if (MAC_Base >= (WIFI_REG(0x52) & 0x1FFE))
-        MAC_Base -= ((WIFI_REG(0x52) & 0x1FFE) - (WIFI_REG(0x50) & 0x1FFE));
+    if (MAC_Base >= (W_RXBUF_END & 0x1FFE))
+        MAC_Base -= (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
     return WIFI_REG(0x4000 + MAC_Base);
 }
 
@@ -303,8 +303,8 @@ void Wifi_MACCopy(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
 {
     int endrange, subval;
     int thislength;
-    endrange = (WIFI_REG(0x52) & 0x1FFE);
-    subval   = ((WIFI_REG(0x52) & 0x1FFE) - (WIFI_REG(0x50) & 0x1FFE));
+    endrange = (W_RXBUF_END & 0x1FFE);
+    subval   = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
     MAC_Base += MAC_Offset;
     if (MAC_Base >= endrange)
         MAC_Base -= subval;
@@ -328,8 +328,8 @@ void Wifi_MACWrite(u16 *src, u32 MAC_Base, u32 MAC_Offset, u32 length)
 {
     int endrange, subval;
     int thislength;
-    endrange = (WIFI_REG(0x52) & 0x1FFE);
-    subval   = ((WIFI_REG(0x52) & 0x1FFE) - (WIFI_REG(0x50) & 0x1FFE));
+    endrange = (W_RXBUF_END & 0x1FFE);
+    subval   = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
     MAC_Base += MAC_Offset;
     if (MAC_Base >= endrange)
         MAC_Base -= subval;
@@ -523,9 +523,9 @@ void Wifi_Intr_RxEnd(void)
 
     int cut  = 0;
 
-    while (WIFI_REG(0x54) != WIFI_REG(0x5A))
+    while (W_RXBUF_WRCSR != W_RXBUF_READCSR)
     {
-        int base           = WIFI_REG(0x5A) << 1;
+        int base           = W_RXBUF_READCSR << 1;
         int packetlen      = Wifi_MACRead(base, 8);
         int full_packetlen = 12 + ((packetlen + 3) & (~3));
         WifiData->stats[WSTAT_RXPACKETS]++;
@@ -544,9 +544,9 @@ void Wifi_Intr_RxEnd(void)
         }
 
         base += full_packetlen;
-        if (base >= (WIFI_REG(0x52) & 0x1FFE))
-            base -= ((WIFI_REG(0x52) & 0x1FFE) - (WIFI_REG(0x50) & 0x1FFE));
-        WIFI_REG(0x5A) = base >> 1;
+        if (base >= (W_RXBUF_END & 0x1FFE))
+            base -= (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
+        W_RXBUF_READCSR = base >> 1;
 
         if (cut++ > 5)
             break;

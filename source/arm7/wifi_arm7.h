@@ -79,6 +79,23 @@ extern "C" {
 #define W_RANDOM            WIFI_REG(0x8044)
 #define W_POWER_UNKNOWN     WIFI_REG(0x8048)
 
+// Receive Control/Memory
+// ----------------------
+
+#define W_RXBUF_BEGIN       WIFI_REG(0x8050)
+#define W_RXBUF_END         WIFI_REG(0x8052)
+#define W_RXBUF_WRCSR       WIFI_REG(0x8054)
+#define W_RXBUF_WR_ADDR     WIFI_REG(0x8056)
+#define W_RXBUF_RD_ADDR     WIFI_REG(0x8058)
+#define W_RXBUF_READCSR     WIFI_REG(0x805A)
+#define W_RXBUF_COUNT       WIFI_REG(0x805C)
+#define W_RXBUF_RD_DATA     WIFI_REG(0x8060)
+#define W_RXBUF_GAP         WIFI_REG(0x8062)
+#define W_RXBUF_GAPDISP     WIFI_REG(0x8064)
+
+// Registers TODO
+// --------------
+
 #define W_BBSIOCNT      (*((vu16 *)(0x04800158)))
 #define W_BBSIOWRITE    (*((vu16 *)(0x0480015A)))
 #define W_BBSIOREAD     (*((vu16 *)(0x0480015C)))
