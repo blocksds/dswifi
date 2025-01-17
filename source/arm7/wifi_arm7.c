@@ -10,80 +10,12 @@
 #include "arm7/wifi_flash.h"
 #include "common/spinlock.h"
 
-volatile Wifi_MainStruct *WifiData = 0;
-WifiSyncHandler synchandler        = 0;
-int keepalive_time                 = 0;
-int chdata_save5                   = 0;
+static volatile Wifi_MainStruct *WifiData = 0;
 
-//////////////////////////////////////////////////////////////////////////
-//
-// WFC data loading
-//
+WifiSyncHandler synchandler = 0;
 
-int crc16_slow(u8 *data, int length)
-{
-    int crc = 0x0000;
-    for (int i = 0; i < length; i++)
-    {
-        crc ^= data[i];
-        for (int j = 0; j < 8; j++)
-        {
-            if (crc & 1)
-                crc = (crc >> 1) ^ 0xA001;
-            else
-                crc = crc >> 1;
-        }
-    }
-    crc &= 0xFFFF;
-    return crc;
-}
-
-void GetWfcSettings(void)
-{
-    u8 data[256];
-    int i, n;
-    unsigned long s;
-
-    int c       = 0;
-    u32 wfcBase = Wifi_FlashReadBytes(0x20, 2) * 8 - 0x400;
-    for (i = 0; i < 3; i++)
-        WifiData->wfc_enable[i] = 0;
-    for (i = 0; i < 3; i++)
-    {
-        readFirmware(wfcBase + (i << 8), (char *)data, 256);
-        // check for validity (crc16)
-        if (crc16_slow(data, 256) == 0x0000 && data[0xE7] == 0x00)
-        {
-            // passed the test
-            WifiData->wfc_enable[c]     = 0x80 | (data[0xE6] & 0x0F);
-            WifiData->wfc_ap[c].channel = 0;
-            for (n = 0; n < 6; n++)
-                WifiData->wfc_ap[c].bssid[n] = 0;
-            for (n = 0; n < 16; n++)
-                WifiData->wfc_wepkey[c][n] = data[0x80 + n];
-            for (n = 0; n < 32; n++)
-                WifiData->wfc_ap[c].ssid[n] = data[0x40 + n];
-            for (n = 0; n < 32; n++)
-                if (!data[0x40 + n])
-                    break;
-            WifiData->wfc_ap[c].ssid_len = n;
-            WifiData->wfc_config[c][0]   = ((unsigned long *)(data + 0xC0))[0];
-            WifiData->wfc_config[c][1]   = ((unsigned long *)(data + 0xC0))[1];
-            WifiData->wfc_config[c][3]   = ((unsigned long *)(data + 0xC0))[2];
-            WifiData->wfc_config[c][4]   = ((unsigned long *)(data + 0xC0))[3];
-
-            s = 0;
-            for (n = 0; n < data[0xD0]; n++)
-            {
-                s |= 1 << (31 - n);
-            }
-
-            s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl
-            WifiData->wfc_config[c][2] = s;
-            c++;
-        }
-    }
-}
+int keepalive_time = 0;
+int chdata_save5   = 0;
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -1060,7 +992,7 @@ void Wifi_Init(u32 wifidata)
         WIFI_REG(i) = 0;
 
     // load in the WFC data.
-    GetWfcSettings();
+    Wifi_GetWfcSettings(WifiData);
 
     for (i = 0; i < 3; i++)
         WifiData->MacAddr[i] = Wifi_FlashReadHWord(0x36 + i * 2);
