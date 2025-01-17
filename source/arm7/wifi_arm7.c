@@ -6,10 +6,9 @@
 
 #include <nds.h>
 
-#include "spinlock.h" // .h file with code for spinlocking in it.
-
-#include "wifi_arm7.h"
-#include "wifi_flash.h"
+#include "arm7/wifi_arm7.h"
+#include "arm7/wifi_flash.h"
+#include "common/spinlock.h"
 
 volatile Wifi_MainStruct *WifiData = 0;
 WifiSyncHandler synchandler        = 0;

@@ -7,7 +7,7 @@
 #ifndef SGIP_MEMBLOCK_H
 #define SGIP_MEMBLOCK_H
 
-#include "sgIP_Config.h"
+#include "arm9/sgIP_Config.h"
 
 typedef struct SGIP_MEMBLOCK
 {

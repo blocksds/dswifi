@@ -6,8 +6,8 @@
 
 #include <stddef.h>
 
-#include "sgIP_ARP.h"
-#include "sgIP_Hub.h"
+#include "arm9/sgIP_ARP.h"
+#include "arm9/sgIP_Hub.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Global vars

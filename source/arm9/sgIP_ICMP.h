@@ -7,8 +7,8 @@
 #ifndef SGIP_ICMP_H
 #define SGIP_ICMP_H
 
-#include "sgIP_Config.h"
-#include "sgIP_memblock.h"
+#include "arm9/sgIP_Config.h"
+#include "arm9/sgIP_memblock.h"
 
 typedef struct SGIP_HEADER_ICMP
 {

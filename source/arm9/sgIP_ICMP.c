@@ -4,9 +4,9 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "sgIP_Hub.h"
-#include "sgIP_ICMP.h"
-#include "sgIP_IP.h"
+#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP_ICMP.h"
+#include "arm9/sgIP_IP.h"
 
 void sgIP_ICMP_Init(void)
 {

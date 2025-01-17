@@ -7,7 +7,7 @@
 #ifndef SGIP_IP_H
 #define SGIP_IP_H
 
-#include "sgIP_memblock.h"
+#include "arm9/sgIP_memblock.h"
 
 #define PROTOCOL_IP_ICMP 1
 #define PROTOCOL_IP_TCP  6

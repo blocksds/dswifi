@@ -7,8 +7,8 @@
 #ifndef SGIP_UDP_H
 #define SGIP_UDP_H
 
-#include "sgIP_Config.h"
-#include "sgIP_memblock.h"
+#include "arm9/sgIP_Config.h"
+#include "arm9/sgIP_memblock.h"
 
 enum SGIP_UDP_STATE
 {

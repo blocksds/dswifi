@@ -7,8 +7,8 @@
 #ifndef SGIP_DHCP_H
 #define SGIP_DHCP_H
 
-#include "sgIP_Config.h"
-#include "sgIP_Hub.h"
+#include "arm9/sgIP_Config.h"
+#include "arm9/sgIP_Hub.h"
 
 // "DHCP Server" port is 67, "DHCP Client" port is 68
 // DHCP messages broadcast by a client prior to that client obtaining its IP address must have the

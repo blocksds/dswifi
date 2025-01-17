@@ -7,10 +7,11 @@
 #ifndef SGIP_SOCKETS_H
 #define SGIP_SOCKETS_H
 
-#include "netdb.h"
-#include "netinet/in.h"
-#include "sgIP_Config.h"
-#include "sys/socket.h"
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+#include "arm9/sgIP_Config.h"
 
 #define SGIP_SOCKET_FLAG_ALLOCATED    0x8000
 #define SGIP_SOCKET_FLAG_NONBLOCKING  0x4000

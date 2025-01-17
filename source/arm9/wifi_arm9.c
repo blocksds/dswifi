@@ -12,11 +12,11 @@
 
 #include <nds.h>
 
-#include "wifi_arm9.h"
+#include "arm9/wifi_arm9.h"
 
 #ifdef WIFI_USE_TCP_SGIP
 
-#    include "sgIP.h"
+#    include "arm9/sgIP.h"
 
 sgIP_Hub_HWInterface *wifi_hw;
 

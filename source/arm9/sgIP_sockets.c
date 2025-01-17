@@ -4,11 +4,11 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "sgIP_DNS.h"
-#include "sgIP_ICMP.h"
-#include "sgIP_TCP.h"
-#include "sgIP_UDP.h"
-#include "sgIP_sockets.h"
+#include "arm9/sgIP_DNS.h"
+#include "arm9/sgIP_ICMP.h"
+#include "arm9/sgIP_TCP.h"
+#include "arm9/sgIP_UDP.h"
+#include "arm9/sgIP_sockets.h"
 
 sgIP_socket_data socketlist[SGIP_SOCKET_MAXSOCKETS];
 extern unsigned long sgIP_timems;

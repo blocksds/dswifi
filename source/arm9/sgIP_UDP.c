@@ -4,9 +4,9 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "sgIP_Hub.h"
-#include "sgIP_IP.h"
-#include "sgIP_UDP.h"
+#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP_IP.h"
+#include "arm9/sgIP_UDP.h"
 
 sgIP_Record_UDP *udprecords;
 int udpport_counter;

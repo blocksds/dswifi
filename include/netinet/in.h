@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "sys/socket.h"
+#include <sys/socket.h>
 
 #define INADDR_ANY       0x00000000
 #define INADDR_BROADCAST 0xFFFFFFFF

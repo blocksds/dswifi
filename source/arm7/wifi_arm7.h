@@ -11,6 +11,8 @@
 #    error Wifi is only accessible from the ARM7
 #endif
 
+#include <nds.h>
+
 // keepalive updated in the update handler, which should be called in vblank
 // keepalive set for 2 minutes.
 #define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
@@ -59,7 +61,7 @@
 #define W_RFSIODATA1 (*((volatile u16 *)(0x0480017E)))
 #define W_RFSIOBUSY  (*((volatile u16 *)(0x04800180)))
 
-#include "wifi_shared.h"
+#include "common/wifi_shared.h"
 
 extern volatile Wifi_MainStruct *WifiData;
 

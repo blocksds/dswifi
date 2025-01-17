@@ -4,14 +4,14 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <netinet/in.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 
-#include "netinet/in.h"
-#include "sgIP_DNS.h"
-#include "sgIP_Hub.h"
-#include "sys/socket.h"
+#include "arm9/sgIP_DNS.h"
+#include "arm9/sgIP_Hub.h"
 
 int dns_sock;
 int time_count;

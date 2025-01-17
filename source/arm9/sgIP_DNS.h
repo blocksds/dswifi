@@ -7,7 +7,7 @@
 #ifndef SGIP_DNS_H
 #define SGIP_DNS_H
 
-#include "sgIP_Config.h"
+#include "arm9/sgIP_Config.h"
 
 #define SGIP_DNS_FLAG_ACTIVE    1
 #define SGIP_DNS_FLAG_RESOLVED  2

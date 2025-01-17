@@ -4,10 +4,11 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "sgIP_Hub.h"
-#include "sgIP_IP.h"
-#include "sgIP_TCP.h"
-#include "sys/socket.h"
+#include <sys/socket.h>
+
+#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP_IP.h"
+#include "arm9/sgIP_TCP.h"
 
 sgIP_Record_TCP *tcprecords;
 int port_counter;

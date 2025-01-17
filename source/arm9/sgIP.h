@@ -7,17 +7,17 @@
 #ifndef SGIP_H
 #define SGIP_H
 
-#include "sgIP_ARP.h"
-#include "sgIP_Config.h"
-#include "sgIP_DHCP.h"
-#include "sgIP_DNS.h"
-#include "sgIP_Hub.h"
-#include "sgIP_ICMP.h"
-#include "sgIP_IP.h"
-#include "sgIP_TCP.h"
-#include "sgIP_UDP.h"
-#include "sgIP_memblock.h"
-#include "sgIP_sockets.h"
+#include "arm9/sgIP_ARP.h"
+#include "arm9/sgIP_Config.h"
+#include "arm9/sgIP_DHCP.h"
+#include "arm9/sgIP_DNS.h"
+#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP_ICMP.h"
+#include "arm9/sgIP_IP.h"
+#include "arm9/sgIP_TCP.h"
+#include "arm9/sgIP_UDP.h"
+#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP_sockets.h"
 
 extern volatile unsigned long sgIP_timems;
 
