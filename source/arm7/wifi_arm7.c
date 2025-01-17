@@ -131,54 +131,18 @@ void Wifi_RFWrite(int writedata)
         ;
 }
 
-int PowerChip_ReadWrite(int cmd, int data)
-{
-    if (cmd & 0x80)
-        data = 0;
-
-    while (REG_SPICNT & 0x80)
-        ;
-
-    REG_SPICNT  = 0x8802;
-    REG_SPIDATA = cmd;
-    while (REG_SPICNT & 0x80)
-        ;
-
-    REG_SPICNT  = 0x8002;
-    REG_SPIDATA = data;
-    while (REG_SPICNT & 0x80)
-        ;
-
-    int read_data = REG_SPIDATA;
-    REG_SPICNT    = 0;
-    return read_data;
-}
-
-#define LED_LONGBLINK  1
-#define LED_SHORTBLINK 3
-#define LED_ON         0
-int led_state = 0;
-
-void SetLedState(int state)
-{
-    if (state > 3 || state < 0)
-        return;
-
-    if (state != led_state)
-    {
-        led_state = state;
-
-        int i = PowerChip_ReadWrite(0x80, 0);
-        i     = i & 0xCF;
-        i |= state << 4;
-        PowerChip_ReadWrite(0, i);
-    }
-}
+static int wifi_led_state = 0;
 
 void ProxySetLedState(int state)
 {
     if (WifiData->flags9 & WFLAG_ARM9_USELED)
-        SetLedState(state);
+    {
+        if (wifi_led_state != state)
+        {
+            wifi_led_state = state;
+            ledBlink(state);
+        }
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -848,7 +812,7 @@ void Wifi_Update(void)
     switch (WifiData->curMode)
     {
         case WIFIMODE_DISABLED:
-            ProxySetLedState(LED_ON);
+            ProxySetLedState(LED_ALWAYS_ON);
             if (WifiData->reqMode != WIFIMODE_DISABLED)
             {
                 Wifi_Start();
@@ -857,7 +821,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_NORMAL: // main switcher function
-            ProxySetLedState(LED_LONGBLINK);
+            ProxySetLedState(LED_BLINK_SLOW);
             if (WifiData->reqMode == WIFIMODE_DISABLED)
             {
                 Wifi_Stop();
@@ -931,7 +895,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_SCAN:
-            ProxySetLedState(LED_LONGBLINK);
+            ProxySetLedState(LED_BLINK_SLOW);
             if (WifiData->reqMode != WIFIMODE_SCAN)
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -971,7 +935,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ASSOCIATE:
-            ProxySetLedState(LED_LONGBLINK);
+            ProxySetLedState(LED_BLINK_SLOW);
             if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
@@ -1014,7 +978,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ASSOCIATED:
-            ProxySetLedState(LED_SHORTBLINK);
+            ProxySetLedState(LED_BLINK_FAST);
             keepalive_time++; // TODO: track time more accurately.
             if (keepalive_time > WIFI_KEEPALIVE_COUNT)
             {
@@ -1039,7 +1003,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_CANNOTASSOCIATE:
-            ProxySetLedState(LED_LONGBLINK);
+            ProxySetLedState(LED_BLINK_SLOW);
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
