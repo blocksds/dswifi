@@ -13,6 +13,7 @@
 #include <nds.h>
 
 #include "arm9/wifi_arm9.h"
+#include "common/spinlock.h"
 
 #ifdef WIFI_USE_TCP_SGIP
 

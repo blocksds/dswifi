@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
+
+#include <nds/asminc.h>
 
     .syntax unified
+
 #ifdef ARM7
     .arch   armv4t
     .cpu    arm7tdmi
@@ -12,13 +16,11 @@
     .cpu    arm946e-s
 #endif
 #endif
+
     .text
     .arm
 
-    .global SLasm_Acquire
-    .type   SLasm_Acquire STT_FUNC
-
-SLasm_Acquire:
+BEGIN_ASM_FUNC SLasm_Acquire
 
     ldr     r2, [r0]
     cmp     r2, #0
@@ -36,10 +38,7 @@ SLasm_Acquire:
     mov     r0, #1
     bx      lr
 
-    .global SLasm_Release
-    .type   SLasm_Release STT_FUNC
-
-SLasm_Release:
+BEGIN_ASM_FUNC SLasm_Release
 
     ldr     r2, [r0]
     cmp     r2, r1
@@ -52,7 +51,3 @@ SLasm_Release:
     moveq   r0, #0
     movne   r0, #2
     bx      lr
-
-    .pool
-    .end
-
