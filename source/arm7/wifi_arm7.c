@@ -645,8 +645,8 @@ void Wifi_SetBeaconChannel(int channel)
 
 void Wifi_Intr_RxEnd(void)
 {
-    int tIME = REG_IME;
-    REG_IME  = 0;
+    int oldIME = enterCriticalSection();
+
     int cut  = 0;
 
     while (WIFI_REG(0x54) != WIFI_REG(0x5A))
@@ -678,7 +678,7 @@ void Wifi_Intr_RxEnd(void)
             break;
     }
 
-    REG_IME = tIME;
+    leaveCriticalSection(oldIME);
 }
 
 #define CNT_STAT_START WSTAT_HW_1B0
@@ -1158,8 +1158,8 @@ void Wifi_Deinit(void)
 
 void Wifi_Start(void)
 {
-    int tIME = REG_IME;
-    REG_IME  = 0;
+    int oldIME = enterCriticalSection();
+
     Wifi_Stop();
 
     // Wifi_WakeUp();
@@ -1251,13 +1251,13 @@ void Wifi_Start(void)
         i--;
 
     WifiData->flags7 |= WFLAG_ARM7_RUNNING;
-    REG_IME = tIME;
+
+    leaveCriticalSection(oldIME);
 }
 
 void Wifi_Stop(void)
 {
-    int tIME = REG_IME;
-    REG_IME  = 0;
+    int oldIME = enterCriticalSection();
 
     WifiData->flags7 &= ~WFLAG_ARM7_RUNNING;
     W_IE             = 0;
@@ -1270,8 +1270,10 @@ void Wifi_Stop(void)
 
     WIFI_REG(0x80AC) = 0xFFFF;
     WIFI_REG(0x80B4) = 0xFFFF;
+
     // Wifi_Shutdown();
-    REG_IME = tIME;
+
+    leaveCriticalSection(oldIME);
 }
 
 void Wifi_SetChannel(int channel)
