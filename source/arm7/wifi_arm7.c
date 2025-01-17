@@ -7,47 +7,14 @@
 #include <nds.h>
 
 #include "spinlock.h" // .h file with code for spinlocking in it.
+
 #include "wifi_arm7.h"
+#include "wifi_flash.h"
 
 volatile Wifi_MainStruct *WifiData = 0;
 WifiSyncHandler synchandler        = 0;
 int keepalive_time                 = 0;
 int chdata_save5                   = 0;
-
-//////////////////////////////////////////////////////////////////////////
-//
-//  Flash support functions
-//
-char FlashData[512];
-
-void InitFlashData(void)
-{
-    readFirmware(0, FlashData, 512);
-}
-
-int ReadFlashByte(int address)
-{
-    if (address < 0 || address > 511)
-        return 0;
-    return FlashData[address];
-}
-
-int ReadFlashBytes(int address, int numbytes)
-{
-    int dataout = 0;
-
-    for (int i = 0; i < numbytes; i++)
-        dataout |= ReadFlashByte(i + address) << (i * 8);
-
-    return dataout;
-}
-
-int ReadFlashHWord(int address)
-{
-    if (address < 0 || address > 510)
-        return 0;
-    return ReadFlashBytes(address, 2);
-}
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -101,7 +68,7 @@ void GetWfcSettings(void)
     unsigned long s;
 
     int c       = 0;
-    u32 wfcBase = ReadFlashBytes(0x20, 2) * 8 - 0x400;
+    u32 wfcBase = Wifi_FlashReadBytes(0x20, 2) * 8 - 0x400;
     for (i = 0; i < 3; i++)
         WifiData->wfc_enable[i] = 0;
     for (i = 0; i < 3; i++)
@@ -254,28 +221,28 @@ void Wifi_RFInit(void)
     int temp;
     for (i = 0; i < 16; i++)
     {
-        WIFI_REG(RF_Reglist[i]) = ReadFlashHWord(0x44 + i * 2);
+        WIFI_REG(RF_Reglist[i]) = Wifi_FlashReadHWord(0x44 + i * 2);
     }
 
-    numchannels        = ReadFlashByte(0x42);
-    channel_extrabits  = ReadFlashByte(0x41);
+    numchannels        = Wifi_FlashReadByte(0x42);
+    channel_extrabits  = Wifi_FlashReadByte(0x41);
     channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
     WIFI_REG(0x184)    = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
 
     j = 0xCE;
 
-    if (ReadFlashByte(0x40) == 3)
+    if (Wifi_FlashReadByte(0x40) == 3)
     {
         for (i = 0; i < numchannels; i++)
         {
-            Wifi_RFWrite(ReadFlashByte(j++) | (i << 8) | 0x50000);
+            Wifi_RFWrite(Wifi_FlashReadByte(j++) | (i << 8) | 0x50000);
         }
     }
-    else if (ReadFlashByte(0x40) == 2)
+    else if (Wifi_FlashReadByte(0x40) == 2)
     {
         for (i = 0; i < numchannels; i++)
         {
-            temp = ReadFlashBytes(j, channel_extrabytes);
+            temp = Wifi_FlashReadBytes(j, channel_extrabytes);
             Wifi_RFWrite(temp);
             j += channel_extrabytes;
             if ((temp >> 18) == 9)
@@ -288,7 +255,7 @@ void Wifi_RFInit(void)
     {
         for (i = 0; i < numchannels; i++)
         {
-            Wifi_RFWrite(ReadFlashBytes(j, channel_extrabytes));
+            Wifi_RFWrite(Wifi_FlashReadBytes(j, channel_extrabytes));
             j += channel_extrabytes;
         }
     }
@@ -298,7 +265,7 @@ void Wifi_BBInit(void)
 {
     WIFI_REG(0x160) = 0x0100;
     for (int i = 0; i < 0x69; i++)
-        Wifi_BBWrite(i, ReadFlashByte(0x64 + i));
+        Wifi_BBWrite(i, Wifi_FlashReadByte(0x64 + i));
 }
 
 // 22 entry list
@@ -424,7 +391,7 @@ void Wifi_WakeUp(void)
 
 void Wifi_Shutdown(void)
 {
-    if (ReadFlashByte(0x40) == 2)
+    if (Wifi_FlashReadByte(0x40) == 2)
         Wifi_RFWrite(0xC008);
 
     int a = Wifi_BBRead(0x1E);
@@ -1131,7 +1098,7 @@ void Wifi_Init(u32 wifidata)
     WIFIWAITCNT =
         WIFI_RAM_N_10_CYCLES | WIFI_RAM_S_6_CYCLES | WIFI_IO_N_6_CYCLES | WIFI_IO_S_4_CYCLES;
 
-    InitFlashData();
+    Wifi_FlashInitData();
 
     // reset/shutdown wifi:
     WIFI_REG(0x4) = 0xffff;
@@ -1155,7 +1122,7 @@ void Wifi_Init(u32 wifidata)
     GetWfcSettings();
 
     for (i = 0; i < 3; i++)
-        WifiData->MacAddr[i] = ReadFlashHWord(0x36 + i * 2);
+        WifiData->MacAddr[i] = Wifi_FlashReadHWord(0x36 + i * 2);
 
     W_IE = 0;
     Wifi_WakeUp();
@@ -1317,12 +1284,12 @@ void Wifi_SetChannel(int channel)
     Wifi_SetBeaconChannel(channel);
     channel -= 1;
 
-    switch (ReadFlashByte(0x40))
+    switch (Wifi_FlashReadByte(0x40))
     {
         case 2:
         case 5:
-            Wifi_RFWrite(ReadFlashBytes(0xf2 + channel * 6, 3));
-            Wifi_RFWrite(ReadFlashBytes(0xf5 + channel * 6, 3));
+            Wifi_RFWrite(Wifi_FlashReadBytes(0xf2 + channel * 6, 3));
+            Wifi_RFWrite(Wifi_FlashReadBytes(0xf5 + channel * 6, 3));
 
             swiDelay(12583); // 1500 us delay
 
@@ -1330,28 +1297,28 @@ void Wifi_SetChannel(int channel)
             {
                 if (chdata_save5 & 0x8000)
                     break;
-                n = ReadFlashByte(0x154 + channel);
+                n = Wifi_FlashReadByte(0x154 + channel);
                 Wifi_RFWrite(chdata_save5 | ((n & 0x1F) << 10));
             }
             else
             {
-                Wifi_BBWrite(0x1E, ReadFlashByte(0x146 + channel));
+                Wifi_BBWrite(0x1E, Wifi_FlashReadByte(0x146 + channel));
             }
 
             break;
 
         case 3:
-            n = ReadFlashByte(0x42);
+            n = Wifi_FlashReadByte(0x42);
             n += 0xCF;
-            l = ReadFlashByte(n - 1);
+            l = Wifi_FlashReadByte(n - 1);
             for (i = 0; i < l; i++)
             {
-                Wifi_BBWrite(ReadFlashByte(n), ReadFlashByte(n + channel + 1));
+                Wifi_BBWrite(Wifi_FlashReadByte(n), Wifi_FlashReadByte(n + channel + 1));
                 n += 15;
             }
-            for (i = 0; i < ReadFlashByte(0x43); i++)
+            for (i = 0; i < Wifi_FlashReadByte(0x43); i++)
             {
-                Wifi_RFWrite((ReadFlashByte(n) << 8) | ReadFlashByte(n + channel + 1) | 0x050000);
+                Wifi_RFWrite((Wifi_FlashReadByte(n) << 8) | Wifi_FlashReadByte(n + channel + 1) | 0x050000);
                 n += 15;
             }
 

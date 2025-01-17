@@ -4,8 +4,8 @@
 
 // ARM7 wifi interface header
 
-#ifndef WIFI_ARM7_H
-#define WIFI_ARM7_H
+#ifndef DSWIFI_ARM7_WIFI_ARM7_H__
+#define DSWIFI_ARM7_WIFI_ARM7_H__
 
 #ifndef ARM7
 #    error Wifi is only accessible from the ARM7
@@ -72,12 +72,6 @@ typedef void (*WifiSyncHandler)(void);
 extern "C" {
 #endif
 
-void Read_Flash(int address, char *destination, int length);
-void InitFlashData(void);
-int ReadFlashByte(int address);
-int ReadFlashHWord(int address);
-int ReadFlashBytes(int address, int numbytes);
-
 int Wifi_BBRead(int a);
 int Wifi_BBWrite(int a, int b);
 void Wifi_RFWrite(int writedata);
@@ -120,4 +114,4 @@ void Wifi_SetSyncHandler(WifiSyncHandler sh);
 };
 #endif
 
-#endif
+#endif // DSWIFI_ARM7_WIFI_ARM7_H__

@@ -26,16 +26,6 @@ extern "C" {
 /// which will call Wifi_Sync() on ARM9.
 typedef void (*WifiSyncHandler)(void);
 
-/// Reads an arbitrary amount of data from the firmware flash chip.
-///
-/// @param address
-///     Offset to start reading from in the flash chip.
-/// @param destination
-///     Pointer to a memory buffer to hold incoming data.
-/// @param length
-///     The number of bytes to read.
-void Read_Flash(int address, char *destination, int length);
-
 /// Reads or writes a value to the DS's power chip.
 ///
 /// @param cmd
