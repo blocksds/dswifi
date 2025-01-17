@@ -140,18 +140,28 @@ void Wifi_BBInit(void)
 
 void Wifi_MacInit(void)
 {
-    static int MAC_Reglist[22] = {
-        0x04, 0x08, 0x0A, 0x12,  0x10,  0x254, 0xB4, 0x80, 0x2A, 0x28, 0xE8,
-        0xEA, 0xEE, 0xEC, 0x1A2, 0x1A0, 0x110, 0xBC, 0xD4, 0xD8, 0xDA, 0x76
-    };
-
-    static int MAC_Vallist[22] = {
-        0, 0, 0, 0, 0xffff, 0, 0xffff, 0, 0, 0, 0, 0, 1, 0x3F03, 1, 0, 0x0800,
-        1, 3, 4, 0x0602, 0
-    };
-
-    for (int i = 0; i < 22; i++)
-        WIFI_REG(MAC_Reglist[i]) = MAC_Vallist[i];
+    WIFI_REG(0x04) = 0;
+    WIFI_REG(0x08) = 0;
+    WIFI_REG(0x0A) = 0;
+    WIFI_REG(0x12) = 0;
+    WIFI_REG(0x10) = 0xFFFF;
+    WIFI_REG(0x254) = 0;
+    WIFI_REG(0xB4) = 0xFFFF;
+    WIFI_REG(0x80) = 0;
+    WIFI_REG(0x2A) = 0;
+    WIFI_REG(0x28) = 0;
+    WIFI_REG(0xE8) = 0;
+    WIFI_REG(0xEA) = 0;
+    WIFI_REG(0xEE) = 1;
+    WIFI_REG(0xEC) = 0x3F03;
+    WIFI_REG(0x1A2) = 1;
+    WIFI_REG(0x1A0) = 0;
+    WIFI_REG(0x110) = 0x0800;
+    WIFI_REG(0xBC) = 1;
+    WIFI_REG(0xD4) = 3;
+    WIFI_REG(0xD8) = 4;
+    WIFI_REG(0xDA) = 0x0602;
+    WIFI_REG(0x76) = 0;
 }
 
 void Wifi_TxSetup(void)
