@@ -147,7 +147,7 @@ void Wifi_MacInit(void)
     W_IF            = 0xFFFF;
     WIFI_REG(0x254) = 0;
     WIFI_REG(0xB4)  = 0xFFFF;
-    WIFI_REG(0x80)  = 0;
+    W_TXBUF_BEACON  = 0;
     W_AID_HIGH      = 0;
     W_AID_LOW       = 0;
     WIFI_REG(0xE8)  = 0;
@@ -161,7 +161,7 @@ void Wifi_MacInit(void)
     WIFI_REG(0xD4)  = 3;
     WIFI_REG(0xD8)  = 4;
     WIFI_REG(0xDA)  = 0x0602;
-    WIFI_REG(0x76)  = 0;
+    W_TXBUF_GAPDISP = 0;
 }
 
 void Wifi_TxSetup(void)
@@ -472,8 +472,8 @@ void Wifi_LoadBeacon(int from, int to)
     int i   = 12 + 24 + 12;
     if (len <= i)
     {
-        WIFI_REG(0x80) &= ~0x8000;
-        WIFI_REG(0x8C) = 0x64;
+        W_TXBUF_BEACON &= ~0x8000;
+        W_BEACONINT = 0x64;
         return;
     }
     if (len > 512)
@@ -491,23 +491,24 @@ void Wifi_LoadBeacon(int from, int to)
                 beacon_channel = to + i;
                 break;
             case 5:                           // TIM
-                WIFI_REG(0x84) = i - 12 - 24; // TIM offset within beacon
-                WIFI_REG(0x8E) = data[i + 1]; // listen interval
-                if (WIFI_REG(0x88) >= WIFI_REG(0x8E))
+                W_TXBUF_TIM = i - 12 - 24; // TIM offset within beacon
+                W_LISTENINT = data[i + 1]; // listen interval
+                if (W_LISTENCOUNT >= W_LISTENINT)
                 {
-                    WIFI_REG(0x88) = 0; // listen count
+                    W_LISTENCOUNT = 0;
                 }
                 break;
         }
         i += seglen;
     }
-    WIFI_REG(0x80) = (0x8000 | (to >> 1));             // beacon location
-    WIFI_REG(0x8C) = ((u16 *)data)[(12 + 24 + 8) / 2]; // beacon interval
+
+    W_TXBUF_BEACON = (0x8000 | (to >> 1));             // beacon location
+    W_BEACONINT    = ((u16 *)data)[(12 + 24 + 8) / 2]; // beacon interval
 }
 
 void Wifi_SetBeaconChannel(int channel)
 {
-    if (WIFI_REG(0x80) & 0x8000)
+    if (W_TXBUF_BEACON & 0x8000)
     {
         if (beacon_channel & 1)
         {
@@ -1248,7 +1249,7 @@ void Wifi_SetBeaconPeriod(int beacon_period)
 {
     if (beacon_period < 0x10 || beacon_period > 0x3E7)
         return;
-    WIFI_REG(0x8C) = beacon_period;
+    W_BEACONINT = beacon_period;
 }
 
 void Wifi_SetMode(int wifimode)
@@ -1419,7 +1420,7 @@ int Wifi_SendAssocPacket(void)
         ((u16 *)(data + i))[0] = 0x0021; // CAPS info
     }
 
-    ((u16 *)(data + i))[1] = WIFI_REG(0x8E); // Listen interval
+    ((u16 *)(data + i))[1] = W_LISTENINT; // Listen interval
     i += 4;
     data[i++] = 0; // SSID element
     data[i++] = WifiData->ssid7[0];

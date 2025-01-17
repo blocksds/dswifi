@@ -93,6 +93,25 @@ extern "C" {
 #define W_RXBUF_GAP         WIFI_REG(0x8062)
 #define W_RXBUF_GAPDISP     WIFI_REG(0x8064)
 
+// Transmit Control/Memory
+// -----------------------
+
+#define W_TXBUF_WR_ADDR     WIFI_REG(0x8068)
+#define W_TXBUF_COUNT       WIFI_REG(0x806C)
+#define W_TXBUF_WR_DATA     WIFI_REG(0x8070)
+#define W_TXBUF_GAP         WIFI_REG(0x8074)
+#define W_TXBUF_GAPDISP     WIFI_REG(0x8076)
+// WIFI_REG(0x8078)
+#define W_TXBUF_BEACON      WIFI_REG(0x8080)
+#define W_TXBUF_TIM         WIFI_REG(0x8084)
+#define W_LISTENCOUNT       WIFI_REG(0x8088)
+#define W_BEACONINT         WIFI_REG(0x808C)
+#define W_LISTENINT         WIFI_REG(0x808E)
+#define W_TXBUF_CMD         WIFI_REG(0x8090)
+#define W_TXBUF_REPLY1      WIFI_REG(0x8094)
+#define W_TXBUF_REPLY2      WIFI_REG(0x8098)
+// WIFI_REG(0x809C)
+
 // Registers TODO
 // --------------
 
