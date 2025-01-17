@@ -20,28 +20,6 @@ int chdata_save5                   = 0;
 // WFC data loading
 //
 
-/*
-int crc16_slow(u8 *data, int length)
-{
-    int i, j, d, crc;
-    crc = 0x0000;
-    for(i = 0; i < length; i++)
-    {
-        d = data[i];
-        for(j = 0; j < 8; j++)
-        {
-            if(((d) ^ (crc >> 15)) & 1)
-                crc = (crc << 1) ^ 0x8005;
-            else
-                crc = crc << 1;
-            d = d >> 1;
-        }
-    }
-    crc &= 0xFFFF;
-    return crc;
-}
-*/
-
 int crc16_slow(u8 *data, int length)
 {
     int crc = 0x0000;
