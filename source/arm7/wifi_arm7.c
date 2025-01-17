@@ -82,51 +82,46 @@ void ProxySetLedState(int state)
 //  Main functionality
 //
 
-int RF_Reglist[] = { 0x146, 0x148, 0x14A, 0x14C, 0x120, 0x122, 0x154, 0x144,
-                     0x130, 0x132, 0x140, 0x142, 0x38,  0x124, 0x128, 0x150 };
-
 void Wifi_RFInit(void)
 {
-    int i, j;
-    int channel_extrabits;
-    int numchannels;
-    int channel_extrabytes;
-    int temp;
-    for (i = 0; i < 16; i++)
-    {
+    static int RF_Reglist[16] = {
+        0x146, 0x148, 0x14A, 0x14C, 0x120, 0x122, 0x154, 0x144,
+        0x130, 0x132, 0x140, 0x142, 0x38,  0x124, 0x128, 0x150
+    };
+
+    for (int i = 0; i < 16; i++)
         WIFI_REG(RF_Reglist[i]) = Wifi_FlashReadHWord(0x44 + i * 2);
-    }
 
-    numchannels        = Wifi_FlashReadByte(0x42);
-    channel_extrabits  = Wifi_FlashReadByte(0x41);
-    channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
-    WIFI_REG(0x184)    = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
+    int numchannels        = Wifi_FlashReadByte(0x42);
+    int channel_extrabits  = Wifi_FlashReadByte(0x41);
+    int channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
 
-    j = 0xCE;
+    WIFI_REG(0x184) = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
+
+    int j = 0xCE;
 
     if (Wifi_FlashReadByte(0x40) == 3)
     {
-        for (i = 0; i < numchannels; i++)
+        for (int i = 0; i < numchannels; i++)
         {
             Wifi_RFWrite(Wifi_FlashReadByte(j++) | (i << 8) | 0x50000);
         }
     }
     else if (Wifi_FlashReadByte(0x40) == 2)
     {
-        for (i = 0; i < numchannels; i++)
+        for (int i = 0; i < numchannels; i++)
         {
-            temp = Wifi_FlashReadBytes(j, channel_extrabytes);
+            int temp = Wifi_FlashReadBytes(j, channel_extrabytes);
             Wifi_RFWrite(temp);
             j += channel_extrabytes;
+
             if ((temp >> 18) == 9)
-            {
-                chdata_save5 = temp & (~0x7C00);
-            }
+                chdata_save5 = temp & ~0x7C00;
         }
     }
     else
     {
-        for (i = 0; i < numchannels; i++)
+        for (int i = 0; i < numchannels; i++)
         {
             Wifi_RFWrite(Wifi_FlashReadBytes(j, channel_extrabytes));
             j += channel_extrabytes;
@@ -137,19 +132,23 @@ void Wifi_RFInit(void)
 void Wifi_BBInit(void)
 {
     WIFI_REG(0x160) = 0x0100;
+
     for (int i = 0; i < 0x69; i++)
         Wifi_BBWrite(i, Wifi_FlashReadByte(0x64 + i));
 }
 
-// 22 entry list
-int MAC_Reglist[] = { 0x04, 0x08, 0x0A, 0x12,  0x10,  0x254, 0xB4, 0x80, 0x2A, 0x28, 0xE8,
-                      0xEA, 0xEE, 0xEC, 0x1A2, 0x1A0, 0x110, 0xBC, 0xD4, 0xD8, 0xDA, 0x76 };
-
-int MAC_Vallist[] = { 0, 0, 0,      0, 0xffff, 0,      0xffff, 0, 0, 0,      0,
-                      0, 1, 0x3F03, 1, 0,      0x0800, 1,      3, 4, 0x0602, 0 };
-
 void Wifi_MacInit(void)
 {
+    static int MAC_Reglist[22] = {
+        0x04, 0x08, 0x0A, 0x12,  0x10,  0x254, 0xB4, 0x80, 0x2A, 0x28, 0xE8,
+        0xEA, 0xEE, 0xEC, 0x1A2, 0x1A0, 0x110, 0xBC, 0xD4, 0xD8, 0xDA, 0x76
+    };
+
+    static int MAC_Vallist[22] = {
+        0, 0, 0, 0, 0xffff, 0, 0xffff, 0, 0, 0, 0, 0, 1, 0x3F03, 1, 0, 0x0800,
+        1, 3, 4, 0x0602, 0
+    };
+
     for (int i = 0; i < 22; i++)
         WIFI_REG(MAC_Reglist[i]) = MAC_Vallist[i];
 }
