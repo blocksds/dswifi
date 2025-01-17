@@ -140,28 +140,28 @@ void Wifi_BBInit(void)
 
 void Wifi_MacInit(void)
 {
-    WIFI_REG(0x04) = 0;
-    WIFI_REG(0x08) = 0;
-    WIFI_REG(0x0A) = 0;
-    WIFI_REG(0x12) = 0;
-    WIFI_REG(0x10) = 0xFFFF;
+    W_MODE_RST      = 0;
+    W_TXSTATCNT     = 0;
+    WIFI_REG(0x0A)  = 0;
+    W_IE            = 0;
+    W_IF            = 0xFFFF;
     WIFI_REG(0x254) = 0;
-    WIFI_REG(0xB4) = 0xFFFF;
-    WIFI_REG(0x80) = 0;
-    WIFI_REG(0x2A) = 0;
-    WIFI_REG(0x28) = 0;
-    WIFI_REG(0xE8) = 0;
-    WIFI_REG(0xEA) = 0;
-    WIFI_REG(0xEE) = 1;
-    WIFI_REG(0xEC) = 0x3F03;
+    WIFI_REG(0xB4)  = 0xFFFF;
+    WIFI_REG(0x80)  = 0;
+    W_AID_HIGH      = 0;
+    W_AID_LOW       = 0;
+    WIFI_REG(0xE8)  = 0;
+    WIFI_REG(0xEA)  = 0;
+    WIFI_REG(0xEE)  = 1;
+    WIFI_REG(0xEC)  = 0x3F03;
     WIFI_REG(0x1A2) = 1;
     WIFI_REG(0x1A0) = 0;
     WIFI_REG(0x110) = 0x0800;
-    WIFI_REG(0xBC) = 1;
-    WIFI_REG(0xD4) = 3;
-    WIFI_REG(0xD8) = 4;
-    WIFI_REG(0xDA) = 0x0602;
-    WIFI_REG(0x76) = 0;
+    WIFI_REG(0xBC)  = 1;
+    WIFI_REG(0xD4)  = 3;
+    WIFI_REG(0xD8)  = 4;
+    WIFI_REG(0xDA)  = 0x0602;
+    WIFI_REG(0x76)  = 0;
 }
 
 void Wifi_TxSetup(void)
