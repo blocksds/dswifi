@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
 
 // ARM7 wifi interface code
 
@@ -156,7 +157,7 @@ void Wifi_MacInit(void)
 void Wifi_TxSetup(void)
 {
 #if 0
-    switch(WIFI_REG(0x8006) & 7)
+    switch(W_MODE_WEP & 7)
     {
         case 0: //
             // 4170,  4028, 4000
@@ -208,9 +209,9 @@ void Wifi_TxSetup(void)
 
 void Wifi_RxSetup(void)
 {
-    WIFI_REG(0x8030) = 0x8000;
+    W_RXCNT = 0x8000;
 #if 0
-    switch(WIFI_REG(0x8006) & 7)
+    switch(W_MODE_WEP & 7)
     {
         case 0:
             WIFI_REG(0x8050) = 0x4794;
@@ -240,13 +241,13 @@ void Wifi_RxSetup(void)
     WIFI_REG(0x8052) = 0x5F60;
     WIFI_REG(0x805A) = (WIFI_REG(0x8050) & 0x3FFF) >> 1;
     WIFI_REG(0x8062) = 0x5F5E;
-    WIFI_REG(0x8030) = 0x8001;
+    W_RXCNT          = 0x8001;
 }
 
 void Wifi_WakeUp(void)
 {
     u32 i;
-    WIFI_REG(0x8036) = 0;
+    W_POWER_US = 0;
 
     swiDelay(67109); // 8ms delay
 
@@ -269,7 +270,7 @@ void Wifi_Shutdown(void)
     int a = Wifi_BBRead(0x1E);
     Wifi_BBWrite(0x1E, a | 0x3F);
     WIFI_REG(0x168) = 0x800D;
-    WIFI_REG(0x36)  = 1;
+    W_POWER_US      = 1;
 }
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
@@ -433,7 +434,7 @@ void Wifi_TxRaw(u16 *data, int datalen)
     datalen = (datalen + 3) & (~3);
     Wifi_MACWrite(data, 0, 0, datalen);
     //	WIFI_REG(0xB8)=0x0001;
-    WIFI_REG(0x2C) = 0x0707;
+    W_TX_RETRYLIMIT = 0x0707;
     WIFI_REG(0xA8) = 0x8000;
     WIFI_REG(0xAE) = 0x000D;
     WifiData->stats[WSTAT_TXPACKETS]++;
@@ -612,9 +613,9 @@ void Wifi_Intr_TxEnd(void)
                 return;
             }
             // WIFI_REG(0xB8)=0x0001;
-            WIFI_REG(0x2C) = 0x0707;
-            WIFI_REG(0xA8) = 0x8000;
-            WIFI_REG(0xAE) = 0x000D;
+            W_TX_RETRYLIMIT = 0x0707;
+            WIFI_REG(0xA8)  = 0x8000;
+            WIFI_REG(0xAE)  = 0x000D;
         }
     }
 }
@@ -1008,7 +1009,7 @@ void Wifi_Init(u32 wifidata)
     W_MACADDR[1] = WifiData->MacAddr[1];
     W_MACADDR[2] = WifiData->MacAddr[2];
 
-    W_RETRLIMIT = 7;
+    W_TX_RETRYLIMIT = 7;
     Wifi_SetMode(2);
     Wifi_SetWepMode(WEPMODE_NONE);
 
@@ -1040,7 +1041,7 @@ void Wifi_Start(void)
     WIFI_REG(0x8032) = 0x8000;
     WIFI_REG(0x8134) = 0xFFFF;
     WIFI_REG(0x802A) = 0;
-    W_AIDS           = 0;
+    W_AID_LOW        = 0;
     WIFI_REG(0x80E8) = 1;
     WIFI_REG(0x8038) = 0x0000;
     WIFI_REG(0x20)   = 0x0000;
@@ -1223,9 +1224,9 @@ void Wifi_SetWepMode(int wepmode)
         return;
 
     if (wepmode == 0)
-        WIFI_REG(0x32) = 0x0000;
+        W_WEP_CNT = 0x0000;
     else
-        WIFI_REG(0x32) = 0x8000;
+        W_WEP_CNT = 0x8000;
 
     if (wepmode == 0)
         wepmode = 1;
@@ -1256,8 +1257,8 @@ void Wifi_SetPreambleType(int preamble_type)
 
 void Wifi_DisableTempPowerSave(void)
 {
-    WIFI_REG(0x8038) &= ~2;
-    WIFI_REG(0x8048) = 0;
+    W_POWER_TX &= ~2;
+    W_POWER_UNKNOWN = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1482,7 +1483,7 @@ int Wifi_SendPSPollFrame(void)
     data[5] = 16 + 4;
     // fill in packet header fields
     data[6] = 0x01A4;
-    data[7] = 0xC000 | W_AIDS;
+    data[7] = 0xC000 | W_AID_LOW;
     Wifi_CopyMacAddr(&data[8], WifiData->apmac7);
     Wifi_CopyMacAddr(&data[11], WifiData->MacAddr);
 
@@ -1853,8 +1854,9 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                         if (((u16 *)(data + 24))[1] == 0)
                         {
                             // status code, 0==success
-                            W_AIDS         = ((u16 *)(data + 24))[2];
-                            WIFI_REG(0x2A) = ((u16 *)(data + 24))[2];
+                            W_AID_LOW  = ((u16 *)(data + 24))[2];
+                            W_AID_HIGH = ((u16 *)(data + 24))[2];
+
                             // set max rate
                             WifiData->maxrate7 = 0xA;
                             for (i = 0; i < ((u8 *)(data + 24))[7]; i++)

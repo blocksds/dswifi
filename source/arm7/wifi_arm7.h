@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
 
 // ARM7 wifi interface header
 
@@ -24,6 +25,7 @@ extern "C" {
 #define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
 
 #define WIFIWAITCNT          (*((volatile u16 *)(0x04000206)))
+
 #define WIFI_RAM_N_10_CYCLES (0)
 #define WIFI_RAM_N_8_CYCLES  (1)
 #define WIFI_RAM_N_6_CYCLES  (2)
@@ -41,31 +43,54 @@ extern "C" {
 #define WIFI_IO_S_4_CYCLES   (1 << 5)
 #define WIFI_IO_S_MASK       (1 << 5)
 
-#define WIFI_REG(ofs) (*((volatile u16 *)(0x04800000 + (ofs))))
-// Wifi regs
-#define W_WEPKEY0 (((volatile u16 *)(0x04805F80)))
-#define W_WEPKEY1 (((volatile u16 *)(0x04805FA0)))
-#define W_WEPKEY2 (((volatile u16 *)(0x04805FC0)))
-#define W_WEPKEY3 (((volatile u16 *)(0x04805FE0)))
+// Wifi registers
+// ==============
 
-#define W_MODE_RST   (*((volatile u16 *)(0x04800004)))
-#define W_MODE_WEP   (*((volatile u16 *)(0x04800006)))
-#define W_IF         (*((volatile u16 *)(0x04800010)))
-#define W_IE         (*((volatile u16 *)(0x04800012)))
-#define W_MACADDR    (((volatile u16 *)(0x04800018)))
-#define W_BSSID      (((volatile u16 *)(0x04800020)))
-#define W_AIDS       (*((volatile u16 *)(0x04800028)))
-#define W_RETRLIMIT  (*((volatile u16 *)(0x0480002C)))
-#define W_POWERSTATE (*((volatile u16 *)(0x0480003C)))
-#define W_RANDOM     (*((volatile u16 *)(0x04800044)))
+#define WIFI_REG(ofs)       (*((vu16 *)(0x04800000 + (ofs))))
+#define WIFI_REG_ARR(ofs)   (((vu16 *)(0x04800000 + (ofs))))
 
-#define W_BBSIOCNT   (*((volatile u16 *)(0x04800158)))
-#define W_BBSIOWRITE (*((volatile u16 *)(0x0480015A)))
-#define W_BBSIOREAD  (*((volatile u16 *)(0x0480015C)))
-#define W_BBSIOBUSY  (*((volatile u16 *)(0x0480015E)))
-#define W_RFSIODATA2 (*((volatile u16 *)(0x0480017C)))
-#define W_RFSIODATA1 (*((volatile u16 *)(0x0480017E)))
-#define W_RFSIOBUSY  (*((volatile u16 *)(0x04800180)))
+// Control registers
+// -----------------
+
+#define W_ID                WIFI_REG(0x8000)
+#define W_MODE_RST          WIFI_REG(0x8004)
+#define W_MODE_WEP          WIFI_REG(0x8006)
+#define W_TXSTATCNT         WIFI_REG(0x8008)
+// WIFI_REG(0x800A)
+#define W_IF                WIFI_REG(0x8010)
+#define W_IE                WIFI_REG(0x8012)
+#define W_MACADDR           WIFI_REG_ARR(0x8018) // 3 registers
+#define W_BSSID             WIFI_REG_ARR(0x8020) // 3 registers
+#define W_AID_LOW           WIFI_REG(0x8028)
+#define W_AID_HIGH          WIFI_REG(0x802A)
+#define W_TX_RETRYLIMIT     WIFI_REG(0x802C)
+// WIFI_REG(0x802E)
+#define W_RXCNT             WIFI_REG(0x8030)
+#define W_WEP_CNT           WIFI_REG(0x8032)
+// WIFI_REG(0x8034)
+
+// Powerdown registers
+// -------------------
+
+#define W_POWER_US          WIFI_REG(0x8036)
+#define W_POWER_TX          WIFI_REG(0x8038)
+#define W_POWERSTATE        WIFI_REG(0x803C)
+#define W_POWERFORCE        WIFI_REG(0x8040)
+#define W_RANDOM            WIFI_REG(0x8044)
+#define W_POWER_UNKNOWN     WIFI_REG(0x8048)
+
+#define W_BBSIOCNT      (*((vu16 *)(0x04800158)))
+#define W_BBSIOWRITE    (*((vu16 *)(0x0480015A)))
+#define W_BBSIOREAD     (*((vu16 *)(0x0480015C)))
+#define W_BBSIOBUSY     (*((vu16 *)(0x0480015E)))
+#define W_RFSIODATA2    (*((vu16 *)(0x0480017C)))
+#define W_RFSIODATA1    (*((vu16 *)(0x0480017E)))
+#define W_RFSIOBUSY     (*((vu16 *)(0x04800180)))
+
+#define W_WEPKEY0       (((vu16 *)(0x04805F80)))
+#define W_WEPKEY1       (((vu16 *)(0x04805FA0)))
+#define W_WEPKEY2       (((vu16 *)(0x04805FC0)))
+#define W_WEPKEY3       (((vu16 *)(0x04805FE0)))
 
 // Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to
 // synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
