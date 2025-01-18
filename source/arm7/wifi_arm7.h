@@ -215,10 +215,12 @@ extern "C" {
 // Registers TODO
 // --------------
 
-#define W_WEPKEY0       (((vu16 *)(0x04805F80)))
-#define W_WEPKEY1       (((vu16 *)(0x04805FA0)))
-#define W_WEPKEY2       (((vu16 *)(0x04805FC0)))
-#define W_WEPKEY3       (((vu16 *)(0x04805FE0)))
+#define W_MACMEM            WIFI_REG_ARR(0x4000)
+// WIFI_REG_ARR(0x5F60)
+#define W_WEPKEY_0          WIFI_REG_ARR(0x5F80)
+#define W_WEPKEY_1          WIFI_REG_ARR(0x5FA0)
+#define W_WEPKEY_2          WIFI_REG_ARR(0x5FC0)
+#define W_WEPKEY_3          WIFI_REG_ARR(0x5FE0)
 
 // Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to
 // synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should

@@ -1245,10 +1245,10 @@ void Wifi_SetWepKey(void *wepkey)
 {
     for (int i = 0; i < 16; i++)
     {
-        W_WEPKEY0[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY1[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY2[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY3[i] = ((u16 *)wepkey)[i];
+        W_WEPKEY_0[i] = ((u16 *)wepkey)[i];
+        W_WEPKEY_1[i] = ((u16 *)wepkey)[i];
+        W_WEPKEY_2[i] = ((u16 *)wepkey)[i];
+        W_WEPKEY_3[i] = ((u16 *)wepkey)[i];
     }
 }
 
