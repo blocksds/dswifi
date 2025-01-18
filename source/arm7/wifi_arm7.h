@@ -56,7 +56,7 @@ extern "C" {
 #define W_MODE_RST          WIFI_REG(0x8004)
 #define W_MODE_WEP          WIFI_REG(0x8006)
 #define W_TXSTATCNT         WIFI_REG(0x8008)
-// WIFI_REG(0x800A)
+#define W_X_00A             WIFI_REG(0x800A)
 #define W_IF                WIFI_REG(0x8010)
 #define W_IE                WIFI_REG(0x8012)
 #define W_MACADDR           WIFI_REG_ARR(0x8018) // 3 registers

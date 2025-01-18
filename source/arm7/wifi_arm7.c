@@ -151,7 +151,7 @@ void Wifi_MacInit(void)
 {
     W_MODE_RST      = 0;
     W_TXSTATCNT     = 0;
-    WIFI_REG(0x0A)  = 0;
+    W_X_00A         = 0;
     W_IE            = 0;
     W_IF            = 0xFFFF;
     WIFI_REG(0x254) = 0;
@@ -1092,7 +1092,7 @@ void Wifi_Start(void)
             W_RXFILTER       = 0xffff;
             W_RXFILTER2      = 0x0008;
             W_TXSTATCNT      = 0;
-            WIFI_REG(0x800A) = 0;
+            W_X_00A          = 0;
             W_US_COUNTCNT    = 0;
             W_MODE_RST       = 1;
             // SetStaState(0x40);
@@ -1106,7 +1106,7 @@ void Wifi_Start(void)
             W_RXFILTER       = 0x0301;
             W_RXFILTER2      = 0x000D;
             W_TXSTATCNT      = 0xE000;
-            WIFI_REG(0x800A) = 0;
+            W_X_00A          = 0;
             W_MODE_RST       = 1;
             // ??
             W_US_COMPARECNT  = 1;
@@ -1129,7 +1129,7 @@ void Wifi_Start(void)
     W_RXFILTER       = 0x0981; // 0x0181
     W_RXFILTER2      = 0x0009; // 0x000B
     W_TXSTATCNT      = 0;
-    WIFI_REG(0x800A) = 0;
+    W_X_00A          = 0;
     W_MODE_RST       = 1;
     W_US_COUNTCNT    = 1;
     W_US_COMPARECNT  = 1;
@@ -1167,7 +1167,7 @@ void Wifi_Stop(void)
     W_US_COMPARECNT  = 0;
     W_US_COUNTCNT    = 0;
     W_TXSTATCNT      = 0;
-    WIFI_REG(0x800A) = 0;
+    W_X_00A          = 0;
     W_TXBUF_BEACON   = 0;
 
     W_TXREQ_RESET = 0xFFFF;
