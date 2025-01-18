@@ -21,6 +21,8 @@ extern "C" {
 #include "arm7/wifi_registers.h"
 #include "common/wifi_shared.h"
 
+extern volatile Wifi_MainStruct *WifiData;
+
 // keepalive updated in the update handler, which should be called in vblank
 // keepalive set for 2 minutes.
 #define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
@@ -30,12 +32,8 @@ extern "C" {
 // send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.
 typedef void (*WifiSyncHandler)(void);
 
-void Wifi_RFWrite(int writedata);
-
-void Wifi_RFInit(void);
 void Wifi_WakeUp(void);
 void Wifi_Shutdown(void);
-void Wifi_MacInit(void);
 void Wifi_Interrupt(void);
 void Wifi_Update(void);
 
@@ -46,10 +44,8 @@ void Wifi_Init(void *WifiData);
 void Wifi_Deinit(void);
 void Wifi_Start(void);
 void Wifi_Stop(void);
-void Wifi_SetChannel(int channel);
 void Wifi_SetWepKey(void *wepkey);
 void Wifi_SetWepMode(int wepmode);
-void Wifi_SetBeaconPeriod(int beacon_period);
 void Wifi_SetMode(int wifimode);
 void Wifi_SetPreambleType(int preamble_type);
 void Wifi_TxSetup(void);
