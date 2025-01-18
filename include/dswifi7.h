@@ -26,20 +26,6 @@ extern "C" {
 /// which will call Wifi_Sync() on ARM9.
 typedef void (*WifiSyncHandler)(void);
 
-/// Reads or writes a value to the DS's power chip.
-///
-/// @param cmd
-///     The byte-long command to send to the chip (top bit 1=read, 0=write -
-///     other bits = register ID to read/write)
-/// @param data
-///     The data to write to the chip (if sending a read command, this should be
-///     zero)
-///
-/// @return
-///     The data read returned by the serial connection; only really useful when
-///     reading.
-int PowerChip_ReadWrite(int cmd, int data);
-
 /// Handler for the ARM7 WiFi interrupt.
 ///
 /// It should be called by the interrupt handler on ARM7, and should *not* have
