@@ -293,25 +293,28 @@ void Wifi_Intr_RxEnd(void)
 {
     int oldIME = enterCriticalSection();
 
-    int cut  = 0;
+    int cut = 0;
 
     while (W_RXBUF_WRCSR != W_RXBUF_READCSR)
     {
         int base           = W_RXBUF_READCSR << 1;
         int packetlen      = Wifi_MACRead(base, 8);
         int full_packetlen = 12 + ((packetlen + 3) & (~3));
+
         WifiData->stats[WSTAT_RXPACKETS]++;
         WifiData->stats[WSTAT_RXBYTES] += full_packetlen;
         WifiData->stats[WSTAT_RXDATABYTES] += full_packetlen - 12;
 
         // process packet here
-        int temp = Wifi_ProcessReceivedFrame(base, full_packetlen); // returns packet type
-        if (temp & WifiData->reqPacketFlags || WifiData->reqReqFlags & WFLAG_REQ_PROMISC)
-        { // if packet type is requested, forward it to the rx queue
+        int type = Wifi_ProcessReceivedFrame(base, full_packetlen); // returns packet type
+        if (type & WifiData->reqPacketFlags || WifiData->reqReqFlags & WFLAG_REQ_PROMISC)
+        {
+            // If the packet type is requested (or promiscous mode is enabled),
+            // forward it to the rx queue
             keepalive_time = 0;
             if (!Wifi_QueueRxMacData(base, full_packetlen))
             {
-                // failed, ignore for now.
+                // Failed, ignore for now.
             }
         }
 
@@ -320,6 +323,7 @@ void Wifi_Intr_RxEnd(void)
             base -= (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
         W_RXBUF_READCSR = base >> 1;
 
+        // Don't handle too many packets in one go
         if (cut++ > 5)
             break;
     }
@@ -738,10 +742,11 @@ void Wifi_Update(void)
         Wifi_SetChannel(WifiData->reqChannel);
     }
 
-    // check Rx
+    // Check if we have received anything
     Wifi_Intr_RxEnd();
-    // check if we need to tx anything
-    Wifi_Intr_TxEnd(); // easiest way to do so at the moment.
+
+    // Check if we need to transfer anything
+    Wifi_Intr_TxEnd();
 }
 
 //////////////////////////////////////////////////////////////////////////
