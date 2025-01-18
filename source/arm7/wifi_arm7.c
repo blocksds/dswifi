@@ -402,7 +402,7 @@ void Wifi_Intr_DoNothing(void)
 
 void Wifi_Interrupt(void)
 {
-    int wIF;
+    // If WiFi hasn't been initialized, don't handle any interrupt
     if (!WifiData)
     {
         W_IF = W_IF;
@@ -413,93 +413,100 @@ void Wifi_Interrupt(void)
         W_IF = W_IF;
         return;
     }
-    do
-    {
-        REG_IF = 0x01000000; // now that we've cleared the wireless IF, kill the bit in regular IF.
-        wIF    = W_IE & W_IF;
 
-        if (wIF & 0x0001) // 0) Rx End
+    while (1)
+    {
+        // First, clear the bit in the global IF register, then clear the
+        // individial bits in the W_IF register.
+
+        REG_IF = IRQ_WIFI;
+
+        // Interrupts left to handle
+        int wIF = W_IE & W_IF;
+        if (wIF == 0)
+            break;
+
+        if (wIF & IRQ_RX_COMPLETE)
         {
-            W_IF = 0x0001;
+            W_IF = IRQ_RX_COMPLETE;
             Wifi_Intr_RxEnd();
         }
-        if (wIF & 0x0002) // 1) Tx End
+        if (wIF & IRQ_TX_COMPLETE)
         {
-            W_IF = 0x0002;
+            W_IF = IRQ_TX_COMPLETE;
             Wifi_Intr_TxEnd();
         }
-        if (wIF & 0x0004) // 2) Rx Cntup
+        if (wIF & IRQ_RX_EVENT_INCREMENT) // RX count up
         {
-            W_IF = 0x0004;
+            W_IF = IRQ_RX_EVENT_INCREMENT;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0008) // 3) Tx Err
+        if (wIF & IRQ_TX_EVENT_INCREMENT) // TX error
         {
-            W_IF = 0x0008;
+            W_IF = IRQ_TX_EVENT_INCREMENT;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0010) // 4) Count Overflow
+        if (wIF & IRQ_RX_EVENT_HALF_OVERFLOW) // Count Overflow
         {
-            W_IF = 0x0010;
+            W_IF = IRQ_RX_EVENT_HALF_OVERFLOW;
             Wifi_Intr_CntOverflow();
         }
-        if (wIF & 0x0020) // 5) AckCount Overflow
+        if (wIF & IRQ_TX_ERROR_HALF_OVERFLOW) // ACK count overflow
         {
-            W_IF = 0x0020;
+            W_IF = IRQ_TX_ERROR_HALF_OVERFLOW;
             Wifi_Intr_CntOverflow();
         }
-        if (wIF & 0x0040) // 6) Start Rx
+        if (wIF & IRQ_RX_START)
         {
-            W_IF = 0x0040;
+            W_IF = IRQ_RX_START;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0080) // 7) Start Tx
+        if (wIF & IRQ_TX_START)
         {
-            W_IF = 0x0080;
+            W_IF = IRQ_TX_START;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0100) // 8)
+        if (wIF & IRQ_TXBUF_COUNT_END)
         {
-            W_IF = 0x0100;
+            W_IF = IRQ_TXBUF_COUNT_END;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0200) // 9)
+        if (wIF & IRQ_RXBUF_COUNT_END)
         {
-            W_IF = 0x0200;
+            W_IF = IRQ_RXBUF_COUNT_END;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0400) // 10)
+        if (wIF & IRQ_UNUSED)
         {
-            W_IF = 0x0400;
+            W_IF = IRQ_UNUSED;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x0800) // 11) RF Wakeup
+        if (wIF & IRQ_RF_WAKEUP)
         {
-            W_IF = 0x0800;
+            W_IF = IRQ_RF_WAKEUP;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x1000) // 12) MP End
+        if (wIF & IRQ_MULTIPLAY_CMD_DONE)
         {
-            W_IF = 0x1000;
+            W_IF = IRQ_MULTIPLAY_CMD_DONE;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x2000) // 13) ACT End
+        if (wIF & IRQ_POST_BEACON_TIMESLOT) // ACT End
         {
-            W_IF = 0x2000;
+            W_IF = IRQ_POST_BEACON_TIMESLOT;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x4000) // 14) TBTT
+        if (wIF & IRQ_BEACON_TIMESLOT) // TBTT
         {
-            W_IF = 0x4000;
+            W_IF = IRQ_BEACON_TIMESLOT;
             Wifi_Intr_DoNothing();
         }
-        if (wIF & 0x8000) // 15) PreTBTT
+        if (wIF & IRQ_PRE_BEACON_TIMESLOT) // PreTBTT
         {
-            W_IF = 0x8000;
+            W_IF = IRQ_PRE_BEACON_TIMESLOT;
             Wifi_Intr_DoNothing();
         }
-        wIF = W_IE & W_IF;
-    } while (wIF);
+    }
 }
 
 static int scanIndex = 0;

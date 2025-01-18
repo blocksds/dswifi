@@ -54,6 +54,24 @@ extern "C" {
 #define W_X_00A             WIFI_REG(0x800A)
 #define W_IF                WIFI_REG(0x8010)
 #define W_IE                WIFI_REG(0x8012)
+
+#define IRQ_RX_COMPLETE             BIT(0)
+#define IRQ_TX_COMPLETE             BIT(1)
+#define IRQ_RX_EVENT_INCREMENT      BIT(2)
+#define IRQ_TX_EVENT_INCREMENT      BIT(3)
+#define IRQ_RX_EVENT_HALF_OVERFLOW  BIT(4)
+#define IRQ_TX_ERROR_HALF_OVERFLOW  BIT(5)
+#define IRQ_RX_START                BIT(6)
+#define IRQ_TX_START                BIT(7)
+#define IRQ_TXBUF_COUNT_END         BIT(8)
+#define IRQ_RXBUF_COUNT_END         BIT(9)
+#define IRQ_UNUSED                  BIT(10)
+#define IRQ_RF_WAKEUP               BIT(11)
+#define IRQ_MULTIPLAY_CMD_DONE      BIT(12)
+#define IRQ_POST_BEACON_TIMESLOT    BIT(13)
+#define IRQ_BEACON_TIMESLOT         BIT(14)
+#define IRQ_PRE_BEACON_TIMESLOT     BIT(15)
+
 #define W_MACADDR           WIFI_REG_ARR(0x8018) // 3 registers
 #define W_BSSID             WIFI_REG_ARR(0x8020) // 3 registers
 #define W_AID_LOW           WIFI_REG(0x8028)

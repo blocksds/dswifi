@@ -12,8 +12,11 @@ static void wifiAddressHandler(void *address, void *userdata)
 {
     (void)userdata;
 
-    irqEnable(IRQ_WIFI);
     Wifi_Init(address);
+
+    // Setup WiFi interrupt after we have setup the IPC struct pointer
+    irqSet(IRQ_WIFI, Wifi_Interrupt);
+    irqEnable(IRQ_WIFI);
 }
 
 static void wifiValue32Handler(u32 value, void *data)
@@ -55,8 +58,8 @@ static void arm7_synctoarm9(void)
 
 void installWifiFIFO(void)
 {
-    irqSet(IRQ_WIFI, Wifi_Interrupt);     // set up wifi interrupt
     Wifi_SetSyncHandler(arm7_synctoarm9); // allow wifi lib to notify arm9
+
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
     fifoSetAddressHandler(FIFO_DSWIFI, wifiAddressHandler, 0);
 }
