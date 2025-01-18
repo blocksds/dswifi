@@ -1005,7 +1005,7 @@ void Wifi_Init(void *wifidata)
     }
 
     powerOn(POWER_WIFI); // Enable power for the WiFi controller
-    WIFIWAITCNT =
+    REG_WIFIWAITCNT =
         WIFI_RAM_N_10_CYCLES | WIFI_RAM_S_6_CYCLES | WIFI_IO_N_6_CYCLES | WIFI_IO_S_4_CYCLES;
 
     Wifi_FlashInitData();

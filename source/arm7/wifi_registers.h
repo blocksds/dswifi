@@ -19,24 +19,24 @@ extern "C" {
 // DS Registers
 // ============
 
-#define WIFIWAITCNT          (*((vu16 *)(0x04000206)))
+#define REG_WIFIWAITCNT         (*((vu16 *)(0x04000206)))
 
-#define WIFI_RAM_N_10_CYCLES (0)
-#define WIFI_RAM_N_8_CYCLES  (1)
-#define WIFI_RAM_N_6_CYCLES  (2)
-#define WIFI_RAM_N_18_CYCLES (3)
-#define WIFI_RAM_N_MASK      (3)
-#define WIFI_RAM_S_6_CYCLES  (0)
-#define WIFI_RAM_S_4_CYCLES  (1 << 2)
-#define WIFI_RAM_S_MASK      (1 << 2)
-#define WIFI_IO_N_10_CYCLES  (0)
-#define WIFI_IO_N_8_CYCLES   (1 << 3)
-#define WIFI_IO_N_6_CYCLES   (2 << 3)
-#define WIFI_IO_N_18_CYCLES  (3 << 3)
-#define WIFI_IO_N_MASK       (3 << 3)
-#define WIFI_IO_S_6_CYCLES   (0)
-#define WIFI_IO_S_4_CYCLES   (1 << 5)
-#define WIFI_IO_S_MASK       (1 << 5)
+#define WIFI_RAM_N_10_CYCLES    (0)
+#define WIFI_RAM_N_8_CYCLES     (1)
+#define WIFI_RAM_N_6_CYCLES     (2)
+#define WIFI_RAM_N_18_CYCLES    (3)
+#define WIFI_RAM_N_MASK         (3)
+#define WIFI_RAM_S_6_CYCLES     (0)
+#define WIFI_RAM_S_4_CYCLES     (1 << 2)
+#define WIFI_RAM_S_MASK         (1 << 2)
+#define WIFI_IO_N_10_CYCLES     (0)
+#define WIFI_IO_N_8_CYCLES      (1 << 3)
+#define WIFI_IO_N_6_CYCLES      (2 << 3)
+#define WIFI_IO_N_18_CYCLES     (3 << 3)
+#define WIFI_IO_N_MASK          (3 << 3)
+#define WIFI_IO_S_6_CYCLES      (0)
+#define WIFI_IO_S_4_CYCLES      (1 << 5)
+#define WIFI_IO_S_MASK          (1 << 5)
 
 // Wifi registers
 // ==============
