@@ -150,13 +150,13 @@ void Wifi_MacInit(void)
     W_TXBUF_BEACON  = 0;
     W_AID_HIGH      = 0;
     W_AID_LOW       = 0;
-    WIFI_REG(0xE8)  = 0;
-    WIFI_REG(0xEA)  = 0;
-    WIFI_REG(0xEE)  = 1;
-    WIFI_REG(0xEC)  = 0x3F03;
+    W_US_COUNTCNT   = 0;
+    W_US_COMPARECNT = 0;
+    W_CMD_COUNTCNT  = 1;
+    W_CONFIG_0ECh   = 0x3F03;
     WIFI_REG(0x1A2) = 1;
     WIFI_REG(0x1A0) = 0;
-    WIFI_REG(0x110) = 0x0800;
+    W_PRE_BEACON    = 0x0800;
     W_PREAMBLE      = 1;
     W_CONFIG_0D4    = 3;
     W_CONFIG_0D8    = 4;
@@ -775,7 +775,7 @@ void Wifi_Update(void)
             }
             if (WifiData->reqMode == WIFIMODE_SCAN)
             {
-                WifiData->counter7 = WIFI_REG(0xFA); // timer hword 2 (each tick is 65.5ms)
+                WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_SCAN;
                 break;
             }
@@ -839,7 +839,7 @@ void Wifi_Update(void)
                 }
                 WifiData->txbufIn = WifiData->txbufOut; // empty tx buffer.
                 WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
-                WifiData->counter7 = WIFI_REG(0xFA); // timer hword 2 (each tick is 65.5ms)
+                WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_ASSOCIATE;
                 WifiData->authctr  = 0;
             }
@@ -852,10 +852,10 @@ void Wifi_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
-            if (((u16)(WIFI_REG(0xFA) - WifiData->counter7)) > 6)
+            if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 6)
             {
                 // jump ship!
-                WifiData->counter7   = WIFI_REG(0xFA);
+                WifiData->counter7   = W_US_COUNT1;
                 WifiData->reqChannel = scanlist[scanIndex];
                 {
                     for (int i = 0; i < WIFI_MAX_AP; i++)
@@ -892,10 +892,10 @@ void Wifi_Update(void)
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
                 break;
             }
-            if (((u16)(WIFI_REG(0xFA) - WifiData->counter7)) > 20)
+            if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 20)
             {
                 // ~1 second, reattempt connect stage
-                WifiData->counter7 = WIFI_REG(0xFA);
+                WifiData->counter7 = W_US_COUNT1;
                 WifiData->authctr++;
                 if (WifiData->authctr > WIFI_MAX_ASSOC_RETRY)
                 {
@@ -936,9 +936,9 @@ void Wifi_Update(void)
                 keepalive_time = 0;
                 Wifi_SendNullFrame();
             }
-            if ((u16)(WIFI_REG(0xFA) - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
+            if ((u16)(W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
             {
-                WifiData->pspoll_period = WIFI_REG(0xFA);
+                WifiData->pspoll_period = W_US_COUNT1;
                 // Wifi_SendPSPollFrame();
             }
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
@@ -1061,7 +1061,7 @@ void Wifi_Start(void)
     WIFI_REG(0x8134) = 0xFFFF;
     W_AID_HIGH       = 0;
     W_AID_LOW        = 0;
-    WIFI_REG(0x80E8) = 1;
+    W_US_COUNTCNT    = 1;
     W_POWER_TX       = 0x0000;
     W_BSSID[0]       = 0x0000;
     W_BSSID[1]       = 0x0000;
@@ -1084,7 +1084,7 @@ void Wifi_Start(void)
             W_RXFILTER2      = 0x0008;
             W_TXSTATCNT      = 0;
             WIFI_REG(0x800A) = 0;
-            WIFI_REG(0x80E8) = 0;
+            W_US_COUNTCNT    = 0;
             W_MODE_RST       = 1;
             // SetStaState(0x40);
             break;
@@ -1100,7 +1100,7 @@ void Wifi_Start(void)
             WIFI_REG(0x800A) = 0;
             W_MODE_RST       = 1;
             // ??
-            WIFI_REG(0x80EA) = 1;
+            W_US_COMPARECNT  = 1;
             W_TXREQ_SET      = 2;
             break;
 
@@ -1122,8 +1122,8 @@ void Wifi_Start(void)
     W_TXSTATCNT      = 0;
     WIFI_REG(0x800A) = 0;
     W_MODE_RST       = 1;
-    WIFI_REG(0x80E8) = 1;
-    WIFI_REG(0x80EA) = 1;
+    W_US_COUNTCNT    = 1;
+    W_US_COMPARECNT  = 1;
     // SetStaState(0x20);
 #if 0
             break;
@@ -1155,8 +1155,8 @@ void Wifi_Stop(void)
     WifiData->flags7 &= ~WFLAG_ARM7_RUNNING;
     W_IE             = 0;
     W_MODE_RST       = 0;
-    WIFI_REG(0x80EA) = 0;
-    WIFI_REG(0x80E8) = 0;
+    W_US_COMPARECNT  = 0;
+    W_US_COUNTCNT    = 0;
     W_TXSTATCNT      = 0;
     WIFI_REG(0x800A) = 0;
     W_TXBUF_BEACON   = 0;

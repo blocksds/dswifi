@@ -131,6 +131,30 @@ extern "C" {
 #define W_RX_LEN_CROP       WIFI_REG(0x80DA)
 #define W_RXFILTER2         WIFI_REG(0x80E0)
 
+// Wifi Timers
+// -----------
+
+#define W_US_COUNTCNT       WIFI_REG(0x80E8)
+#define W_US_COMPARECNT     WIFI_REG(0x80EA)
+#define W_CONFIG_0ECh       WIFI_REG(0x80EC)
+#define W_CMD_COUNTCNT      WIFI_REG(0x80EE)
+#define W_US_COMPARE0       WIFI_REG(0x80F0)
+#define W_US_COMPARE1       WIFI_REG(0x80F2)
+#define W_US_COMPARE2       WIFI_REG(0x80F4)
+#define W_US_COMPARE3       WIFI_REG(0x80F6)
+#define W_US_COUNT0         WIFI_REG(0x80F8)
+#define W_US_COUNT1         WIFI_REG(0x80FA)
+#define W_US_COUNT2         WIFI_REG(0x80FC)
+#define W_US_COUNT3         WIFI_REG(0x80FE)
+// WIFI_REG(0x8100)
+// WIFI_REG(0x8102)
+// WIFI_REG(0x8104)
+// WIFI_REG(0x8106)
+#define W_CONTENTFREE       WIFI_REG(0x810C)
+#define W_PRE_BEACON        WIFI_REG(0x8110)
+#define W_CMD_COUNT         WIFI_REG(0x8118)
+#define W_BEACON_COUNT      WIFI_REG(0x811C)
+
 // Registers TODO
 // --------------
 
