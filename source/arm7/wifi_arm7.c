@@ -85,13 +85,22 @@ void ProxySetLedState(int state)
 
 void Wifi_RFInit(void)
 {
-    static int RF_Reglist[16] = {
-        0x146, 0x148, 0x14A, 0x14C, 0x120, 0x122, 0x154, 0x144,
-        0x130, 0x132, 0x140, 0x142, 0x38,  0x124, 0x128, 0x150
-    };
-
-    for (int i = 0; i < 16; i++)
-        WIFI_REG(RF_Reglist[i]) = Wifi_FlashReadHWord(0x44 + i * 2);
+    WIFI_REG(0x146) = Wifi_FlashReadHWord(0x44);
+    WIFI_REG(0x148) = Wifi_FlashReadHWord(0x46);
+    WIFI_REG(0x14A) = Wifi_FlashReadHWord(0x48);
+    WIFI_REG(0x14C) = Wifi_FlashReadHWord(0x4A);
+    WIFI_REG(0x120) = Wifi_FlashReadHWord(0x4C);
+    WIFI_REG(0x122) = Wifi_FlashReadHWord(0x4E);
+    WIFI_REG(0x154) = Wifi_FlashReadHWord(0x50);
+    WIFI_REG(0x144) = Wifi_FlashReadHWord(0x52);
+    WIFI_REG(0x130) = Wifi_FlashReadHWord(0x54);
+    WIFI_REG(0x132) = Wifi_FlashReadHWord(0x56);
+    WIFI_REG(0x140) = Wifi_FlashReadHWord(0x58);
+    WIFI_REG(0x142) = Wifi_FlashReadHWord(0x5A);
+    WIFI_REG(0x38)  = Wifi_FlashReadHWord(0x5C);
+    WIFI_REG(0x124) = Wifi_FlashReadHWord(0x5E);
+    WIFI_REG(0x128) = Wifi_FlashReadHWord(0x60);
+    WIFI_REG(0x150) = Wifi_FlashReadHWord(0x62);
 
     int numchannels        = Wifi_FlashReadByte(0x42);
     int channel_extrabits  = Wifi_FlashReadByte(0x41);
