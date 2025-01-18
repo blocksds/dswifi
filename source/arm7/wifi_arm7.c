@@ -368,6 +368,7 @@ void Wifi_Intr_TxEnd(void)
         arm7qlen       = 0;
         return;
     }
+
     if ((WifiData->txbufOut != WifiData->txbufIn)
         // && (!(WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
         // || WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
@@ -856,7 +857,7 @@ void Wifi_Start(void)
     switch (W_MODE_WEP & 7)
     {
         case 0: // infrastructure mode?
-            W_IF = 0xFFFF;
+            W_IF = IRQ_ALL_BITS;
             W_IE = 0x003F;
 
             W_RXSTAT_OVF_IE  = 0x1FFF;
@@ -871,7 +872,7 @@ void Wifi_Start(void)
             break;
 
         case 1: // ad-hoc mode? -- beacons are required to be created!
-            W_IF = 0xFFF;
+            W_IF = 0xFFF; // TODO: Is this a bug?
             W_IE = 0x703F;
 
             W_RXSTAT_OVF_IE  = 0x1FFF;
@@ -888,7 +889,7 @@ void Wifi_Start(void)
 
         case 2: // DS comms mode?
 #endif
-    W_IF = 0xFFFF;
+    W_IF = IRQ_ALL_BITS;
     // W_IE = 0xE03F;
     W_IE = 0x40B3;
 
@@ -967,13 +968,13 @@ void Wifi_SetWepMode(int wepmode)
     if (wepmode < 0 || wepmode > 7)
         return;
 
-    if (wepmode == 0)
+    if (wepmode == WEPMODE_NONE)
         W_WEP_CNT = WEP_CNT_DISABLE;
     else
         W_WEP_CNT = WEP_CNT_ENABLE;
 
-    if (wepmode == 0)
-        wepmode = 1;
+    if (wepmode == WEPMODE_NONE)
+        wepmode = WEPMODE_40BIT;
 
     W_MODE_WEP = (W_MODE_WEP & 0xFFC7) | (wepmode << 3);
 }
@@ -1006,8 +1007,6 @@ void Wifi_DisableTempPowerSave(void)
 
 int Wifi_TxQueue(u16 *data, int datalen)
 {
-    int i, j;
-
     if (arm7qlen)
     {
         if (!Wifi_TxBusy())
@@ -1015,11 +1014,11 @@ int Wifi_TxQueue(u16 *data, int datalen)
             Wifi_TxRaw(arm7q, arm7qlen);
             arm7qlen = 0;
 
-            j = (datalen + 1) >> 1;
+            int j = (datalen + 1) >> 1;
             if (j > 1024)
                 return 0;
 
-            for (i = 0; i < j; i++)
+            for (int i = 0; i < j; i++)
                 arm7q[i] = data[i];
 
             arm7qlen = datalen;
@@ -1035,11 +1034,11 @@ int Wifi_TxQueue(u16 *data, int datalen)
 
     arm7qlen = 0;
 
-    j = (datalen + 1) >> 1;
+    int j = (datalen + 1) >> 1;
     if (j > 1024)
         return 0;
 
-    for (i = 0; i < j; i++)
+    for (int i = 0; i < j; i++)
         arm7q[i] = data[i];
 
     arm7qlen = datalen;

@@ -76,6 +76,7 @@ extern "C" {
 #define IRQ_POST_BEACON_TIMESLOT    BIT(13)
 #define IRQ_BEACON_TIMESLOT         BIT(14)
 #define IRQ_PRE_BEACON_TIMESLOT     BIT(15)
+#define IRQ_ALL_BITS                0xFFFF
 
 #define W_MACADDR           WIFI_REG_ARR(0x8018) // 3 registers
 #define W_BSSID             WIFI_REG_ARR(0x8020) // 3 registers
