@@ -136,14 +136,13 @@ void Wifi_RxSetup(void)
 
 void Wifi_WakeUp(void)
 {
-    u32 i;
     W_POWER_US = 0;
 
     swiDelay(67109); // 8ms delay
 
     Wifi_BBPowerOn();
 
-    i = Wifi_BBRead(1);
+    u32 i = Wifi_BBRead(1);
     Wifi_BBWrite(1, i & 0x7f);
     Wifi_BBWrite(1, i);
 
@@ -503,14 +502,15 @@ void Wifi_Interrupt(void)
     } while (wIF);
 }
 
-static u8 scanlist[] = { 1, 6, 11, 2, 3, 7, 8, 1, 6, 11, 4, 5, 9, 10, 1, 6, 11, 12, 13 };
-
-static int scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
-static int scanIndex     = 0;
+static int scanIndex = 0;
 
 void Wifi_Update(void)
 {
-    int i;
+    static const u8 scanlist[] = {
+        1, 6, 11, 2, 3, 7, 8, 1, 6, 11, 4, 5, 9, 10, 1, 6, 11, 12, 13
+    };
+    static int scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
+
     if (!WifiData)
         return;
 
@@ -567,11 +567,11 @@ void Wifi_Update(void)
                     WifiData->apchannel7 = WifiData->apchannel9;
                     Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
                     Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
-                    for (i = 0; i < 20; i++)
+                    for (int i = 0; i < 20; i++)
                         WifiData->wepkey7[i] = WifiData->wepkey9[i];
-                    for (i = 0; i < 34; i++)
+                    for (int i = 0; i < 34; i++)
                         WifiData->ssid7[i] = WifiData->ssid9[i];
-                    for (i = 0; i < 16; i++)
+                    for (int i = 0; i < 16; i++)
                         WifiData->baserates7[i] = WifiData->baserates9[i];
                     if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
                         WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
