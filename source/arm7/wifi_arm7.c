@@ -37,7 +37,7 @@ int Wifi_BBRead(int a)
 int Wifi_BBWrite(int a, int b)
 {
     int i = 0x2710;
-    while ((W_BB_BUSY & 1))
+    while (W_BB_BUSY & 1)
     {
         if (!i--)
             return -1;
@@ -596,14 +596,14 @@ void Wifi_Intr_CntOverflow(void)
     for (int i = 0; i < CNT_STAT_NUM; i++)
     {
         int d = WIFI_REG(count_ofs_list[i]);
-        WifiData->stats[s++] += (d & 0xFF);
-        WifiData->stats[s++] += ((d >> 8) & 0xFF);
+        WifiData->stats[s++] += d & 0xFF;
+        WifiData->stats[s++] += (d >> 8) & 0xFF;
     }
 }
 
 void Wifi_Intr_TxEnd(void)
 {
-    WifiData->stats[WSTAT_DEBUG] = ((W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF));
+    WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
     if (!Wifi_TxCheck())
     {
         return;
@@ -1173,16 +1173,16 @@ void Wifi_Stop(void)
     int oldIME = enterCriticalSection();
 
     WifiData->flags7 &= ~WFLAG_ARM7_RUNNING;
-    W_IE             = 0;
-    W_MODE_RST       = 0;
-    W_US_COMPARECNT  = 0;
-    W_US_COUNTCNT    = 0;
-    W_TXSTATCNT      = 0;
-    W_X_00A          = 0;
-    W_TXBUF_BEACON   = 0;
 
-    W_TXREQ_RESET = 0xFFFF;
-    W_TXBUF_RESET = 0xFFFF;
+    W_IE            = 0;
+    W_MODE_RST      = 0;
+    W_US_COMPARECNT = 0;
+    W_US_COUNTCNT   = 0;
+    W_TXSTATCNT     = 0;
+    W_X_00A         = 0;
+    W_TXBUF_BEACON  = 0;
+    W_TXREQ_RESET   = 0xFFFF;
+    W_TXBUF_RESET   = 0xFFFF;
 
     // Wifi_Shutdown();
 
