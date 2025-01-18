@@ -155,6 +155,28 @@ extern "C" {
 #define W_CMD_COUNT         WIFI_REG(0x8118)
 #define W_BEACON_COUNT      WIFI_REG(0x811C)
 
+// Configuration Ports
+// -------------------
+
+#define W_CONFIG_120       WIFI_REG(0x8120)
+#define W_CONFIG_122       WIFI_REG(0x8122)
+#define W_CONFIG_124       WIFI_REG(0x8124)
+// WIFI_REG(0x8126)
+#define W_CONFIG_128       WIFI_REG(0x8128)
+// WIFI_REG(0x812A)
+#define W_CONFIG_130       WIFI_REG(0x8130)
+#define W_CONFIG_132       WIFI_REG(0x8132)
+#define W_POST_BEACON      WIFI_REG(0x8134)
+#define W_CONFIG_140       WIFI_REG(0x8140)
+#define W_CONFIG_142       WIFI_REG(0x8142)
+#define W_CONFIG_144       WIFI_REG(0x8144)
+#define W_CONFIG_146       WIFI_REG(0x8146)
+#define W_CONFIG_148       WIFI_REG(0x8148)
+#define W_CONFIG_14A       WIFI_REG(0x814A)
+#define W_CONFIG_14C       WIFI_REG(0x814C)
+#define W_CONFIG_150       WIFI_REG(0x8150)
+#define W_CONFIG_154       WIFI_REG(0x8154)
+
 // Registers TODO
 // --------------
 

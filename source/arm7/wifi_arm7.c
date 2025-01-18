@@ -85,22 +85,22 @@ void ProxySetLedState(int state)
 
 void Wifi_RFInit(void)
 {
-    WIFI_REG(0x146) = Wifi_FlashReadHWord(0x44);
-    WIFI_REG(0x148) = Wifi_FlashReadHWord(0x46);
-    WIFI_REG(0x14A) = Wifi_FlashReadHWord(0x48);
-    WIFI_REG(0x14C) = Wifi_FlashReadHWord(0x4A);
-    WIFI_REG(0x120) = Wifi_FlashReadHWord(0x4C);
-    WIFI_REG(0x122) = Wifi_FlashReadHWord(0x4E);
-    WIFI_REG(0x154) = Wifi_FlashReadHWord(0x50);
-    WIFI_REG(0x144) = Wifi_FlashReadHWord(0x52);
-    WIFI_REG(0x130) = Wifi_FlashReadHWord(0x54);
-    WIFI_REG(0x132) = Wifi_FlashReadHWord(0x56);
-    WIFI_REG(0x140) = Wifi_FlashReadHWord(0x58);
-    WIFI_REG(0x142) = Wifi_FlashReadHWord(0x5A);
-    WIFI_REG(0x38)  = Wifi_FlashReadHWord(0x5C);
-    WIFI_REG(0x124) = Wifi_FlashReadHWord(0x5E);
-    WIFI_REG(0x128) = Wifi_FlashReadHWord(0x60);
-    WIFI_REG(0x150) = Wifi_FlashReadHWord(0x62);
+    W_CONFIG_146 = Wifi_FlashReadHWord(0x44);
+    W_CONFIG_148 = Wifi_FlashReadHWord(0x46);
+    W_CONFIG_14A = Wifi_FlashReadHWord(0x48);
+    W_CONFIG_14C = Wifi_FlashReadHWord(0x4A);
+    W_CONFIG_120 = Wifi_FlashReadHWord(0x4C);
+    W_CONFIG_122 = Wifi_FlashReadHWord(0x4E);
+    W_CONFIG_154 = Wifi_FlashReadHWord(0x50);
+    W_CONFIG_144 = Wifi_FlashReadHWord(0x52);
+    W_CONFIG_130 = Wifi_FlashReadHWord(0x54);
+    W_CONFIG_132 = Wifi_FlashReadHWord(0x56);
+    W_CONFIG_140 = Wifi_FlashReadHWord(0x58);
+    W_CONFIG_142 = Wifi_FlashReadHWord(0x5A);
+    W_POWER_TX   = Wifi_FlashReadHWord(0x5C);
+    W_CONFIG_124 = Wifi_FlashReadHWord(0x5E);
+    W_CONFIG_128 = Wifi_FlashReadHWord(0x60);
+    W_CONFIG_150 = Wifi_FlashReadHWord(0x62);
 
     int numchannels        = Wifi_FlashReadByte(0x42);
     int channel_extrabits  = Wifi_FlashReadByte(0x41);
@@ -1066,15 +1066,15 @@ void Wifi_Start(void)
 
     // Wifi_WakeUp();
 
-    W_WEP_CNT        = 0x8000;
-    WIFI_REG(0x8134) = 0xFFFF;
-    W_AID_HIGH       = 0;
-    W_AID_LOW        = 0;
-    W_US_COUNTCNT    = 1;
-    W_POWER_TX       = 0x0000;
-    W_BSSID[0]       = 0x0000;
-    W_BSSID[1]       = 0x0000;
-    W_BSSID[2]       = 0x0000;
+    W_WEP_CNT     = 0x8000;
+    W_POST_BEACON = 0xFFFF;
+    W_AID_HIGH    = 0;
+    W_AID_LOW     = 0;
+    W_US_COUNTCNT = 1;
+    W_POWER_TX    = 0x0000;
+    W_BSSID[0]    = 0x0000;
+    W_BSSID[1]    = 0x0000;
+    W_BSSID[2]    = 0x0000;
 
     Wifi_TxSetup();
     Wifi_RxSetup();
