@@ -25,28 +25,29 @@ int chdata_save5   = 0;
 
 int Wifi_BBRead(int a)
 {
-    while (W_BBSIOBUSY & 1)
-        ;
-    W_BBSIOCNT = a | 0x6000;
-    while (W_BBSIOBUSY & 1)
-        ;
-    return W_BBSIOREAD;
+    while (W_BB_BUSY & 1);
+
+    W_BB_CNT = a | 0x6000;
+
+    while (W_BB_BUSY & 1);
+
+    return W_BB_READ;
 }
 
 int Wifi_BBWrite(int a, int b)
 {
     int i = 0x2710;
-    while ((W_BBSIOBUSY & 1))
+    while ((W_BB_BUSY & 1))
     {
         if (!i--)
             return -1;
     }
 
-    W_BBSIOWRITE = b;
-    W_BBSIOCNT   = a | 0x5000;
+    W_BB_WRITE = b;
+    W_BB_CNT   = a | 0x5000;
 
     i = 0x2710;
-    while (W_BBSIOBUSY & 1)
+    while (W_BB_BUSY & 1)
     {
         if (!i--)
             return 0;
@@ -56,12 +57,12 @@ int Wifi_BBWrite(int a, int b)
 
 void Wifi_RFWrite(int writedata)
 {
-    while (W_RFSIOBUSY & 1)
-        ;
-    W_RFSIODATA1 = writedata;
-    W_RFSIODATA2 = writedata >> 16;
-    while (W_RFSIOBUSY & 1)
-        ;
+    while (W_RF_BUSY & 1);
+
+    W_RF_DATA1 = writedata;
+    W_RF_DATA2 = writedata >> 16;
+
+    while (W_RF_BUSY & 1);
 }
 
 static int wifi_led_state = 0;
@@ -106,7 +107,7 @@ void Wifi_RFInit(void)
     int channel_extrabits  = Wifi_FlashReadByte(0x41);
     int channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
 
-    WIFI_REG(0x184) = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
+    W_RF_CNT = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
 
     int j = 0xCE;
 
@@ -141,7 +142,7 @@ void Wifi_RFInit(void)
 
 void Wifi_BBInit(void)
 {
-    WIFI_REG(0x160) = 0x0100;
+    W_BB_MODE = 0x0100;
 
     for (int i = 0; i < 0x69; i++)
         Wifi_BBWrite(i, Wifi_FlashReadByte(0x64 + i));
@@ -163,8 +164,8 @@ void Wifi_MacInit(void)
     W_US_COMPARECNT = 0;
     W_CMD_COUNTCNT  = 1;
     W_CONFIG_0ECh   = 0x3F03;
-    WIFI_REG(0x1A2) = 1;
-    WIFI_REG(0x1A0) = 0;
+    W_X_1A2         = 1;
+    W_X_1A0         = 0;
     W_PRE_BEACON    = 0x0800;
     W_PREAMBLE      = 1;
     W_CONFIG_0D4    = 3;
@@ -270,7 +271,7 @@ void Wifi_WakeUp(void)
 
     swiDelay(67109); // 8ms delay
 
-    WIFI_REG(0x8168) = 0;
+    W_BB_POWER = 0;
 
     i = Wifi_BBRead(1);
     Wifi_BBWrite(1, i & 0x7f);
@@ -288,8 +289,9 @@ void Wifi_Shutdown(void)
 
     int a = Wifi_BBRead(0x1E);
     Wifi_BBWrite(0x1E, a | 0x3F);
-    WIFI_REG(0x168) = 0x800D;
-    W_POWER_US      = 1;
+
+    W_BB_POWER = 0x800D;
+    W_POWER_US = 1;
 }
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
@@ -1153,7 +1155,7 @@ void Wifi_Start(void)
     W_TXREQ_RESET = 0xFFFF;
 
     int i = 0xFA0;
-    while (i != 0 && !(WIFI_REG(0x819C) & 0x80))
+    while (i != 0 && !(W_RF_PINS & 0x80))
         i--;
 
     WifiData->flags7 |= WFLAG_ARM7_RUNNING;

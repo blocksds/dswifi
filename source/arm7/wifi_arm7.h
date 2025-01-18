@@ -177,16 +177,43 @@ extern "C" {
 #define W_CONFIG_150       WIFI_REG(0x8150)
 #define W_CONFIG_154       WIFI_REG(0x8154)
 
+// Baseband Chip Ports
+// -------------------
+
+#define W_BB_CNT           WIFI_REG(0x8158)
+#define W_BB_WRITE         WIFI_REG(0x815A)
+#define W_BB_READ          WIFI_REG(0x815C)
+#define W_BB_BUSY          WIFI_REG(0x815E)
+#define W_BB_MODE          WIFI_REG(0x8160)
+#define W_BB_POWER         WIFI_REG(0x8168)
+
+// Internal
+// --------
+
+// WIFI_REG(0x816A)
+// WIFI_REG(0x8170)
+// WIFI_REG(0x8172)
+// WIFI_REG(0x8174)
+// WIFI_REG(0x8176)
+// WIFI_REG(0x8178)
+
+// RF Chip Ports
+// -------------
+
+#define W_RF_DATA2          WIFI_REG(0x817C)
+#define W_RF_DATA1          WIFI_REG(0x817E)
+#define W_RF_BUSY           WIFI_REG(0x8180)
+#define W_RF_CNT            WIFI_REG(0x8184)
+// WIFI_REG(0x8190)
+#define W_TX_HDR_CNT        WIFI_REG(0x8194)
+// WIFI_REG(0x8198)
+#define W_RF_PINS           WIFI_REG(0x819C)
+#define W_X_1A0             WIFI_REG(0x81A0)
+#define W_X_1A2             WIFI_REG(0x81A2)
+#define W_X_1A4             WIFI_REG(0x81A4)
+
 // Registers TODO
 // --------------
-
-#define W_BBSIOCNT      (*((vu16 *)(0x04800158)))
-#define W_BBSIOWRITE    (*((vu16 *)(0x0480015A)))
-#define W_BBSIOREAD     (*((vu16 *)(0x0480015C)))
-#define W_BBSIOBUSY     (*((vu16 *)(0x0480015E)))
-#define W_RFSIODATA2    (*((vu16 *)(0x0480017C)))
-#define W_RFSIODATA1    (*((vu16 *)(0x0480017E)))
-#define W_RFSIOBUSY     (*((vu16 *)(0x04800180)))
 
 #define W_WEPKEY0       (((vu16 *)(0x04805F80)))
 #define W_WEPKEY1       (((vu16 *)(0x04805FA0)))
