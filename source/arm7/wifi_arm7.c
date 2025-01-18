@@ -3,11 +3,10 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-// ARM7 wifi interface code
-
 #include <nds.h>
 
 #include "arm7/wifi_arm7.h"
+#include "arm7/wifi_baseband.h"
 #include "arm7/wifi_flash.h"
 #include "common/spinlock.h"
 
@@ -22,38 +21,6 @@ int chdata_save5   = 0;
 //
 //  Other support
 //
-
-int Wifi_BBRead(int a)
-{
-    while (W_BB_BUSY & 1);
-
-    W_BB_CNT = a | 0x6000;
-
-    while (W_BB_BUSY & 1);
-
-    return W_BB_READ;
-}
-
-int Wifi_BBWrite(int a, int b)
-{
-    int i = 0x2710;
-    while (W_BB_BUSY & 1)
-    {
-        if (!i--)
-            return -1;
-    }
-
-    W_BB_WRITE = b;
-    W_BB_CNT   = a | 0x5000;
-
-    i = 0x2710;
-    while (W_BB_BUSY & 1)
-    {
-        if (!i--)
-            return 0;
-    }
-    return 0;
-}
 
 void Wifi_RFWrite(int writedata)
 {
@@ -138,14 +105,6 @@ void Wifi_RFInit(void)
             j += channel_extrabytes;
         }
     }
-}
-
-void Wifi_BBInit(void)
-{
-    W_BB_MODE = 0x0100;
-
-    for (int i = 0; i < 0x69; i++)
-        Wifi_BBWrite(i, Wifi_FlashReadByte(0x64 + i));
 }
 
 void Wifi_MacInit(void)
@@ -273,7 +232,7 @@ void Wifi_WakeUp(void)
 
     swiDelay(67109); // 8ms delay
 
-    W_BB_POWER = 0;
+    Wifi_BBPowerOn();
 
     i = Wifi_BBRead(1);
     Wifi_BBWrite(1, i & 0x7f);
@@ -292,7 +251,8 @@ void Wifi_Shutdown(void)
     int a = Wifi_BBRead(0x1E);
     Wifi_BBWrite(0x1E, a | 0x3F);
 
-    W_BB_POWER = 0x800D;
+    Wifi_BBPowerOff();
+
     W_POWER_US = 1;
 }
 

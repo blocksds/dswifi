@@ -30,12 +30,9 @@ extern "C" {
 // send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.
 typedef void (*WifiSyncHandler)(void);
 
-int Wifi_BBRead(int a);
-int Wifi_BBWrite(int a, int b);
 void Wifi_RFWrite(int writedata);
 
 void Wifi_RFInit(void);
-void Wifi_BBInit(void);
 void Wifi_WakeUp(void);
 void Wifi_Shutdown(void);
 void Wifi_MacInit(void);
