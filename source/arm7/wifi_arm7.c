@@ -277,11 +277,12 @@ void Wifi_TxRaw(u16 *data, int datalen)
     WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
 }
 
-int Wifi_TxCheck(void)
+static bool Wifi_TxBusy(void)
 {
-    if (W_TXBUSY & 0x0008)
-        return 0;
-    return 1;
+    if (W_TXBUSY & TXBUSY_LOC3_BUSY)
+        return true;
+
+    return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -356,10 +357,10 @@ void Wifi_Intr_CntOverflow(void)
 void Wifi_Intr_TxEnd(void)
 {
     WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
-    if (!Wifi_TxCheck())
-    {
+
+    if (Wifi_TxBusy())
         return;
-    }
+
     if (arm7qlen)
     {
         Wifi_TxRaw(arm7q, arm7qlen);
@@ -737,6 +738,7 @@ void Wifi_Update(void)
             }
             break;
     }
+
     if (WifiData->curChannel != WifiData->reqChannel)
     {
         Wifi_SetChannel(WifiData->reqChannel);
@@ -1008,7 +1010,7 @@ int Wifi_TxQueue(u16 *data, int datalen)
 
     if (arm7qlen)
     {
-        if (Wifi_TxCheck())
+        if (!Wifi_TxBusy())
         {
             Wifi_TxRaw(arm7q, arm7qlen);
             arm7qlen = 0;
@@ -1025,7 +1027,7 @@ int Wifi_TxQueue(u16 *data, int datalen)
         }
         return 0;
     }
-    if (Wifi_TxCheck())
+    if (!Wifi_TxBusy())
     {
         Wifi_TxRaw(data, datalen);
         return 1;

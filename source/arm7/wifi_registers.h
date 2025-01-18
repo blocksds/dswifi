@@ -132,6 +132,13 @@ extern "C" {
 #define W_TXREQ_READ        WIFI_REG(0x80B0)
 #define W_TXBUF_RESET       WIFI_REG(0x80B4)
 #define W_TXBUSY            WIFI_REG(0x80B6)
+
+#define TXBUSY_LOC1_BUSY    BIT(0)
+#define TXBUSY_CMD_BUSY     BIT(1)
+#define TXBUSY_LOC2_BUSY    BIT(2)
+#define TXBUSY_LOC3_BUSY    BIT(3)
+#define TXBUSY_BEACON_BUSY  BIT(4)
+
 #define W_TXSTAT            WIFI_REG(0x80B8)
 // WIFI_REG(0x80BA)
 #define W_PREAMBLE          WIFI_REG(0x80BC)
