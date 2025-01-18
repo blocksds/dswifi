@@ -48,10 +48,15 @@ extern "C" {
 // -----------------
 
 #define W_ID                WIFI_REG(0x8000)
+
+#define ID_NDS_ORIGINAL     0x1440
+#define ID_NDS_LITE         0xC340
+
 #define W_MODE_RST          WIFI_REG(0x8004)
 #define W_MODE_WEP          WIFI_REG(0x8006)
 #define W_TXSTATCNT         WIFI_REG(0x8008)
 #define W_X_00A             WIFI_REG(0x800A)
+
 #define W_IF                WIFI_REG(0x8010)
 #define W_IE                WIFI_REG(0x8012)
 
@@ -79,7 +84,12 @@ extern "C" {
 #define W_TX_RETRYLIMIT     WIFI_REG(0x802C)
 // WIFI_REG(0x802E)
 #define W_RXCNT             WIFI_REG(0x8030)
+
 #define W_WEP_CNT           WIFI_REG(0x8032)
+
+#define WEP_CNT_ENABLE      BIT(15)
+#define WEP_CNT_DISABLE     0
+
 // WIFI_REG(0x8034)
 
 // Powerdown registers

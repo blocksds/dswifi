@@ -837,7 +837,7 @@ void Wifi_Start(void)
 
     // Wifi_WakeUp();
 
-    W_WEP_CNT     = 0x8000;
+    W_WEP_CNT     = WEP_CNT_ENABLE;
     W_POST_BEACON = 0xFFFF;
     W_AID_HIGH    = 0;
     W_AID_LOW     = 0;
@@ -968,9 +968,9 @@ void Wifi_SetWepMode(int wepmode)
         return;
 
     if (wepmode == 0)
-        W_WEP_CNT = 0x0000;
+        W_WEP_CNT = WEP_CNT_DISABLE;
     else
-        W_WEP_CNT = 0x8000;
+        W_WEP_CNT = WEP_CNT_ENABLE;
 
     if (wepmode == 0)
         wepmode = 1;
