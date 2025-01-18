@@ -14,7 +14,7 @@
 
 volatile Wifi_MainStruct *WifiData = 0;
 
-WifiSyncHandler synchandler = 0;
+static WifiSyncHandler synchandler = 0;
 
 int keepalive_time = 0;
 
@@ -22,6 +22,11 @@ int keepalive_time = 0;
 //
 //  Other support
 //
+
+void Wifi_SetSyncHandler(WifiSyncHandler sh)
+{
+    synchandler = sh;
+}
 
 static int wifi_led_state = 0;
 
@@ -1760,59 +1765,4 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
         default: // ignore!
             return 0;
     }
-}
-
-//////////////////////////////////////////////////////////////////////////
-// sync functions
-
-void Wifi_Sync(void)
-{
-    Wifi_Update();
-}
-
-void Wifi_SetSyncHandler(WifiSyncHandler sh)
-{
-    synchandler = sh;
-}
-
-static void wifiAddressHandler(void *address, void *userdata)
-{
-    (void)userdata;
-
-    irqEnable(IRQ_WIFI);
-    Wifi_Init(address);
-}
-
-static void wifiValue32Handler(u32 value, void *data)
-{
-    (void)data;
-
-    switch (value)
-    {
-        case WIFI_DISABLE:
-            irqDisable(IRQ_WIFI);
-            break;
-        case WIFI_ENABLE:
-            irqEnable(IRQ_WIFI);
-            break;
-        case WIFI_SYNC:
-            Wifi_Sync();
-            break;
-        default:
-            break;
-    }
-}
-
-// callback to allow wifi library to notify arm9
-static void arm7_synctoarm9(void)
-{
-    fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
-}
-
-void installWifiFIFO(void)
-{
-    irqSet(IRQ_WIFI, Wifi_Interrupt);     // set up wifi interrupt
-    Wifi_SetSyncHandler(arm7_synctoarm9); // allow wifi lib to notify arm9
-    fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
-    fifoSetAddressHandler(FIFO_DSWIFI, wifiAddressHandler, 0);
 }

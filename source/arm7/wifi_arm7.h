@@ -58,7 +58,6 @@ int Wifi_SendNullFrame(void);
 int Wifi_SendPSPollFrame(void);
 int Wifi_ProcessReceivedFrame(int macbase, int framelen);
 
-void Wifi_Sync(void);
 void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 #ifdef __cplusplus
