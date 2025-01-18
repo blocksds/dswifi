@@ -4,6 +4,9 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/wifi_arm7.h"
+#include "arm7/wifi_ipc.h"
+
+WifiSyncHandler synchandler = NULL;
 
 static void wifiAddressHandler(void *address, void *userdata)
 {
@@ -31,6 +34,17 @@ static void wifiValue32Handler(u32 value, void *data)
         default:
             break;
     }
+}
+
+void Wifi_CallSyncHandler(void)
+{
+    if (synchandler)
+        synchandler();
+}
+
+static void Wifi_SetSyncHandler(WifiSyncHandler sh)
+{
+    synchandler = sh;
 }
 
 // callback to allow wifi library to notify arm9

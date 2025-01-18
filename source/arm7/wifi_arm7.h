@@ -27,11 +27,6 @@ extern volatile Wifi_MainStruct *WifiData;
 // keepalive set for 2 minutes.
 #define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
 
-// Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to
-// synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
-// send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.
-typedef void (*WifiSyncHandler)(void);
-
 void Wifi_WakeUp(void);
 void Wifi_Shutdown(void);
 void Wifi_Interrupt(void);
@@ -57,8 +52,6 @@ int Wifi_SendAssocPacket(void);
 int Wifi_SendNullFrame(void);
 int Wifi_SendPSPollFrame(void);
 int Wifi_ProcessReceivedFrame(int macbase, int framelen);
-
-void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 #ifdef __cplusplus
 };

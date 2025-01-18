@@ -8,13 +8,12 @@
 #include "arm7/wifi_arm7.h"
 #include "arm7/wifi_baseband.h"
 #include "arm7/wifi_flash.h"
+#include "arm7/wifi_ipc.h"
 #include "arm7/wifi_mac.h"
 #include "arm7/wifi_rf.h"
 #include "common/spinlock.h"
 
 volatile Wifi_MainStruct *WifiData = 0;
-
-static WifiSyncHandler synchandler = 0;
 
 int keepalive_time = 0;
 
@@ -22,11 +21,6 @@ int keepalive_time = 0;
 //
 //  Other support
 //
-
-void Wifi_SetSyncHandler(WifiSyncHandler sh)
-{
-    synchandler = sh;
-}
 
 static int wifi_led_state = 0;
 
@@ -215,8 +209,9 @@ int Wifi_QueueRxMacData(u32 base, u32 len)
     if (tempout >= (WIFI_RXBUFFER_SIZE / 2))
         tempout -= (WIFI_RXBUFFER_SIZE / 2);
     WifiData->rxbufOut = tempout;
-    if (synchandler)
-        synchandler();
+
+    Wifi_CallSyncHandler();
+
     return 1;
 }
 
