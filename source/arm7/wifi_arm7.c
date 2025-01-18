@@ -67,7 +67,7 @@ void Wifi_RFWrite(int writedata)
 
 static int wifi_led_state = 0;
 
-void ProxySetLedState(int state)
+static void Wifi_SetLedState(int state)
 {
     if (WifiData->flags9 & WFLAG_ARM9_USELED)
     {
@@ -772,7 +772,7 @@ void Wifi_Update(void)
     switch (WifiData->curMode)
     {
         case WIFIMODE_DISABLED:
-            ProxySetLedState(LED_ALWAYS_ON);
+            Wifi_SetLedState(LED_ALWAYS_ON);
             if (WifiData->reqMode != WIFIMODE_DISABLED)
             {
                 Wifi_Start();
@@ -781,7 +781,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_NORMAL: // main switcher function
-            ProxySetLedState(LED_BLINK_SLOW);
+            Wifi_SetLedState(LED_BLINK_SLOW);
             if (WifiData->reqMode == WIFIMODE_DISABLED)
             {
                 Wifi_Stop();
@@ -861,7 +861,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_SCAN:
-            ProxySetLedState(LED_BLINK_SLOW);
+            Wifi_SetLedState(LED_BLINK_SLOW);
             if (WifiData->reqMode != WIFIMODE_SCAN)
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -901,7 +901,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ASSOCIATE:
-            ProxySetLedState(LED_BLINK_SLOW);
+            Wifi_SetLedState(LED_BLINK_SLOW);
             if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
@@ -944,7 +944,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ASSOCIATED:
-            ProxySetLedState(LED_BLINK_FAST);
+            Wifi_SetLedState(LED_BLINK_FAST);
             keepalive_time++; // TODO: track time more accurately.
             if (keepalive_time > WIFI_KEEPALIVE_COUNT)
             {
@@ -969,7 +969,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_CANNOTASSOCIATE:
-            ProxySetLedState(LED_BLINK_SLOW);
+            Wifi_SetLedState(LED_BLINK_SLOW);
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
