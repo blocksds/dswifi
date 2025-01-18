@@ -585,8 +585,11 @@ void Wifi_Intr_RxEnd(void)
 void Wifi_Intr_CntOverflow(void)
 {
     static const u16 count_ofs_list[CNT_STAT_NUM] = {
-        0x1B0, 0x1B2, 0x1B4, 0x1B6, 0x1B8, 0x1BA, 0x1BC, 0x1BE, 0x1C0,
-        0x1C4, 0x1D0, 0x1D2, 0x1D4, 0x1D6, 0x1D8, 0x1DA, 0x1DC, 0x1DE
+        OFF_RXSTAT_1B0, OFF_RXSTAT_1B2, OFF_RXSTAT_1B4, OFF_RXSTAT_1B6,
+        OFF_RXSTAT_1B8, OFF_RXSTAT_1BA, OFF_RXSTAT_1BC, OFF_RXSTAT_1BE,
+        OFF_TX_ERR_COUNT, OFF_RX_COUNT,
+        OFF_CMD_STAT_1D0, OFF_CMD_STAT_1D2, OFF_CMD_STAT_1D4, OFF_CMD_STAT_1D6,
+        OFF_CMD_STAT_1D8, OFF_CMD_STAT_1DA, OFF_CMD_STAT_1DC, OFF_CMD_STAT_1DE,
     };
 
     int s = CNT_STAT_START;
@@ -1093,9 +1096,10 @@ void Wifi_Start(void)
         case 0: // infrastructure mode?
             W_IF = 0xFFFF;
             W_IE = 0x003F;
-            WIFI_REG(0x81AE) = 0x1fff;
-            // WIFI_REG(0x81AA) = 0x0400;
-            W_RXFILTER       = 0xffff;
+
+            W_RXSTAT_OVF_IE  = 0x1FFF;
+            // W_RXSTAT_INC_IE = 0x0400;
+            W_RXFILTER       = 0xFFFF;
             W_RXFILTER2      = 0x0008;
             W_TXSTATCNT      = 0;
             W_X_00A          = 0;
@@ -1107,8 +1111,9 @@ void Wifi_Start(void)
         case 1: // ad-hoc mode? -- beacons are required to be created!
             W_IF = 0xFFF;
             W_IE = 0x703F;
-            WIFI_REG(0x81AE) = 0x1fff;
-            WIFI_REG(0x81AA) = 0; // 0x400
+
+            W_RXSTAT_OVF_IE  = 0x1FFF;
+            W_RXSTAT_INC_IE  = 0; // 0x400
             W_RXFILTER       = 0x0301;
             W_RXFILTER2      = 0x000D;
             W_TXSTATCNT      = 0xE000;
@@ -1125,11 +1130,11 @@ void Wifi_Start(void)
     // W_IE = 0xE03F;
     W_IE = 0x40B3;
 
-    WIFI_REG(0x81AE) = 0x1fff;
-    WIFI_REG(0x81AA) = 0; // 0x68
-    W_BSSID[0]       = WifiData->MacAddr[0];
-    W_BSSID[1]       = WifiData->MacAddr[1];
-    W_BSSID[2]       = WifiData->MacAddr[2];
+    W_RXSTAT_OVF_IE = 0x1FFF;
+    W_RXSTAT_INC_IE = 0; // 0x68
+    W_BSSID[0]      = WifiData->MacAddr[0];
+    W_BSSID[1]      = WifiData->MacAddr[1];
+    W_BSSID[2]      = WifiData->MacAddr[2];
     // W_RXFILTER      = 0xEFFF;
     // W_RXFILTER2     = 0x0008;
     W_RXFILTER       = 0x0981; // 0x0181

@@ -212,6 +212,55 @@ extern "C" {
 #define W_X_1A2             WIFI_REG(0x81A2)
 #define W_X_1A4             WIFI_REG(0x81A4)
 
+// Wifi Statistics
+// ---------------
+
+#define OFF_RXSTAT_INC_IF   0x81A8
+#define OFF_RXSTAT_INC_IE   0x81AA
+#define OFF_RXSTAT_OVF_IF   0x81AC
+#define OFF_RXSTAT_OVF_IE   0x81AE
+#define OFF_RXSTAT_1B0      0x81B0
+#define OFF_RXSTAT_1B2      0x81B2
+#define OFF_RXSTAT_1B4      0x81B4
+#define OFF_RXSTAT_1B6      0x81B6
+#define OFF_RXSTAT_1B8      0x81B8
+#define OFF_RXSTAT_1BA      0x81BA
+#define OFF_RXSTAT_1BC      0x81BC
+#define OFF_RXSTAT_1BE      0x81BE
+#define OFF_TX_ERR_COUNT    0x81C0
+#define OFF_RX_COUNT        0x81C4
+#define OFF_CMD_STAT_1D0    0x81D0
+#define OFF_CMD_STAT_1D2    0x81D2
+#define OFF_CMD_STAT_1D4    0x81D4
+#define OFF_CMD_STAT_1D6    0x81D6
+#define OFF_CMD_STAT_1D8    0x81D8
+#define OFF_CMD_STAT_1DA    0x81DA
+#define OFF_CMD_STAT_1DC    0x81DC
+#define OFF_CMD_STAT_1DE    0x81DE
+
+#define W_RXSTAT_INC_IF     WIFI_REG(OFF_RXSTAT_INC_IF)
+#define W_RXSTAT_INC_IE     WIFI_REG(OFF_RXSTAT_INC_IE)
+#define W_RXSTAT_OVF_IF     WIFI_REG(OFF_RXSTAT_OVF_IF)
+#define W_RXSTAT_OVF_IE     WIFI_REG(OFF_RXSTAT_OVF_IE)
+#define W_RXSTAT_1B0        WIFI_REG(OFF_RXSTAT_1B0)
+#define W_RXSTAT_1B2        WIFI_REG(OFF_RXSTAT_1B2)
+#define W_RXSTAT_1B4        WIFI_REG(OFF_RXSTAT_1B4)
+#define W_RXSTAT_1B6        WIFI_REG(OFF_RXSTAT_1B6)
+#define W_RXSTAT_1B8        WIFI_REG(OFF_RXSTAT_1B8)
+#define W_RXSTAT_1BA        WIFI_REG(OFF_RXSTAT_1BA)
+#define W_RXSTAT_1BC        WIFI_REG(OFF_RXSTAT_1BC)
+#define W_RXSTAT_1BE        WIFI_REG(OFF_RXSTAT_1BE)
+#define W_TX_ERR_COUNT      WIFI_REG(OFF_TX_ERR_COUNT)
+#define W_RX_COUNT          WIFI_REG(OFF_RX_COUNT)
+#define W_CMD_STAT_1D0      WIFI_REG(OFF_CMD_STAT_1D0)
+#define W_CMD_STAT_1D2      WIFI_REG(OFF_CMD_STAT_1D2)
+#define W_CMD_STAT_1D4      WIFI_REG(OFF_CMD_STAT_1D4)
+#define W_CMD_STAT_1D6      WIFI_REG(OFF_CMD_STAT_1D6)
+#define W_CMD_STAT_1D8      WIFI_REG(OFF_CMD_STAT_1D8)
+#define W_CMD_STAT_1DA      WIFI_REG(OFF_CMD_STAT_1DA)
+#define W_CMD_STAT_1DC      WIFI_REG(OFF_CMD_STAT_1DC)
+#define W_CMD_STAT_1DE      WIFI_REG(OFF_CMD_STAT_1DE)
+
 // Registers TODO
 // --------------
 
