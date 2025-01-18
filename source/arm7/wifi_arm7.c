@@ -146,7 +146,7 @@ void Wifi_MacInit(void)
     W_IE            = 0;
     W_IF            = 0xFFFF;
     WIFI_REG(0x254) = 0;
-    WIFI_REG(0xB4)  = 0xFFFF;
+    W_TXBUF_RESET   = 0xFFFF;
     W_TXBUF_BEACON  = 0;
     W_AID_HIGH      = 0;
     W_AID_LOW       = 0;
@@ -158,9 +158,9 @@ void Wifi_MacInit(void)
     WIFI_REG(0x1A0) = 0;
     WIFI_REG(0x110) = 0x0800;
     WIFI_REG(0xBC)  = 1;
-    WIFI_REG(0xD4)  = 3;
-    WIFI_REG(0xD8)  = 4;
-    WIFI_REG(0xDA)  = 0x0602;
+    W_CONFIG_0D4    = 3;
+    W_CONFIG_0D8    = 4;
+    W_RX_LEN_CROP   = 0x0602;
     W_TXBUF_GAPDISP = 0;
 }
 
@@ -443,10 +443,12 @@ void Wifi_TxRaw(u16 *data, int datalen)
 {
     datalen = (datalen + 3) & (~3);
     Wifi_MACWrite(data, 0, 0, datalen);
-    //	WIFI_REG(0xB8)=0x0001;
+
+    // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    WIFI_REG(0xA8) = 0x8000;
-    WIFI_REG(0xAE) = 0x000D;
+    W_TXBUF_LOC3    = 0x8000;
+    W_TXREQ_SET     = 0x000D;
+
     WifiData->stats[WSTAT_TXPACKETS]++;
     WifiData->stats[WSTAT_TXBYTES] += datalen;
     WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
@@ -454,7 +456,7 @@ void Wifi_TxRaw(u16 *data, int datalen)
 
 int Wifi_TxCheck(void)
 {
-    if (WIFI_REG(0xB6) & 0x0008)
+    if (W_TXBUSY & 0x0008)
         return 0;
     return 1;
 }
@@ -586,7 +588,7 @@ void Wifi_Intr_CntOverflow(void)
 
 void Wifi_Intr_TxEnd(void)
 {
-    WifiData->stats[WSTAT_DEBUG] = ((WIFI_REG(0xA8) & 0x8000) | (WIFI_REG(0xB6) & 0x7FFF));
+    WifiData->stats[WSTAT_DEBUG] = ((W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF));
     if (!Wifi_TxCheck())
     {
         return;
@@ -623,10 +625,10 @@ void Wifi_Intr_TxEnd(void)
                 Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
                 return;
             }
-            // WIFI_REG(0xB8)=0x0001;
+            // W_TXSTAT       = 0x0001;
             W_TX_RETRYLIMIT = 0x0707;
-            WIFI_REG(0xA8)  = 0x8000;
-            WIFI_REG(0xAE)  = 0x000D;
+            W_TXBUF_LOC3    = 0x8000;
+            W_TXREQ_SET     = 0x000D;
         }
     }
 }
@@ -783,9 +785,12 @@ void Wifi_Update(void)
                 W_BSSID[0] = WifiData->MacAddr[0];
                 W_BSSID[1] = WifiData->MacAddr[1];
                 W_BSSID[2] = WifiData->MacAddr[2];
-                WIFI_REG(0xD0) &= ~0x0400;
-                WIFI_REG(0xD0) |= 0x0800; // allow toDS
-                WIFI_REG(0xE0) &= ~0x0002;
+
+                W_RXFILTER &= ~0x0400;
+                W_RXFILTER |= 0x0800; // allow toDS
+
+                W_RXFILTER2 &= ~0x0002;
+
                 WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
             }
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
@@ -815,9 +820,12 @@ void Wifi_Update(void)
                 W_BSSID[0] = WifiData->bssid7[0];
                 W_BSSID[1] = WifiData->bssid7[1];
                 W_BSSID[2] = WifiData->bssid7[2];
-                WIFI_REG(0xD0) |= 0x0400;
-                WIFI_REG(0xD0) &= ~0x0800; // disallow toDS
-                WIFI_REG(0xE0) |= 0x0002;
+
+                W_RXFILTER |= 0x0400;
+                W_RXFILTER &= ~0x0800; // disallow toDS
+
+                W_RXFILTER2 |= 0x0002;
+
                 WifiData->reqChannel = WifiData->apchannel7;
                 Wifi_SetChannel(WifiData->apchannel7);
                 if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
@@ -1072,8 +1080,8 @@ void Wifi_Start(void)
             W_IE = 0x003F;
             WIFI_REG(0x81AE) = 0x1fff;
             // WIFI_REG(0x81AA) = 0x0400;
-            WIFI_REG(0x80D0) = 0xffff;
-            WIFI_REG(0x80E0) = 0x0008;
+            W_RXFILTER       = 0xffff;
+            W_RXFILTER2      = 0x0008;
             WIFI_REG(0x8008) = 0;
             WIFI_REG(0x800A) = 0;
             WIFI_REG(0x80E8) = 0;
@@ -1086,8 +1094,8 @@ void Wifi_Start(void)
             W_IE = 0x703F;
             WIFI_REG(0x81AE) = 0x1fff;
             WIFI_REG(0x81AA) = 0; // 0x400
-            WIFI_REG(0x80D0) = 0x0301;
-            WIFI_REG(0x80E0) = 0x000D;
+            W_RXFILTER       = 0x0301;
+            W_RXFILTER2      = 0x000D;
             WIFI_REG(0x8008) = 0xE000;
             WIFI_REG(0x800A) = 0;
             WIFI_REG(0x8004) = 1;
@@ -1106,10 +1114,10 @@ void Wifi_Start(void)
     W_BSSID[0]       = WifiData->MacAddr[0];
     W_BSSID[1]       = WifiData->MacAddr[1];
     W_BSSID[2]       = WifiData->MacAddr[2];
-    // WIFI_REG(0x80D0)=0xEFFF;
-    // WIFI_REG(0x80E0)=0x0008;
-    WIFI_REG(0x80D0) = 0x0981; // 0x0181
-    WIFI_REG(0x80E0) = 0x0009; // 0x000B
+    // W_RXFILTER      = 0xEFFF;
+    // W_RXFILTER2     = 0x0008;
+    W_RXFILTER       = 0x0981; // 0x0181
+    W_RXFILTER2      = 0x0009; // 0x000B
     WIFI_REG(0x8008) = 0;
     WIFI_REG(0x800A) = 0;
     WIFI_REG(0x8004) = 1;
@@ -1129,7 +1137,7 @@ void Wifi_Start(void)
     Wifi_DisableTempPowerSave();
     // WIFI_REG(0x80AE)=0x0002;
     W_POWERSTATE |= 2;
-    WIFI_REG(0xAC) = 0xFFFF;
+    W_TXREQ_RESET = 0xFFFF;
 
     int i = 0xFA0;
     while (i != 0 && !(WIFI_REG(0x819C) & 0x80))
