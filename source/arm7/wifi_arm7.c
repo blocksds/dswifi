@@ -986,16 +986,19 @@ void Wifi_Update(void)
 //
 //  Wifi User-called Functions
 //
-void Wifi_Init(u32 wifidata)
+void Wifi_Init(void *wifidata)
 {
     WifiData = (Wifi_MainStruct *)wifidata;
 
-    // Initialize NTR WiFi on DSi.
-    gpioSetWifiMode(GPIO_WIFI_MODE_NTR);
-    if (REG_GPIO_WIFI)
-        swiDelay(5 /*ms*/ * 134056);
+    if (isDSiMode())
+    {
+        // Initialize NTR WiFi on DSi.
+        gpioSetWifiMode(GPIO_WIFI_MODE_NTR);
+        if (REG_GPIO_WIFI)
+            swiDelay(5 * 134056); // 5 milliseconds
+    }
 
-    REG_POWERCNT |= 2; // enable power for the wifi
+    powerOn(POWER_WIFI); // Enable power for the WiFi controller
     WIFIWAITCNT =
         WIFI_RAM_N_10_CYCLES | WIFI_RAM_S_6_CYCLES | WIFI_IO_N_6_CYCLES | WIFI_IO_S_4_CYCLES;
 
@@ -2086,7 +2089,7 @@ static void wifiAddressHandler(void *address, void *userdata)
     (void)userdata;
 
     irqEnable(IRQ_WIFI);
-    Wifi_Init((u32)address);
+    Wifi_Init(address);
 }
 
 static void wifiValue32Handler(u32 value, void *data)
