@@ -155,7 +155,7 @@ void Wifi_MacInit(void)
     W_X_00A         = 0;
     W_IE            = 0;
     W_IF            = 0xFFFF;
-    WIFI_REG(0x254) = 0;
+    W_CONFIG_254    = 0;
     W_TXBUF_RESET   = 0xFFFF;
     W_TXBUF_BEACON  = 0;
     W_AID_HIGH      = 0;
