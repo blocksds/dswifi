@@ -182,44 +182,46 @@ void Wifi_TxSetup(void)
         case 0: //
             // 4170,  4028, 4000
             // TxqEndData, TxqEndManCtrl, TxqEndPsPoll
-            WIFI_REG(0x4024)=0xB6B8;
-            WIFI_REG(0x4026)=0x1D46;
-            WIFI_REG(0x416C)=0xB6B8;
-            WIFI_REG(0x416E)=0x1D46;
-            WIFI_REG(0x4790)=0xB6B8;
-            WIFI_REG(0x4792)=0x1D46;
+            W_MACMEM(0x24) = 0xB6B8;
+            W_MACMEM(0x26) = 0x1D46;
+            W_MACMEM(0x16C) = 0xB6B8;
+            W_MACMEM(0x16E) = 0x1D46;
+            W_MACMEM(0x790) = 0xB6B8;
+            W_MACMEM(0x792) = 0x1D46;
             W_TXREQ_SET = 1;
             break;
+
         case 1: //
             // 4AA0, 4958, 4334
             // TxqEndData, TxqEndManCtrl, TxqEndBroadCast
             // 4238, 4000
-            WIFI_REG(0x4234)=0xB6B8;
-            WIFI_REG(0x4236)=0x1D46;
-            WIFI_REG(0x4330)=0xB6B8;
-            WIFI_REG(0x4332)=0x1D46;
-            WIFI_REG(0x4954)=0xB6B8;
-            WIFI_REG(0x4956)=0x1D46;
-            WIFI_REG(0x4A9C)=0xB6B8;
-            WIFI_REG(0x4A9E)=0x1D46;
-            WIFI_REG(0x50C0)=0xB6B8;
-            WIFI_REG(0x50C2)=0x1D46;
+            W_MACMEM(0x234) = 0xB6B8;
+            W_MACMEM(0x236) = 0x1D46;
+            W_MACMEM(0x330) = 0xB6B8;
+            W_MACMEM(0x332) = 0x1D46;
+            W_MACMEM(0x954) = 0xB6B8;
+            W_MACMEM(0x956) = 0x1D46;
+            W_MACMEM(0xA9C) = 0xB6B8;
+            W_MACMEM(0xA9E) = 0x1D46;
+            W_MACMEM(0x10C0) = 0xB6B8;
+            W_MACMEM(0x10C2) = 0x1D46;
             //...
             break;
+
         case 2:
             // 45D8, 4490, 4468
             // TxqEndData, TxqEndManCtrl, TxqEndPsPoll
 
-            WIFI_REG(0x4230)=0xB6B8;
-            WIFI_REG(0x4232)=0x1D46;
-            WIFI_REG(0x4464)=0xB6B8;
-            WIFI_REG(0x4466)=0x1D46;
-            WIFI_REG(0x448C)=0xB6B8;
-            WIFI_REG(0x448E)=0x1D46;
-            WIFI_REG(0x45D4)=0xB6B8;
-            WIFI_REG(0x45D6)=0x1D46;
-            WIFI_REG(0x4BF8)=0xB6B8;
-            WIFI_REG(0x4BFA)=0x1D46;
+            W_MACMEM(0x230) = 0xB6B8;
+            W_MACMEM(0x232) = 0x1D46;
+            W_MACMEM(0x464) = 0xB6B8;
+            W_MACMEM(0x466) = 0x1D46;
+            W_MACMEM(0x48C) = 0xB6B8;
+            W_MACMEM(0x48E) = 0x1D46;
+            W_MACMEM(0x5D4) = 0xB6B8;
+            W_MACMEM(0x5D6) = 0x1D46;
+            W_MACMEM(0xBF8) = 0xB6B8;
+            W_MACMEM(0xBFA) = 0x1D46;
 #endif
     W_TXREQ_SET = 0x000D;
 #if 0
@@ -315,9 +317,11 @@ int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
 u16 Wifi_MACRead(u32 MAC_Base, u32 MAC_Offset)
 {
     MAC_Base += MAC_Offset;
+
     if (MAC_Base >= (W_RXBUF_END & 0x1FFE))
         MAC_Base -= (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
-    return WIFI_REG(0x4000 + MAC_Base);
+
+    return W_MACMEM(MAC_Base);
 }
 
 void Wifi_MACCopy(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
@@ -337,7 +341,7 @@ void Wifi_MACCopy(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
         length -= thislength;
         while (thislength > 0)
         {
-            *(dest++) = WIFI_REG(0x4000 + MAC_Base);
+            *(dest++) = W_MACMEM(MAC_Base);
             MAC_Base += 2;
             thislength -= 2;
         }
@@ -362,7 +366,7 @@ void Wifi_MACWrite(u16 *src, u32 MAC_Base, u32 MAC_Offset, u32 length)
         length -= thislength;
         while (thislength > 0)
         {
-            WIFI_REG(0x4000 + MAC_Base) = *(src++);
+            W_MACMEM(MAC_Base) = *(src++);
             MAC_Base += 2;
             thislength -= 2;
         }
@@ -432,7 +436,7 @@ int Wifi_CopyFirstTxData(s32 macbase)
         length -= seglen;
         while (seglen--)
         {
-            WIFI_REG(0x4000 + macbase) = WifiData->txbufData[readbase++];
+            W_MACMEM(macbase) = WifiData->txbufData[readbase++];
             macbase += 2;
         }
         if (readbase >= WIFI_TXBUFFER_SIZE / 2)
@@ -525,13 +529,13 @@ void Wifi_SetBeaconChannel(int channel)
     {
         if (beacon_channel & 1)
         {
-            WIFI_REG(0x4000 + beacon_channel - 1) =
-                ((WIFI_REG(0x4000 + beacon_channel - 1) & 0x00FF) | (channel << 8));
+            W_MACMEM(beacon_channel - 1) =
+                (W_MACMEM(beacon_channel - 1) & 0x00FF) | (channel << 8);
         }
         else
         {
-            WIFI_REG(0x4000 + beacon_channel) =
-                ((WIFI_REG(0x4000 + beacon_channel) & 0xFF00) | channel);
+            W_MACMEM(beacon_channel) =
+                (W_MACMEM(beacon_channel) & 0xFF00) | channel;
         }
     }
 }
@@ -623,19 +627,19 @@ void Wifi_Intr_TxEnd(void)
         if (Wifi_CopyFirstTxData(0))
         {
             keepalive_time = 0;
-            if (WIFI_REG(0x4008) == 0)
+            if (W_MACMEM(0x8) == 0)
             {
                 // if rate dne, fill it in.
-                WIFI_REG(0x4008) = WifiData->maxrate7;
+                W_MACMEM(0x8) = WifiData->maxrate7;
             }
-            if (WIFI_REG(0x400C) & 0x4000)
+            if (W_MACMEM(0xC) & 0x4000)
             {
                 // wep is enabled, fill in the IV.
-                WIFI_REG(0x4024) = (W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0xFFFF;
-                WIFI_REG(0x4026) =
+                W_MACMEM(0x24) = (W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0xFFFF;
+                W_MACMEM(0x26) =
                     ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF) | (WifiData->wepkeyid7 << 14);
             }
-            if ((WIFI_REG(0x400C) & 0x00FF) == 0x0080)
+            if ((W_MACMEM(0xC) & 0x00FF) == 0x0080)
             {
                 Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
                 return;
@@ -1024,14 +1028,13 @@ void Wifi_Init(void *wifidata)
     WifiData->reqReqFlags    = 0;
     WifiData->maxrate7       = 0x0A;
 
-    int i;
-    for (i = 0x4000; i < 0x6000; i += 2)
-        WIFI_REG(i) = 0;
+    for (int i = 0; i < W_MACMEM_SIZE; i += 2)
+        W_MACMEM(i) = 0;
 
     // load in the WFC data.
     Wifi_GetWfcSettings(WifiData);
 
-    for (i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
         WifiData->MacAddr[i] = Wifi_FlashReadHWord(0x36 + i * 2);
 
     W_IE = 0;

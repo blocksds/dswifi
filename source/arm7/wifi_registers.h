@@ -308,10 +308,12 @@ extern "C" {
 // WIFI_REG(0x82F4)
 // WIFI_REG(0x82F6)
 
-// Registers TODO
-// --------------
+// Wifi RAM
+// ========
 
-#define W_MACMEM            WIFI_REG_ARR(0x4000)
+#define W_MACMEM(addr)      WIFI_REG(0x4000 + (addr))
+#define W_MACMEM_SIZE       0x2000
+
 // WIFI_REG_ARR(0x5F60)
 #define W_WEPKEY_0          WIFI_REG_ARR(0x5F80)
 #define W_WEPKEY_1          WIFI_REG_ARR(0x5FA0)
