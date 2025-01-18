@@ -17,12 +17,12 @@ void Wifi_MacInit(void)
     W_CONFIG_254    = 0;
     W_TXBUF_RESET   = 0xFFFF;
     W_TXBUF_BEACON  = 0;
-    W_AID_HIGH      = 0;
+    W_AID_FULL      = 0;
     W_AID_LOW       = 0;
     W_US_COUNTCNT   = 0;
     W_US_COMPARECNT = 0;
     W_CMD_COUNTCNT  = 1;
-    W_CONFIG_0ECh   = 0x3F03;
+    W_CONFIG_0EC    = 0x3F03;
     W_X_1A2         = 1;
     W_X_1A0         = 0;
     W_PRE_BEACON    = 0x0800;

@@ -80,7 +80,7 @@ extern "C" {
 #define W_MACADDR           WIFI_REG_ARR(0x8018) // 3 registers
 #define W_BSSID             WIFI_REG_ARR(0x8020) // 3 registers
 #define W_AID_LOW           WIFI_REG(0x8028)
-#define W_AID_HIGH          WIFI_REG(0x802A)
+#define W_AID_FULL          WIFI_REG(0x802A)
 #define W_TX_RETRYLIMIT     WIFI_REG(0x802C)
 // WIFI_REG(0x802E)
 #define W_RXCNT             WIFI_REG(0x8030)
@@ -100,7 +100,7 @@ extern "C" {
 #define W_POWERSTATE        WIFI_REG(0x803C)
 #define W_POWERFORCE        WIFI_REG(0x8040)
 #define W_RANDOM            WIFI_REG(0x8044)
-#define W_POWER_UNKNOWN     WIFI_REG(0x8048)
+#define W_POWER_48          WIFI_REG(0x8048)
 
 // Receive Control/Memory
 // ----------------------
@@ -166,7 +166,7 @@ extern "C" {
 
 #define W_US_COUNTCNT       WIFI_REG(0x80E8)
 #define W_US_COMPARECNT     WIFI_REG(0x80EA)
-#define W_CONFIG_0ECh       WIFI_REG(0x80EC)
+#define W_CONFIG_0EC        WIFI_REG(0x80EC)
 #define W_CMD_COUNTCNT      WIFI_REG(0x80EE)
 #define W_US_COMPARE0       WIFI_REG(0x80F0)
 #define W_US_COMPARE1       WIFI_REG(0x80F2)

@@ -839,7 +839,7 @@ void Wifi_Start(void)
 
     W_WEP_CNT     = WEP_CNT_ENABLE;
     W_POST_BEACON = 0xFFFF;
-    W_AID_HIGH    = 0;
+    W_AID_FULL    = 0;
     W_AID_LOW     = 0;
     W_US_COUNTCNT = 1;
     W_POWER_TX    = 0x0000;
@@ -915,7 +915,7 @@ void Wifi_Start(void)
             break;
     }
 #endif
-    W_POWER_UNKNOWN = 0x0000;
+    W_POWER_48 = 0;
     Wifi_DisableTempPowerSave();
     // W_TXREQ_SET = 0x0002;
     W_POWERSTATE |= 2;
@@ -997,7 +997,7 @@ void Wifi_SetPreambleType(int preamble_type)
 void Wifi_DisableTempPowerSave(void)
 {
     W_POWER_TX &= ~2;
-    W_POWER_UNKNOWN = 0;
+    W_POWER_48 = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1594,7 +1594,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                         {
                             // status code, 0==success
                             W_AID_LOW  = ((u16 *)(data + 24))[2];
-                            W_AID_HIGH = ((u16 *)(data + 24))[2];
+                            W_AID_FULL = ((u16 *)(data + 24))[2];
 
                             // set max rate
                             WifiData->maxrate7 = 0xA;
