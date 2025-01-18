@@ -157,7 +157,7 @@ void Wifi_MacInit(void)
     WIFI_REG(0x1A2) = 1;
     WIFI_REG(0x1A0) = 0;
     WIFI_REG(0x110) = 0x0800;
-    WIFI_REG(0xBC)  = 1;
+    W_PREAMBLE      = 1;
     W_CONFIG_0D4    = 3;
     W_CONFIG_0D8    = 4;
     W_RX_LEN_CROP   = 0x0602;
@@ -178,7 +178,7 @@ void Wifi_TxSetup(void)
             WIFI_REG(0x416E)=0x1D46;
             WIFI_REG(0x4790)=0xB6B8;
             WIFI_REG(0x4792)=0x1D46;
-            WIFI_REG(0x80AE) = 1;
+            W_TXREQ_SET = 1;
             break;
         case 1: //
             // 4AA0, 4958, 4334
@@ -211,7 +211,7 @@ void Wifi_TxSetup(void)
             WIFI_REG(0x4BF8)=0xB6B8;
             WIFI_REG(0x4BFA)=0x1D46;
 #endif
-    WIFI_REG(0x80AE) = 0x000D;
+    W_TXREQ_SET = 0x000D;
 #if 0
     }
 #endif
@@ -993,7 +993,7 @@ void Wifi_Init(u32 wifidata)
     Wifi_FlashInitData();
 
     // reset/shutdown wifi:
-    WIFI_REG(0x4) = 0xffff;
+    W_MODE_RST = 0xFFFF;
     Wifi_Stop();
     Wifi_Shutdown(); // power off wifi
 
@@ -1057,23 +1057,23 @@ void Wifi_Start(void)
 
     // Wifi_WakeUp();
 
-    WIFI_REG(0x8032) = 0x8000;
+    W_WEP_CNT        = 0x8000;
     WIFI_REG(0x8134) = 0xFFFF;
-    WIFI_REG(0x802A) = 0;
+    W_AID_HIGH       = 0;
     W_AID_LOW        = 0;
     WIFI_REG(0x80E8) = 1;
-    WIFI_REG(0x8038) = 0x0000;
-    WIFI_REG(0x20)   = 0x0000;
-    WIFI_REG(0x22)   = 0x0000;
-    WIFI_REG(0x24)   = 0x0000;
+    W_POWER_TX       = 0x0000;
+    W_BSSID[0]       = 0x0000;
+    W_BSSID[1]       = 0x0000;
+    W_BSSID[2]       = 0x0000;
 
     Wifi_TxSetup();
     Wifi_RxSetup();
 
-    WIFI_REG(0x8030) = 0x8000;
+    W_RXCNT = 0x8000;
 
 #if 0
-    switch (WIFI_REG(0x8006) & 7)
+    switch (W_MODE_WEP & 7)
     {
         case 0: // infrastructure mode?
             W_IF = 0xFFFF;
@@ -1082,10 +1082,10 @@ void Wifi_Start(void)
             // WIFI_REG(0x81AA) = 0x0400;
             W_RXFILTER       = 0xffff;
             W_RXFILTER2      = 0x0008;
-            WIFI_REG(0x8008) = 0;
+            W_TXSTATCNT      = 0;
             WIFI_REG(0x800A) = 0;
             WIFI_REG(0x80E8) = 0;
-            WIFI_REG(0x8004) = 1;
+            W_MODE_RST       = 1;
             // SetStaState(0x40);
             break;
 
@@ -1096,19 +1096,20 @@ void Wifi_Start(void)
             WIFI_REG(0x81AA) = 0; // 0x400
             W_RXFILTER       = 0x0301;
             W_RXFILTER2      = 0x000D;
-            WIFI_REG(0x8008) = 0xE000;
+            W_TXSTATCNT      = 0xE000;
             WIFI_REG(0x800A) = 0;
-            WIFI_REG(0x8004) = 1;
+            W_MODE_RST       = 1;
             // ??
             WIFI_REG(0x80EA) = 1;
-            WIFI_REG(0x80AE) = 2;
+            W_TXREQ_SET      = 2;
             break;
 
         case 2: // DS comms mode?
 #endif
     W_IF = 0xFFFF;
-    // W_IE=0xE03F;
-    W_IE             = 0x40B3;
+    // W_IE = 0xE03F;
+    W_IE = 0x40B3;
+
     WIFI_REG(0x81AE) = 0x1fff;
     WIFI_REG(0x81AA) = 0; // 0x68
     W_BSSID[0]       = WifiData->MacAddr[0];
@@ -1118,9 +1119,9 @@ void Wifi_Start(void)
     // W_RXFILTER2     = 0x0008;
     W_RXFILTER       = 0x0981; // 0x0181
     W_RXFILTER2      = 0x0009; // 0x000B
-    WIFI_REG(0x8008) = 0;
+    W_TXSTATCNT      = 0;
     WIFI_REG(0x800A) = 0;
-    WIFI_REG(0x8004) = 1;
+    W_MODE_RST       = 1;
     WIFI_REG(0x80E8) = 1;
     WIFI_REG(0x80EA) = 1;
     // SetStaState(0x20);
@@ -1132,10 +1133,9 @@ void Wifi_Start(void)
             break;
     }
 #endif
-
-    WIFI_REG(0x8048) = 0x0000;
+    W_POWER_UNKNOWN = 0x0000;
     Wifi_DisableTempPowerSave();
-    // WIFI_REG(0x80AE)=0x0002;
+    // W_TXREQ_SET = 0x0002;
     W_POWERSTATE |= 2;
     W_TXREQ_RESET = 0xFFFF;
 
@@ -1154,15 +1154,15 @@ void Wifi_Stop(void)
 
     WifiData->flags7 &= ~WFLAG_ARM7_RUNNING;
     W_IE             = 0;
-    WIFI_REG(0x8004) = 0;
+    W_MODE_RST       = 0;
     WIFI_REG(0x80EA) = 0;
     WIFI_REG(0x80E8) = 0;
-    WIFI_REG(0x8008) = 0;
+    W_TXSTATCNT      = 0;
     WIFI_REG(0x800A) = 0;
-    WIFI_REG(0x8080) = 0;
+    W_TXBUF_BEACON   = 0;
 
-    WIFI_REG(0x80AC) = 0xFFFF;
-    WIFI_REG(0x80B4) = 0xFFFF;
+    W_TXREQ_RESET = 0xFFFF;
+    W_TXBUF_RESET = 0xFFFF;
 
     // Wifi_Shutdown();
 
@@ -1257,6 +1257,7 @@ void Wifi_SetBeaconPeriod(int beacon_period)
 {
     if (beacon_period < 0x10 || beacon_period > 0x3E7)
         return;
+
     W_BEACONINT = beacon_period;
 }
 
@@ -1264,6 +1265,7 @@ void Wifi_SetMode(int wifimode)
 {
     if (wifimode > 3 || wifimode < 0)
         return;
+
     W_MODE_WEP = (W_MODE_WEP & 0xfff8) | wifimode;
 }
 
@@ -1271,7 +1273,8 @@ void Wifi_SetPreambleType(int preamble_type)
 {
     if (preamble_type > 1 || preamble_type < 0)
         return;
-    WIFI_REG(0x80BC) = (WIFI_REG(0x80BC) & 0xFFBF) | (preamble_type << 6);
+
+    W_PREAMBLE = (W_PREAMBLE & 0xFFBF) | (preamble_type << 6);
 }
 
 void Wifi_DisableTempPowerSave(void)
