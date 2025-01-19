@@ -564,10 +564,10 @@ void Wifi_Update(void)
                 W_BSSID[1] = WifiData->MacAddr[1];
                 W_BSSID[2] = WifiData->MacAddr[2];
 
-                W_RXFILTER &= ~0x0400;
-                W_RXFILTER |= 0x0800; // allow toDS
+                W_RXFILTER &= ~RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
+                W_RXFILTER |= RXFILTER_DATA_OTHER_BSSID; // allow toDS?
 
-                W_RXFILTER2 &= ~0x0002;
+                W_RXFILTER2 &= ~RXFILTER2_IGNORE_STA_DS;
 
                 WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
             }
@@ -599,10 +599,10 @@ void Wifi_Update(void)
                 W_BSSID[1] = WifiData->bssid7[1];
                 W_BSSID[2] = WifiData->bssid7[2];
 
-                W_RXFILTER |= 0x0400;
-                W_RXFILTER &= ~0x0800; // disallow toDS
+                W_RXFILTER |= RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
+                W_RXFILTER &= ~RXFILTER_DATA_OTHER_BSSID; // disallow toDS?
 
-                W_RXFILTER2 |= 0x0002;
+                W_RXFILTER2 |= RXFILTER2_IGNORE_STA_DS;
 
                 WifiData->reqChannel = WifiData->apchannel7;
                 Wifi_SetChannel(WifiData->apchannel7);
@@ -864,7 +864,7 @@ void Wifi_Start(void)
             W_RXSTAT_OVF_IE  = 0x1FFF;
             // W_RXSTAT_INC_IE = 0x0400;
             W_RXFILTER       = 0xFFFF;
-            W_RXFILTER2      = 0x0008;
+            W_RXFILTER2      = RXFILTER2_IGNORE_DS_DS;
             W_TXSTATCNT      = 0;
             W_X_00A          = 0;
             W_US_COUNTCNT    = 0;
@@ -878,8 +878,11 @@ void Wifi_Start(void)
 
             W_RXSTAT_OVF_IE  = 0x1FFF;
             W_RXSTAT_INC_IE  = 0; // 0x400
-            W_RXFILTER       = 0x0301;
-            W_RXFILTER2      = 0x000D;
+            W_RXFILTER       = RXFILTER_MGMT_BEACON_OTHER_BSSID
+                             | RXFILTER_MP_EMPTY_REPLY
+                             | RXFILTER_MGMT_NONBEACON_OTHER_BSSID;
+            W_RXFILTER2      = RXFILTER2_IGNORE_STA_STA | RXFILTER2_IGNORE_DS_STA
+                             | RXFILTER2_IGNORE_DS_DS;
             W_TXSTATCNT      = 0xE000;
             W_X_00A          = 0;
             W_MODE_RST       = 1;
@@ -900,9 +903,12 @@ void Wifi_Start(void)
     W_BSSID[1]      = WifiData->MacAddr[1];
     W_BSSID[2]      = WifiData->MacAddr[2];
     // W_RXFILTER      = 0xEFFF;
-    // W_RXFILTER2     = 0x0008;
-    W_RXFILTER       = 0x0981; // 0x0181
-    W_RXFILTER2      = 0x0009; // 0x000B
+    // W_RXFILTER2     = RXFILTER2_IGNORE_DS_DS;
+    W_RXFILTER       = RXFILTER_MGMT_BEACON_OTHER_BSSID
+                     | RXFILTER_MP_ACK
+                     | RXFILTER_MP_EMPTY_REPLY
+                     | RXFILTER_DATA_OTHER_BSSID; // or 0x0181
+    W_RXFILTER2      = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA; // or 0x000B
     W_TXSTATCNT      = 0;
     W_X_00A          = 0;
     W_MODE_RST       = 1;

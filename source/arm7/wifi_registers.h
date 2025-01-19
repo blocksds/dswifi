@@ -170,11 +170,34 @@ extern "C" {
 #define W_CMD_TOTALTIME     WIFI_REG(0x80C0)
 #define W_CMD_REPLYTIME     WIFI_REG(0x80C4)
 // WIFI_REG(0x80C8)
+
 #define W_RXFILTER          WIFI_REG(0x80D0)
+
+#define RXFILTER_MGMT_BEACON_OTHER_BSSID       BIT(0) ///< Beacons with mismatched BSSID, data frame retransmits
+#define RXFILTER_DATA_SUBTYPE_1                BIT(1) ///< Data frames, subtype 1 (non-multiplay)
+#define RXFILTER_DATA_SUBTYPE_2                BIT(2) ///< Data frames, subtype 2 (non-multiplay)
+#define RXFILTER_DATA_SUBTYPE_3                BIT(3) ///< Data frames, subtype 3
+#define RXFILTER_DATA_SUBTYPE_5                BIT(4) ///< Data frames, subtype 5
+#define RXFILTER_DATA_SUBTYPE_6                BIT(5) ///< Data frames, subtype 6
+#define RXFILTER_DATA_SUBTYPE_7                BIT(6) ///< Data frames, subtype 7
+#define RXFILTER_MP_ACK                        BIT(7) ///< Multiplay ACKs
+#define RXFILTER_MP_EMPTY_REPLY                BIT(8) ///< Empty multiplay replies
+#define RXFILTER_MGMT_NONBEACON_OTHER_BSSID    BIT(9) ///< Non-beacon management packets with mismatched BSSID
+#define RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX BIT(10) ///< Same as bit 9
+#define RXFILTER_DATA_OTHER_BSSID              BIT(11) ///< Data frames with mismatched BSSID
+#define RXFILTER_UPDATE_WRCSR                  BIT(12) ///< Update W_RXBUF_WRCSR after IEEE header
+#define RXFILTER_ALL                           (0x1FFF) // Bits 13-15 don't exit
+
 #define W_CONFIG_0D4        WIFI_REG(0x80D4)
 #define W_CONFIG_0D8        WIFI_REG(0x80D8)
 #define W_RX_LEN_CROP       WIFI_REG(0x80DA)
+
 #define W_RXFILTER2         WIFI_REG(0x80E0)
+
+#define RXFILTER2_IGNORE_STA_STA    (1 << 0) ///< Ignore fromSTA/toSTA packets
+#define RXFILTER2_IGNORE_STA_DS     (1 << 1) ///< Ignore fromSTA/toDS packets
+#define RXFILTER2_IGNORE_DS_STA     (1 << 2) ///< Ignore fromDS/toSTA packets
+#define RXFILTER2_IGNORE_DS_DS      (1 << 3) ///< Ignore fromDS/toDS packets
 
 // Wifi Timers
 // -----------
