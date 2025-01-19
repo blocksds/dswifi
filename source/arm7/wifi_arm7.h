@@ -41,7 +41,7 @@ void Wifi_Start(void);
 void Wifi_Stop(void);
 void Wifi_SetWepKey(void *wepkey);
 void Wifi_SetWepMode(int wepmode);
-void Wifi_SetMode(int wifimode);
+void Wifi_SetSleepMode(int mode);
 void Wifi_SetPreambleType(int preamble_type);
 void Wifi_TxSetup(void);
 void Wifi_RxSetup(void);

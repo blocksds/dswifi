@@ -53,7 +53,21 @@ extern "C" {
 #define ID_NDS_LITE         0xC340
 
 #define W_MODE_RST          WIFI_REG(0x8004)
+
 #define W_MODE_WEP          WIFI_REG(0x8006)
+
+#define MODE_WEP_SLEEP_AUTO     (0) // Auto sleep/wakeup mode
+#define MODE_WEP_SLEEP_WAKE     (1)
+#define MODE_WEP_SLEEP_OFF      (2)
+#define MODE_WEP_SLEEP_MANUAL   (3) // Use W_POWERSTATE bit 0..1 manaully
+#define MODE_WEP_SLEEP_MASK     (7)
+
+#define MODE_WEP_KEYLEN_64BIT   (1 << 3)
+#define MODE_WEP_KEYLEN_128BIT  (2 << 3)
+#define MODE_WEP_KEYLEN_152BIT  (3 << 3)
+#define MODE_WEP_KEYLEN_SHIFT   (3)
+#define MODE_WEP_KEYLEN_MASK    (7 << 3)
+
 #define W_TXSTATCNT         WIFI_REG(0x8008)
 #define W_X_00A             WIFI_REG(0x800A)
 

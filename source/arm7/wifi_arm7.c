@@ -811,7 +811,7 @@ void Wifi_Init(void *wifidata)
     W_MACADDR[2] = WifiData->MacAddr[2];
 
     W_TX_RETRYLIMIT = 7;
-    Wifi_SetMode(2);
+    Wifi_SetSleepMode(MODE_WEP_SLEEP_OFF);
     Wifi_SetWepMode(WEPMODE_NONE);
 
     Wifi_SetChannel(1);
@@ -977,15 +977,16 @@ void Wifi_SetWepMode(int wepmode)
     if (wepmode == WEPMODE_NONE)
         wepmode = WEPMODE_40BIT;
 
-    W_MODE_WEP = (W_MODE_WEP & 0xFFC7) | (wepmode << 3);
+    W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_KEYLEN_MASK)
+               | (wepmode << MODE_WEP_KEYLEN_SHIFT);
 }
 
-void Wifi_SetMode(int wifimode)
+void Wifi_SetSleepMode(int mode)
 {
-    if (wifimode > 3 || wifimode < 0)
+    if (mode > 3 || mode < 0)
         return;
 
-    W_MODE_WEP = (W_MODE_WEP & 0xfff8) | wifimode;
+    W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_SLEEP_MASK) | mode;
 }
 
 void Wifi_SetPreambleType(int preamble_type)
