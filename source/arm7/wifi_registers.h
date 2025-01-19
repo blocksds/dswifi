@@ -69,6 +69,12 @@ extern "C" {
 #define MODE_WEP_KEYLEN_MASK    (7 << 3)
 
 #define W_TXSTATCNT         WIFI_REG(0x8008)
+
+#define TXSTATCNT_IRQ_MP_REPLY  BIT(12) ///< Trigger IRQ on REPLY transmit
+#define TXSTATCNT_IRQ_MP_ACK    BIT(13) ///< Trigger IRQ on CMD ACK transmit
+#define TXSTATCNT_IRQ_MP_CMD    BIT(14) ///< Trigger IRQ on CMD DATA transmit
+#define TXSTATCNT_IRQ_BEACON    BIT(15) ///< Trigger IRQ on BEACON transmit
+
 #define W_X_00A             WIFI_REG(0x800A)
 
 #define W_IF                WIFI_REG(0x8010)

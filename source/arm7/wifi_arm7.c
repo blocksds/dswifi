@@ -883,7 +883,9 @@ void Wifi_Start(void)
                              | RXFILTER_MGMT_NONBEACON_OTHER_BSSID;
             W_RXFILTER2      = RXFILTER2_IGNORE_STA_STA | RXFILTER2_IGNORE_DS_STA
                              | RXFILTER2_IGNORE_DS_DS;
-            W_TXSTATCNT      = 0xE000;
+            W_TXSTATCNT      = TXSTATCNT_IRQ_MP_ACK
+                             | TXSTATCNT_IRQ_MP_CMD
+                             | TXSTATCNT_IRQ_BEACON;
             W_X_00A          = 0;
             W_MODE_RST       = 1;
             // ??
