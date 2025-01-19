@@ -16,6 +16,13 @@ extern "C" {
 
 #include "arm7/wifi_registers.h"
 
+/// BB-Chip Mitsumi MM3155 (DS) or BB/RF-Chip Mitsumi MM3218 (DS-Lite)
+
+#define REG_MM3218_CHIP_ID                      0x00
+#define REG_MM3218_CCA                          0x13
+#define REG_MM3218_EXT_GAIN                     0x1E
+#define REG_MM3218_ENERGY_DETECTION_THRESHOLD   0x35
+
 int Wifi_BBRead(int addr);
 int Wifi_BBWrite(int addr, int value);
 void Wifi_BBInit(void);

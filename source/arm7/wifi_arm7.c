@@ -141,6 +141,7 @@ void Wifi_WakeUp(void)
 
     Wifi_BBPowerOn();
 
+    // Unset and set bit 7 of register 1 to reset the baseband
     u32 i = Wifi_BBRead(1);
     Wifi_BBWrite(1, i & 0x7f);
     Wifi_BBWrite(1, i);
@@ -156,7 +157,7 @@ void Wifi_Shutdown(void)
         Wifi_RFWrite(0xC008);
 
     int a = Wifi_BBRead(0x1E);
-    Wifi_BBWrite(0x1E, a | 0x3F);
+    Wifi_BBWrite(REG_MM3218_EXT_GAIN, a | 0x3F);
 
     Wifi_BBPowerOff();
 
@@ -815,8 +816,8 @@ void Wifi_Init(void *wifidata)
 
     Wifi_SetChannel(1);
 
-    Wifi_BBWrite(0x13, 0x00);
-    Wifi_BBWrite(0x35, 0x1F);
+    Wifi_BBWrite(REG_MM3218_CCA, 0x00);
+    Wifi_BBWrite(REG_MM3218_ENERGY_DETECTION_THRESHOLD, 0x1F);
 
     // Wifi_Shutdown();
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));

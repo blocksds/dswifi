@@ -175,7 +175,7 @@ void Wifi_SetChannel(int channel)
             }
             else
             {
-                Wifi_BBWrite(0x1E, Wifi_FlashReadByte(0x146 + channel));
+                Wifi_BBWrite(REG_MM3218_EXT_GAIN, Wifi_FlashReadByte(0x146 + channel));
             }
 
             break;
