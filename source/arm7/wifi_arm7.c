@@ -38,13 +38,6 @@ static void Wifi_SetLedState(int state)
     }
 }
 
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
-{
-    ((u16 *)dest)[0] = ((u16 *)src)[0];
-    ((u16 *)dest)[1] = ((u16 *)src)[1];
-    ((u16 *)dest)[2] = ((u16 *)src)[2];
-}
-
 //////////////////////////////////////////////////////////////////////////
 //
 //  MAC Copy functions

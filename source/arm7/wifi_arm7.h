@@ -24,8 +24,6 @@ extern volatile Wifi_MainStruct *WifiData;
 void Wifi_Interrupt(void);
 void Wifi_Update(void);
 
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
-
 #ifdef __cplusplus
 };
 #endif

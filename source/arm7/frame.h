@@ -12,6 +12,8 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
+void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
+
 int Wifi_SendOpenSystemAuthPacket(void);
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text);
 int Wifi_SendAssocPacket(void);
