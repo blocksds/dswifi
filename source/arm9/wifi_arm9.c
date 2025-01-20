@@ -966,13 +966,17 @@ u32 Wifi_Init(int initflags)
     {
         Wifi_Data_Struct = malloc(sizeof(Wifi_MainStruct));
         if (Wifi_Data_Struct == NULL)
-        {
             return 0;
-        }
     }
+
+    // Clear the struct whenever we initialize WiFi, not just the first time it
+    // is allocated.
     memset(Wifi_Data_Struct, 0, sizeof(Wifi_MainStruct));
-    DC_FlushAll();
-    // should prevent the cache from eating us alive.
+    DC_FlushRange(Wifi_Data_Struct, sizeof(Wifi_MainStruct));
+
+    // Normally we will access the struct through an uncached mirror so that the
+    // ARM7 and ARM9 always see the same values without any need for cache
+    // management.
     WifiData = (Wifi_MainStruct *)memUncached(Wifi_Data_Struct);
 
 #ifdef WIFI_USE_TCP_SGIP
