@@ -44,14 +44,9 @@ void Wifi_SetWepMode(int wepmode);
 void Wifi_SetSleepMode(int mode);
 void Wifi_SetPreambleType(int preamble_type);
 void Wifi_TxSetup(void);
+int Wifi_TxQueue(u16 *data, int datalen);
 void Wifi_RxSetup(void);
 void Wifi_DisableTempPowerSave(void);
-
-int Wifi_SendOpenSystemAuthPacket(void);
-int Wifi_SendAssocPacket(void);
-int Wifi_SendNullFrame(void);
-int Wifi_SendPSPollFrame(void);
-int Wifi_ProcessReceivedFrame(int macbase, int framelen);
 
 #ifdef __cplusplus
 };
