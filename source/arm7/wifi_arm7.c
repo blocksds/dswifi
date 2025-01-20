@@ -172,12 +172,6 @@ void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
     ((u16 *)dest)[2] = ((u16 *)src)[2];
 }
 
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
-{
-    return (((u16 *)mac1)[0] == ((u16 *)mac2)[0]) && (((u16 *)mac1)[1] == ((u16 *)mac2)[1])
-           && (((u16 *)mac1)[2] == ((u16 *)mac2)[2]);
-}
-
 //////////////////////////////////////////////////////////////////////////
 //
 //  MAC Copy functions
@@ -1051,4 +1045,3 @@ void Wifi_DisableTempPowerSave(void)
     W_POWER_TX &= ~2;
     W_POWER_48 = 0;
 }
-

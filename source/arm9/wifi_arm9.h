@@ -45,7 +45,6 @@ typedef void (*WifiPacketHandler)(int, int);
 typedef void (*WifiSyncHandler)(void);
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
 
 uint32_t Wifi_Init(int initflags);
 bool Wifi_InitDefault(bool useFirmwareSettings);

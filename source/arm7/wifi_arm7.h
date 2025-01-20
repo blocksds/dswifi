@@ -33,7 +33,6 @@ void Wifi_Interrupt(void);
 void Wifi_Update(void);
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
 
 void Wifi_Init(void *WifiData);
 void Wifi_Deinit(void);

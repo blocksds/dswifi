@@ -10,6 +10,14 @@
 
 // 802.11b system
 
+static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
+{
+    volatile u16 *m1 = mac1;
+    volatile u16 *m2 = mac2;
+
+    return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
+}
+
 static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 {
     // tx header
