@@ -4,7 +4,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/wifi_arm7.h"
-#include "arm7/wifi_ipc.h"
+#include "arm7/ipc.h"
 
 WifiSyncHandler synchandler = NULL;
 

@@ -3,14 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-// ARM7 wifi interface header
-
 #ifndef DSWIFI_ARM7_WIFI_ARM7_H__
 #define DSWIFI_ARM7_WIFI_ARM7_H__
-
-#ifndef ARM7
-#    error Wifi is only accessible from the ARM7
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +12,7 @@ extern "C" {
 
 #include <nds.h>
 
-#include "arm7/wifi_registers.h"
+#include "arm7/registers.h"
 #include "common/wifi_shared.h"
 
 extern volatile Wifi_MainStruct *WifiData;

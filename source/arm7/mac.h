@@ -3,12 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_WIFI_MAC_H__
-#define DSWIFI_ARM7_WIFI_MAC_H__
-
-#ifndef ARM7
-#    error Wifi is only accessible from the ARM7
-#endif
+#ifndef DSWIFI_ARM7_MAC_H__
+#define DSWIFI_ARM7_MAC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,4 +21,4 @@ void Wifi_MACWrite(u16 *src, u32 MAC_Base, u32 MAC_Offset, u32 length);
 };
 #endif
 
-#endif // DSWIFI_ARM7_WIFI_MAC_H__
+#endif // DSWIFI_ARM7_MAC_H__

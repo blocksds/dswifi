@@ -5,13 +5,13 @@
 
 #include <nds.h>
 
+#include "arm7/baseband.h"
+#include "arm7/flash.h"
+#include "arm7/frame.h"
+#include "arm7/ipc.h"
+#include "arm7/mac.h"
+#include "arm7/rf.h"
 #include "arm7/wifi_arm7.h"
-#include "arm7/wifi_baseband.h"
-#include "arm7/wifi_flash.h"
-#include "arm7/wifi_frame.h"
-#include "arm7/wifi_ipc.h"
-#include "arm7/wifi_mac.h"
-#include "arm7/wifi_rf.h"
 #include "common/spinlock.h"
 
 volatile Wifi_MainStruct *WifiData = 0;

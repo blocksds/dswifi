@@ -3,18 +3,14 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_WIFI_BASEBAND_H__
-#define DSWIFI_ARM7_WIFI_BASEBAND_H__
-
-#ifndef ARM7
-#    error Wifi is only accessible from the ARM7
-#endif
+#ifndef DSWIFI_ARM7_BASEBAND_H__
+#define DSWIFI_ARM7_BASEBAND_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "arm7/wifi_registers.h"
+#include "arm7/registers.h"
 
 /// BB-Chip Mitsumi MM3155 (DS) or BB/RF-Chip Mitsumi MM3218 (DS-Lite)
 
@@ -41,4 +37,4 @@ static inline void Wifi_BBPowerOff(void)
 };
 #endif
 
-#endif // DSWIFI_ARM7_WIFI_BASEBAND_H__
+#endif // DSWIFI_ARM7_BASEBAND_H__

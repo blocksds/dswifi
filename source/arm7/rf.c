@@ -3,11 +3,11 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/baseband.h"
+#include "arm7/flash.h"
+#include "arm7/mac.h"
+#include "arm7/registers.h"
 #include "arm7/wifi_arm7.h"
-#include "arm7/wifi_baseband.h"
-#include "arm7/wifi_flash.h"
-#include "arm7/wifi_mac.h"
-#include "arm7/wifi_registers.h"
 
 static u16 beacon_channel = 0;
 static int chdata_save5 = 0;

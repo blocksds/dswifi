@@ -4,8 +4,8 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/wifi_arm7.h"
-#include "arm7/wifi_registers.h"
-#include "arm7/wifi_mac.h"
+#include "arm7/registers.h"
+#include "arm7/mac.h"
 #include "common/spinlock.h"
 
 // 802.11b system
