@@ -5,6 +5,7 @@
 
 #include "arm7/wifi_arm7.h"
 #include "arm7/ipc.h"
+#include "arm7/setup.h"
 
 WifiSyncHandler synchandler = NULL;
 
