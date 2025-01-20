@@ -7,7 +7,7 @@
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 
-WifiSyncHandler synchandler = NULL;
+static WifiSyncHandler synchandler = NULL;
 
 static void wifiAddressHandler(void *address, void *userdata)
 {

@@ -17,7 +17,7 @@
 
 volatile Wifi_MainStruct *WifiData = 0;
 
-int keepalive_time = 0;
+static int keepalive_time = 0;
 
 //////////////////////////////////////////////////////////////////////////
 //
