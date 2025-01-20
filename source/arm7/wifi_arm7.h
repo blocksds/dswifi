@@ -26,8 +26,6 @@ void Wifi_Update(void);
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
-int Wifi_TxQueue(u16 *data, int datalen);
-
 #ifdef __cplusplus
 };
 #endif

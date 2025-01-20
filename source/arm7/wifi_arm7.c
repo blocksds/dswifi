@@ -11,6 +11,7 @@
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/rf.h"
+#include "arm7/tx_queue.h"
 #include "arm7/setup.h"
 #include "arm7/wifi_arm7.h"
 
@@ -83,14 +84,6 @@ int Wifi_QueueRxMacData(u32 base, u32 len)
     return 1;
 }
 
-static bool Wifi_TxBusy(void)
-{
-    if (W_TXBUSY & TXBUSY_LOC3_BUSY)
-        return true;
-
-    return false;
-}
-
 int Wifi_CheckTxBuf(s32 offset)
 {
     offset += WifiData->txbufIn;
@@ -133,64 +126,6 @@ int Wifi_CopyFirstTxData(s32 macbase)
     WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
 
     return packetlen;
-}
-
-u16 arm7q[1024];
-u16 arm7qlen = 0;
-
-void Wifi_TxRaw(u16 *data, int datalen)
-{
-    datalen = (datalen + 3) & (~3);
-    Wifi_MACWrite(data, 0, 0, datalen);
-
-    // W_TXSTAT       = 0x0001;
-    W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_LOC3    = 0x8000;
-    W_TXREQ_SET     = 0x000D;
-
-    WifiData->stats[WSTAT_TXPACKETS]++;
-    WifiData->stats[WSTAT_TXBYTES] += datalen;
-    WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
-}
-
-int Wifi_TxQueue(u16 *data, int datalen)
-{
-    if (arm7qlen)
-    {
-        if (!Wifi_TxBusy())
-        {
-            Wifi_TxRaw(arm7q, arm7qlen);
-            arm7qlen = 0;
-
-            int j = (datalen + 1) >> 1;
-            if (j > 1024)
-                return 0;
-
-            for (int i = 0; i < j; i++)
-                arm7q[i] = data[i];
-
-            arm7qlen = datalen;
-            return 1;
-        }
-        return 0;
-    }
-    if (!Wifi_TxBusy())
-    {
-        Wifi_TxRaw(data, datalen);
-        return 1;
-    }
-
-    arm7qlen = 0;
-
-    int j = (datalen + 1) >> 1;
-    if (j > 1024)
-        return 0;
-
-    for (int i = 0; i < j; i++)
-        arm7q[i] = data[i];
-
-    arm7qlen = datalen;
-    return 1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -266,14 +201,18 @@ void Wifi_Intr_TxEnd(void)
 {
     WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
 
+    // If TX is still busy it means that some packet has just been sent but
+    // there are more being sent in the MAC.
     if (Wifi_TxBusy())
         return;
 
-    if (arm7qlen)
+    // There is no active transfer, so all packets have been sent. Check if the
+    // transfer queue has data. If it has data, flush the queue to the MAC to
+    // start a new transfer.
+    if (!Wifi_TxQueueEmpty())
     {
-        Wifi_TxRaw(arm7q, arm7qlen);
+        Wifi_TxQueueFlush();
         keepalive_time = 0;
-        arm7qlen       = 0;
         return;
     }
 
