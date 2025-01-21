@@ -112,3 +112,51 @@ int Wifi_TxQueueAdd(u16 *data, int datalen)
         }
     }
 }
+
+static int Wifi_CheckTxBuf(s32 offset)
+{
+    offset += WifiData->txbufIn;
+    if (offset >= WIFI_TXBUFFER_SIZE / 2)
+        offset -= WIFI_TXBUFFER_SIZE / 2;
+
+    return WifiData->txbufData[offset];
+}
+
+// non-wrapping function.
+int Wifi_CopyFirstTxData(s32 macbase)
+{
+    int packetlen = Wifi_CheckTxBuf(5);
+    int readbase  = WifiData->txbufIn;
+    int length    = (packetlen + 12 - 4 + 1) / 2;
+
+    int max = WifiData->txbufOut - WifiData->txbufIn;
+    if (max < 0)
+        max += WIFI_TXBUFFER_SIZE / 2;
+    if (max < length)
+        return 0;
+
+    while (length > 0)
+    {
+        int seglen = length;
+
+        if (readbase + seglen > WIFI_TXBUFFER_SIZE / 2)
+            seglen = WIFI_TXBUFFER_SIZE / 2 - readbase;
+
+        length -= seglen;
+        while (seglen--)
+        {
+            W_MACMEM(macbase) = WifiData->txbufData[readbase++];
+            macbase += 2;
+        }
+
+        if (readbase >= WIFI_TXBUFFER_SIZE / 2)
+            readbase -= WIFI_TXBUFFER_SIZE / 2;
+    }
+    WifiData->txbufIn = readbase;
+
+    WifiData->stats[WSTAT_TXPACKETS]++;
+    WifiData->stats[WSTAT_TXBYTES] += packetlen + 12 - 4;
+    WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
+
+    return packetlen;
+}

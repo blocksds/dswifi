@@ -11,6 +11,7 @@
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/rf.h"
+#include "arm7/rx_queue.h"
 #include "arm7/tx_queue.h"
 #include "arm7/setup.h"
 #include "arm7/wifi_arm7.h"
@@ -52,98 +53,6 @@ static void Wifi_SetLedState(int state)
 
 //////////////////////////////////////////////////////////////////////////
 //
-//  MAC Copy functions
-//
-
-int Wifi_QueueRxMacData(u32 base, u32 len)
-{
-    int buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
-    if (buflen < 0)
-    {
-        buflen += WIFI_RXBUFFER_SIZE;
-    }
-    if (buflen < len)
-    {
-        WifiData->stats[WSTAT_RXQUEUEDLOST]++;
-        return 0;
-    }
-
-    WifiData->stats[WSTAT_RXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_RXQUEUEDBYTES] += len;
-
-    int temp    = WIFI_RXBUFFER_SIZE - (WifiData->rxbufOut * 2);
-    int tempout = WifiData->rxbufOut;
-
-    int macofs = 0;
-    if (len > temp)
-    {
-        Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, temp);
-        macofs += temp;
-        len -= temp;
-        tempout = 0;
-    }
-
-    Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, len);
-    tempout += len / 2;
-    if (tempout >= (WIFI_RXBUFFER_SIZE / 2))
-        tempout -= (WIFI_RXBUFFER_SIZE / 2);
-    WifiData->rxbufOut = tempout;
-
-    Wifi_CallSyncHandler();
-
-    return 1;
-}
-
-static int Wifi_CheckTxBuf(s32 offset)
-{
-    offset += WifiData->txbufIn;
-    if (offset >= WIFI_TXBUFFER_SIZE / 2)
-        offset -= WIFI_TXBUFFER_SIZE / 2;
-
-    return WifiData->txbufData[offset];
-}
-
-// non-wrapping function.
-int Wifi_CopyFirstTxData(s32 macbase)
-{
-    int packetlen = Wifi_CheckTxBuf(5);
-    int readbase  = WifiData->txbufIn;
-    int length    = (packetlen + 12 - 4 + 1) / 2;
-
-    int max = WifiData->txbufOut - WifiData->txbufIn;
-    if (max < 0)
-        max += WIFI_TXBUFFER_SIZE / 2;
-    if (max < length)
-        return 0;
-
-    while (length > 0)
-    {
-        int seglen = length;
-
-        if (readbase + seglen > WIFI_TXBUFFER_SIZE / 2)
-            seglen = WIFI_TXBUFFER_SIZE / 2 - readbase;
-
-        length -= seglen;
-        while (seglen--)
-        {
-            W_MACMEM(macbase) = WifiData->txbufData[readbase++];
-            macbase += 2;
-        }
-
-        if (readbase >= WIFI_TXBUFFER_SIZE / 2)
-            readbase -= WIFI_TXBUFFER_SIZE / 2;
-    }
-    WifiData->txbufIn = readbase;
-
-    WifiData->stats[WSTAT_TXPACKETS]++;
-    WifiData->stats[WSTAT_TXBYTES] += packetlen + 12 - 4;
-    WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
-
-    return packetlen;
-}
-
-//////////////////////////////////////////////////////////////////////////
-//
 //  Wifi Interrupts
 //
 
@@ -170,7 +79,7 @@ void Wifi_Intr_RxEnd(void)
             // If the packet type is requested (or promiscous mode is enabled),
             // forward it to the rx queue
             Wifi_KeepaliveCountReset();
-            if (!Wifi_QueueRxMacData(base, full_packetlen))
+            if (!Wifi_RxQueueMacData(base, full_packetlen))
             {
                 // Failed, ignore for now.
             }

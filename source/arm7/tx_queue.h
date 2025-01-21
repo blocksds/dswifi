@@ -22,6 +22,8 @@ void Wifi_TxQueueFlush(void);
 bool Wifi_TxQueueEmpty(void);
 int Wifi_TxQueueAdd(u16 *data, int datalen);
 
+int Wifi_CopyFirstTxData(s32 macbase);
+
 #ifdef __cplusplus
 };
 #endif
