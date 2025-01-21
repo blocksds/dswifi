@@ -5,6 +5,8 @@
 
 #include <nds/asminc.h>
 
+#include "common/spinlock_asm.h"
+
     .syntax unified
 
 #ifdef ARM7
@@ -23,31 +25,31 @@
 BEGIN_ASM_FUNC SLasm_Acquire
 
     ldr     r2, [r0]
-    cmp     r2, #0
-    movne   r0, #1
+    cmp     r2, #SPINLOCK_NOBODY
+    movne   r0, #SPINLOCK_INUSE
     bxne    lr
 
     mov     r2, r1
     swp     r2, r2, [r0]
-    cmp     r2, #0
+    cmp     r2, #SPINLOCK_NOBODY
     cmpne   r2, r1
-    moveq   r0, #0
+    moveq   r0, #SPINLOCK_OK
     bxeq    lr
 
     swp     r2, r2, [r0]
-    mov     r0, #1
+    mov     r0, #SPINLOCK_INUSE
     bx      lr
 
 BEGIN_ASM_FUNC SLasm_Release
 
     ldr     r2, [r0]
     cmp     r2, r1
-    movne   r0, #2
+    movne   r0, #SPINLOCK_ERROR
     bxne    lr
 
-    mov     r2, #0
+    mov     r2, #SPINLOCK_NOBODY
     swp     r2, r2, [r0]
     cmp     r2, r1
-    moveq   r0, #0
-    movne   r0, #2
+    moveq   r0, #SPINLOCK_OK
+    movne   r0, #SPINLOCK_ERROR
     bx      lr
