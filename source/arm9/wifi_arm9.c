@@ -116,9 +116,12 @@ WifiSyncHandler synchandler     = 0;
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
 {
-    ((u16 *)dest)[0] = ((u16 *)src)[0];
-    ((u16 *)dest)[1] = ((u16 *)src)[1];
-    ((u16 *)dest)[2] = ((u16 *)src)[2];
+    volatile u16 *d = dest;
+    volatile u16 *s = src;
+
+    d[0] = s[0];
+    d[1] = s[1];
+    d[2] = s[2];
 }
 
 static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
