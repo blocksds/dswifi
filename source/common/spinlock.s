@@ -25,13 +25,13 @@
 BEGIN_ASM_FUNC SLasm_Acquire
 
     ldr     r2, [r0]
-    cmp     r2, #SPINLOCK_NOBODY
+    cmp     r2, #SPINLOCK_OWNER_NOBODY
     movne   r0, #SPINLOCK_INUSE
     bxne    lr
 
     mov     r2, r1
     swp     r2, r2, [r0]
-    cmp     r2, #SPINLOCK_NOBODY
+    cmp     r2, #SPINLOCK_OWNER_NOBODY
     cmpne   r2, r1
     moveq   r0, #SPINLOCK_OK
     bxeq    lr
@@ -47,7 +47,7 @@ BEGIN_ASM_FUNC SLasm_Release
     movne   r0, #SPINLOCK_ERROR
     bxne    lr
 
-    mov     r2, #SPINLOCK_NOBODY
+    mov     r2, #SPINLOCK_OWNER_NOBODY
     swp     r2, r2, [r0]
     cmp     r2, r1
     moveq   r0, #SPINLOCK_OK

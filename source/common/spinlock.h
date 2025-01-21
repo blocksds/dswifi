@@ -18,7 +18,7 @@ extern "C" {
 // Macros to be used with structs that contain a "u32 spinlock" field
 #define Spinlock_Acquire(structtolock) SLasm_Acquire(&((structtolock).spinlock), SPINLOCK_VALUE)
 #define Spinlock_Release(structtolock) SLasm_Release(&((structtolock).spinlock), SPINLOCK_VALUE)
-#define Spinlock_Check(structtolock)   (((structtolock).spinlock) != SPINLOCK_NOBODY)
+#define Spinlock_Check(structtolock)   (((structtolock).spinlock) != SPINLOCK_OWNER_NOBODY)
 
 u32 SLasm_Acquire(volatile u32 *lockaddr, u32 lockvalue);
 u32 SLasm_Release(volatile u32 *lockaddr, u32 lockvalue);
