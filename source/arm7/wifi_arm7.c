@@ -17,7 +17,19 @@
 
 volatile Wifi_MainStruct *WifiData = 0;
 
-static int keepalive_time = 0;
+// The keepalive counter is updated in Wifi_Update(), which is called once per
+// frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
+// the connection alive.
+#define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
+
+static int wifi_keepalive_time = 0;
+
+// This resets the keepalive counter. Call this function whenever a packet is
+// transmitted so that the count starts from the last packet transmitted.
+void Wifi_KeepaliveCountReset(void)
+{
+    wifi_keepalive_time = 0;
+}
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -157,7 +169,7 @@ void Wifi_Intr_RxEnd(void)
         {
             // If the packet type is requested (or promiscous mode is enabled),
             // forward it to the rx queue
-            keepalive_time = 0;
+            Wifi_KeepaliveCountReset();
             if (!Wifi_QueueRxMacData(base, full_packetlen))
             {
                 // Failed, ignore for now.
@@ -214,7 +226,7 @@ void Wifi_Intr_TxEnd(void)
     if (!Wifi_TxQueueEmpty())
     {
         Wifi_TxQueueFlush();
-        keepalive_time = 0;
+        Wifi_KeepaliveCountReset();
         return;
     }
 
@@ -225,7 +237,7 @@ void Wifi_Intr_TxEnd(void)
     {
         if (Wifi_CopyFirstTxData(0))
         {
-            keepalive_time = 0;
+            Wifi_KeepaliveCountReset();
             if (W_MACMEM(0x8) == 0)
             {
                 // if rate dne, fill it in.
@@ -556,10 +568,10 @@ void Wifi_Update(void)
 
         case WIFIMODE_ASSOCIATED:
             Wifi_SetLedState(LED_BLINK_FAST);
-            keepalive_time++; // TODO: track time more accurately.
-            if (keepalive_time > WIFI_KEEPALIVE_COUNT)
+            wifi_keepalive_time++; // TODO: track time more accurately.
+            if (wifi_keepalive_time > WIFI_KEEPALIVE_COUNT)
             {
-                keepalive_time = 0;
+                Wifi_KeepaliveCountReset();
                 Wifi_SendNullFrame();
             }
             if ((u16)(W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)

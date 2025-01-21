@@ -17,9 +17,7 @@ extern "C" {
 
 extern volatile Wifi_MainStruct *WifiData;
 
-// keepalive updated in the update handler, which should be called in vblank
-// keepalive set for 2 minutes.
-#define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
+void Wifi_KeepaliveCountReset(void);
 
 void Wifi_Interrupt(void);
 void Wifi_Update(void);
