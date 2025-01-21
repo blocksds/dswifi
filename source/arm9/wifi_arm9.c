@@ -280,8 +280,6 @@ int Wifi_GetNumAP(void)
 
 int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
 {
-    int j;
-
     if (!apdata)
         return WIFI_RETURN_PARAMERROR;
 
@@ -289,20 +287,19 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
     {
         while (Spinlock_Acquire(WifiData->aplist[apnum]) != SPINLOCK_OK)
             ;
+
+        // Additionally calculate average RSSI here
+        WifiData->aplist[apnum].rssi = 0;
+        for (int j = 0; j < 8; j++)
         {
-            // additionally calculate average RSSI here
-            WifiData->aplist[apnum].rssi = 0;
-            for (j = 0; j < 8; j++)
-            {
-                WifiData->aplist[apnum].rssi += WifiData->aplist[apnum].rssi_past[j];
-            }
-            WifiData->aplist[apnum].rssi = WifiData->aplist[apnum].rssi >> 3;
-
-            *apdata = WifiData->aplist[apnum]; // yay for struct copy!
-
-            Spinlock_Release(WifiData->aplist[apnum]);
-            return WIFI_RETURN_OK;
+            WifiData->aplist[apnum].rssi += WifiData->aplist[apnum].rssi_past[j];
         }
+        WifiData->aplist[apnum].rssi = WifiData->aplist[apnum].rssi >> 3;
+
+        *apdata = WifiData->aplist[apnum]; // yay for struct copy!
+
+        Spinlock_Release(WifiData->aplist[apnum]);
+        return WIFI_RETURN_OK;
     }
 
     return WIFI_RETURN_ERROR;
