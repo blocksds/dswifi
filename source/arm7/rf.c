@@ -41,28 +41,28 @@ void Wifi_RFInit(void)
     W_CONFIG_128 = Wifi_FlashReadHWord(F_WIFI_CFG_060);
     W_CONFIG_150 = Wifi_FlashReadHWord(F_WIFI_CFG_062);
 
-    int numchannels        = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
-    int channel_extrabits  = Wifi_FlashReadByte(F_RF_BITS_PER_ENTRY);
-    int channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
+    int rf_num_entries = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
+    int rf_entry_bits  = Wifi_FlashReadByte(F_RF_BITS_PER_ENTRY);
+    int rf_entry_bytes = ((rf_entry_bits & 0x1F) + 7) / 8;
 
-    W_RF_CNT = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
+    W_RF_CNT = ((rf_entry_bits >> 7) << 8) | (rf_entry_bits & 0x7F);
 
     int j = 0xCE;
 
     if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 3)
     {
-        for (int i = 0; i < numchannels; i++)
+        for (int i = 0; i < rf_num_entries; i++)
         {
             Wifi_RFWrite(Wifi_FlashReadByte(j++) | (i << 8) | 0x50000);
         }
     }
     else if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 2)
     {
-        for (int i = 0; i < numchannels; i++)
+        for (int i = 0; i < rf_num_entries; i++)
         {
-            int temp = Wifi_FlashReadBytes(j, channel_extrabytes);
+            int temp = Wifi_FlashReadBytes(j, rf_entry_bytes);
             Wifi_RFWrite(temp);
-            j += channel_extrabytes;
+            j += rf_entry_bytes;
 
             if ((temp >> 18) == 9)
                 chdata_save5 = temp & ~0x7C00;
@@ -70,10 +70,10 @@ void Wifi_RFInit(void)
     }
     else
     {
-        for (int i = 0; i < numchannels; i++)
+        for (int i = 0; i < rf_num_entries; i++)
         {
-            Wifi_RFWrite(Wifi_FlashReadBytes(j, channel_extrabytes));
-            j += channel_extrabytes;
+            Wifi_RFWrite(Wifi_FlashReadBytes(j, rf_entry_bytes));
+            j += rf_entry_bytes;
         }
     }
 }
