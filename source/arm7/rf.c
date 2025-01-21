@@ -5,9 +5,9 @@
 
 #include "arm7/baseband.h"
 #include "arm7/flash.h"
+#include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"
-#include "arm7/wifi_arm7.h"
 
 static u16 beacon_channel = 0;
 static int chdata_save5 = 0;

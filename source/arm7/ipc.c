@@ -3,9 +3,11 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#include "arm7/wifi_arm7.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
+#include "arm7/wifi_arm7.h"
+
+volatile Wifi_MainStruct *WifiData = NULL;
 
 static WifiSyncHandler synchandler = NULL;
 

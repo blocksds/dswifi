@@ -10,6 +10,11 @@
 extern "C" {
 #endif
 
+#include "common/wifi_shared.h"
+
+// Struct used to communicate between ARM7 and ARM9.
+extern volatile Wifi_MainStruct *WifiData;
+
 // Wifi Sync Handler function: Callback function that is called when the arm9 needs to be told to
 // synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
 // send a message via the fifo to the arm9, which will call Wifi_Sync() on arm9.

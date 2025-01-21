@@ -5,7 +5,6 @@
 
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/wifi_arm7.h"
 
 int Wifi_RxQueueMacData(u32 base, u32 len)
 {

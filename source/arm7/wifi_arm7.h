@@ -15,8 +15,6 @@ extern "C" {
 #include "arm7/registers.h"
 #include "common/wifi_shared.h"
 
-extern volatile Wifi_MainStruct *WifiData;
-
 void Wifi_KeepaliveCountReset(void);
 
 void Wifi_Interrupt(void);

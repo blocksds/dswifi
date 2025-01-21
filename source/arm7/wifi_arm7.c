@@ -16,8 +16,6 @@
 #include "arm7/setup.h"
 #include "arm7/wifi_arm7.h"
 
-volatile Wifi_MainStruct *WifiData = 0;
-
 // The keepalive counter is updated in Wifi_Update(), which is called once per
 // frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
 // the connection alive.
