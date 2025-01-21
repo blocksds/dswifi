@@ -19,10 +19,14 @@
 // frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
 // the connection alive.
 #define WIFI_KEEPALIVE_COUNT (60 * 60 * 2)
-
 static int wifi_keepalive_time = 0;
+
+// Current state of the LED. This is stored here so that we don't call
+// ledBlink() to re-set the current state.
 static int wifi_led_state = 0;
-static int scanIndex = 0;
+
+// Index of the current WiFi channel to be scanned. Check Wifi_Update().
+static int wifi_scan_index = 0;
 
 // This resets the keepalive counter. Call this function whenever a packet is
 // transmitted so that the count starts from the last packet transmitted.
@@ -159,7 +163,7 @@ void Wifi_Update(void)
             {
                 // jump ship!
                 WifiData->counter7   = W_US_COUNT1;
-                WifiData->reqChannel = scanlist[scanIndex];
+                WifiData->reqChannel = scanlist[wifi_scan_index];
                 {
                     for (int i = 0; i < WIFI_MAX_AP; i++)
                     {
@@ -182,9 +186,9 @@ void Wifi_Update(void)
                         }
                     }
                 }
-                scanIndex++;
-                if (scanIndex == scanlist_size)
-                    scanIndex = 0;
+                wifi_scan_index++;
+                if (wifi_scan_index == scanlist_size)
+                    wifi_scan_index = 0;
             }
             break;
 
