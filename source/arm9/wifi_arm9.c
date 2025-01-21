@@ -35,6 +35,9 @@ const char *ASSOCSTATUS_STRINGS[] = {
 
 void sgIP_IntrWaitEvent(void)
 {
+    // TODO: This loop is most likely removed by the compiler when optimizing
+    // the code. Replace it by an actual delay.
+
     // __asm( ".ARM\n swi 0x060000\n" );
     int j = 0;
     for (int i = 0; i < 20000; i++)
