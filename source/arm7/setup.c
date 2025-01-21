@@ -167,7 +167,7 @@ void Wifi_WakeUp(void)
 
 void Wifi_Shutdown(void)
 {
-    if (Wifi_FlashReadByte(0x40) == 2)
+    if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 2)
         Wifi_RFWrite(0xC008);
 
     int a = Wifi_BBRead(REG_MM3218_EXT_GAIN);
@@ -217,7 +217,7 @@ void Wifi_Init(void *wifidata)
     Wifi_GetWfcSettings(WifiData);
 
     for (int i = 0; i < 3; i++)
-        WifiData->MacAddr[i] = Wifi_FlashReadHWord(0x36 + i * 2);
+        WifiData->MacAddr[i] = Wifi_FlashReadHWord(F_MAC_ADDRESS + i * 2);
 
     W_IE = 0;
     Wifi_WakeUp();

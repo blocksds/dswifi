@@ -43,5 +43,5 @@ void Wifi_BBInit(void)
     W_BB_MODE = 0x0100;
 
     for (int i = 0; i < 0x69; i++)
-        Wifi_BBWrite(i, Wifi_FlashReadByte(0x64 + i));
+        Wifi_BBWrite(i, Wifi_FlashReadByte(F_BB_CFG + i));
 }

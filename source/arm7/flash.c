@@ -5,6 +5,7 @@
 
 #include <nds.h>
 
+#include "arm7/flash.h"
 #include "common/wifi_shared.h"
 
 // Flash support functions
@@ -63,9 +64,9 @@ static int wifi_crc16_slow(u8 *data, int length)
 
 void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 {
-    u8 data[256];
+    u8 ap_data[256];
 
-    u32 wfcBase = Wifi_FlashReadBytes(0x20, 2) * 8 - 0x400;
+    u32 wfcBase = Wifi_FlashReadBytes(F_USER_SETTINGS_OFFSET, 2) * 8 - 0x400;
 
     int c = 0;
 
@@ -74,13 +75,13 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
     for (int i = 0; i < 3; i++)
     {
-        readFirmware(wfcBase + (i << 8), (char *)data, 256);
+        readFirmware(wfcBase + (i << 8), (char *)ap_data, 256);
 
-        // Check for validity (crc16)
-        if (wifi_crc16_slow(data, 256) == 0x0000 && data[0xE7] == 0x00)
+        // Check for validity (CRC16)
+        if (wifi_crc16_slow(ap_data, 256) == 0x0000 && ap_data[AP_STATUS] == 0x00)
         {
             // passed the test
-            WifiData->wfc_enable[c]     = 0x80 | (data[0xE6] & 0x0F);
+            WifiData->wfc_enable[c]     = 0x80 | (ap_data[AP_WEP_MODE] & 0x0F);
             WifiData->wfc_ap[c].channel = 0;
 
             int n;
@@ -89,26 +90,26 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
             for (n = 0; n < 16; n++)
-                WifiData->wfc_wepkey[c][n] = data[0x80 + n];
+                WifiData->wfc_wepkey[c][n] = ap_data[AP_WEP_KEY_1 + n];
 
             for (n = 0; n < 32; n++)
-                WifiData->wfc_ap[c].ssid[n] = data[0x40 + n];
+                WifiData->wfc_ap[c].ssid[n] = ap_data[AP_SSID_NAME + n];
 
             for (n = 0; n < 32; n++)
             {
-                if (!data[0x40 + n])
+                if (!ap_data[AP_SSID_NAME + n])
                     break;
             }
 
             WifiData->wfc_ap[c].ssid_len = n;
 
-            WifiData->wfc_config[c][0] = ((unsigned long *)(data + 0xC0))[0];
-            WifiData->wfc_config[c][1] = ((unsigned long *)(data + 0xC0))[1];
-            WifiData->wfc_config[c][3] = ((unsigned long *)(data + 0xC0))[2];
-            WifiData->wfc_config[c][4] = ((unsigned long *)(data + 0xC0))[3];
+            WifiData->wfc_config[c][0] = *(u32 *)&ap_data[AP_IP_ADDR];
+            WifiData->wfc_config[c][1] = *(u32 *)&ap_data[AP_GATEWAY];
+            WifiData->wfc_config[c][3] = *(u32 *)&ap_data[AP_DNS_PRIMARY];
+            WifiData->wfc_config[c][4] = *(u32 *)&ap_data[AP_DNS_SECONDARY];
 
             unsigned long s = 0;
-            for (n = 0; n < data[0xD0]; n++)
+            for (n = 0; n < ap_data[AP_SUBNET_MASK]; n++)
                 s |= 1 << (31 - n);
 
             s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl

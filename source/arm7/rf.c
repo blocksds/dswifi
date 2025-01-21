@@ -24,39 +24,39 @@ void Wifi_RFWrite(int writedata)
 
 void Wifi_RFInit(void)
 {
-    W_CONFIG_146 = Wifi_FlashReadHWord(0x44);
-    W_CONFIG_148 = Wifi_FlashReadHWord(0x46);
-    W_CONFIG_14A = Wifi_FlashReadHWord(0x48);
-    W_CONFIG_14C = Wifi_FlashReadHWord(0x4A);
-    W_CONFIG_120 = Wifi_FlashReadHWord(0x4C);
-    W_CONFIG_122 = Wifi_FlashReadHWord(0x4E);
-    W_CONFIG_154 = Wifi_FlashReadHWord(0x50);
-    W_CONFIG_144 = Wifi_FlashReadHWord(0x52);
-    W_CONFIG_130 = Wifi_FlashReadHWord(0x54);
-    W_CONFIG_132 = Wifi_FlashReadHWord(0x56);
-    W_CONFIG_140 = Wifi_FlashReadHWord(0x58);
-    W_CONFIG_142 = Wifi_FlashReadHWord(0x5A);
-    W_POWER_TX   = Wifi_FlashReadHWord(0x5C);
-    W_CONFIG_124 = Wifi_FlashReadHWord(0x5E);
-    W_CONFIG_128 = Wifi_FlashReadHWord(0x60);
-    W_CONFIG_150 = Wifi_FlashReadHWord(0x62);
+    W_CONFIG_146 = Wifi_FlashReadHWord(F_WIFI_CFG_044);
+    W_CONFIG_148 = Wifi_FlashReadHWord(F_WIFI_CFG_046);
+    W_CONFIG_14A = Wifi_FlashReadHWord(F_WIFI_CFG_048);
+    W_CONFIG_14C = Wifi_FlashReadHWord(F_WIFI_CFG_04A);
+    W_CONFIG_120 = Wifi_FlashReadHWord(F_WIFI_CFG_04C);
+    W_CONFIG_122 = Wifi_FlashReadHWord(F_WIFI_CFG_04E);
+    W_CONFIG_154 = Wifi_FlashReadHWord(F_WIFI_CFG_050);
+    W_CONFIG_144 = Wifi_FlashReadHWord(F_WIFI_CFG_052);
+    W_CONFIG_130 = Wifi_FlashReadHWord(F_WIFI_CFG_054);
+    W_CONFIG_132 = Wifi_FlashReadHWord(F_WIFI_CFG_056);
+    W_CONFIG_140 = Wifi_FlashReadHWord(F_WIFI_CFG_058);
+    W_CONFIG_142 = Wifi_FlashReadHWord(F_WIFI_CFG_05A);
+    W_POWER_TX   = Wifi_FlashReadHWord(F_WIFI_CFG_POWER_TX);
+    W_CONFIG_124 = Wifi_FlashReadHWord(F_WIFI_CFG_05E);
+    W_CONFIG_128 = Wifi_FlashReadHWord(F_WIFI_CFG_060);
+    W_CONFIG_150 = Wifi_FlashReadHWord(F_WIFI_CFG_062);
 
-    int numchannels        = Wifi_FlashReadByte(0x42);
-    int channel_extrabits  = Wifi_FlashReadByte(0x41);
+    int numchannels        = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
+    int channel_extrabits  = Wifi_FlashReadByte(F_RF_BITS_PER_ENTRY);
     int channel_extrabytes = ((channel_extrabits & 0x1F) + 7) / 8;
 
     W_RF_CNT = ((channel_extrabits >> 7) << 8) | (channel_extrabits & 0x7F);
 
     int j = 0xCE;
 
-    if (Wifi_FlashReadByte(0x40) == 3)
+    if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 3)
     {
         for (int i = 0; i < numchannels; i++)
         {
             Wifi_RFWrite(Wifi_FlashReadByte(j++) | (i << 8) | 0x50000);
         }
     }
-    else if (Wifi_FlashReadByte(0x40) == 2)
+    else if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 2)
     {
         for (int i = 0; i < numchannels; i++)
         {
@@ -157,12 +157,12 @@ void Wifi_SetChannel(int channel)
     Wifi_SetBeaconChannel(channel);
     channel -= 1;
 
-    switch (Wifi_FlashReadByte(0x40))
+    switch (Wifi_FlashReadByte(F_RF_CHIP_TYPE))
     {
         case 2:
         case 5:
-            Wifi_RFWrite(Wifi_FlashReadBytes(0xf2 + channel * 6, 3));
-            Wifi_RFWrite(Wifi_FlashReadBytes(0xf5 + channel * 6, 3));
+            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + channel * 6, 3));
+            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + 3 + channel * 6, 3));
 
             swiDelay(12583); // 1500 us delay
 
@@ -170,18 +170,19 @@ void Wifi_SetChannel(int channel)
             {
                 if (chdata_save5 & 0x8000)
                     break;
-                n = Wifi_FlashReadByte(0x154 + channel);
+                n = Wifi_FlashReadByte(F_T2_RF_CHANNEL_CFG2 + channel);
                 Wifi_RFWrite(chdata_save5 | ((n & 0x1F) << 10));
             }
             else
             {
-                Wifi_BBWrite(REG_MM3218_EXT_GAIN, Wifi_FlashReadByte(0x146 + channel));
+                Wifi_BBWrite(REG_MM3218_EXT_GAIN,
+                             Wifi_FlashReadByte(F_T2_BB_CHANNEL_CFG + channel));
             }
 
             break;
 
         case 3:
-            n = Wifi_FlashReadByte(0x42);
+            n = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
             n += 0xCF;
             l = Wifi_FlashReadByte(n - 1);
             for (i = 0; i < l; i++)
@@ -189,7 +190,7 @@ void Wifi_SetChannel(int channel)
                 Wifi_BBWrite(Wifi_FlashReadByte(n), Wifi_FlashReadByte(n + channel + 1));
                 n += 15;
             }
-            for (i = 0; i < Wifi_FlashReadByte(0x43); i++)
+            for (i = 0; i < Wifi_FlashReadByte(F_UNKNOWN_043); i++)
             {
                 Wifi_RFWrite((Wifi_FlashReadByte(n) << 8) | Wifi_FlashReadByte(n + channel + 1) | 0x050000);
                 n += 15;
