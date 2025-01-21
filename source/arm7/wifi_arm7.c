@@ -45,20 +45,24 @@ static void Wifi_SetLedState(int state)
 
 int Wifi_QueueRxMacData(u32 base, u32 len)
 {
-    int buflen, temp, macofs, tempout;
-    macofs = 0;
-    buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
+    int buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
     if (buflen < 0)
+    {
         buflen += WIFI_RXBUFFER_SIZE;
+    }
     if (buflen < len)
     {
         WifiData->stats[WSTAT_RXQUEUEDLOST]++;
         return 0;
     }
+
     WifiData->stats[WSTAT_RXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_RXQUEUEDBYTES] += len;
-    temp    = WIFI_RXBUFFER_SIZE - (WifiData->rxbufOut * 2);
-    tempout = WifiData->rxbufOut;
+
+    int temp    = WIFI_RXBUFFER_SIZE - (WifiData->rxbufOut * 2);
+    int tempout = WifiData->rxbufOut;
+
+    int macofs = 0;
     if (len > temp)
     {
         Wifi_MACCopy((u16 *)WifiData->rxbufData + tempout, base, macofs, temp);
@@ -66,6 +70,7 @@ int Wifi_QueueRxMacData(u32 base, u32 len)
         len -= temp;
         tempout = 0;
     }
+
     Wifi_MACCopy((u16 *)WifiData->rxbufData + tempout, base, macofs, len);
     tempout += len / 2;
     if (tempout >= (WIFI_RXBUFFER_SIZE / 2))
@@ -77,22 +82,23 @@ int Wifi_QueueRxMacData(u32 base, u32 len)
     return 1;
 }
 
-int Wifi_CheckTxBuf(s32 offset)
+static int Wifi_CheckTxBuf(s32 offset)
 {
     offset += WifiData->txbufIn;
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
         offset -= WIFI_TXBUFFER_SIZE / 2;
+
     return WifiData->txbufData[offset];
 }
 
 // non-wrapping function.
 int Wifi_CopyFirstTxData(s32 macbase)
 {
-    int seglen, readbase, max, packetlen, length;
-    packetlen = Wifi_CheckTxBuf(5);
-    readbase  = WifiData->txbufIn;
-    length    = (packetlen + 12 - 4 + 1) / 2;
-    max       = WifiData->txbufOut - WifiData->txbufIn;
+    int packetlen = Wifi_CheckTxBuf(5);
+    int readbase  = WifiData->txbufIn;
+    int length    = (packetlen + 12 - 4 + 1) / 2;
+
+    int max = WifiData->txbufOut - WifiData->txbufIn;
     if (max < 0)
         max += WIFI_TXBUFFER_SIZE / 2;
     if (max < length)
@@ -100,15 +106,18 @@ int Wifi_CopyFirstTxData(s32 macbase)
 
     while (length > 0)
     {
-        seglen = length;
+        int seglen = length;
+
         if (readbase + seglen > WIFI_TXBUFFER_SIZE / 2)
             seglen = WIFI_TXBUFFER_SIZE / 2 - readbase;
+
         length -= seglen;
         while (seglen--)
         {
             W_MACMEM(macbase) = WifiData->txbufData[readbase++];
             macbase += 2;
         }
+
         if (readbase >= WIFI_TXBUFFER_SIZE / 2)
             readbase -= WIFI_TXBUFFER_SIZE / 2;
     }
