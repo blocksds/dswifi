@@ -49,14 +49,6 @@ void Wifi_SetSleepMode(int mode)
     W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_SLEEP_MASK) | mode;
 }
 
-void Wifi_SetPreambleType(int preamble_type)
-{
-    if (preamble_type > 1 || preamble_type < 0)
-        return;
-
-    W_PREAMBLE = (W_PREAMBLE & 0xFFBF) | (preamble_type << 6);
-}
-
 void Wifi_DisableTempPowerSave(void)
 {
     W_POWER_TX &= ~2;

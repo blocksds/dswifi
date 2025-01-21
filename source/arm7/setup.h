@@ -20,7 +20,6 @@ void Wifi_Stop(void);
 void Wifi_SetWepKey(void *wepkey);
 void Wifi_SetWepMode(int wepmode);
 void Wifi_SetSleepMode(int mode);
-void Wifi_SetPreambleType(int preamble_type);
 void Wifi_DisableTempPowerSave(void);
 
 #ifdef __cplusplus
