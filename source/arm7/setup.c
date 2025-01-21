@@ -63,7 +63,7 @@ void Wifi_SetPreambleType(int preamble_type)
 void Wifi_DisableTempPowerSave(void)
 {
     W_POWER_TX &= ~2;
-    W_POWER_48 = 0;
+    W_POWER_048 = 0;
 }
 
 static void Wifi_TxSetup(void)
@@ -357,7 +357,7 @@ void Wifi_Start(void)
             break;
     }
 #endif
-    W_POWER_48 = 0;
+    W_POWER_048 = 0;
     Wifi_DisableTempPowerSave();
     // W_TXREQ_SET = 0x0002;
     W_POWERSTATE |= 2;

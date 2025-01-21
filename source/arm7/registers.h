@@ -117,7 +117,7 @@ extern "C" {
 #define W_POWERSTATE        WIFI_REG(0x803C)
 #define W_POWERFORCE        WIFI_REG(0x8040)
 #define W_RANDOM            WIFI_REG(0x8044)
-#define W_POWER_48          WIFI_REG(0x8048)
+#define W_POWER_048         WIFI_REG(0x8048)
 
 // Receive Control/Memory
 // ----------------------
