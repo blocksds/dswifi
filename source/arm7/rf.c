@@ -43,7 +43,7 @@ void Wifi_RFInit(void)
 
     int rf_num_entries = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
     int rf_entry_bits  = Wifi_FlashReadByte(F_RF_BITS_PER_ENTRY);
-    int rf_entry_bytes = ((rf_entry_bits & 0x1F) + 7) / 8;
+    int rf_entry_bytes = ((rf_entry_bits & 0x3F) + 7) / 8;
 
     W_RF_CNT = ((rf_entry_bits >> 7) << 8) | (rf_entry_bits & 0x7F);
 
