@@ -218,7 +218,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
     (void)framelen;
 
     Wifi_RxHeader packetheader;
-    Wifi_MACCopy((u16 *)&packetheader, macbase, 0, 12);
+    Wifi_MACRead((u16 *)&packetheader, macbase, 0, 12);
     u16 control_802 = Wifi_MACReadHWord(macbase, 12);
 
     switch ((control_802 >> 2) & 0x3F)
@@ -244,7 +244,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 512)
                     datalen = 512;
-                Wifi_MACCopy((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
                 wepmode = 0;
                 maxrate = 0;
                 if (((u16 *)data)[5 + 12] & 0x0010)
@@ -565,7 +565,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 64)
                     datalen = 64;
-                Wifi_MACCopy((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {
@@ -620,7 +620,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 384)
                     datalen = 384;
-                Wifi_MACCopy((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {
@@ -705,7 +705,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 64)
                     datalen = 64;
-                Wifi_MACCopy((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {

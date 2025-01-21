@@ -96,7 +96,7 @@ void Wifi_LoadBeacon(int from, int to)
     if (len > 512)
         return;
 
-    Wifi_MACCopy((u16 *)data, from, 0, len);
+    Wifi_MACRead((u16 *)data, from, 0, len);
     Wifi_MACWrite((u16 *)data, to, 0, len);
     while (i < len)
     {

@@ -45,7 +45,7 @@ u16 Wifi_MACReadHWord(u32 MAC_Base, u32 MAC_Offset)
     return W_MACMEM(MAC_Base);
 }
 
-void Wifi_MACCopy(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
+void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
 {
     int endrange, subval;
     int thislength;

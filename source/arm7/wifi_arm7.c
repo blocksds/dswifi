@@ -65,13 +65,13 @@ int Wifi_QueueRxMacData(u32 base, u32 len)
     int macofs = 0;
     if (len > temp)
     {
-        Wifi_MACCopy((u16 *)WifiData->rxbufData + tempout, base, macofs, temp);
+        Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, temp);
         macofs += temp;
         len -= temp;
         tempout = 0;
     }
 
-    Wifi_MACCopy((u16 *)WifiData->rxbufData + tempout, base, macofs, len);
+    Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, len);
     tempout += len / 2;
     if (tempout >= (WIFI_RXBUFFER_SIZE / 2))
         tempout -= (WIFI_RXBUFFER_SIZE / 2);
