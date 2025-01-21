@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#include "arm9/wifi_arm9.h"
+
 #ifdef WIFI_USE_TCP_SGIP
 
 void wHeapAllocInit(int size);

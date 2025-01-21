@@ -4,7 +4,11 @@
 
 #include <stdlib.h>
 
+#include "arm9/wifi_arm9.h"
+
 #ifdef WIFI_USE_TCP_SGIP
+
+#    include "arm9/sgIP.h"
 
 void *sgIP_malloc(int size) __attribute__((weak));
 void sgIP_free(void *ptr) __attribute__((weak));
