@@ -5,15 +5,12 @@
 
 #include "arm7/baseband.h"
 #include "arm7/flash.h"
-#include "arm7/registers.h"
-#include "arm7/flash.h"
-
 #include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
+#include "arm7/registers.h"
 #include "arm7/rf.h"
 #include "arm7/setup.h"
-#include "arm7/wifi_arm7.h"
 #include "common/spinlock.h"
 
 void Wifi_SetWepKey(void *wepkey)
