@@ -170,7 +170,7 @@ void Wifi_Shutdown(void)
     if (Wifi_FlashReadByte(0x40) == 2)
         Wifi_RFWrite(0xC008);
 
-    int a = Wifi_BBRead(0x1E);
+    int a = Wifi_BBRead(REG_MM3218_EXT_GAIN);
     Wifi_BBWrite(REG_MM3218_EXT_GAIN, a | 0x3F);
 
     Wifi_BBPowerOff();
