@@ -33,7 +33,9 @@ void Wifi_MacInit(void)
     W_TXBUF_GAPDISP = 0;
 }
 
-u16 Wifi_MACRead(u32 MAC_Base, u32 MAC_Offset)
+// Read one halfword from "MAC_Base + MAC_Offset". If the result is out of the
+// read buffer, it will wrap around.
+u16 Wifi_MACReadHWord(u32 MAC_Base, u32 MAC_Offset)
 {
     MAC_Base += MAC_Offset;
 

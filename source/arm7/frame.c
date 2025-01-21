@@ -219,7 +219,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
 
     Wifi_RxHeader packetheader;
     Wifi_MACCopy((u16 *)&packetheader, macbase, 0, 12);
-    u16 control_802 = Wifi_MACRead(macbase, 12);
+    u16 control_802 = Wifi_MACReadHWord(macbase, 12);
 
     switch ((control_802 >> 2) & 0x3F)
     {

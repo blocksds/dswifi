@@ -144,7 +144,7 @@ void Wifi_Intr_RxEnd(void)
     while (W_RXBUF_WRCSR != W_RXBUF_READCSR)
     {
         int base           = W_RXBUF_READCSR << 1;
-        int packetlen      = Wifi_MACRead(base, 8);
+        int packetlen      = Wifi_MACReadHWord(base, 8);
         int full_packetlen = 12 + ((packetlen + 3) & (~3));
 
         WifiData->stats[WSTAT_RXPACKETS]++;

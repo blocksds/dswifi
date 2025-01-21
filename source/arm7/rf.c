@@ -83,7 +83,7 @@ void Wifi_LoadBeacon(int from, int to)
     u8 data[512];
     int type, seglen;
 
-    int packetlen = Wifi_MACRead(from, 10);
+    int packetlen = Wifi_MACReadHWord(from, 10);
 
     int len = (packetlen + 12 - 4);
     int i   = 12 + 24 + 12;
