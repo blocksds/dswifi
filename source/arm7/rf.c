@@ -106,7 +106,7 @@ void Wifi_LoadBeacon(int from, int to)
         return;
 
     Wifi_MACRead((u16 *)data, from, 0, len);
-    Wifi_MACWrite((u16 *)data, to, 0, len);
+    Wifi_MACWrite((u16 *)data, to, len);
     while (i < len)
     {
         type   = data[i++];

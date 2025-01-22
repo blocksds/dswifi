@@ -22,7 +22,7 @@ bool Wifi_TxBusy(void)
 void Wifi_TxRaw(u16 *data, int datalen)
 {
     datalen = (datalen + 3) & (~3);
-    Wifi_MACWrite(data, 0, 0, datalen);
+    Wifi_MACWrite(data, 0, datalen);
 
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
