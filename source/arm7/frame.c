@@ -16,9 +16,6 @@
 // ===============================
 
 #define HDR_MGT_FRAME_CONTROL   0
-
-#define FC_PROTECTED_FRAME      BIT(14)
-
 #define HDR_MGT_DURATION        1
 #define HDR_MGT_DA              2
 #define HDR_MGT_SA              5
@@ -27,6 +24,31 @@
 #define HDR_MGT_BODY            12 // The body has a variable size
 
 #define HDR_MGT_MAC_SIZE        24 // Size of the header up to the body in bytes
+
+// Frame control bitfields
+// =======================
+
+#define FC_PROTOCOL_VERSION_MASK    0x3
+#define FC_PROTOCOL_VERSION_SHIFT   0
+#define FC_TYPE_MASK                0x3
+#define FC_TYPE_SHIFT               2
+#define FC_SUBTYPE_MASK             0xF
+#define FC_SUBTYPE_SHIFT            4
+#define FC_TO_DS                    BIT(8)
+#define FC_FROM_DS                  BIT(9)
+#define FC_MORE_FRAG                BIT(10)
+#define FC_RETRY                    BIT(11)
+#define FC_PWR_MGT                  BIT(12)
+#define FC_MORE_DATA                BIT(13)
+#define FC_PROTECTED_FRAME          BIT(14)
+#define FC_ORDER                    BIT(15)
+
+#define FORM_MANAGEMENT(s)  ((0 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
+#define FORM_CONTROL(s)     ((1 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
+#define FORM_DATA(s)        ((2 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
+#define FORM_RESERVED(s)    ((3 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
+
+#define TYPE_AUTHENTICATION  FORM_MANAGEMENT(0xB)
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
 {
@@ -46,14 +68,14 @@ static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
     return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
 }
 
-// This returns the size of the TX and IEEE 802.11 headers combined (so it
-// returns an index in bytes to the start of the body of the frame).
+// This returns the size in bytes of the TX and IEEE 802.11 headers combined (so
+// it returns an index in bytes to the start of the body of the frame).
 //
-// It doesn't fill the transfer rate in the TX header. That must be done by the
-// caller of the function
+// It doesn't fill the transfer rate or the size in the TX header. That must be
+// done by the caller of the function
 static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 {
-    u16 *tx_header = (u16 *)data;
+    u8 *tx_header = data;
     u16 *ieee_header = (u16 *)(data + HDR_TX_SIZE);
 
     // Hardware TX header
@@ -91,55 +113,74 @@ static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 
 int Wifi_SendOpenSystemAuthPacket(void)
 {
-    // max size is 12+24+4+6 = 46
-    u8 data[64];
-    int i = Wifi_GenMgtHeader(data, 0x00B0);
+    u16 frame_control = TYPE_AUTHENTICATION;
 
-    ((u16 *)(data + i))[0] = 0; // Authentication algorithm number (0=open system)
-    ((u16 *)(data + i))[1] = 1; // Authentication sequence number
-    ((u16 *)(data + i))[2] = 0; // Authentication status code (reserved for this message, =0)
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    ((u16 *)data)[4] = 0x000A;
-    ((u16 *)data)[5] = i + 6 - 12 + 4;
+    u16 *tx_header = (u16 *)data;
+    u16 *body = (u16 *)(data + hdr_size);
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, i + 6);
+    body[0] = 0; // Authentication algorithm number (0=open system)
+    body[1] = 1; // Authentication sequence number
+    body[2] = 0; // Authentication status code (reserved for this message, =0)
+
+    size_t body_size = 6;
+
+    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket(void)
 {
-    // max size is 12+24+4+6 = 46
-    u8 data[64];
-    int i = Wifi_GenMgtHeader(data, 0x00B0);
+    u16 frame_control = TYPE_AUTHENTICATION;
 
-    ((u16 *)(data + i))[0] = 1; // Authentication algorithm number (1=shared key)
-    ((u16 *)(data + i))[1] = 1; // Authentication sequence number
-    ((u16 *)(data + i))[2] = 0; // Authentication status code (reserved for this message, =0)
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    ((u16 *)data)[4] = 0x000A;
-    ((u16 *)data)[5] = i + 6 - 12 + 4;
+    u16 *tx_header = (u16 *)data;
+    u16 *body = (u16 *)(data + hdr_size);
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, i + 6);
+    body[0] = 1; // Authentication algorithm number (1=shared key)
+    body[1] = 1; // Authentication sequence number
+    body[2] = 0; // Authentication status code (reserved for this message, =0)
+
+    size_t body_size = 6;
+
+    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 {
+    u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
+
     u8 data[320];
-    int i = Wifi_GenMgtHeader(data, 0x40B0);
+    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    ((u16 *)(data + i))[0] = 1; // Authentication algorithm number (1=shared key)
-    ((u16 *)(data + i))[1] = 3; // Authentication sequence number
-    ((u16 *)(data + i))[2] = 0; // Authentication status code (reserved for this message, =0)
+    u16 *tx_header = (u16 *)data;
+    u16 *body = (u16 *)(data + hdr_size);
 
-    data[i + 6] = 0x10; // 16=challenge text block
-    data[i + 7] = challenge_length;
+    body[0] = 1; // Authentication algorithm number (1=shared key)
+    body[1] = 3; // Authentication sequence number
+    body[2] = 0; // Authentication status code (reserved for this message, =0)
+
+    data[hdr_size + 6] = 0x10; // 16=challenge text block
+    data[hdr_size + 7] = challenge_length;
 
     for (int j = 0; j < challenge_length; j++)
-        data[i + j + 8] = challenge_Text[j];
+        data[hdr_size + j + 8] = challenge_Text[j];
 
-    ((u16 *)data)[4] = 0x000A;
-    ((u16 *)data)[5] = i + 8 + challenge_length - 12 + 4 + 4;
+    size_t body_size = 6 + 2 + challenge_length;
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, i + 8 + challenge_length);
+    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4 + 4;
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 // uses arm7 data in our struct
