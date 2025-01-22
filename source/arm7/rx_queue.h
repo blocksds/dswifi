@@ -12,11 +12,17 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
-// This function tries to read up to "len" bytes from the RX queue in MAC RAM
-// and writes them to the circular RX buffer shared with the ARM9.
-//
-// It returns 0 if there isn't enough space in the ARM9 buffer, or 1 on success.
-int Wifi_RxArm9QueueAdd(u32 base, u32 len);
+// Handling packets can take time, and this handling is done inside an interrupt
+// handler. This will block other interrupts from happening, so it is important
+// to stop at some point to give the system the chance to handle other
+// interrupts.
+#define WIFI_RX_PACKETS_PER_INTERRUPT   5
+
+// This function will take packets from the MAC RAM up to a total of
+// WIFI_RX_PACKETS_PER_INTERRUPT so that it doesn't block for a long time. It
+// will first analyze which type of packet each frame is, process some of them,
+// and send the rest to the RX ARM9 queue to be handled by the ARM9.
+void Wifi_RxQueueFlush(void);
 
 #ifdef __cplusplus
 };

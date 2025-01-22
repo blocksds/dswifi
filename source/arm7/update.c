@@ -275,9 +275,9 @@ void Wifi_Update(void)
         Wifi_SetChannel(WifiData->reqChannel);
     }
 
-    // Check if we have received anything
-    Wifi_Intr_RxEnd();
+    // First, check if we have received anything and handle it
+    Wifi_RxQueueFlush();
 
     // Check if we need to transfer anything
-    Wifi_Intr_TxEnd();
+    Wifi_TxAllQueueFlush();
 }

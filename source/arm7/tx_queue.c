@@ -217,3 +217,31 @@ int Wifi_TxArm9QueueFlush(void)
 
     return 1;
 }
+
+void Wifi_TxAllQueueFlush(void)
+{
+    WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
+
+    // If TX is still busy it means that some packet has just been sent but
+    // there are more waiting to be sent in the MAC RAM.
+    if (Wifi_TxIsBusy())
+        return;
+
+    // There is no active transfer, so all packets have been sent. First, check
+    // if the ARM7 wants to send something (like management frames, etc) and
+    // send it.
+    if (!Wifi_TxArm7QueueIsEmpty())
+    {
+        Wifi_TxArm7QueueFlush();
+        Wifi_KeepaliveCountReset();
+        return;
+    }
+
+    // If there is no active transfer and the ARM7 queue is empty, check if
+    // there is pending data in the ARM9 TX circular buffer that the ARM9 wants
+    // to send.
+    if (Wifi_TxArm9QueueFlush())
+        return;
+
+    // Nothing more to do
+}

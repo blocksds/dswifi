@@ -43,6 +43,11 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen);
 // beforehand.
 int Wifi_TxArm9QueueFlush(void);
 
+// This function will check if there is an active transfer. If not, it will
+// check the ARM7 queue and flush it if it has enqueued data. If not, it will
+// try with the ARM9 queue.
+void Wifi_TxAllQueueFlush(void);
+
 #ifdef __cplusplus
 };
 #endif

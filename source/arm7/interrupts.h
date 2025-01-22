@@ -12,9 +12,6 @@ extern "C" {
 
 void Wifi_Interrupt(void);
 
-void Wifi_Intr_RxEnd(void);
-void Wifi_Intr_TxEnd(void);
-
 #ifdef __cplusplus
 };
 #endif
