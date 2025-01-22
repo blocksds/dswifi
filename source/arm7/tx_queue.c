@@ -3,9 +3,12 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/registers.h"
 #include "arm7/mac.h"
+#include "arm7/rf.h"
+#include "arm7/update.h"
 
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
@@ -105,7 +108,7 @@ int Wifi_TxQueueAdd(u16 *data, int datalen)
     }
 }
 
-static int Wifi_CheckTxBuf(s32 offset)
+static int Wifi_CheckTxBuf(s32 offset) // offset in halfwords
 {
     offset += WifiData->txbufIn;
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
@@ -114,10 +117,12 @@ static int Wifi_CheckTxBuf(s32 offset)
     return WifiData->txbufData[offset];
 }
 
-// non-wrapping function.
-int Wifi_CopyFirstTxData(s32 macbase)
+// Copies data from the ARM9 TX buffer to MAC RAM and updates stats. It
+// doesn't start the transfer because the header still requires some fields to
+// be filled in.
+static int Wifi_CopyFirstTxData(s32 macbase)
 {
-    int packetlen = Wifi_CheckTxBuf(5);
+    int packetlen = Wifi_CheckTxBuf(HDR_TX_IEEE_FRAME_SIZE / 2);
     int readbase  = WifiData->txbufIn;
     int length    = (packetlen + 12 - 4 + 1) / 2;
 
@@ -151,4 +156,55 @@ int Wifi_CopyFirstTxData(s32 macbase)
     WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
 
     return packetlen;
+}
+
+int Wifi_TxQueueTransferFromARM9(void)
+{
+    // If there is no data in the ARM9 queue, exit
+    if (WifiData->txbufOut == WifiData->txbufIn)
+        return 0;
+
+    // TODO: Check this as well?
+    // (!(WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
+    // || WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
+
+    // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where the
+    // TX buffer is located.
+    if (Wifi_CopyFirstTxData(0) == 0)
+        return 0;
+
+    // Reset the keepalive count to not send unneeded frames
+    Wifi_KeepaliveCountReset();
+
+    // Ensure that the hardware TX header has all required information.  This
+    // header goes before everything else, so it's stored at address 0 of MAC
+    // RAM as well.
+
+    // If the transfer rate isn't set, fill it in now
+    if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
+        W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
+
+    // Ensure that the IEEE header has all required information. This header
+    // goes after the TX header.
+
+    if (W_MACMEM(0xC) & 0x4000)
+    {
+        // wep is enabled, fill in the IV.
+        W_MACMEM(0x24) = (W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0xFFFF;
+        W_MACMEM(0x26) =
+            ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF) | (WifiData->wepkeyid7 << 14);
+    }
+    if ((W_MACMEM(0xC) & 0x00FF) == 0x0080)
+    {
+        // 2400 = 0x960 (out of 0x2000 bytes)
+        Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
+        return 1;
+    }
+
+    // W_TXSTAT       = 0x0001;
+    W_TX_RETRYLIMIT = 0x0707; // This has to be set before every transfer
+    W_TXBUF_LOC3    = 0x8000;
+    W_TXREQ_SET     = 0x000D;
+
+    return 1;
 }

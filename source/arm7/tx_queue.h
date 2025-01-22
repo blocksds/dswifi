@@ -37,8 +37,11 @@ bool Wifi_TxQueueEmpty(void);
 // enqueued, this function will return 0. On success it returns 1.
 int Wifi_TxQueueAdd(u16 *data, int datalen);
 
-// TODO: Document
-int Wifi_CopyFirstTxData(s32 macbase);
+// This function checks if there is any data that the ARM9 has requested to
+// transfer, and it will copy it to MAC RAM and start a transfer. Note that this
+// doesn't check if there is an active transfer already, you need to check that
+// beforehand.
+int Wifi_TxQueueTransferFromARM9(void);
 
 #ifdef __cplusplus
 };

@@ -10,7 +10,6 @@
 #include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/rf.h"
 #include "arm7/rx_queue.h"
 #include "arm7/tx_queue.h"
 #include "arm7/update.h"
@@ -101,49 +100,10 @@ void Wifi_Intr_TxEnd(void)
     // If there is no active transfer and the ARM7 queue is empty, check if
     // there is pending data in the ARM9 TX circular buffer that the ARM9 wants
     // to send.
-    if ((WifiData->txbufOut != WifiData->txbufIn)
-        // && (!(WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
-        // || WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
-    )
-    {
-        // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where
-        // the TX buffer is located.
-        if (Wifi_CopyFirstTxData(0))
-        {
-            // Reset the keepalive count to not send unneeded frames
-            Wifi_KeepaliveCountReset();
+    if (Wifi_TxQueueTransferFromARM9())
+        return;
 
-            // Ensure that the hardware TX header has all required information.
-            // This header goes before everything else, so it's stored at
-            // address 0 of MAC RAM as well.
-
-            // If the transfer rate isn't set, fill it in now
-            if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
-                W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
-
-            // Ensure that the IEEE header has all required information. This
-            // header goes after the TX header.
-
-            if (W_MACMEM(0xC) & 0x4000)
-            {
-                // wep is enabled, fill in the IV.
-                W_MACMEM(0x24) = (W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0xFFFF;
-                W_MACMEM(0x26) =
-                    ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF) | (WifiData->wepkeyid7 << 14);
-            }
-            if ((W_MACMEM(0xC) & 0x00FF) == 0x0080)
-            {
-                // 2400 = 0x960 (out of 0x2000 bytes)
-                Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
-                return;
-            }
-
-            // W_TXSTAT       = 0x0001;
-            W_TX_RETRYLIMIT = 0x0707; // This has to be set before every transfer
-            W_TXBUF_LOC3    = 0x8000;
-            W_TXREQ_SET     = 0x000D;
-        }
-    }
+    // Nothing more to do
 }
 
 void Wifi_Intr_DoNothing(void)

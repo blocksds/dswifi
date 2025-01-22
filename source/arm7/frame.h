@@ -22,7 +22,7 @@ extern "C" {
 #define HDR_TX_UNKNOWN_06       0x6
 #define HDR_TX_TRANSFER_RATE    0x8 // 0x0A = 1Mbit/s, 0x14 = 2Mbit/s
 #define HDR_TX_UNKNOWN_09       0x9
-#define HDR_TX_IEEE_FRAME_SIZE  0xA // Header + Body + checksum(s) in bytes
+#define HDR_TX_IEEE_FRAME_SIZE  0xA // Header + body + checksum(s) in bytes
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
