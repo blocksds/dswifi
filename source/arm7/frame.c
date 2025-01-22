@@ -3,13 +3,30 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <string.h>
+
+#include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "common/spinlock.h"
 
-// 802.11b system
+// 802.11b management frame header (Indices in halfwords)
+// ===============================
+
+#define HDR_MGT_FRAME_CONTROL   0
+
+#define FC_PROTECTED_FRAME      BIT(14)
+
+#define HDR_MGT_DURATION        1
+#define HDR_MGT_DA              2
+#define HDR_MGT_SA              5
+#define HDR_MGT_BSSID           8
+#define HDR_MGT_SEQ_CTL         11
+#define HDR_MGT_BODY            12 // The body has a variable size
+
+#define HDR_MGT_MAC_SIZE        24 // Size of the header up to the body in bytes
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
 {
@@ -29,35 +46,46 @@ static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
     return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
 }
 
+// This returns the size of the TX and IEEE 802.11 headers combined (so it
+// returns an index in bytes to the start of the body of the frame).
+//
+// It doesn't fill the transfer rate in the TX header. That must be done by the
+// caller of the function
 static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 {
-    // tx header
-    ((u16 *)data)[0] = 0;
-    ((u16 *)data)[1] = 0;
-    ((u16 *)data)[2] = 0;
-    ((u16 *)data)[3] = 0;
-    ((u16 *)data)[4] = 0;
-    ((u16 *)data)[5] = 0;
-    // fill in most header fields
-    ((u16 *)data)[7] = 0x0000;
-    Wifi_CopyMacAddr(data + 16, WifiData->apmac7);
-    Wifi_CopyMacAddr(data + 22, WifiData->MacAddr);
-    Wifi_CopyMacAddr(data + 28, WifiData->bssid7);
-    ((u16 *)data)[17] = 0;
+    u16 *tx_header = (u16 *)data;
+    u16 *ieee_header = (u16 *)(data + HDR_TX_SIZE);
 
-    // fill in wep-specific stuff
-    if (headerflags & 0x4000)
+    // Hardware TX header
+    // ------------------
+
+    memset(tx_header, 0, HDR_TX_SIZE);
+
+    // IEEE 802.11 header
+    // ------------------
+
+    ieee_header[HDR_MGT_FRAME_CONTROL] = headerflags;
+    ieee_header[HDR_MGT_DURATION] = 0;
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_DA, WifiData->apmac7);
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_SA, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_BSSID, WifiData->bssid7);
+    ieee_header[HDR_MGT_SEQ_CTL] = 0;
+
+    // Fill in WEP-specific stuff
+    if (headerflags & FC_PROTECTED_FRAME)
     {
-        // I'm lazy and certainly haven't done this to spec.
-        ((u32 *)data)[9] = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
-                           | (WifiData->wepkeyid7 << 30);
-        ((u16 *)data)[6] = headerflags;
-        return 28 + 12;
+        u32 *p = (u32 *)&ieee_header[HDR_MGT_BODY];
+
+        // TODO: This isn't done to spec
+        *p = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
+           | (WifiData->wepkeyid7 << 30);
+
+        // The body is already 4 bytes in size
+        return HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 4;
     }
     else
     {
-        ((u16 *)data)[6] = headerflags;
-        return 24 + 12;
+        return HDR_TX_SIZE + HDR_MGT_MAC_SIZE;
     }
 }
 
