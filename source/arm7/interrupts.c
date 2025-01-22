@@ -38,7 +38,7 @@ void Wifi_Intr_RxEnd(void)
             // If the packet type is requested (or promiscous mode is enabled),
             // forward it to the rx queue
             Wifi_KeepaliveCountReset();
-            if (!Wifi_RxQueueMacData(base, full_packetlen))
+            if (!Wifi_RxQueueTransferToARM9(base, full_packetlen))
             {
                 // Failed, ignore for now.
             }
@@ -85,7 +85,7 @@ void Wifi_Intr_TxEnd(void)
 
     // If TX is still busy it means that some packet has just been sent but
     // there are more being sent in the MAC.
-    if (Wifi_TxBusy())
+    if (Wifi_TxIsBusy())
         return;
 
     // There is no active transfer, so all packets have been sent. Check if the
@@ -120,6 +120,7 @@ void Wifi_Intr_TxEnd(void)
             }
             if ((W_MACMEM(0xC) & 0x00FF) == 0x0080)
             {
+                // 2400 = 0x960 (out of 0x2000 bytes)
                 Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
                 return;
             }

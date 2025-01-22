@@ -16,12 +16,28 @@ extern "C" {
 // function will try to send data if there is no active transfer. If there is an
 // active transfer, it will store data in an internal buffer to be sent later.
 
-bool Wifi_TxBusy(void);
+// Returns true if there is an active transfer.
+bool Wifi_TxIsBusy(void);
+
+// Copy data to the TX buffer in MAC RAM (right at the start of MAC RAM). This
+// bypasses the ARM7 transfer queue.
 void Wifi_TxRaw(u16 *data, int datalen);
+
+// Copy enqueued data to the MAC and start a transfer. Note that this function
+// doesn't do any checks, be careful when using it.
 void Wifi_TxQueueFlush(void);
+
+// Returns true if the transfer queue is empty. Note that there may still be an
+// active transfer.
 bool Wifi_TxQueueEmpty(void);
+
+// Define data to be transferred. This function will check if there is an active
+// transfer already active. If so, it will try to enqueue the data in a 1024
+// halfword buffer to be sent after the transfer is finished. If it can't be
+// enqueued, this function will return 0. On success it returns 1.
 int Wifi_TxQueueAdd(u16 *data, int datalen);
 
+// TODO: Document
 int Wifi_CopyFirstTxData(s32 macbase);
 
 #ifdef __cplusplus

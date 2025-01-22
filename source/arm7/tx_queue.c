@@ -10,7 +10,7 @@
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
 
-bool Wifi_TxBusy(void)
+bool Wifi_TxIsBusy(void)
 {
     if (W_TXBUSY & TXBUSY_LOC3_BUSY)
         return true;
@@ -18,7 +18,6 @@ bool Wifi_TxBusy(void)
     return false;
 }
 
-// Copy data to the MAC to be sent. This bypasses the ARM7 transfer queue.
 void Wifi_TxRaw(u16 *data, int datalen)
 {
     datalen = (datalen + 3) & (~3);
@@ -34,15 +33,12 @@ void Wifi_TxRaw(u16 *data, int datalen)
     WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
 }
 
-// Copy enqueued data to the MAC and start a transfer. Note that this function
-// doesn't do any checks, be careful when using it.
 void Wifi_TxQueueFlush(void)
 {
     Wifi_TxRaw(wifi_tx_queue, wifi_tx_queue_len);
     wifi_tx_queue_len = 0;
 }
 
-// Returns true if the transfer queue is empty.
 bool Wifi_TxQueueEmpty(void)
 {
     if (wifi_tx_queue_len == 0)
@@ -68,13 +64,9 @@ static int Wifi_TxQueueSetEnqueuedData(u16 *data, int datalen)
     return 1;
 }
 
-// Define data to be transferred. This function will check if there is an active
-// transfer already active. If so, it will try to enqueue the data in a 1024
-// halfword buffer to be sent after the transfer is finished. If it can't be
-// enqueued, this function will return 0. On success it returns 1.
 int Wifi_TxQueueAdd(u16 *data, int datalen)
 {
-    if (!Wifi_TxBusy())
+    if (!Wifi_TxIsBusy())
     {
         // No active transfer. Check the queue to see if there is any data.
 
