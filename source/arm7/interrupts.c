@@ -14,6 +14,12 @@
 #include "arm7/tx_queue.h"
 #include "arm7/update.h"
 
+// Handling packets can take time, and this handling is done inside an interrupt
+// handler. This will block other interrupts from happening, so it is important
+// to stop at some point to give the system the chance to handle other
+// interrupts.
+#define MAX_RX_PACKETS_HANDLED_PER_INTERRUPT 5
+
 void Wifi_Intr_RxEnd(void)
 {
     int oldIME = enterCriticalSection();
@@ -23,23 +29,28 @@ void Wifi_Intr_RxEnd(void)
     while (W_RXBUF_WRCSR != W_RXBUF_READCSR)
     {
         int base           = W_RXBUF_READCSR << 1;
-        int packetlen      = Wifi_MACReadHWord(base, 8);
-        int full_packetlen = 12 + ((packetlen + 3) & (~3));
+
+        int packetlen      = Wifi_MACReadHWord(base, HDR_RX_IEEE_FRAME_SIZE);
+        int full_packetlen = HDR_RX_SIZE
+                           + ((packetlen + 3) & (~3)); // Round up to a word
 
         WifiData->stats[WSTAT_RXPACKETS]++;
         WifiData->stats[WSTAT_RXBYTES] += full_packetlen;
-        WifiData->stats[WSTAT_RXDATABYTES] += full_packetlen - 12;
+        WifiData->stats[WSTAT_RXDATABYTES] += full_packetlen - HDR_RX_SIZE;
 
-        // process packet here
-        int type = Wifi_ProcessReceivedFrame(base, full_packetlen); // returns packet type
-        if (type & WifiData->reqPacketFlags || WifiData->reqReqFlags & WFLAG_REQ_PROMISC)
+        // First, process the received frame in the ARM7. In some cases the ARM7
+        // can handle the frame type by itself (e.g. frames of beacon type,
+        // WFLAG_PACKET_BEACON).
+        int type = Wifi_ProcessReceivedFrame(base, full_packetlen);
+        if ((type & WifiData->reqPacketFlags) || (WifiData->reqReqFlags & WFLAG_REQ_PROMISC))
         {
-            // If the packet type is requested (or promiscous mode is enabled),
-            // forward it to the rx queue
+            // If the packet type is requested by the ARM9 (or promiscous mode
+            // is enabled), forward it to the ARM9 RX queue.
             Wifi_KeepaliveCountReset();
             if (!Wifi_RxArm9QueueAdd(base, full_packetlen))
             {
                 // Failed, ignore for now.
+                // TODO: Handle this somehow
             }
         }
 
@@ -49,7 +60,7 @@ void Wifi_Intr_RxEnd(void)
         W_RXBUF_READCSR = base >> 1;
 
         // Don't handle too many packets in one go
-        if (cut++ > 5)
+        if (cut++ > MAX_RX_PACKETS_HANDLED_PER_INTERRUPT)
             break;
     }
 
