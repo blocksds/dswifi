@@ -119,18 +119,18 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             }
             WifiData->wfc_ap[c].ssid_len = len;
 
-            WifiData->wfc_config[c][0] = *(u32 *)&ap_data[AP_IP_ADDR];
-            WifiData->wfc_config[c][1] = *(u32 *)&ap_data[AP_GATEWAY];
-            WifiData->wfc_config[c][3] = *(u32 *)&ap_data[AP_DNS_PRIMARY];
-            WifiData->wfc_config[c][4] = *(u32 *)&ap_data[AP_DNS_SECONDARY];
+            WifiData->wfc_ip[c]            = *(u32 *)&ap_data[AP_IP_ADDR];
+            WifiData->wfc_gateway[c]       = *(u32 *)&ap_data[AP_GATEWAY];
+            WifiData->wfc_dns_primary[c]   = *(u32 *)&ap_data[AP_DNS_PRIMARY];
+            WifiData->wfc_dns_secondary[c] = *(u32 *)&ap_data[AP_DNS_SECONDARY];
 
             // Subnet mask
             unsigned long s = 0;
             for (int n = 0; n < ap_data[AP_SUBNET_MASK]; n++)
                 s |= 1 << (31 - n);
-
             s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl
-            WifiData->wfc_config[c][2] = s;
+
+            WifiData->wfc_subnet_mask[c] = s;
 
             // Start filling next DSWiFi slot
             c++;

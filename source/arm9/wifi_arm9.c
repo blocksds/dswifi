@@ -582,9 +582,10 @@ int Wifi_AssocStatus(void)
                 if (n != -1)
                 {
 #ifdef WIFI_USE_TCP_SGIP
-                    Wifi_SetIP(WifiData->wfc_config[n][0], WifiData->wfc_config[n][1],
-                               WifiData->wfc_config[n][2], WifiData->wfc_config[n][3],
-                               WifiData->wfc_config[n][4]);
+                    Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
+                               WifiData->wfc_subnet_mask[n],
+                               WifiData->wfc_dns_primary[n],
+                               WifiData->wfc_dns_secondary[n]);
 #endif
                     WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                     WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;

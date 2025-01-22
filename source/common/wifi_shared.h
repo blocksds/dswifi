@@ -246,7 +246,11 @@ typedef struct WIFI_MAINSTRUCT
     // WFC data
     u8 wfc_enable[4]; // wep mode, or 0x80 for "enabled"
     Wifi_AccessPoint wfc_ap[3];
-    unsigned long wfc_config[3][5]; // ip, gateway, snmask, primarydns, 2nddns
+    u32 wfc_ip[3];
+    u32 wfc_gateway[3];
+    u32 wfc_subnet_mask[3];
+    u32 wfc_dns_primary[3];
+    u32 wfc_dns_secondary[3];
     u8 wfc_wepkey[3][16];
 
     // wifi data
