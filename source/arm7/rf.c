@@ -45,6 +45,15 @@ void Wifi_RFInit(void)
     int rf_entry_bits  = Wifi_FlashReadByte(F_RF_BITS_PER_ENTRY);
     int rf_entry_bytes = ((rf_entry_bits & 0x3F) + 7) / 8;
 
+    if (rf_entry_bytes > 4)
+    {
+        // TODO: According to GBATEK, this is usually 3. Wifi_FlashReadBytes()
+        // can only read up to 4 bytes (and Wifi_RFWrite() can only take 4 bytes,
+        // so it is ok. In case this isn't true at some point, we need to add an
+        // error message here that gets transferred to the ARM9.
+        return;
+    }
+
     W_RF_CNT = ((rf_entry_bits >> 7) << 8) | (rf_entry_bits & 0x7F);
 
     int j = 0xCE;
