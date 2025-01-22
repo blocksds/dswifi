@@ -75,47 +75,70 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
     for (int i = 0; i < 3; i++)
     {
-        readFirmware(wfcBase + (i << 8), (char *)ap_data, 256);
+        readFirmware(wfcBase + (i * sizeof(ap_data)), ap_data, sizeof(ap_data));
+
+        // Skip AP entries that are completely zeroed
+        // TODO: Replace this by checking AP_CONNECTION_SETUP
+        bool entry_is_zeroed = true;
+        for (int j = 0; j < sizeof(ap_data); j++)
+        {
+            if (ap_data[j] != 0)
+            {
+                entry_is_zeroed = false;
+                break;
+            }
+        }
+        if (entry_is_zeroed)
+            continue;
 
         // Check for validity (CRC16)
-        if (wifi_crc16_slow(ap_data, 256) == 0x0000 && ap_data[AP_STATUS] == 0x00)
+        if (wifi_crc16_slow(ap_data, 256) != 0x0000)
+            continue;
+
+        if (ap_data[AP_STATUS] == 0x00)
         {
-            // passed the test
+            // Normal network
+
             WifiData->wfc_enable[c]     = 0x80 | (ap_data[AP_WEP_MODE] & 0x0F);
             WifiData->wfc_ap[c].channel = 0;
 
-            int n;
-
-            for (n = 0; n < 6; n++)
+            for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
-            for (n = 0; n < 16; n++)
+            for (int n = 0; n < 16; n++)
                 WifiData->wfc_wepkey[c][n] = ap_data[AP_WEP_KEY_1 + n];
 
-            for (n = 0; n < 32; n++)
+            for (int n = 0; n < 32; n++)
                 WifiData->wfc_ap[c].ssid[n] = ap_data[AP_SSID_NAME + n];
 
-            for (n = 0; n < 32; n++)
+            int len;
+            for (len = 0; len < 32; len++)
             {
-                if (!ap_data[AP_SSID_NAME + n])
+                if (!ap_data[AP_SSID_NAME + len])
                     break;
             }
-
-            WifiData->wfc_ap[c].ssid_len = n;
+            WifiData->wfc_ap[c].ssid_len = len;
 
             WifiData->wfc_config[c][0] = *(u32 *)&ap_data[AP_IP_ADDR];
             WifiData->wfc_config[c][1] = *(u32 *)&ap_data[AP_GATEWAY];
             WifiData->wfc_config[c][3] = *(u32 *)&ap_data[AP_DNS_PRIMARY];
             WifiData->wfc_config[c][4] = *(u32 *)&ap_data[AP_DNS_SECONDARY];
 
+            // Subnet mask
             unsigned long s = 0;
-            for (n = 0; n < ap_data[AP_SUBNET_MASK]; n++)
+            for (int n = 0; n < ap_data[AP_SUBNET_MASK]; n++)
                 s |= 1 << (31 - n);
 
             s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl
             WifiData->wfc_config[c][2] = s;
 
+            // Start filling next DSWiFi slot
             c++;
+        }
+        else if (ap_data[AP_STATUS] == 0x01)
+        {
+            // AOSS entry
+            // TODO: Support this
         }
     }
 }
