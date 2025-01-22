@@ -116,7 +116,7 @@ void Wifi_LoadBeacon(int from, int to)
             case 3: // Channel
                 beacon_channel = to + i;
                 break;
-            case 5:                           // TIM
+            case 5:                        // TIM
                 W_TXBUF_TIM = i - 12 - 24; // TIM offset within beacon
                 W_LISTENINT = data[i + 1]; // listen interval
                 if (W_LISTENCOUNT >= W_LISTENINT)

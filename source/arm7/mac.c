@@ -47,18 +47,19 @@ u16 Wifi_MACReadHWord(u32 MAC_Base, u32 MAC_Offset)
 
 void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
 {
-    int endrange, subval;
-    int thislength;
-    endrange = (W_RXBUF_END & 0x1FFE);
-    subval   = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
+    int endrange = (W_RXBUF_END & 0x1FFE);
+    int subval   = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
+
     MAC_Base += MAC_Offset;
     if (MAC_Base >= endrange)
         MAC_Base -= subval;
+
     while (length > 0)
     {
-        thislength = length;
+        int thislength = length;
         if (thislength > (endrange - MAC_Base))
             thislength = endrange - MAC_Base;
+
         length -= thislength;
         while (thislength > 0)
         {
@@ -66,6 +67,7 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length)
             MAC_Base += 2;
             thislength -= 2;
         }
+
         MAC_Base -= subval;
     }
 }
