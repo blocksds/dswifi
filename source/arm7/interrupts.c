@@ -43,10 +43,6 @@ void Wifi_Intr_CntOverflow(void)
     }
 }
 
-void Wifi_Intr_DoNothing(void)
-{
-}
-
 void Wifi_Interrupt(void)
 {
     // If WiFi hasn't been initialized, don't handle any interrupt
@@ -86,12 +82,10 @@ void Wifi_Interrupt(void)
         if (wIF & IRQ_RX_EVENT_INCREMENT) // RX count up
         {
             W_IF = IRQ_RX_EVENT_INCREMENT;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_TX_EVENT_INCREMENT) // TX error
         {
             W_IF = IRQ_TX_EVENT_INCREMENT;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_RX_EVENT_HALF_OVERFLOW) // Count Overflow
         {
@@ -106,52 +100,42 @@ void Wifi_Interrupt(void)
         if (wIF & IRQ_RX_START)
         {
             W_IF = IRQ_RX_START;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_TX_START)
         {
             W_IF = IRQ_TX_START;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_TXBUF_COUNT_END)
         {
             W_IF = IRQ_TXBUF_COUNT_END;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_RXBUF_COUNT_END)
         {
             W_IF = IRQ_RXBUF_COUNT_END;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_UNUSED)
         {
             W_IF = IRQ_UNUSED;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_RF_WAKEUP)
         {
             W_IF = IRQ_RF_WAKEUP;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_MULTIPLAY_CMD_DONE)
         {
             W_IF = IRQ_MULTIPLAY_CMD_DONE;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_POST_BEACON_TIMESLOT) // ACT End
         {
             W_IF = IRQ_POST_BEACON_TIMESLOT;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_BEACON_TIMESLOT) // TBTT
         {
             W_IF = IRQ_BEACON_TIMESLOT;
-            Wifi_Intr_DoNothing();
         }
         if (wIF & IRQ_PRE_BEACON_TIMESLOT) // PreTBTT
         {
             W_IF = IRQ_PRE_BEACON_TIMESLOT;
-            Wifi_Intr_DoNothing();
         }
     }
 }
