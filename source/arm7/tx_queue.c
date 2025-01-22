@@ -33,7 +33,7 @@ void Wifi_TxRaw(u16 *data, int datalen)
 
     WifiData->stats[WSTAT_TXPACKETS]++;
     WifiData->stats[WSTAT_TXBYTES] += datalen;
-    WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
+    WifiData->stats[WSTAT_TXDATABYTES] += datalen - HDR_TX_SIZE;
 }
 
 void Wifi_TxArm7QueueFlush(void)
@@ -124,7 +124,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
 {
     int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE / 2);
     int readbase  = WifiData->txbufIn;
-    int length    = (packetlen + 12 - 4 + 1) / 2;
+    int length    = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
 
     int max = WifiData->txbufOut - WifiData->txbufIn;
     if (max < 0)
@@ -152,7 +152,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
     WifiData->txbufIn = readbase;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
-    WifiData->stats[WSTAT_TXBYTES] += packetlen + 12 - 4;
+    WifiData->stats[WSTAT_TXBYTES] += packetlen + HDR_TX_SIZE - 4;
     WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
 
     return packetlen;
@@ -184,7 +184,8 @@ int Wifi_TxArm9QueueFlush(void)
     // Reset the keepalive count to not send unneeded frames
     Wifi_KeepaliveCountReset();
 
-    // Ensure that the hardware TX header has all required information.  This
+    // Packets received from the ARM9 don't have a fully filled TX header.
+    // Ensure that the hardware TX header has all required information. This
     // header goes before everything else, so it's stored at address 0 of MAC
     // RAM as well.
 

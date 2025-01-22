@@ -24,6 +24,8 @@ extern "C" {
 #define HDR_TX_UNKNOWN_09       0x9
 #define HDR_TX_IEEE_FRAME_SIZE  0xA // Header + body + checksum(s) in bytes
 
+#define HDR_TX_SIZE             0xC
+
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
 int Wifi_SendOpenSystemAuthPacket(void);
