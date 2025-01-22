@@ -37,7 +37,7 @@ void Wifi_Intr_RxEnd(void)
             // If the packet type is requested (or promiscous mode is enabled),
             // forward it to the rx queue
             Wifi_KeepaliveCountReset();
-            if (!Wifi_RxQueueTransferToARM9(base, full_packetlen))
+            if (!Wifi_RxArm9QueueAdd(base, full_packetlen))
             {
                 // Failed, ignore for now.
             }
@@ -90,9 +90,9 @@ void Wifi_Intr_TxEnd(void)
     // There is no active transfer, so all packets have been sent. First, check
     // if the ARM7 wants to send something (like management frames, etc) and
     // send it.
-    if (!Wifi_TxQueueEmpty())
+    if (!Wifi_TxArm7QueueIsEmpty())
     {
-        Wifi_TxQueueFlush();
+        Wifi_TxArm7QueueFlush();
         Wifi_KeepaliveCountReset();
         return;
     }
@@ -100,7 +100,7 @@ void Wifi_Intr_TxEnd(void)
     // If there is no active transfer and the ARM7 queue is empty, check if
     // there is pending data in the ARM9 TX circular buffer that the ARM9 wants
     // to send.
-    if (Wifi_TxQueueTransferFromARM9())
+    if (Wifi_TxArm9QueueFlush())
         return;
 
     // Nothing more to do

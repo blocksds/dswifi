@@ -25,23 +25,23 @@ void Wifi_TxRaw(u16 *data, int datalen);
 
 // Copy enqueued data to the MAC and start a transfer. Note that this function
 // doesn't do any checks, be careful when using it.
-void Wifi_TxQueueFlush(void);
+void Wifi_TxArm7QueueFlush(void);
 
 // Returns true if the transfer queue is empty. Note that there may still be an
 // active transfer.
-bool Wifi_TxQueueEmpty(void);
+bool Wifi_TxArm7QueueIsEmpty(void);
 
 // Define data to be transferred. This function will check if there is an active
 // transfer already active. If so, it will try to enqueue the data in a 1024
 // halfword buffer to be sent after the transfer is finished. If it can't be
 // enqueued, this function will return 0. On success it returns 1.
-int Wifi_TxQueueAdd(u16 *data, int datalen);
+int Wifi_TxArm7QueueAdd(u16 *data, int datalen);
 
 // This function checks if there is any data that the ARM9 has requested to
 // transfer, and it will copy it to MAC RAM and start a transfer. Note that this
 // doesn't check if there is an active transfer already, you need to check that
 // beforehand.
-int Wifi_TxQueueTransferFromARM9(void);
+int Wifi_TxArm9QueueFlush(void);
 
 #ifdef __cplusplus
 };

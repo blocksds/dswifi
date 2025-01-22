@@ -16,7 +16,7 @@ extern "C" {
 // and writes them to the circular RX buffer shared with the ARM9.
 //
 // It returns 0 if there isn't enough space in the ARM9 buffer, or 1 on success.
-int Wifi_RxQueueTransferToARM9(u32 base, u32 len);
+int Wifi_RxArm9QueueAdd(u32 base, u32 len);
 
 #ifdef __cplusplus
 };

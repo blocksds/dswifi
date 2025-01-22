@@ -6,7 +6,7 @@
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 
-int Wifi_RxQueueTransferToARM9(u32 base, u32 len)
+int Wifi_RxArm9QueueAdd(u32 base, u32 len)
 {
     int buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
     if (buflen < 0)

@@ -74,7 +74,7 @@ int Wifi_SendOpenSystemAuthPacket(void)
     ((u16 *)data)[4] = 0x000A;
     ((u16 *)data)[5] = i + 6 - 12 + 4;
 
-    return Wifi_TxQueueAdd((u16 *)data, i + 6);
+    return Wifi_TxArm7QueueAdd((u16 *)data, i + 6);
 }
 
 int Wifi_SendSharedKeyAuthPacket(void)
@@ -90,7 +90,7 @@ int Wifi_SendSharedKeyAuthPacket(void)
     ((u16 *)data)[4] = 0x000A;
     ((u16 *)data)[5] = i + 6 - 12 + 4;
 
-    return Wifi_TxQueueAdd((u16 *)data, i + 6);
+    return Wifi_TxArm7QueueAdd((u16 *)data, i + 6);
 }
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
@@ -111,7 +111,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     ((u16 *)data)[4] = 0x000A;
     ((u16 *)data)[5] = i + 8 + challenge_length - 12 + 4 + 4;
 
-    return Wifi_TxQueueAdd((u16 *)data, i + 8 + challenge_length);
+    return Wifi_TxArm7QueueAdd((u16 *)data, i + 8 + challenge_length);
 }
 
 // uses arm7 data in our struct
@@ -168,7 +168,7 @@ int Wifi_SendAssocPacket(void)
     ((u16 *)data)[4] = 0x000A;
     ((u16 *)data)[5] = i - 12 + 4;
 
-    return Wifi_TxQueueAdd((u16 *)data, i);
+    return Wifi_TxArm7QueueAdd((u16 *)data, i);
 }
 
 // Fix: Either sent ToDS properly or drop ToDS flag. Also fix length (16+4)
@@ -189,7 +189,7 @@ int Wifi_SendNullFrame(void)
     Wifi_CopyMacAddr(&data[8], WifiData->apmac7);
     Wifi_CopyMacAddr(&data[11], WifiData->MacAddr);
 
-    return Wifi_TxQueueAdd(data, 30);
+    return Wifi_TxArm7QueueAdd(data, 30);
 }
 
 // TODO: This is unused
@@ -210,7 +210,7 @@ int Wifi_SendPSPollFrame(void)
     Wifi_CopyMacAddr(&data[8], WifiData->apmac7);
     Wifi_CopyMacAddr(&data[11], WifiData->MacAddr);
 
-    return Wifi_TxQueueAdd(data, 28);
+    return Wifi_TxArm7QueueAdd(data, 28);
 }
 
 int Wifi_ProcessReceivedFrame(int macbase, int framelen)

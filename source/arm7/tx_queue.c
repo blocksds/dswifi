@@ -36,13 +36,13 @@ void Wifi_TxRaw(u16 *data, int datalen)
     WifiData->stats[WSTAT_TXDATABYTES] += datalen - 12;
 }
 
-void Wifi_TxQueueFlush(void)
+void Wifi_TxArm7QueueFlush(void)
 {
     Wifi_TxRaw(wifi_tx_queue, wifi_tx_queue_len);
     wifi_tx_queue_len = 0;
 }
 
-bool Wifi_TxQueueEmpty(void)
+bool Wifi_TxArm7QueueIsEmpty(void)
 {
     if (wifi_tx_queue_len == 0)
         return true;
@@ -53,7 +53,7 @@ bool Wifi_TxQueueEmpty(void)
 // Overwrite the current data in the queue with the newly provided data. If the
 // new buffer is too big it will return 0. If the data fits in the buffer, it
 // will return 1.
-static int Wifi_TxQueueSetEnqueuedData(u16 *data, int datalen)
+static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, int datalen)
 {
     // Convert to halfords, rounding up
     int hwords = (datalen + 1) >> 1;
@@ -67,13 +67,13 @@ static int Wifi_TxQueueSetEnqueuedData(u16 *data, int datalen)
     return 1;
 }
 
-int Wifi_TxQueueAdd(u16 *data, int datalen)
+int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
 {
     if (!Wifi_TxIsBusy())
     {
         // No active transfer. Check the queue to see if there is any data.
 
-        if (Wifi_TxQueueEmpty())
+        if (Wifi_TxArm7QueueIsEmpty())
         {
             // The queue is empty. Copy the data directly to the MAC without
             // passing through the queue, and start a transfer.
@@ -84,9 +84,9 @@ int Wifi_TxQueueAdd(u16 *data, int datalen)
         {
             // The queue has data. Flush the enqueued data to the MAC, start a
             // transfer, and enqueue the data just passed to Wifi_TxQueueAdd().
-            Wifi_TxQueueFlush();
+            Wifi_TxArm7QueueFlush();
 
-            return Wifi_TxQueueSetEnqueuedData(data, datalen);
+            return Wifi_TxArm7QueueSetEnqueuedData(data, datalen);
         }
     }
     else
@@ -94,11 +94,11 @@ int Wifi_TxQueueAdd(u16 *data, int datalen)
         // There is an active transfer. Check the queue to see if there is any
         // enqueued data.
 
-        if (Wifi_TxQueueEmpty())
+        if (Wifi_TxArm7QueueIsEmpty())
         {
             // The queue is empty, so we can enqueue the data just passed to
             // Wifi_TxQueueAdd().
-            return Wifi_TxQueueSetEnqueuedData(data, datalen);
+            return Wifi_TxArm7QueueSetEnqueuedData(data, datalen);
         }
         else
         {
@@ -108,7 +108,7 @@ int Wifi_TxQueueAdd(u16 *data, int datalen)
     }
 }
 
-static int Wifi_CheckTxBuf(s32 offset) // offset in halfwords
+static int Wifi_TxArm9BufCheck(s32 offset) // offset in halfwords
 {
     offset += WifiData->txbufIn;
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
@@ -120,9 +120,9 @@ static int Wifi_CheckTxBuf(s32 offset) // offset in halfwords
 // Copies data from the ARM9 TX buffer to MAC RAM and updates stats. It
 // doesn't start the transfer because the header still requires some fields to
 // be filled in.
-static int Wifi_CopyFirstTxData(s32 macbase)
+static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
 {
-    int packetlen = Wifi_CheckTxBuf(HDR_TX_IEEE_FRAME_SIZE / 2);
+    int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE / 2);
     int readbase  = WifiData->txbufIn;
     int length    = (packetlen + 12 - 4 + 1) / 2;
 
@@ -158,10 +158,18 @@ static int Wifi_CopyFirstTxData(s32 macbase)
     return packetlen;
 }
 
-int Wifi_TxQueueTransferFromARM9(void)
+static bool Wifi_TxArm9QueueIsEmpty(void)
+{
+    if (WifiData->txbufOut == WifiData->txbufIn)
+        return true;
+
+    return false;
+}
+
+int Wifi_TxArm9QueueFlush(void)
 {
     // If there is no data in the ARM9 queue, exit
-    if (WifiData->txbufOut == WifiData->txbufIn)
+    if (Wifi_TxArm9QueueIsEmpty())
         return 0;
 
     // TODO: Check this as well?
@@ -170,7 +178,7 @@ int Wifi_TxQueueTransferFromARM9(void)
 
     // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where the
     // TX buffer is located.
-    if (Wifi_CopyFirstTxData(0) == 0)
+    if (Wifi_TxArm9QueueCopyFirstData(0) == 0)
         return 0;
 
     // Reset the keepalive count to not send unneeded frames
