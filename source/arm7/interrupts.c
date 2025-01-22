@@ -84,13 +84,13 @@ void Wifi_Intr_TxEnd(void)
     WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
 
     // If TX is still busy it means that some packet has just been sent but
-    // there are more being sent in the MAC.
+    // there are more waiting to be sent in the MAC RAM.
     if (Wifi_TxIsBusy())
         return;
 
-    // There is no active transfer, so all packets have been sent. Check if the
-    // transfer queue has data. If it has data, flush the queue to the MAC to
-    // start a new transfer.
+    // There is no active transfer, so all packets have been sent. First, check
+    // if the ARM7 wants to send something (like management frames, etc) and
+    // send it.
     if (!Wifi_TxQueueEmpty())
     {
         Wifi_TxQueueFlush();
@@ -98,19 +98,32 @@ void Wifi_Intr_TxEnd(void)
         return;
     }
 
+    // If there is no active transfer and the ARM7 queue is empty, check if
+    // there is pending data in the ARM9 TX circular buffer that the ARM9 wants
+    // to send.
     if ((WifiData->txbufOut != WifiData->txbufIn)
         // && (!(WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
         // || WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
     )
     {
+        // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where
+        // the TX buffer is located.
         if (Wifi_CopyFirstTxData(0))
         {
+            // Reset the keepalive count to not send unneeded frames
             Wifi_KeepaliveCountReset();
-            if (W_MACMEM(0x8) == 0)
-            {
-                // if rate dne, fill it in.
-                W_MACMEM(0x8) = WifiData->maxrate7;
-            }
+
+            // Ensure that the hardware TX header has all required information.
+            // This header goes before everything else, so it's stored at
+            // address 0 of MAC RAM as well.
+
+            // If the transfer rate isn't set, fill it in now
+            if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
+                W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
+
+            // Ensure that the IEEE header has all required information. This
+            // header goes after the TX header.
+
             if (W_MACMEM(0xC) & 0x4000)
             {
                 // wep is enabled, fill in the IV.
@@ -124,8 +137,9 @@ void Wifi_Intr_TxEnd(void)
                 Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F
                 return;
             }
+
             // W_TXSTAT       = 0x0001;
-            W_TX_RETRYLIMIT = 0x0707;
+            W_TX_RETRYLIMIT = 0x0707; // This has to be set before every transfer
             W_TXBUF_LOC3    = 0x8000;
             W_TXREQ_SET     = 0x000D;
         }

@@ -12,6 +12,18 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
+// Hardware TX Header (12 bytes)
+// =============================
+
+#define HDR_TX_STATUS           0x0
+#define HDR_TX_UNKNOWN_02       0x2
+#define HDR_TX_UNKNOWN_04       0x4
+#define HDR_TX_UNKNOWN_05       0x5
+#define HDR_TX_UNKNOWN_06       0x6
+#define HDR_TX_TRANSFER_RATE    0x8 // 0x0A = 1Mbit/s, 0x14 = 2Mbit/s
+#define HDR_TX_UNKNOWN_09       0x9
+#define HDR_TX_IEEE_FRAME_SIZE  0xA // Header + Body + checksum(s) in bytes
+
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
 int Wifi_SendOpenSystemAuthPacket(void);
