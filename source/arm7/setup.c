@@ -249,7 +249,8 @@ void Wifi_Init(void *wifidata)
 void Wifi_Deinit(void)
 {
     Wifi_Stop();
-    REG_POWERCNT &= ~2;
+
+    powerOff(POWER_WIFI);
 }
 
 void Wifi_Start(void)
