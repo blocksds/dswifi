@@ -208,7 +208,7 @@ void Wifi_Init(void *wifidata)
     WifiData->reqPacketFlags = WFLAG_PACKET_ALL & (~WFLAG_PACKET_BEACON);
     WifiData->curReqFlags    = 0;
     WifiData->reqReqFlags    = 0;
-    WifiData->maxrate7       = 0x0A;
+    WifiData->maxrate7       = WIFI_TRANSFER_RATE_1MBPS;
 
     for (int i = 0; i < W_MACMEM_SIZE; i += 2)
         W_MACMEM(i) = 0;

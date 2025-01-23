@@ -169,6 +169,12 @@ enum WIFI_ASSOCSTATUS
                                 // start)
 };
 
+enum WIFI_TRANSFERRATES
+{
+    WIFI_TRANSFER_RATE_1MBPS = 0x0A, // 1 Mbit/s
+    WIFI_TRANSFER_RATE_2MBPS = 0x14, // 1 Mbit/s
+};
+
 typedef struct WIFI_TXHEADER
 {
     u16 enable_flags;

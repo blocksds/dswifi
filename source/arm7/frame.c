@@ -189,7 +189,7 @@ int Wifi_SendOpenSystemAuthPacket(void)
 
     size_t body_size = 6;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
@@ -211,7 +211,7 @@ int Wifi_SendSharedKeyAuthPacket(void)
 
     size_t body_size = 6;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
@@ -239,7 +239,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 
     size_t body_size = 6 + 2 + challenge_length;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4 + 4;
 
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
@@ -309,7 +309,7 @@ int Wifi_SendAssocPacket(void)
     for (int j = 0; j < numrates; j++)
         body[body_size++] = WifiData->baserates7[j];
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
@@ -330,10 +330,10 @@ int Wifi_SendNullFrame(void)
     // Hardware TX header
     // ------------------
 
-    tx_header[HDR_TX_STATUS / 2]          = 0;
-    tx_header[HDR_TX_UNKNOWN_02 / 2]      = 0;
-    tx_header[HDR_TX_UNKNOWN_04 / 2]      = 0;
-    tx_header[HDR_TX_UNKNOWN_06 / 2]      = 0;
+    tx_header[HDR_TX_STATUS / 2]     = 0;
+    tx_header[HDR_TX_UNKNOWN_02 / 2] = 0;
+    tx_header[HDR_TX_UNKNOWN_04 / 2] = 0;
+    tx_header[HDR_TX_UNKNOWN_06 / 2] = 0;
 
     // IEEE 802.11 header
     // ------------------
@@ -751,13 +751,13 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                             W_AID_FULL = ((u16 *)(data + 24))[2];
 
                             // set max rate
-                            WifiData->maxrate7 = 0xA;
+                            WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
                             for (i = 0; i < ((u8 *)(data + 24))[7]; i++)
                             {
                                 if (((u8 *)(data + 24))[8 + i] == 0x84
                                     || ((u8 *)(data + 24))[8 + i] == 0x04)
                                 {
-                                    WifiData->maxrate7 = 0x14;
+                                    WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
                                 }
                             }
                             if (WifiData->authlevel == WIFI_AUTHLEVEL_AUTHENTICATED
