@@ -61,9 +61,56 @@
 #define FORM_DATA(s)        ((2 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
 #define FORM_RESERVED(s)    ((3 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
 
-#define TYPE_AUTHENTICATION  FORM_MANAGEMENT(0xB)
+// Management frames
+// -----------------
 
-#define TYPE_NULL            FORM_DATA(0x4)
+#define TYPE_ASSOC_REQUEST      FORM_MANAGEMENT(0x0)
+#define TYPE_ASSOC_RESPONSE     FORM_MANAGEMENT(0x1)
+#define TYPE_REASSOC_REQUEST    FORM_MANAGEMENT(0x2)
+#define TYPE_REASSOC_RESPONSE   FORM_MANAGEMENT(0x3)
+#define TYPE_PROBE_REQUEST      FORM_MANAGEMENT(0x4)
+#define TYPE_PROBE_RESPONSE     FORM_MANAGEMENT(0x5)
+// Reserved: 6, 7
+#define TYPE_BEACON             FORM_MANAGEMENT(0x8)
+#define TYPE_ATIM               FORM_MANAGEMENT(0x9)
+#define TYPE_DISASSOCIATION     FORM_MANAGEMENT(0xA)
+#define TYPE_AUTHENTICATION     FORM_MANAGEMENT(0xB)
+#define TYPE_DEAUTHENTICATION   FORM_MANAGEMENT(0xC)
+#define TYPE_ACTION             FORM_MANAGEMENT(0xD)
+// Reserved: E, F
+
+// Control frames
+// --------------
+
+// Reserved: 0 to 7
+#define TYPE_BLOCKACKREQ        FORM_CONTROL(0x8)
+#define TYPE_BLOCKACK           FORM_CONTROL(0x9)
+#define TYPE_POWERSAVE_POLL     FORM_CONTROL(0xA)
+#define TYPE_RTS                FORM_CONTROL(0xB)
+#define TYPE_CTS                FORM_CONTROL(0xC)
+#define TYPE_ACK                FORM_CONTROL(0xD)
+#define TYPE_CF_END             FORM_CONTROL(0xE)
+#define TYPE_CF_END_CF_ACK      FORM_CONTROL(0xF)
+
+// Data frames
+// -----------
+
+#define TYPE_DATA                       FORM_DATA(0x0)
+#define TYPE_DATA_CF_ACK                FORM_DATA(0x1)
+#define TYPE_DATA_CF_POLL               FORM_DATA(0x2)
+#define TYPE_DATA_CF_ACK_CF_POLL        FORM_DATA(0x3)
+#define TYPE_NULL_FUNCTION              FORM_DATA(0x4)
+#define TYPE_CF_ACK                     FORM_DATA(0x5)
+#define TYPE_CF_POLL                    FORM_DATA(0x6)
+#define TYPE_CF_ACK_CF_POLL             FORM_DATA(0x7)
+#define TYPE_QOS_DATA                   FORM_DATA(0x8)
+#define TYPE_QOS_DATA_CF_ACK            FORM_DATA(0x9)
+#define TYPE_QOS_DATA_CF_POLL           FORM_DATA(0xA)
+#define TYPE_QOS_DATA_CF_ACK_CF_POLL    FORM_DATA(0xB)
+#define TYPE_QOS_NULL                   FORM_DATA(0xC)
+// Reserved: D
+#define TYPE_QOS_CF_POLL                FORM_DATA(0xE)
+#define TYPE_QOS_CF_POLL_CF_ACK         FORM_DATA(0xF)
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
 {
@@ -260,7 +307,7 @@ int Wifi_SendNullFrame(void)
     // We can't use Wifi_GenMgtHeader(): Null frames don't include the BSSID,
     // and Wifi_GenMgtHeader() always includes it.
 
-    u16 frame_control = TYPE_NULL | FC_TO_DS;
+    u16 frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
 
     u8 data[50]; // Max size is 40 = 12 + 24 + 4
 
@@ -326,11 +373,16 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
     Wifi_MACRead((u16 *)&packetheader, macbase, 0, 12);
     u16 control_802 = Wifi_MACReadHWord(macbase, 12);
 
-    switch ((control_802 >> 2) & 0x3F)
+    const u16 control_802_type_mask = (FC_TYPE_MASK << FC_TYPE_SHIFT)
+                                    | (FC_SUBTYPE_MASK << FC_SUBTYPE_SHIFT);
+
+    switch (control_802 & control_802_type_mask)
     {
         // Management Frames
-        case 0x20: // 1000 00 Beacon
-        case 0x14: // 0101 00 Probe Response // process probe responses too.
+        // -----------------
+
+        case TYPE_BEACON: // 1000 00 Beacon
+        case TYPE_PROBE_RESPONSE: // 0101 00 Probe Response // process probe responses too.
             // mine data from the beacon...
             {
                 u8 data[512];
@@ -661,8 +713,8 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 return WFLAG_PACKET_MGT;
             return WFLAG_PACKET_BEACON;
 
-        case 0x04: // 0001 00 Assoc Response
-        case 0x0C: // 0011 00 Reassoc Response
+        case TYPE_ASSOC_RESPONSE: // 0001 00 Assoc Response
+        case TYPE_REASSOC_RESPONSE: // 0011 00 Reassoc Response
             // we might have been associated, let's check.
             {
                 int datalen, i;
@@ -710,14 +762,14 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
             }
             return WFLAG_PACKET_MGT;
 
-        case 0x00: // 0000 00 Assoc Request
-        case 0x08: // 0010 00 Reassoc Request
-        case 0x10: // 0100 00 Probe Request
-        case 0x24: // 1001 00 ATIM
-        case 0x28: // 1010 00 Disassociation
+        case TYPE_ASSOC_REQUEST: // 0000 00 Assoc Request
+        case TYPE_REASSOC_REQUEST: // 0010 00 Reassoc Request
+        case TYPE_PROBE_REQUEST: // 0100 00 Probe Request
+        case TYPE_ATIM: // 1001 00 ATIM
+        case TYPE_DISASSOCIATION: // 1010 00 Disassociation
             return WFLAG_PACKET_MGT;
 
-        case 0x2C: // 1011 00 Authentication
+        case TYPE_AUTHENTICATION: // 1011 00 Authentication
             // check auth response to ensure we're in
             {
                 int datalen;
@@ -803,7 +855,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
             }
             return WFLAG_PACKET_MGT;
 
-        case 0x30: // 1100 00 Deauthentication
+        case TYPE_DEAUTHENTICATION: // 1100 00 Deauthentication
             {
                 int datalen;
                 u8 data[64];
@@ -836,28 +888,45 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
             }
             return WFLAG_PACKET_MGT;
 
-            // Control Frames
-        case 0x29: // 1010 01 PowerSave Poll
-        case 0x2D: // 1011 01 RTS
-        case 0x31: // 1100 01 CTS
-        case 0x35: // 1101 01 ACK
-        case 0x39: // 1110 01 CF-End
-        case 0x3D: // 1111 01 CF-End+CF-Ack
+        //case TYPE_ACTION: // TODO: Ignored, should we handle it?
+
+        // Control Frames
+        // --------------
+
+        //case TYPE_BLOCKACKREQ: // TODO: Ignored, should we handle it?
+        //case TYPE_BLOCKACK:
+
+        case TYPE_POWERSAVE_POLL: // 1010 01 PowerSave Poll
+        case TYPE_RTS: // 1011 01 RTS
+        case TYPE_CTS: // 1100 01 CTS
+        case TYPE_ACK: // 1101 01 ACK
+        case TYPE_CF_END: // 1110 01 CF-End
+        case TYPE_CF_END_CF_ACK: // 1111 01 CF-End+CF-Ack
             return WFLAG_PACKET_CTRL;
 
-            // Data Frames
-        case 0x02: // 0000 10 Data
-        case 0x06: // 0001 10 Data + CF-Ack
-        case 0x0A: // 0010 10 Data + CF-Poll
-        case 0x0E: // 0011 10 Data + CF-Ack + CF-Poll
+        // Data Frames
+        // -----------
+
+        case TYPE_DATA: // 0000 10 Data
+        case TYPE_DATA_CF_ACK: // 0001 10 Data + CF-Ack
+        case TYPE_DATA_CF_POLL: // 0010 10 Data + CF-Poll
+        case TYPE_DATA_CF_ACK_CF_POLL: // 0011 10 Data + CF-Ack + CF-Poll
             // We like data!
             return WFLAG_PACKET_DATA;
 
-        case 0x12: // 0100 10 Null Function
-        case 0x16: // 0101 10 CF-Ack
-        case 0x1A: // 0110 10 CF-Poll
-        case 0x1E: // 0111 10 CF-Ack + CF-Poll
+        case TYPE_NULL_FUNCTION: // 0100 10 Null Function
+        case TYPE_CF_ACK: // 0101 10 CF-Ack
+        case TYPE_CF_POLL: // 0110 10 CF-Poll
+        case TYPE_CF_ACK_CF_POLL: // 0111 10 CF-Ack + CF-Poll
             return WFLAG_PACKET_DATA;
+
+        //case TYPE_QOS_DATA: // TODO: Ignored, should we handle them?
+        //case TYPE_QOS_DATA_CF_ACK:
+        //case TYPE_QOS_DATA_CF_POLL:
+        //case TYPE_QOS_DATA_CF_ACK_CF_POLL:
+        //case TYPE_QOS_NULL:
+        //case TYPE_QOS_CF_POLL:
+        //case TYPE_QOS_CF_POLL_CF_ACK:
 
         default: // ignore!
             return 0;
