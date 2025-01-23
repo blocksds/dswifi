@@ -249,7 +249,6 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 int Wifi_SendAssocPacket(void)
 {
     u8 data[96];
-    int j, numrates;
 
     int i = Wifi_GenMgtHeader(data, 0x0000);
 
@@ -266,33 +265,34 @@ int Wifi_SendAssocPacket(void)
     i += 4;
     data[i++] = 0; // SSID element
     data[i++] = WifiData->ssid7[0];
-    for (j = 0; j < WifiData->ssid7[0]; j++)
+    for (int j = 0; j < WifiData->ssid7[0]; j++)
         data[i++] = WifiData->ssid7[1 + j];
 
     if ((WifiData->baserates7[0] & 0x7f) != 2)
     {
-        for (j = 1; j < 16; j++)
+        for (int j = 1; j < 16; j++)
             WifiData->baserates7[j] = WifiData->baserates7[j - 1];
     }
     WifiData->baserates7[0] = 0x82;
     if ((WifiData->baserates7[1] & 0x7f) != 4)
     {
-        for (j = 2; j < 16; j++)
+        for (int j = 2; j < 16; j++)
             WifiData->baserates7[j] = WifiData->baserates7[j - 1];
     }
     WifiData->baserates7[1] = 0x04;
 
     WifiData->baserates7[15] = 0;
-    for (j = 0; j < 16; j++)
-        if (WifiData->baserates7[j] == 0)
+    int r;
+    for (r = 0; r < 16; r++)
+        if (WifiData->baserates7[r] == 0)
             break;
-    numrates = j;
-    for (j = 2; j < numrates; j++)
+    int numrates = r;
+    for (int j = 2; j < numrates; j++)
         WifiData->baserates7[j] &= 0x7F;
 
     data[i++] = 1; // rate set
     data[i++] = numrates;
-    for (j = 0; j < numrates; j++)
+    for (int j = 0; j < numrates; j++)
         data[i++] = WifiData->baserates7[j];
 
     // reset header fields with needed data
@@ -344,7 +344,7 @@ int Wifi_SendNullFrame(void)
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size);
 }
 
-// TODO: This is unused
+#if 0 // TODO: This is unused
 int Wifi_SendPSPollFrame(void)
 {
     // max size is 12+16 = 28
@@ -364,6 +364,7 @@ int Wifi_SendPSPollFrame(void)
 
     return Wifi_TxArm7QueueAdd(data, 28);
 }
+#endif
 
 int Wifi_ProcessReceivedFrame(int macbase, int framelen)
 {
