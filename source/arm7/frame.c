@@ -245,61 +245,74 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
-// uses arm7 data in our struct
+// This function gets information from the IPC struct
 int Wifi_SendAssocPacket(void)
 {
-    u8 data[96];
+    u16 frame_control = TYPE_ASSOC_REQUEST;
 
-    int i = Wifi_GenMgtHeader(data, 0x0000);
+    u8 data[96];
+    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
+
+    u16 *tx_header = (u16 *)data;
+    u8 *body = (u8 *)(data + hdr_size);
+
+    size_t body_size = 0;
 
     if (WifiData->wepmode7)
-    {
-        ((u16 *)(data + i))[0] = 0x0031; // CAPS info
-    }
+        ((u16 *)body)[0] = 0x0031; // CAPS info
     else
-    {
-        ((u16 *)(data + i))[0] = 0x0021; // CAPS info
-    }
+        ((u16 *)body)[0] = 0x0021; // CAPS info
 
-    ((u16 *)(data + i))[1] = W_LISTENINT; // Listen interval
-    i += 4;
-    data[i++] = 0; // SSID element
-    data[i++] = WifiData->ssid7[0];
+    ((u16 *)body)[1] = W_LISTENINT; // Listen interval
+
+    body_size += 4;
+
+    body[body_size++] = 0; // SSID element
+    body[body_size++] = WifiData->ssid7[0];
     for (int j = 0; j < WifiData->ssid7[0]; j++)
-        data[i++] = WifiData->ssid7[1 + j];
+        body[body_size++] = WifiData->ssid7[1 + j];
 
-    if ((WifiData->baserates7[0] & 0x7f) != 2)
+    // Base rate handling
+
     {
-        for (int j = 1; j < 16; j++)
-            WifiData->baserates7[j] = WifiData->baserates7[j - 1];
+        if ((WifiData->baserates7[0] & 0x7f) != 2)
+        {
+            for (int j = 1; j < 16; j++)
+                WifiData->baserates7[j] = WifiData->baserates7[j - 1];
+        }
+        WifiData->baserates7[0] = 0x82;
+        if ((WifiData->baserates7[1] & 0x7f) != 4)
+        {
+            for (int j = 2; j < 16; j++)
+                WifiData->baserates7[j] = WifiData->baserates7[j - 1];
+        }
+        WifiData->baserates7[1] = 0x04;
+        WifiData->baserates7[15] = 0;
     }
-    WifiData->baserates7[0] = 0x82;
-    if ((WifiData->baserates7[1] & 0x7f) != 4)
+
+    int numrates;
+
     {
-        for (int j = 2; j < 16; j++)
-            WifiData->baserates7[j] = WifiData->baserates7[j - 1];
+        int r;
+        for (r = 0; r < 16; r++)
+        {
+            if (WifiData->baserates7[r] == 0)
+                break;
+        }
+        numrates = r;
+        for (int j = 2; j < numrates; j++)
+            WifiData->baserates7[j] &= 0x7F;
     }
-    WifiData->baserates7[1] = 0x04;
 
-    WifiData->baserates7[15] = 0;
-    int r;
-    for (r = 0; r < 16; r++)
-        if (WifiData->baserates7[r] == 0)
-            break;
-    int numrates = r;
-    for (int j = 2; j < numrates; j++)
-        WifiData->baserates7[j] &= 0x7F;
-
-    data[i++] = 1; // rate set
-    data[i++] = numrates;
+    body[body_size++] = 1; // rate set
+    body[body_size++] = numrates;
     for (int j = 0; j < numrates; j++)
-        data[i++] = WifiData->baserates7[j];
+        body[body_size++] = WifiData->baserates7[j];
 
-    // reset header fields with needed data
-    ((u16 *)data)[4] = 0x000A;
-    ((u16 *)data)[5] = i - 12 + 4;
+    tx_header[HDR_TX_TRANSFER_RATE / 2] = 0x000A;
+    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, i);
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 int Wifi_SendNullFrame(void)
