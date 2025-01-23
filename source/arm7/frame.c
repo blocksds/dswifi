@@ -25,6 +25,19 @@
 
 #define HDR_MGT_MAC_SIZE        24 // Size of the header up to the body in bytes
 
+// 802.11b data frame header (Indices in halfwords)
+// =========================
+
+#define HDR_DATA_FRAME_CONTROL  0
+#define HDR_DATA_DURATION       1
+#define HDR_DATA_ADDRESS_1      2
+#define HDR_DATA_ADDRESS_2      5
+#define HDR_DATA_ADDRESS_3      8
+#define HDR_DATA_SEQ_CTL        11
+#define HDR_DATA_BODY           12 // The body has a variable size
+
+#define HDR_DATA_MAC_SIZE       24 // Size of the header up to the body in bytes
+
 // Frame control bitfields
 // =======================
 
@@ -49,6 +62,8 @@
 #define FORM_RESERVED(s)    ((3 << FC_TYPE_SHIFT) | ((s) << FC_SUBTYPE_SHIFT))
 
 #define TYPE_AUTHENTICATION  FORM_MANAGEMENT(0xB)
+
+#define TYPE_NULL            FORM_DATA(0x4)
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
 {
@@ -240,25 +255,46 @@ int Wifi_SendAssocPacket(void)
     return Wifi_TxArm7QueueAdd((u16 *)data, i);
 }
 
-// Fix: Either sent ToDS properly or drop ToDS flag. Also fix length (16+4)
 int Wifi_SendNullFrame(void)
 {
-    // max size is 12+16 = 28
-    u16 data[16];
-    // tx header
-    data[0] = 0;
-    data[1] = 0;
-    data[2] = 0;
-    data[3] = 0;
-    data[4] = WifiData->maxrate7;
-    data[5] = 18 + 4;
-    // fill in packet header fields
-    data[6] = 0x0148;
-    data[7] = 0;
-    Wifi_CopyMacAddr(&data[8], WifiData->apmac7);
-    Wifi_CopyMacAddr(&data[11], WifiData->MacAddr);
+    // We can't use Wifi_GenMgtHeader(): Null frames don't include the BSSID,
+    // and Wifi_GenMgtHeader() always includes it.
 
-    return Wifi_TxArm7QueueAdd(data, 30);
+    u16 frame_control = TYPE_NULL | FC_TO_DS;
+
+    u8 data[50]; // Max size is 40 = 12 + 24 + 4
+
+    u16 *tx_header = (u16 *)data;
+    u16 *ieee_header = (u16 *)(data + HDR_TX_SIZE);
+
+    // Hardware TX header
+    // ------------------
+
+    tx_header[HDR_TX_STATUS / 2]          = 0;
+    tx_header[HDR_TX_UNKNOWN_02 / 2]      = 0;
+    tx_header[HDR_TX_UNKNOWN_04 / 2]      = 0;
+    tx_header[HDR_TX_UNKNOWN_06 / 2]      = 0;
+
+    // IEEE 802.11 header
+    // ------------------
+
+    // "Functions of address fields in data frames"
+    // ToDS=1, FromDS=0 -> Addr1=BSSID, Addr2=SA, Addr3=DA
+
+    ieee_header[HDR_DATA_FRAME_CONTROL] = frame_control;
+    ieee_header[HDR_DATA_DURATION] = 0;
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_1, WifiData->bssid7);
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_3, WifiData->apmac7);
+    ieee_header[HDR_DATA_SEQ_CTL] = 0;
+
+    size_t hdr_size = HDR_TX_SIZE + HDR_DATA_MAC_SIZE;
+    // body size = 0
+
+    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WifiData->maxrate7;
+    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size - HDR_TX_SIZE + 4;
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size);
 }
 
 // TODO: This is unused
