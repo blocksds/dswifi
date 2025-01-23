@@ -664,8 +664,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     hdrlen      = 18;
     framehdr[7] = 0;
 
-    if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
-    { // adhoc mode
+    if (WifiData->curReqFlags & WFLAG_REQ_APADHOC) // adhoc mode
+    {
         framehdr[6] = 0x0008;
         Wifi_CopyMacAddr(framehdr + 14, WifiData->bssid7);
         Wifi_CopyMacAddr(framehdr + 11, WifiData->MacAddr);
