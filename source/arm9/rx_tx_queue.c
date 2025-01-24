@@ -21,22 +21,29 @@ u32 Wifi_TxBufferBytesAvailable(void)
     return size * 2;
 }
 
-// TODO: This is in halfwords, switch to bytes?
-void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data)
+void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src)
 {
-    int writelen;
-    while (len > 0)
+    sassert((base & 1) == 0, "Unaligned base address");
+
+    // Convert to halfwords
+    base = base / 2;
+    int write_halfwords = (size_bytes + 1) / 2; // Round up
+
+    while (write_halfwords > 0)
     {
-        writelen = len;
-        if (writelen > (WIFI_TXBUFFER_SIZE / 2) - start)
-            writelen = (WIFI_TXBUFFER_SIZE / 2) - start;
-        len -= writelen;
+        int writelen = write_halfwords;
+        if (writelen > (WIFI_TXBUFFER_SIZE / 2) - base)
+            writelen = (WIFI_TXBUFFER_SIZE / 2) - base;
+
+        write_halfwords -= writelen;
+
         while (writelen)
         {
-            WifiData->txbufData[start++] = *(data++);
+            WifiData->txbufData[base++] = *(src++);
             writelen--;
         }
-        start = 0;
+
+        base = 0;
     }
 }
 
@@ -60,13 +67,13 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
 
     int base = WifiData->txbufOut;
 
-    Wifi_TxBufferWrite(base, 6, (u16 *)&txh);
+    Wifi_TxBufferWrite(base * 2, HDR_TX_SIZE, (u16 *)&txh);
 
     base += 6;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
-    Wifi_TxBufferWrite(base, (datalen + 1) / 2, data);
+    Wifi_TxBufferWrite(base * 2, datalen, data);
 
     base += (datalen + 1) / 2;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))

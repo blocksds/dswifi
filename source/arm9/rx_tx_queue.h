@@ -15,8 +15,17 @@ extern "C" {
 // Returns the number of bytes available in the TX buffer.
 u32 Wifi_TxBufferBytesAvailable(void);
 
-// Start and length are specified in halfwords.
-void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data);
+// Start and length are specified in bytes.
+//
+// The base address must be aligned to 16 bits.
+//
+// The length doesn't need to be a multiple of two, but it will be read with 16
+// bit reads. If the value isn't a multiple of two, one more byte will be read
+// to do the last read.
+//
+// TODO: Handle this special case in the function to only read one byte and fill
+// the rest with 0?
+void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *dst);
 
 // Length specified in bytes.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);

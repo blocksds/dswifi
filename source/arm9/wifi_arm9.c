@@ -229,7 +229,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen * 2;
 
     base = WifiData->txbufOut;
-    Wifi_TxBufferWrite(base, hdrlen, framehdr);
+    Wifi_TxBufferWrite(base * 2, hdrlen * 2, framehdr);
     base += hdrlen;
     copytotal += hdrlen;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
@@ -241,7 +241,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     framehdr[2] = 0x0000;
     framehdr[3] = ((u16 *)mb->datastart)[6]; // frame type
 
-    Wifi_TxBufferWrite(base, 4, framehdr);
+    Wifi_TxBufferWrite(base * 2, 8, framehdr);
     base += 4;
     copytotal += 4;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
@@ -251,7 +251,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     writelen = (mb->thislength - 14);
     if (writelen)
     {
-        Wifi_TxBufferWrite(base, (writelen + 1) / 2, ((u16 *)mb->datastart) + 7);
+        Wifi_TxBufferWrite(base * 2, writelen, ((u16 *)mb->datastart) + 7);
         base += (writelen + 1) / 2;
         copytotal += (writelen + 1) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
@@ -261,7 +261,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     {
         mb       = mb->next;
         writelen = mb->thislength;
-        Wifi_TxBufferWrite(base, (writelen + 1) / 2, ((u16 *)mb->datastart));
+        Wifi_TxBufferWrite(base * 2, writelen, (u16 *)mb->datastart);
         base += (writelen + 1) / 2;
         copytotal += (writelen + 1) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
