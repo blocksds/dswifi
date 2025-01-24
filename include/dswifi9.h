@@ -494,7 +494,7 @@ uint32_t Wifi_GetStats(int statnum);
 ///     Pointer to the data to send (should be halfword-aligned)
 ///
 /// @return
-///     Nothing of interest.
+///     0 on success (not enough space in queue), -1 on error.
 int Wifi_RawTxFrame(unsigned short datalen, unsigned short rate, unsigned short *data);
 
 /// Set a handler to process all raw incoming packets.
