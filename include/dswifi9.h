@@ -485,7 +485,8 @@ uint32_t Wifi_GetStats(int statnum);
 /// Send a raw 802.11 frame at a specified rate.
 ///
 /// @param datalen
-///     The length in bytes of the frame to send
+///     The length in bytes of the frame to send from beginning of 802.11 header
+///     to end, but not including CRC.
 /// @param rate
 ///     The rate to transmit at (Specified as mbits/10, 1mbit=0x000A,
 ///     2mbit=0x0014)

@@ -44,7 +44,6 @@ typedef void (*WifiPacketHandler)(int, int);
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
-int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data);
 
 void Wifi_DisableWifi(void);
 void Wifi_EnableWifi(void);

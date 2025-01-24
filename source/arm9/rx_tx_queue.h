@@ -12,12 +12,20 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
+// Returns the number of halfwords available.
 u32 Wifi_TxBufferWordsAvailable(void);
+
+// Start and length are specified in halfwords.
 void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data);
+
+// Length specified in bytes.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
 
-int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data);
-u16 Wifi_RxReadHWordOffset(s32 base, s32 offset);
+// The base address is specified in halfwords. The size is specified in bytes.
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst);
+
+// The base address and offset are specified in halfwords.
+u16 Wifi_RxReadHWordOffset(u32 base, u32 offset);
 
 #ifdef __cplusplus
 };

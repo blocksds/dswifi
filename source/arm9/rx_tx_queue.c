@@ -16,6 +16,7 @@ u32 Wifi_TxBufferWordsAvailable(void)
     s32 size = WifiData->txbufIn - WifiData->txbufOut - 1;
     if (size < 0)
         size += WIFI_TXBUFFER_SIZE / 2;
+
     return size;
 }
 
@@ -38,33 +39,38 @@ void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data)
     }
 }
 
-// datalen = size of packet from beginning of 802.11 header to end, but not including CRC.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
 {
     Wifi_TxHeader txh;
-    int sizeneeded;
-    int base;
-    sizeneeded = (datalen + 12 + 1) / 2;
+
+    int sizeneeded = (datalen + 12 + 1) / 2;
     if (sizeneeded > Wifi_TxBufferWordsAvailable())
     {
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
         return -1;
     }
+
     txh.enable_flags = 0;
     txh.unknown      = 0;
     txh.countup      = 0;
     txh.beaconfreq   = 0;
     txh.tx_rate      = rate;
     txh.tx_length    = datalen + 4;
-    base             = WifiData->txbufOut;
+
+    int base = WifiData->txbufOut;
+
     Wifi_TxBufferWrite(base, 6, (u16 *)&txh);
+
     base += 6;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
+
     Wifi_TxBufferWrite(base, (datalen + 1) / 2, data);
+
     base += (datalen + 1) / 2;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
+
     WifiData->txbufOut = base;
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
@@ -77,32 +83,34 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
 // RX functions
 // ============
 
-int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data)
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst)
 {
-    int readlen, read_data;
-    readlength = (readlength + 1) / 2;
-    read_data  = 0;
-    while (readlength > 0)
+    int read_hwords = (size_bytes + 1) / 2;
+
+    while (read_hwords > 0)
     {
-        readlen = readlength;
-        if (readlen > (WIFI_RXBUFFER_SIZE / 2) - packetID)
-            readlen = (WIFI_RXBUFFER_SIZE / 2) - packetID;
-        readlength -= readlen;
-        read_data += readlen;
-        while (readlen > 0)
+        int len = read_hwords;
+        if (len > (WIFI_RXBUFFER_SIZE / 2) - base)
+            len = (WIFI_RXBUFFER_SIZE / 2) - base;
+
+        read_hwords -= len;
+
+        while (len > 0)
         {
-            *(data++) = WifiData->rxbufData[packetID++];
-            readlen--;
+            *dst = WifiData->rxbufData[base++];
+            dst++;
+            len--;
         }
-        packetID = 0;
+
+        base = 0;
     }
-    return read_data;
 }
 
-u16 Wifi_RxReadHWordOffset(s32 base, s32 offset)
+u16 Wifi_RxReadHWordOffset(u32 base, u32 offset)
 {
     base += offset;
     if (base >= (WIFI_RXBUFFER_SIZE / 2))
         base -= (WIFI_RXBUFFER_SIZE / 2);
+
     return WifiData->rxbufData[base];
 }
