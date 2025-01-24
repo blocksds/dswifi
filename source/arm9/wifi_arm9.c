@@ -48,7 +48,7 @@ void sgIP_IntrWaitEvent(void)
 
 #endif
 
-void ethhdr_print(char f, void *d)
+static void ethhdr_print(char f, void *d)
 {
     char buffer[33];
     int i;
