@@ -788,8 +788,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
     // IEEE header goes right after the hardware RX header.
     u16 control_802 = Wifi_MACReadHWord(macbase, HDR_RX_SIZE + 0);
 
-    const u16 control_802_type_mask = (FC_TYPE_MASK << FC_TYPE_SHIFT)
-                                    | (FC_SUBTYPE_MASK << FC_SUBTYPE_SHIFT);
+    const u16 control_802_type_mask = FC_TYPE_SUBTYPE_MASK;
 
     switch (control_802 & control_802_type_mask)
     {

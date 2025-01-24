@@ -16,6 +16,8 @@
 #include "arm9/ipc.h"
 #include "arm9/rx_tx_queue.h"
 #include "arm9/wifi_arm9.h"
+#include "common/common_defs.h"
+#include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
 #ifdef WIFI_USE_TCP_SGIP
@@ -311,8 +313,6 @@ void Wifi_Timer(int num_ms)
 
 void Wifi_Update(void)
 {
-    int cnt;
-    int base, base2, len, fulllen;
     if (!WifiData)
         return;
 
@@ -341,21 +341,24 @@ void Wifi_Update(void)
 #endif
 
     // check for received packets, forward to whatever wants them.
-    cnt = 0;
+    int cnt = 0;
     while (WifiData->rxbufIn != WifiData->rxbufOut)
     {
-        base    = WifiData->rxbufIn;
-        len     = Wifi_RxReadHWordOffset(base, 4);
-        fulllen = ((len + 3) & (~3)) + 12;
+        int base    = WifiData->rxbufIn;
+        int len     = Wifi_RxReadHWordOffset(base, HDR_RX_IEEE_FRAME_SIZE / 2);
+        int fulllen = ((len + 3) & (~3)) + HDR_RX_SIZE;
+
 #ifdef WIFI_USE_TCP_SGIP
-        // Do lwIP interfacing for rx here
-        // if it is a non-null data packet coming from the AP (toDS==0)
-        if ((Wifi_RxReadHWordOffset(base, 6) & 0x01CF) == 0x0008)
+        // Do lwIP interfacing for RX packets here.
+
+        // Only check packets if they are of non-null data type, and if they
+        // are coming from the AP (toDS==0).
+        if ((Wifi_RxReadHWordOffset(base, 6) & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA)
         {
-            u16 framehdr[6 + 12 + 2 + 4];
+            u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
             sgIP_memblock *mb;
             int hdrlen;
-            base2 = base;
+            int base2 = base;
             Wifi_RxRawReadPacket(base, 22 * 2, framehdr);
 
             // ethhdr_print('!',framehdr+8);
@@ -434,7 +437,7 @@ void Wifi_Update(void)
         // check if we have a handler
         if (packethandler)
         {
-            base2 = base + 6;
+            int base2 = base + 6;
             if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
                 base2 -= (WIFI_RXBUFFER_SIZE / 2);
             (*packethandler)(base2, len);

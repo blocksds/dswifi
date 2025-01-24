@@ -57,6 +57,9 @@
 // Management frames
 // -----------------
 
+#define FC_TYPE_SUBTYPE_MASK    ((FC_TYPE_MASK << FC_TYPE_SHIFT) | \
+                                 (FC_SUBTYPE_MASK << FC_SUBTYPE_SHIFT))
+
 #define TYPE_ASSOC_REQUEST      FORM_MANAGEMENT(0x0)
 #define TYPE_ASSOC_RESPONSE     FORM_MANAGEMENT(0x1)
 #define TYPE_REASSOC_REQUEST    FORM_MANAGEMENT(0x2)
