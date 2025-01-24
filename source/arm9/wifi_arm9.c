@@ -35,17 +35,12 @@ const char *ASSOCSTATUS_STRINGS[] = {
     [ASSOCSTATUS_CANNOTCONNECT] = "ASSOCSTATUS_CANNOTCONNECT",
 };
 
+// This function is used in socket handling code when the user has selected
+// blocking mode. They are called after every retry to give interrupts a chance
+// to happen (interrupts are disabled in critical sections).
 void sgIP_IntrWaitEvent(void)
 {
-    // TODO: This loop is most likely removed by the compiler when optimizing
-    // the code. Replace it by an actual delay.
-
-    // __asm( ".ARM\n swi 0x060000\n" );
-    int j = 0;
-    for (int i = 0; i < 20000; i++)
-    {
-        j += i;
-    }
+    swiDelay(20000);
 }
 
 #endif
