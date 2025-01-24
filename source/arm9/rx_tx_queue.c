@@ -47,7 +47,7 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src)
     }
 }
 
-int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
+int Wifi_RawTxFrame(u16 datalen, u16 rate, const u16 *src)
 {
     Wifi_TxHeader txh;
 
@@ -73,7 +73,7 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
-    Wifi_TxBufferWrite(base * 2, datalen, data);
+    Wifi_TxBufferWrite(base * 2, datalen, src);
 
     base += (datalen + 1) / 2;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))

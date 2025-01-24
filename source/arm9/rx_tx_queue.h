@@ -25,7 +25,7 @@ u32 Wifi_TxBufferBytesAvailable(void);
 //
 // TODO: Handle this special case in the function to only read one byte and fill
 // the rest with 0?
-void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *dst);
+void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src);
 
 // Length specified in bytes.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
