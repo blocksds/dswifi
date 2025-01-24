@@ -33,7 +33,8 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
 // The base address is specified in halfwords. The size is specified in bytes.
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst);
 
-// The base address and offset are specified in halfwords.
+// The base address and offset are specified in bytes. The base must be aligned
+// to 16 bit and the offset must be a multiple of 16 bits.
 u16 Wifi_RxReadHWordOffset(u32 base, u32 offset);
 
 #ifdef __cplusplus

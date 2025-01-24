@@ -116,7 +116,9 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst)
 
 u16 Wifi_RxReadHWordOffset(u32 base, u32 offset)
 {
-    base += offset;
+    sassert(((base | offset) & 1) == 0, "Unaligned arguments");
+
+    base = (base + offset) / 2;
     if (base >= (WIFI_RXBUFFER_SIZE / 2))
         base -= (WIFI_RXBUFFER_SIZE / 2);
 
