@@ -108,9 +108,9 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
     }
 }
 
-static int Wifi_TxArm9BufCheck(s32 offset) // offset in halfwords
+static int Wifi_TxArm9BufCheck(s32 offset) // offset in bytes
 {
-    offset += WifiData->txbufIn;
+    offset = WifiData->txbufIn + (offset / 2);
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
         offset -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -122,7 +122,7 @@ static int Wifi_TxArm9BufCheck(s32 offset) // offset in halfwords
 // be filled in.
 static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
 {
-    int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE / 2);
+    int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE);
     int readbase  = WifiData->txbufIn;
     int length    = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
 
