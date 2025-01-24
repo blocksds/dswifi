@@ -43,8 +43,6 @@ void sgIP_IntrWaitEvent(void)
     swiDelay(20000);
 }
 
-#endif
-
 static void ethhdr_print(char f, void *d)
 {
     char buffer[33];
@@ -103,6 +101,8 @@ static void ethhdr_print(char f, void *d)
     }
     SGIP_DEBUG_MESSAGE((buffer));
 }
+
+#endif
 
 WifiPacketHandler packethandler = 0;
 
