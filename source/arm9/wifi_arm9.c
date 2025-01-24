@@ -19,7 +19,7 @@
 #ifdef WIFI_USE_TCP_SGIP
 
 #    include "arm9/heap.h"
-#    include "arm9/sgIP.h"
+#    include "arm9/sgIP/sgIP.h"
 
 sgIP_Hub_HWInterface *wifi_hw;
 

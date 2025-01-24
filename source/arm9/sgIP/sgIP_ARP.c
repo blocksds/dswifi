@@ -4,7 +4,7 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "arm9/sgIP_ARP.h"
+#include "arm9/sgIP/sgIP_ARP.h"
 
 sgIP_ARP_Record ArpRecords[SGIP_ARP_MAXENTRIES];
 

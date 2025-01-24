@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_Config.h"
-#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_Hub.h"
 
 // "DHCP Server" port is 67, "DHCP Client" port is 68
 // DHCP messages broadcast by a client prior to that client obtaining its IP address must have the

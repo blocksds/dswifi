@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_Config.h"
 
 typedef struct SGIP_MEMBLOCK
 {

@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_Config.h"
-#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_memblock.h"
 
 enum SGIP_TCP_STATE
 {

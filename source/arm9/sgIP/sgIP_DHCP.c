@@ -8,8 +8,8 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include "arm9/sgIP_DHCP.h"
-#include "arm9/sgIP_DNS.h"
+#include "arm9/sgIP/sgIP_DHCP.h"
+#include "arm9/sgIP/sgIP_DNS.h"
 
 extern volatile unsigned long sgIP_timems;
 int dhcp_socket;

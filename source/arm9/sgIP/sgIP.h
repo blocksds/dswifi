@@ -11,17 +11,17 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_ARP.h"
-#include "arm9/sgIP_Config.h"
-#include "arm9/sgIP_DHCP.h"
-#include "arm9/sgIP_DNS.h"
-#include "arm9/sgIP_Hub.h"
-#include "arm9/sgIP_ICMP.h"
-#include "arm9/sgIP_IP.h"
-#include "arm9/sgIP_TCP.h"
-#include "arm9/sgIP_UDP.h"
-#include "arm9/sgIP_memblock.h"
-#include "arm9/sgIP_sockets.h"
+#include "arm9/sgIP/sgIP_ARP.h"
+#include "arm9/sgIP/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_DHCP.h"
+#include "arm9/sgIP/sgIP_DNS.h"
+#include "arm9/sgIP/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_ICMP.h"
+#include "arm9/sgIP/sgIP_IP.h"
+#include "arm9/sgIP/sgIP_TCP.h"
+#include "arm9/sgIP/sgIP_UDP.h"
+#include "arm9/sgIP/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_sockets.h"
 
 extern volatile unsigned long sgIP_timems;
 

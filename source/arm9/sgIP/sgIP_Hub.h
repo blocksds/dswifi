@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_Config.h"
-#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_memblock.h"
 
 #define SGIP_FLAG_PROTOCOL_IN_USE  0x0001
 #define SGIP_FLAG_PROTOCOL_ENABLED 0x8000

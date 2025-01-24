@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_memblock.h"
 
 #define PROTOCOL_IP_ICMP 1
 #define PROTOCOL_IP_TCP  6

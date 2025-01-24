@@ -11,7 +11,7 @@
 
 #ifdef WIFI_USE_TCP_SGIP
 #    include "arm9/heap.h"
-#    include "arm9/sgIP.h"
+#    include "arm9/sgIP/sgIP.h"
 #endif
 
 static Wifi_MainStruct *Wifi_Data_Struct = NULL; // Cached mirror

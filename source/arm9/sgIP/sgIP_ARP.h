@@ -11,9 +11,9 @@
 extern "C" {
 #endif
 
-#include "arm9/sgIP_Config.h"
-#include "arm9/sgIP_Hub.h"
-#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_Config.h"
+#include "arm9/sgIP/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_memblock.h"
 
 #define SGIP_ARP_FLAG_ACTIVE     0x0001
 #define SGIP_ARP_FLAG_HAVEHWADDR 0x0002

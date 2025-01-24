@@ -10,8 +10,8 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include "arm9/sgIP_DNS.h"
-#include "arm9/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_DNS.h"
+#include "arm9/sgIP/sgIP_Hub.h"
 
 int dns_sock;
 int time_count;

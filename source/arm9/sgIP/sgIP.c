@@ -4,7 +4,7 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "arm9/sgIP.h"
+#include "arm9/sgIP/sgIP.h"
 
 volatile unsigned long sgIP_timems;
 int sgIP_errno;

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "arm9/sgIP_memblock.h"
+#include "arm9/sgIP/sgIP_memblock.h"
 
 #ifndef SGIP_MEMBLOCK_DYNAMIC_MALLOC_ALL
 

@@ -6,9 +6,9 @@
 
 #include <sys/socket.h>
 
-#include "arm9/sgIP_Hub.h"
-#include "arm9/sgIP_IP.h"
-#include "arm9/sgIP_TCP.h"
+#include "arm9/sgIP/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_IP.h"
+#include "arm9/sgIP/sgIP_TCP.h"
 
 sgIP_Record_TCP *tcprecords;
 int port_counter;

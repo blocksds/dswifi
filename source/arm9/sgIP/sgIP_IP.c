@@ -4,11 +4,11 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
-#include "arm9/sgIP_Hub.h"
-#include "arm9/sgIP_ICMP.h"
-#include "arm9/sgIP_IP.h"
-#include "arm9/sgIP_TCP.h"
-#include "arm9/sgIP_UDP.h"
+#include "arm9/sgIP/sgIP_Hub.h"
+#include "arm9/sgIP/sgIP_ICMP.h"
+#include "arm9/sgIP/sgIP_IP.h"
+#include "arm9/sgIP/sgIP_TCP.h"
+#include "arm9/sgIP/sgIP_UDP.h"
 
 int idnum_count;
 
