@@ -7,17 +7,18 @@
 
 #include "arm9/ipc.h"
 #include "arm9/wifi_arm9.h"
+#include "common/common_defs.h"
 
 // TX functions
 // ============
 
-u32 Wifi_TxBufferWordsAvailable(void)
+u32 Wifi_TxBufferBytesAvailable(void)
 {
     s32 size = WifiData->txbufIn - WifiData->txbufOut - 1;
     if (size < 0)
         size += WIFI_TXBUFFER_SIZE / 2;
 
-    return size;
+    return size * 2;
 }
 
 // TODO: This is in halfwords, switch to bytes?
@@ -43,8 +44,8 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data)
 {
     Wifi_TxHeader txh;
 
-    int sizeneeded = (datalen + 12 + 1) / 2;
-    if (sizeneeded > Wifi_TxBufferWordsAvailable())
+    int sizeneeded = (datalen + HDR_TX_SIZE + 1) / 2;
+    if (sizeneeded > (Wifi_TxBufferBytesAvailable() / 2))
     {
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
         return -1;

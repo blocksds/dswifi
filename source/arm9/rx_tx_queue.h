@@ -12,8 +12,8 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
-// Returns the number of halfwords available.
-u32 Wifi_TxBufferWordsAvailable(void);
+// Returns the number of bytes available in the TX buffer.
+u32 Wifi_TxBufferBytesAvailable(void);
 
 // Start and length are specified in halfwords.
 void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data);

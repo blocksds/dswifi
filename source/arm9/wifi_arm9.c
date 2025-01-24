@@ -181,7 +181,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         sgIP_memblock_free(mb);
         return 0; // ?
     }
-    if (framelen + 40 > Wifi_TxBufferWordsAvailable() * 2)
+    if (framelen + 40 > Wifi_TxBufferBytesAvailable())
     {
         // error, can't send this much!
         SGIP_DEBUG_MESSAGE(("Transmit:err_space"));
