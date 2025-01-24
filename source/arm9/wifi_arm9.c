@@ -345,12 +345,12 @@ void Wifi_Update(void)
     while (WifiData->rxbufIn != WifiData->rxbufOut)
     {
         base    = WifiData->rxbufIn;
-        len     = Wifi_RxReadOffset(base, 4);
+        len     = Wifi_RxReadHWordOffset(base, 4);
         fulllen = ((len + 3) & (~3)) + 12;
 #ifdef WIFI_USE_TCP_SGIP
         // Do lwIP interfacing for rx here
         // if it is a non-null data packet coming from the AP (toDS==0)
-        if ((Wifi_RxReadOffset(base, 6) & 0x01CF) == 0x0008)
+        if ((Wifi_RxReadHWordOffset(base, 6) & 0x01CF) == 0x0008)
         {
             u16 framehdr[6 + 12 + 2 + 4];
             sgIP_memblock *mb;
@@ -380,15 +380,15 @@ void Wifi_Update(void)
                 // }
 
                 //  SGIP_DEBUG_MESSAGE(("%04X %04X %04X %04X %04X",
-                //                     Wifi_RxReadOffset(base2 - 8, 0),
-                //                     Wifi_RxReadOffset(base2 - 7, 0),
-                //                     Wifi_RxReadOffset(base2 - 6, 0),
-                //                     Wifi_RxReadOffset(base2 - 5, 0),
-                //                     Wifi_RxReadOffset(base2 - 4, 0)));
+                //                     Wifi_RxReadHWordOffset(base2 - 8, 0),
+                //                     Wifi_RxReadHWordOffset(base2 - 7, 0),
+                //                     Wifi_RxReadHWordOffset(base2 - 6, 0),
+                //                     Wifi_RxReadHWordOffset(base2 - 5, 0),
+                //                     Wifi_RxReadHWordOffset(base2 - 4, 0)));
                 // check for LLC/SLIP header...
-                if (Wifi_RxReadOffset(base2 - 4, 0) == 0xAAAA
-                    && Wifi_RxReadOffset(base2 - 4, 1) == 0x0003
-                    && Wifi_RxReadOffset(base2 - 4, 2) == 0)
+                if (Wifi_RxReadHWordOffset(base2 - 4, 0) == 0xAAAA
+                    && Wifi_RxReadHWordOffset(base2 - 4, 1) == 0x0003
+                    && Wifi_RxReadHWordOffset(base2 - 4, 2) == 0)
                 {
                     mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
                     if (mb)
@@ -403,10 +403,10 @@ void Wifi_Update(void)
                         if (len & 1)
                         {
                             ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
-                                Wifi_RxReadOffset(base2, ((len - 8 - hdrlen) / 2)) & 255;
+                                Wifi_RxReadHWordOffset(base2, ((len - 8 - hdrlen) / 2)) & 255;
                         }
                         Wifi_CopyMacAddr(mb->datastart, framehdr + 8); // copy dest
-                        if (Wifi_RxReadOffset(base, 6) & 0x0200)
+                        if (Wifi_RxReadHWordOffset(base, 6) & 0x0200)
                         {
                             // from DS set?
                             // copy src from adrs3

@@ -99,7 +99,7 @@ int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data)
     return read_data;
 }
 
-u16 Wifi_RxReadOffset(s32 base, s32 offset)
+u16 Wifi_RxReadHWordOffset(s32 base, s32 offset)
 {
     base += offset;
     if (base >= (WIFI_RXBUFFER_SIZE / 2))

@@ -17,7 +17,7 @@ void Wifi_TxBufferWrite(s32 start, s32 len, u16 *data);
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
 
 int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data);
-u16 Wifi_RxReadOffset(s32 base, s32 offset);
+u16 Wifi_RxReadHWordOffset(s32 base, s32 offset);
 
 #ifdef __cplusplus
 };
