@@ -345,30 +345,44 @@ void Wifi_Update(void)
     while (WifiData->rxbufIn != WifiData->rxbufOut)
     {
         int base    = WifiData->rxbufIn;
-        int len     = Wifi_RxReadHWordOffset(base, HDR_RX_IEEE_FRAME_SIZE / 2);
+
+        int hdr_rx_base = base;
+
+        int len     = Wifi_RxReadHWordOffset(hdr_rx_base, HDR_RX_IEEE_FRAME_SIZE / 2);
         int fulllen = ((len + 3) & (~3)) + HDR_RX_SIZE;
 
 #ifdef WIFI_USE_TCP_SGIP
         // Do lwIP interfacing for RX packets here.
 
+        int hdr_ieee_base = hdr_rx_base + HDR_RX_SIZE / 2; // 6
+
         // Only check packets if they are of non-null data type, and if they
-        // are coming from the AP (toDS==0).
-        if ((Wifi_RxReadHWordOffset(base, 6) & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA)
+        // are coming from the AP (toDS=0).
+        u16 frame_control = Wifi_RxReadHWordOffset(hdr_ieee_base, HDR_MGT_FRAME_CONTROL / 2);
+        if ((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA)
         {
             u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
-            sgIP_memblock *mb;
-            int hdrlen;
-            int base2 = base;
+            u16 *ieeehdr = framehdr + HDR_RX_SIZE / 2;
+
             Wifi_RxRawReadPacket(base, 22 * 2, framehdr);
 
-            // ethhdr_print('!',framehdr+8);
-            if ((framehdr[8] == ((u16 *)WifiData->MacAddr)[0]
-                 && framehdr[9] == ((u16 *)WifiData->MacAddr)[1]
-                 && framehdr[10] == ((u16 *)WifiData->MacAddr)[2])
-                || (framehdr[8] == 0xFFFF && framehdr[9] == 0xFFFF && framehdr[10] == 0xFFFF))
+            // With toDS=0, regardless of the value of fromDS, Address 1 is
+            // RA/DA (Receiver Address / Destination Address), which is the
+            // final recipient of the frame. Only accept messages addressed to
+            // our MAC address or to all devices.
+
+            u16 *address_1 = ieeehdr + (HDR_DATA_ADDRESS_1 / 2);
+            const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
+
+            // ethhdr_print('!', address_1);
+            if (Wifi_CmpMacAddr(address_1, WifiData->MacAddr) ||
+                Wifi_CmpMacAddr(address_1, (void *)&broadcast_address))
             {
+                int hdrlen;
+                int base2 = base;
+
                 // destination matches our mac address, or the broadcast address.
-                // if(framehdr[6] & 0x4000)
+                // if(ieeehdr[0] & 0x4000)
                 // {
                 //     // WEP enabled. When receiving WEP packets, the IV is stripped for us!
                 //     // How nice :|
@@ -393,7 +407,7 @@ void Wifi_Update(void)
                     && Wifi_RxReadHWordOffset(base2 - 4, 1) == 0x0003
                     && Wifi_RxReadHWordOffset(base2 - 4, 2) == 0)
                 {
-                    mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
+                    sgIP_memblock *mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
                     if (mb)
                     {
                         if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
@@ -408,17 +422,17 @@ void Wifi_Update(void)
                             ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
                                 Wifi_RxReadHWordOffset(base2, ((len - 8 - hdrlen) / 2)) & 255;
                         }
-                        Wifi_CopyMacAddr(mb->datastart, framehdr + 8); // copy dest
-                        if (Wifi_RxReadHWordOffset(base, 6) & 0x0200)
+                        Wifi_CopyMacAddr(mb->datastart, ieeehdr + 2); // copy dest
+                        if (Wifi_RxReadHWordOffset(hdr_ieee_base, 0) & 0x0200)
                         {
                             // from DS set?
                             // copy src from adrs3
-                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, framehdr + 14);
+                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 8);
                         }
                         else
                         {
                             // copy src from adrs2
-                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, framehdr + 11);
+                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 5);
                         }
                         // assume LLC exists and is 8 bytes.
                         ((u16 *)mb->datastart)[6] = framehdr[(hdrlen / 2) + 6 + 3];
@@ -437,7 +451,7 @@ void Wifi_Update(void)
         // check if we have a handler
         if (packethandler)
         {
-            int base2 = base + 6;
+            int base2 = base + HDR_RX_SIZE / 2;
             if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
                 base2 -= (WIFI_RXBUFFER_SIZE / 2);
             (*packethandler)(base2, len);
@@ -448,6 +462,7 @@ void Wifi_Update(void)
             base -= (WIFI_RXBUFFER_SIZE / 2);
         WifiData->rxbufIn = base;
 
+        // Exit if we have already handled a lot of packets
         if (cnt++ > 80)
             break;
     }

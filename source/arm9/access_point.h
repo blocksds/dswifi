@@ -14,6 +14,8 @@ extern "C" {
 
 #include "common/wifi_shared.h"
 
+int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
+
 int Wifi_GetNumAP(void);
 int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata);
 int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *match_dest);

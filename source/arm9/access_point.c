@@ -14,7 +14,7 @@
 #    include "arm9/sgIP/sgIP.h"
 #endif
 
-static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
+int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
 {
     volatile u16 *m1 = mac1;
     volatile u16 *m2 = mac2;
