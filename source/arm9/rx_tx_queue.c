@@ -51,14 +51,14 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
 
 int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 {
-    Wifi_TxHeader txh;
-
-    int sizeneeded = (datalen + HDR_TX_SIZE + 1) / 2;
-    if (sizeneeded > (Wifi_TxBufferBytesAvailable() / 2))
+    int sizeneeded = datalen + HDR_TX_SIZE + 1;
+    if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
         return -1;
     }
+
+    Wifi_TxHeader txh;
 
     txh.enable_flags = 0;
     txh.unknown      = 0;
