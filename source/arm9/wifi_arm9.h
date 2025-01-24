@@ -24,6 +24,8 @@ extern "C" {
 #define WIFIINIT_OPTION_USECUSTOMALLOC 0x4000
 #define WIFIINIT_OPTION_HEAPMASK       0xF000
 
+// Uncached mirror of the WiFi struct. This needs to be used from the ARM9 so
+// that there aren't cache management issues.
 extern volatile Wifi_MainStruct *WifiData;
 
 enum WIFIGETDATA
@@ -39,19 +41,9 @@ enum WIFIGETDATA
 // retreive the data to a local buffer.
 typedef void (*WifiPacketHandler)(int, int);
 
-// Wifi Sync Handler function: Callback function that is called when the arm7 needs to be told to
-// synchronize with new fifo data. If this callback is used (see Wifi_SetSyncHandler()), it should
-// send a message via the fifo to the arm7, which will call Wifi_Sync() on arm7.
-typedef void (*WifiSyncHandler)(void);
-
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
-uint32_t Wifi_Init(int initflags);
-bool Wifi_InitDefault(bool useFirmwareSettings);
-int Wifi_CheckInit(void);
-
 int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
-void Wifi_SetSyncHandler(WifiSyncHandler wshfunc);
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 int Wifi_RxRawReadPacket(s32 packetID, s32 readlength, u16 *data);
 
@@ -69,10 +61,8 @@ void Wifi_AutoConnect(void);
 
 int Wifi_AssocStatus(void);
 int Wifi_DisconnectAP(void);
-int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
 
 void Wifi_Update(void);
-void Wifi_Sync(void);
 
 #ifdef WIFI_USE_TCP_SGIP
 void Wifi_Timer(int num_ms);
