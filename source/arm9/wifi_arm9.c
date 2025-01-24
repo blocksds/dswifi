@@ -766,13 +766,15 @@ int Wifi_Interface_Init(sgIP_Hub_HWInterface *hw)
     return 0;
 }
 
+#endif
+
 void Wifi_Timer(int num_ms)
 {
     Wifi_Update();
+#ifdef WIFI_USE_TCP_SGIP
     sgIP_Timer(num_ms);
-}
-
 #endif
+}
 
 u32 Wifi_Init(int initflags)
 {
