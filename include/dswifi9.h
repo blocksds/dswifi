@@ -268,8 +268,8 @@ typedef struct WIFI_ACCESSPOINT
 
 /// Wifi Packet Handler function
 ///
-/// The first parameter is the packetID. It is only valid while the called
-/// function is executing. The second parameter is packetlength.
+/// The first parameter is the packet address. It is only valid while the called
+/// function is executing. The second parameter is packet length.
 ///
 /// Call Wifi_RxRawReadPacket() while in the packet handler function, to
 /// retreive the data to a local buffer.
@@ -505,17 +505,13 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
 /// Allows user code to read a packet from within the WifiPacketHandler function.
 ///
-/// @param packetID
-///     A non-unique identifier which locates the packet specified in the
-///     internal buffer.
+/// @param base
+///     The base address of the packet in the internal buffer.
 /// @param readlength
 ///     Number of bytes to read. It actually reads ((number + 1) & ~1) bytes
 /// @param data
 ///     Location for the data to be read into
-///
-/// @return
-///     Number of bytes read.
-int Wifi_RxRawReadPacket(long packetID, long readlength, unsigned short *data);
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst);
 
 //////////////////////////////////////////////////////////////////////////
 // Fast transfer support - update functions

@@ -328,7 +328,7 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
     u16 *ieeehdr = framehdr + HDR_RX_SIZE / 2;
 
-    Wifi_RxRawReadPacket(base, 22 * 2, framehdr);
+    Wifi_RxRawReadPacket(base * 2, 22 * 2, framehdr);
 
     // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
     // (Receiver Address / Destination Address), which is the final recipient of
@@ -381,8 +381,8 @@ static void Wifi_sgIpHandlePackage(int base, int len)
 
     // TODO: Improve this to read correctly in the case that the packet buffer
     // is fragmented
-    Wifi_RxRawReadPacket(base2, (len - 8 - hdrlen) & (~1),
-                            ((u16 *)mb->datastart) + 7);
+    Wifi_RxRawReadPacket(base2 * 2, (len - 8 - hdrlen) & (~1),
+                         ((u16 *)mb->datastart) + 7);
     if (len & 1)
     {
         ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
@@ -458,7 +458,7 @@ void Wifi_Update(void)
             int base2 = base + HDR_RX_SIZE / 2;
             if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
                 base2 -= (WIFI_RXBUFFER_SIZE / 2);
-            (*packethandler)(base2, len);
+            (*packethandler)(base2 * 2, len);
         }
 
         base += fulllen / 2;

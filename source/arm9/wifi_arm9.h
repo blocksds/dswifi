@@ -36,9 +36,6 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
-// Wifi Packet Handler function: (int packetID, int packetlength) - packetID is only valid while the
-// called function is executing. call Wifi_RxRawReadPacket while in the packet handler function, to
-// retreive the data to a local buffer.
 typedef void (*WifiPacketHandler)(int, int);
 
 void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);

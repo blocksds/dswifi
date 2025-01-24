@@ -93,7 +93,15 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const u16 *src)
 
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst)
 {
-    int read_hwords = (size_bytes + 1) / 2;
+    if (base & 1)
+    {
+        sassert(0, "Unaligned base address");
+        return;
+    }
+
+    // Convert to halfwords
+    base = base / 2;
+    int read_hwords = (size_bytes + 1) / 2; // Round up
 
     while (read_hwords > 0)
     {
