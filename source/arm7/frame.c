@@ -621,44 +621,40 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+        return;
+
+    // Check if packet is indeed from the base station we're trying to associate to.
+    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+        return;
+
+    if (((u16 *)(data + 24))[1] == 0)
     {
-        // Check if packet is indeed from the base station we're trying to
-        // associate to.
-        if (Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+        // Status code, 0==success
+
+        W_AID_LOW  = ((u16 *)(data + 24))[2];
+        W_AID_FULL = ((u16 *)(data + 24))[2];
+
+        // Set max rate
+        WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
+        for (int i = 0; i < ((u8 *)(data + 24))[7]; i++)
         {
-            if (((u16 *)(data + 24))[1] == 0)
-            {
-                // Status code, 0==success
-
-                W_AID_LOW  = ((u16 *)(data + 24))[2];
-                W_AID_FULL = ((u16 *)(data + 24))[2];
-
-                // Set max rate
-                WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
-                for (int i = 0; i < ((u8 *)(data + 24))[7]; i++)
-                {
-                    if (((u8 *)(data + 24))[8 + i] == 0x84
-                        || ((u8 *)(data + 24))[8 + i] == 0x04)
-                    {
-                        WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
-                    }
-                }
-
-                if ((WifiData->authlevel == WIFI_AUTHLEVEL_AUTHENTICATED) ||
-                    (WifiData->authlevel == WIFI_AUTHLEVEL_DEASSOCIATED))
-                {
-                    WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
-                    WifiData->authctr   = 0;
-                }
-            }
-            else
-            {
-                // Status code = failure!
-
-                WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-            }
+            if ((((u8 *)(data + 24))[8 + i] == 0x84) || (((u8 *)(data + 24))[8 + i] == 0x04))
+                WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
         }
+
+        if ((WifiData->authlevel == WIFI_AUTHLEVEL_AUTHENTICATED) ||
+            (WifiData->authlevel == WIFI_AUTHLEVEL_DEASSOCIATED))
+        {
+            WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
+            WifiData->authctr   = 0;
+        }
+    }
+    else
+    {
+        // Status code = failure!
+
+        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
     }
 }
 
@@ -674,76 +670,75 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+        return;
+
+    // Check if packet is indeed from the base station we're trying to associate to.
+    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+        return;
+
+    if (((u16 *)(data + 24))[0] == 0)
     {
-        // Check if packet is indeed from the base station we're trying to
-        // associate to.
-        if (Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+        // open system auth
+        if (((u16 *)(data + 24))[1] == 2)
         {
-            if (((u16 *)(data + 24))[0] == 0)
+            // seq 2, should be final sequence
+            if (((u16 *)(data + 24))[2] == 0)
             {
-                // open system auth
-                if (((u16 *)(data + 24))[1] == 2)
+                // status code: successful
+                if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
                 {
-                    // seq 2, should be final sequence
-                    if (((u16 *)(data + 24))[2] == 0)
-                    {
-                        // status code: successful
-                        if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
-                        {
-                            WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
-                            WifiData->authctr   = 0;
-                            Wifi_SendAssocPacket();
-                        }
-                    }
-                    else
-                    {
-                        // status code: rejected, try something else
-                        Wifi_SendSharedKeyAuthPacket();
-                    }
+                    WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
+                    WifiData->authctr   = 0;
+                    Wifi_SendAssocPacket();
                 }
             }
-            else if (((u16 *)(data + 24))[0] == 1)
+            else
             {
-                // shared key auth
-                if (((u16 *)(data + 24))[1] == 2)
+                // status code: rejected, try something else
+                Wifi_SendSharedKeyAuthPacket();
+            }
+        }
+    }
+    else if (((u16 *)(data + 24))[0] == 1)
+    {
+        // shared key auth
+        if (((u16 *)(data + 24))[1] == 2)
+        {
+            // seq 2, challenge text
+            if (((u16 *)(data + 24))[2] == 0)
+            {
+                // status code: successful
+                // scrape challenge text and send challenge reply
+                if (data[24 + 6] == 0x10)
                 {
-                    // seq 2, challenge text
-                    if (((u16 *)(data + 24))[2] == 0)
-                    {
-                        // status code: successful
-                        // scrape challenge text and send challenge reply
-                        if (data[24 + 6] == 0x10)
-                        {
-                            // 16 = challenge text - this value must be 0x10 or else!
-                            Wifi_SendSharedKeyAuthPacket2(data[24 + 7], data + 24 + 8);
-                        }
-                    }
-                    else
-                    {
-                        // rejected, just give up.
-                        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-                    }
+                    // 16 = challenge text - this value must be 0x10 or else!
+                    Wifi_SendSharedKeyAuthPacket2(data[24 + 7], data + 24 + 8);
                 }
-                else if (((u16 *)(data + 24))[1] == 4)
+            }
+            else
+            {
+                // rejected, just give up.
+                WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+            }
+        }
+        else if (((u16 *)(data + 24))[1] == 4)
+        {
+            // seq 4, accept/deny
+            if (((u16 *)(data + 24))[2] == 0)
+            {
+                // status code: successful
+                if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
                 {
-                    // seq 4, accept/deny
-                    if (((u16 *)(data + 24))[2] == 0)
-                    {
-                        // status code: successful
-                        if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
-                        {
-                            WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
-                            WifiData->authctr   = 0;
-                            Wifi_SendAssocPacket();
-                        }
-                    }
-                    else
-                    {
-                        // status code: rejected. Cry in the corner.
-                        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-                    }
+                    WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
+                    WifiData->authctr   = 0;
+                    Wifi_SendAssocPacket();
                 }
+            }
+            else
+            {
+                // status code: rejected. Cry in the corner.
+                WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
             }
         }
     }
@@ -761,25 +756,23 @@ static void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+        return;
+
+    // Check if packet is indeed from the base station we're trying to associate to.
+    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+        return;
+
+    // They have booted us. Back to square 1.
+    if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
     {
-        // Check if packet is indeed from the base station we're trying to
-        // associate to.
-        if (Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
-        {
-            // bad things! they booted us!.
-            // back to square 1.
-            if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
-            {
-                WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
-                Wifi_SendAssocPacket();
-            }
-            else
-            {
-                WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
-                Wifi_SendOpenSystemAuthPacket();
-            }
-        }
+        WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
+        Wifi_SendAssocPacket();
+    }
+    else
+    {
+        WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+        Wifi_SendOpenSystemAuthPacket();
     }
 }
 
