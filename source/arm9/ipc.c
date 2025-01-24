@@ -5,6 +5,7 @@
 
 #include <nds.h>
 
+#include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/wifi_arm9.h"
 #include "common/spinlock.h"

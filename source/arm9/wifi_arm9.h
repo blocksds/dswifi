@@ -52,22 +52,19 @@ void Wifi_SetPromiscuousMode(int enable);
 void Wifi_ScanMode(void);
 void Wifi_SetChannel(int channel);
 
-int Wifi_GetNumAP(void);
-int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata);
-int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *match_dest);
-int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey);
-void Wifi_AutoConnect(void);
-
 int Wifi_AssocStatus(void);
-int Wifi_DisconnectAP(void);
 
 void Wifi_Update(void);
 
 #ifdef WIFI_USE_TCP_SGIP
+
+#    include "arm9/sgIP/sgIP.h"
+
 void Wifi_Timer(int num_ms);
 void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 u32 Wifi_GetIP(void);
 
+extern sgIP_Hub_HWInterface *wifi_hw;
 #endif
 
 #ifdef __cplusplus
