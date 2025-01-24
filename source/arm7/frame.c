@@ -384,8 +384,11 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
     (void)framelen;
 
     Wifi_RxHeader packetheader;
-    Wifi_MACRead((u16 *)&packetheader, macbase, 0, 12);
-    u16 control_802 = Wifi_MACReadHWord(macbase, 12);
+    Wifi_MACRead((u16 *)&packetheader, macbase, 0, HDR_RX_SIZE);
+
+    // Read the IEEE 802.11 frame control word to determine the frame type. The
+    // IEEE header goes right after the hardware RX header.
+    u16 control_802 = Wifi_MACReadHWord(macbase, HDR_RX_SIZE + 0);
 
     const u16 control_802_type_mask = (FC_TYPE_MASK << FC_TYPE_SHIFT)
                                     | (FC_SUBTYPE_MASK << FC_SUBTYPE_SHIFT);

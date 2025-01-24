@@ -229,7 +229,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 ip, snmask, gateway;
 
     // current AP data
-    char ssid7[34], ssid9[34];
+    char ssid7[34], ssid9[34]; // Index 0 is the size
     u16 bssid7[3], bssid9[3];
     u8 apmac7[6], apmac9[6];
     char wepmode7, wepmode9;
