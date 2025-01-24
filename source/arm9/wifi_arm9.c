@@ -311,6 +311,105 @@ void Wifi_Timer(int num_ms)
 #endif
 }
 
+#ifdef WIFI_USE_TCP_SGIP
+static void Wifi_sgIpHandlePackage(int base, int len)
+{
+    // Do sgIP interfacing for RX packets here.
+
+    int hdr_rx_base = base;
+    int hdr_ieee_base = hdr_rx_base + HDR_RX_SIZE / 2; // 6
+
+    // Only check packets if they are of non-null data type, and if they are
+    // coming from the AP (toDS=0).
+    u16 frame_control = Wifi_RxReadHWordOffset(hdr_ieee_base, HDR_MGT_FRAME_CONTROL / 2);
+    if (!((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA))
+        return;
+
+    u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
+    u16 *ieeehdr = framehdr + HDR_RX_SIZE / 2;
+
+    Wifi_RxRawReadPacket(base, 22 * 2, framehdr);
+
+    // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
+    // (Receiver Address / Destination Address), which is the final recipient of
+    // the frame. Only accept messages addressed to our MAC address or to all
+    // devices.
+
+    u16 *address_1 = ieeehdr + (HDR_DATA_ADDRESS_1 / 2);
+    const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
+
+    // ethhdr_print('!', address_1);
+    if (!(Wifi_CmpMacAddr(address_1, WifiData->MacAddr) ||
+          Wifi_CmpMacAddr(address_1, (void *)&broadcast_address)))
+        return;
+
+    int hdrlen;
+    int base2 = base;
+
+    // if(ieeehdr[0] & 0x4000)
+    // {
+    //     // WEP enabled. When receiving WEP packets, the IV is stripped for us!
+    //     // How nice :|
+    //     base2 += 24;
+    //     hdrlen = 28;
+    //     base2 += [wifi hdr 12byte] + [802 header hdrlen] + [slip hdr 8byte]
+    // }
+    // else
+    // {
+    base2 += 22;
+    hdrlen = 24;
+    // }
+
+    //  SGIP_DEBUG_MESSAGE(("%04X %04X %04X %04X %04X",
+    //                     Wifi_RxReadHWordOffset(base2 - 8, 0),
+    //                     Wifi_RxReadHWordOffset(base2 - 7, 0),
+    //                     Wifi_RxReadHWordOffset(base2 - 6, 0),
+    //                     Wifi_RxReadHWordOffset(base2 - 5, 0),
+    //                     Wifi_RxReadHWordOffset(base2 - 4, 0)));
+    // check for LLC/SLIP header...
+    if (!((Wifi_RxReadHWordOffset(base2 - 4, 0) == 0xAAAA)
+        && (Wifi_RxReadHWordOffset(base2 - 4, 1) == 0x0003)
+        && (Wifi_RxReadHWordOffset(base2 - 4, 2) == 0)))
+        return;
+
+    sgIP_memblock *mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
+    if (mb == NULL)
+        return;
+
+    if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
+        base2 -= (WIFI_RXBUFFER_SIZE / 2);
+
+    // TODO: Improve this to read correctly in the case that the packet buffer
+    // is fragmented
+    Wifi_RxRawReadPacket(base2, (len - 8 - hdrlen) & (~1),
+                            ((u16 *)mb->datastart) + 7);
+    if (len & 1)
+    {
+        ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
+            Wifi_RxReadHWordOffset(base2, ((len - 8 - hdrlen) / 2)) & 255;
+    }
+    Wifi_CopyMacAddr(mb->datastart, ieeehdr + 2); // copy dest
+    if (Wifi_RxReadHWordOffset(hdr_ieee_base, 0) & 0x0200)
+    {
+        // from DS set?
+        // copy src from adrs3
+        Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 8);
+    }
+    else
+    {
+        // copy src from adrs2
+        Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 5);
+    }
+    // assume LLC exists and is 8 bytes.
+    ((u16 *)mb->datastart)[6] = framehdr[(hdrlen / 2) + 6 + 3];
+
+    ethhdr_print('R', mb->datastart);
+
+    // Done generating recieved data packet... now distribute it.
+    sgIP_Hub_ReceiveHardwarePacket(wifi_hw, mb);
+}
+#endif
+
 void Wifi_Update(void)
 {
     if (!WifiData)
@@ -346,106 +445,11 @@ void Wifi_Update(void)
     {
         int base    = WifiData->rxbufIn;
 
-        int hdr_rx_base = base;
-
-        int len     = Wifi_RxReadHWordOffset(hdr_rx_base, HDR_RX_IEEE_FRAME_SIZE / 2);
+        int len     = Wifi_RxReadHWordOffset(base, HDR_RX_IEEE_FRAME_SIZE / 2);
         int fulllen = ((len + 3) & (~3)) + HDR_RX_SIZE;
 
 #ifdef WIFI_USE_TCP_SGIP
-        // Do lwIP interfacing for RX packets here.
-
-        int hdr_ieee_base = hdr_rx_base + HDR_RX_SIZE / 2; // 6
-
-        // Only check packets if they are of non-null data type, and if they
-        // are coming from the AP (toDS=0).
-        u16 frame_control = Wifi_RxReadHWordOffset(hdr_ieee_base, HDR_MGT_FRAME_CONTROL / 2);
-        if ((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA)
-        {
-            u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
-            u16 *ieeehdr = framehdr + HDR_RX_SIZE / 2;
-
-            Wifi_RxRawReadPacket(base, 22 * 2, framehdr);
-
-            // With toDS=0, regardless of the value of fromDS, Address 1 is
-            // RA/DA (Receiver Address / Destination Address), which is the
-            // final recipient of the frame. Only accept messages addressed to
-            // our MAC address or to all devices.
-
-            u16 *address_1 = ieeehdr + (HDR_DATA_ADDRESS_1 / 2);
-            const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
-
-            // ethhdr_print('!', address_1);
-            if (Wifi_CmpMacAddr(address_1, WifiData->MacAddr) ||
-                Wifi_CmpMacAddr(address_1, (void *)&broadcast_address))
-            {
-                int hdrlen;
-                int base2 = base;
-
-                // destination matches our mac address, or the broadcast address.
-                // if(ieeehdr[0] & 0x4000)
-                // {
-                //     // WEP enabled. When receiving WEP packets, the IV is stripped for us!
-                //     // How nice :|
-                //     base2 += 24;
-                //     hdrlen = 28;
-                //     base2 += [wifi hdr 12byte] + [802 header hdrlen] + [slip hdr 8byte]
-                // }
-                // else
-                // {
-                base2 += 22;
-                hdrlen = 24;
-                // }
-
-                //  SGIP_DEBUG_MESSAGE(("%04X %04X %04X %04X %04X",
-                //                     Wifi_RxReadHWordOffset(base2 - 8, 0),
-                //                     Wifi_RxReadHWordOffset(base2 - 7, 0),
-                //                     Wifi_RxReadHWordOffset(base2 - 6, 0),
-                //                     Wifi_RxReadHWordOffset(base2 - 5, 0),
-                //                     Wifi_RxReadHWordOffset(base2 - 4, 0)));
-                // check for LLC/SLIP header...
-                if (Wifi_RxReadHWordOffset(base2 - 4, 0) == 0xAAAA
-                    && Wifi_RxReadHWordOffset(base2 - 4, 1) == 0x0003
-                    && Wifi_RxReadHWordOffset(base2 - 4, 2) == 0)
-                {
-                    sgIP_memblock *mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
-                    if (mb)
-                    {
-                        if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
-                            base2 -= (WIFI_RXBUFFER_SIZE / 2);
-
-                        // TODO: Improve this to read correctly  in the case that the packet
-                        // buffer is fragmented
-                        Wifi_RxRawReadPacket(base2, (len - 8 - hdrlen) & (~1),
-                                             ((u16 *)mb->datastart) + 7);
-                        if (len & 1)
-                        {
-                            ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
-                                Wifi_RxReadHWordOffset(base2, ((len - 8 - hdrlen) / 2)) & 255;
-                        }
-                        Wifi_CopyMacAddr(mb->datastart, ieeehdr + 2); // copy dest
-                        if (Wifi_RxReadHWordOffset(hdr_ieee_base, 0) & 0x0200)
-                        {
-                            // from DS set?
-                            // copy src from adrs3
-                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 8);
-                        }
-                        else
-                        {
-                            // copy src from adrs2
-                            Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 5);
-                        }
-                        // assume LLC exists and is 8 bytes.
-                        ((u16 *)mb->datastart)[6] = framehdr[(hdrlen / 2) + 6 + 3];
-
-                        ethhdr_print('R', mb->datastart);
-
-                        // Done generating recieved data packet... now distribute it.
-                        sgIP_Hub_ReceiveHardwarePacket(wifi_hw, mb);
-                    }
-                }
-            }
-        }
-
+        Wifi_sgIpHandlePackage(base, len);
 #endif
 
         // check if we have a handler
