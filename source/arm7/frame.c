@@ -319,7 +319,10 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 512)
                     datalen = 512;
-                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+
+                // Read IEEE frame, right after the hardware RX header
+                Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
+
                 wepmode = 0;
                 maxrate = 0;
                 if (((u16 *)data)[5 + 12] & 0x0010)
@@ -627,7 +630,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                     }
                 }
             }
-            if (((control_802 >> 2) & 0x3F) == 0x14)
+            if ((control_802 & control_802_type_mask) == TYPE_PROBE_RESPONSE)
                 return WFLAG_PACKET_MGT;
             return WFLAG_PACKET_BEACON;
 
@@ -640,7 +643,9 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 64)
                     datalen = 64;
-                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+
+                // Read IEEE frame, right after the hardware RX header
+                Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {
@@ -695,7 +700,9 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 384)
                     datalen = 384;
-                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+
+                // Read IEEE frame, right after the hardware RX header
+                Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {
@@ -780,7 +787,9 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 datalen = packetheader.byteLength;
                 if (datalen > 64)
                     datalen = 64;
-                Wifi_MACRead((u16 *)data, macbase, 12, (datalen + 1) & ~1);
+
+                // Read IEEE frame, right after the hardware RX header
+                Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
                 if (Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
                 {
