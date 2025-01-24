@@ -20,7 +20,7 @@ extern "C" {
 bool Wifi_TxIsBusy(void);
 
 // Copy data to the TX buffer in MAC RAM (right at the start of MAC RAM). This
-// bypasses the ARM7 transfer queue.
+// bypasses the ARM7 transfer queue. The size is specified in bytes.
 void Wifi_TxRaw(u16 *data, int datalen);
 
 // Copy enqueued data to the MAC and start a transfer. Note that this function
@@ -31,10 +31,11 @@ void Wifi_TxArm7QueueFlush(void);
 // active transfer.
 bool Wifi_TxArm7QueueIsEmpty(void);
 
-// Define data to be transferred. This function will check if there is an active
-// transfer already active. If so, it will try to enqueue the data in a 1024
-// halfword buffer to be sent after the transfer is finished. If it can't be
-// enqueued, this function will return 0. On success it returns 1.
+// Define data to be transferred, with a size specified in bytes. This function
+// will check if there is an active transfer already active. If so, it will try
+// to enqueue the data in a 1024 halfword buffer to be sent after the transfer
+// is finished. If it can't be enqueued, this function will return 0. On success
+// it returns 1.
 int Wifi_TxArm7QueueAdd(u16 *data, int datalen);
 
 // This function checks if there is any data that the ARM9 has requested to
