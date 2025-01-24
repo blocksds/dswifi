@@ -280,6 +280,7 @@ int Wifi_SendPSPollFrame(void)
 }
 #endif
 
+// TODO: Clean this
 static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 {
     u8 data[512];
@@ -299,7 +300,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         // capability info, WEP bit
         wepmode = 1;
     }
-    u8 fromsta     = Wifi_CmpMacAddr(data + 10, data + 16);
+    u8 fromsta     = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
     u16 curloc     = 12 + 24; // 12 fixed bytes, 24 802.11 header
     u16 compatible = 1;
     u16 ptr_ssid   = 0;
@@ -621,11 +622,11 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
         return;
 
     // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
     if (((u16 *)(data + 24))[1] == 0)
@@ -670,11 +671,11 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
         return;
 
     // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
     if (((u16 *)(data + 24))[0] == 0)
@@ -756,11 +757,11 @@ static void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(data + 4, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
         return;
 
     // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + 16, WifiData->bssid7))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
     // They have booted us. Back to square 1.
