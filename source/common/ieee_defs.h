@@ -5,29 +5,29 @@
 #ifndef DSWIFI_IEEE_DEFS_H__
 #define DSWIFI_IEEE_DEFS_H__
 
-// 802.11b management frame header (Indices in halfwords)
+// 802.11b management frame header (Indices in bytes)
 // ===============================
 
 #define HDR_MGT_FRAME_CONTROL   0
-#define HDR_MGT_DURATION        1
-#define HDR_MGT_DA              2
-#define HDR_MGT_SA              5
-#define HDR_MGT_BSSID           8
-#define HDR_MGT_SEQ_CTL         11
-#define HDR_MGT_BODY            12 // The body has a variable size
+#define HDR_MGT_DURATION        2
+#define HDR_MGT_DA              4
+#define HDR_MGT_SA              10
+#define HDR_MGT_BSSID           16
+#define HDR_MGT_SEQ_CTL         22
+#define HDR_MGT_BODY            24 // The body has a variable size
 
 #define HDR_MGT_MAC_SIZE        24 // Size of the header up to the body in bytes
 
-// 802.11b data frame header (Indices in halfwords)
+// 802.11b data frame header (Indices in bytes)
 // =========================
 
 #define HDR_DATA_FRAME_CONTROL  0
-#define HDR_DATA_DURATION       1
-#define HDR_DATA_ADDRESS_1      2
-#define HDR_DATA_ADDRESS_2      5
-#define HDR_DATA_ADDRESS_3      8
-#define HDR_DATA_SEQ_CTL        11
-#define HDR_DATA_BODY           12 // The body has a variable size
+#define HDR_DATA_DURATION       2
+#define HDR_DATA_ADDRESS_1      4
+#define HDR_DATA_ADDRESS_2      10
+#define HDR_DATA_ADDRESS_3      16
+#define HDR_DATA_SEQ_CTL        22
+#define HDR_DATA_BODY           24 // The body has a variable size
 
 #define HDR_DATA_MAC_SIZE       24 // Size of the header up to the body in bytes
 

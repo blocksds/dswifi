@@ -49,17 +49,17 @@ static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
     // IEEE 802.11 header
     // ------------------
 
-    ieee_header[HDR_MGT_FRAME_CONTROL] = headerflags;
-    ieee_header[HDR_MGT_DURATION] = 0;
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_DA, WifiData->apmac7);
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_SA, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_BSSID, WifiData->bssid7);
-    ieee_header[HDR_MGT_SEQ_CTL] = 0;
+    ieee_header[HDR_MGT_FRAME_CONTROL / 2] = headerflags;
+    ieee_header[HDR_MGT_DURATION / 2] = 0;
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_DA / 2, WifiData->apmac7);
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_SA / 2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee_header + HDR_MGT_BSSID / 2, WifiData->bssid7);
+    ieee_header[HDR_MGT_SEQ_CTL / 2] = 0;
 
     // Fill in WEP-specific stuff
     if (headerflags & FC_PROTECTED_FRAME)
     {
-        u32 *p = (u32 *)&ieee_header[HDR_MGT_BODY];
+        u32 *p = (u32 *)&ieee_header[HDR_MGT_BODY / 2];
 
         // TODO: This isn't done to spec
         *p = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
@@ -242,12 +242,12 @@ int Wifi_SendNullFrame(void)
     // "Functions of address fields in data frames"
     // ToDS=1, FromDS=0 -> Addr1=BSSID, Addr2=SA, Addr3=DA
 
-    ieee_header[HDR_DATA_FRAME_CONTROL] = frame_control;
-    ieee_header[HDR_DATA_DURATION] = 0;
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_1, WifiData->bssid7);
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_3, WifiData->apmac7);
-    ieee_header[HDR_DATA_SEQ_CTL] = 0;
+    ieee_header[HDR_DATA_FRAME_CONTROL / 2] = frame_control;
+    ieee_header[HDR_DATA_DURATION / 2] = 0;
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_1 / 2, WifiData->bssid7);
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_2 / 2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_3 / 2, WifiData->apmac7);
+    ieee_header[HDR_DATA_SEQ_CTL / 2] = 0;
 
     size_t hdr_size = HDR_TX_SIZE + HDR_DATA_MAC_SIZE;
     // body size = 0
