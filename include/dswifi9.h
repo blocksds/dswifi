@@ -491,11 +491,11 @@ uint32_t Wifi_GetStats(int statnum);
 ///     The rate to transmit at (Specified as mbits/10, 1mbit=0x000A,
 ///     2mbit=0x0014)
 /// @param data
-///     Pointer to the data to send (should be halfword-aligned)
+///     Pointer to the data to send (should be halfword-aligned).
 ///
 /// @return
 ///     0 on success (not enough space in queue), -1 on error.
-int Wifi_RawTxFrame(u16 datalen, u16 rate, u16 *data);
+int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src);
 
 /// Set a handler to process all raw incoming packets.
 ///
@@ -510,8 +510,8 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 /// @param readlength
 ///     Number of bytes to read. It actually reads ((number + 1) & ~1) bytes
 /// @param data
-///     Location for the data to be read into
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst);
+///     Location for the data to be read into. It must be aligned to 16 bits.
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 
 //////////////////////////////////////////////////////////////////////////
 // Fast transfer support - update functions

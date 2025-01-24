@@ -21,9 +21,11 @@ u32 Wifi_TxBufferBytesAvailable(void)
     return size * 2;
 }
 
-void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src)
+void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
 {
     sassert((base & 1) == 0, "Unaligned base address");
+
+    const u16 *in = src;
 
     // Convert to halfwords
     base = base / 2;
@@ -39,7 +41,7 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src)
 
         while (writelen)
         {
-            WifiData->txbufData[base++] = *(src++);
+            WifiData->txbufData[base++] = *(in++);
             writelen--;
         }
 
@@ -47,7 +49,7 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src)
     }
 }
 
-int Wifi_RawTxFrame(u16 datalen, u16 rate, const u16 *src)
+int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 {
     Wifi_TxHeader txh;
 
@@ -91,13 +93,15 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const u16 *src)
 // RX functions
 // ============
 
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst)
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
 {
     if (base & 1)
     {
         sassert(0, "Unaligned base address");
         return;
     }
+
+    u16 *out = dst;
 
     // Convert to halfwords
     base = base / 2;
@@ -113,8 +117,8 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst)
 
         while (len > 0)
         {
-            *dst = WifiData->rxbufData[base++];
-            dst++;
+            *out = WifiData->rxbufData[base++];
+            out++;
             len--;
         }
 

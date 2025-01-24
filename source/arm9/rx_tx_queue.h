@@ -25,15 +25,15 @@ u32 Wifi_TxBufferBytesAvailable(void);
 //
 // TODO: Handle this special case in the function to only read one byte and fill
 // the rest with 0?
-void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const u16 *src);
+void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src);
 
 // Length specified in bytes.
-int Wifi_RawTxFrame(u16 datalen, u16 rate, const u16 *src);
+int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src);
 
 // Both the base address and size are in bytes. However, the base needs to be
 // aligned to 16 bit, and the output buffer needs to be a multiple of 16 bits
 // because the last read and write will always be a halfword.
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, u16 *dst);
+void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 
 // The base address and offset are specified in bytes. The base must be aligned
 // to 16 bit and the offset must be a multiple of 16 bits.
