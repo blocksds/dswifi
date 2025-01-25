@@ -4,6 +4,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/baseband.h"
+#include "arm7/debug.h"
 #include "arm7/flash.h"
 #include "arm7/frame.h"
 #include "arm7/ipc.h"
@@ -180,6 +181,8 @@ void Wifi_Shutdown(void)
 
 void Wifi_Init(void *wifidata)
 {
+    WLOG_PUTS("W: Init\n");
+
     WifiData = (Wifi_MainStruct *)wifidata;
 
     if (isDSiMode())
@@ -219,6 +222,11 @@ void Wifi_Init(void *wifidata)
     for (int i = 0; i < 3; i++)
         WifiData->MacAddr[i] = Wifi_FlashReadHWord(F_MAC_ADDRESS + i * 2);
 
+    WLOG_PRINTF("W: MAC: %x:%x:%x:%x:%x:%x\n",
+        WifiData->MacAddr[0] & 0xFF, (WifiData->MacAddr[0] >> 8) & 0xFF,
+        WifiData->MacAddr[1] & 0xFF, (WifiData->MacAddr[1] >> 8) & 0xFF,
+        WifiData->MacAddr[2] & 0xFF, (WifiData->MacAddr[2] >> 8) & 0xFF);
+
     W_IE = 0;
     Wifi_WakeUp();
 
@@ -244,6 +252,9 @@ void Wifi_Init(void *wifidata)
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
 
     WifiData->flags7 |= WFLAG_ARM7_ACTIVE;
+
+    WLOG_PUTS("W: ARM7 ready\n");
+    WLOG_FLUSH();
 }
 
 void Wifi_Deinit(void)

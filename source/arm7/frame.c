@@ -5,6 +5,7 @@
 
 #include <string.h>
 
+#include "arm7/debug.h"
 #include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -78,6 +79,8 @@ int Wifi_SendOpenSystemAuthPacket(void)
 {
     u16 frame_control = TYPE_AUTHENTICATION;
 
+    WLOG_PUTS("W: [S] Auth (Open)\n");
+
     u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
@@ -93,12 +96,16 @@ int Wifi_SendOpenSystemAuthPacket(void)
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
+    WLOG_FLUSH();
+
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket(void)
 {
     u16 frame_control = TYPE_AUTHENTICATION;
+
+    WLOG_PUTS("W: [S] Auth (Shared Key)\n");
 
     u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
@@ -115,12 +122,16 @@ int Wifi_SendSharedKeyAuthPacket(void)
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
+    WLOG_FLUSH();
+
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 {
     u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
+
+    WLOG_PUTS("W: [S] Auth (WEP)\n");
 
     u8 data[320];
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
@@ -143,6 +154,8 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4 + 4;
 
+    WLOG_FLUSH();
+
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
@@ -150,6 +163,8 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 int Wifi_SendAssocPacket(void)
 {
     u16 frame_control = TYPE_ASSOC_REQUEST;
+
+    WLOG_PUTS("W: [S] Assoc Request\n");
 
     u8 data[96];
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
@@ -213,6 +228,8 @@ int Wifi_SendAssocPacket(void)
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
 
+    WLOG_FLUSH();
+
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
@@ -220,6 +237,8 @@ int Wifi_SendNullFrame(void)
 {
     // We can't use Wifi_GenMgtHeader(): Null frames don't include the BSSID,
     // and Wifi_GenMgtHeader() always includes it.
+
+    WLOG_PUTS("W: [S] Null\n");
 
     u16 frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
 
@@ -255,6 +274,8 @@ int Wifi_SendNullFrame(void)
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WifiData->maxrate7;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size - HDR_TX_SIZE + 4;
 
+    WLOG_FLUSH();
+
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size);
 }
 
@@ -285,6 +306,8 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 {
     u8 data[512];
     u8 rateset[16];
+
+    //WLOG_PUTS("W: [R] Beacon/ProbeResp\n");
 
     u32 datalen = packetheader->byteLength;
     if (datalen > 512)
@@ -608,6 +631,8 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
             // couldn't update beacon - oh well :\ there'll be other beacons.
         }
     }
+
+    //WLOG_FLUSH();
 }
 
 static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
@@ -629,6 +654,8 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
+    WLOG_PUTS("W: [R] AssocResponse\n");
+
     if (((u16 *)(data + 24))[1] == 0)
     {
         // Status code, 0==success
@@ -644,11 +671,15 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
                 WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
         }
 
+        WLOG_PRINTF("W: Rate: %c Mb/s\n",
+                    (WifiData->maxrate7 == WIFI_TRANSFER_RATE_2MBPS) ? '2' : '1');
+
         if ((WifiData->authlevel == WIFI_AUTHLEVEL_AUTHENTICATED) ||
             (WifiData->authlevel == WIFI_AUTHLEVEL_DEASSOCIATED))
         {
             WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
             WifiData->authctr   = 0;
+            WLOG_PUTS("W: Associated\n");
         }
     }
     else
@@ -656,7 +687,10 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         // Status code = failure!
 
         WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+        WLOG_PUTS("W: Failed\n");
     }
+
+    WLOG_FLUSH();
 }
 
 static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
@@ -678,8 +712,12 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
+    WLOG_PUTS("W: [R] Authentication\n");
+
     if (((u16 *)(data + 24))[0] == 0)
     {
+        WLOG_PUTS("W: Open auth\n");
+
         // open system auth
         if (((u16 *)(data + 24))[1] == 2)
         {
@@ -692,17 +730,21 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                     WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
                     WifiData->authctr   = 0;
                     Wifi_SendAssocPacket();
+                    WLOG_PUTS("W: Authenticated\n");
                 }
             }
             else
             {
                 // status code: rejected, try something else
                 Wifi_SendSharedKeyAuthPacket();
+                WLOG_PUTS("W: Rejected\n");
             }
         }
     }
     else if (((u16 *)(data + 24))[0] == 1)
     {
+        WLOG_PUTS("W: Shared key auth\n");
+
         // shared key auth
         if (((u16 *)(data + 24))[1] == 2)
         {
@@ -715,12 +757,14 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                 {
                     // 16 = challenge text - this value must be 0x10 or else!
                     Wifi_SendSharedKeyAuthPacket2(data[24 + 7], data + 24 + 8);
+                    WLOG_PUTS("W: Send challenge\n");
                 }
             }
             else
             {
                 // rejected, just give up.
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                WLOG_PUTS("W: Rejected\n");
             }
         }
         else if (((u16 *)(data + 24))[1] == 4)
@@ -734,15 +778,19 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                     WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
                     WifiData->authctr   = 0;
                     Wifi_SendAssocPacket();
+                    WLOG_PUTS("W: Authenticated\n");
                 }
             }
             else
             {
                 // status code: rejected. Cry in the corner.
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                WLOG_PUTS("W: Rejected\n");
             }
         }
     }
+
+    WLOG_FLUSH();
 }
 
 static void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
@@ -764,6 +812,8 @@ static void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
+    WLOG_PUTS("W: [R] Deauthentication\n");
+
     // They have booted us. Back to square 1.
     if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
     {
@@ -775,6 +825,8 @@ static void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
         WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
         Wifi_SendOpenSystemAuthPacket();
     }
+
+    WLOG_FLUSH();
 }
 
 int Wifi_ProcessReceivedFrame(int macbase, int framelen)
@@ -867,6 +919,8 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
         //case TYPE_QOS_CF_POLL_CF_ACK:
 
         default: // ignore!
+            WLOG_PRINTF("W: Ignored frame: %x\n", control_802);
+            WLOG_FLUSH();
             return 0;
     }
 }

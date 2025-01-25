@@ -4,6 +4,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/baseband.h"
+#include "arm7/debug.h"
 #include "arm7/flash.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -117,6 +118,7 @@ void Wifi_LoadBeacon(int from, int to)
         {
             case 3: // Channel
                 beacon_channel = to + i;
+                WLOG_PRINTF("W: Beacon channel %d\n", beacon_channel);
                 break;
 
             case 5: // TIM
@@ -124,6 +126,7 @@ void Wifi_LoadBeacon(int from, int to)
                 W_LISTENINT = data[i + 1]; // listen interval
                 if (W_LISTENCOUNT >= W_LISTENINT)
                     W_LISTENCOUNT = 0;
+                WLOG_PRINTF("W: Beacon listen int %d\n", data[i + 1]);
                 break;
         }
         i += seglen;
@@ -131,6 +134,8 @@ void Wifi_LoadBeacon(int from, int to)
 
     W_TXBUF_BEACON = (0x8000 | (to >> 1));             // beacon location
     W_BEACONINT    = ((u16 *)data)[(12 + 24 + 8) / 2]; // beacon interval
+
+    WLOG_FLUSH();
 }
 
 void Wifi_SetBeaconChannel(int channel)
@@ -163,6 +168,9 @@ void Wifi_SetChannel(int channel)
     int i, n, l;
     if (channel < 1 || channel > 13)
         return;
+
+    WLOG_PRINTF("W: Set channel %d\n", channel);
+    WLOG_FLUSH();
 
     Wifi_SetBeaconChannel(channel);
     channel -= 1;

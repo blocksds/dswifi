@@ -18,7 +18,7 @@ INCLUDEDIRS	:= include source
 # ---------------------------
 
 ifeq ($(DEBUG),1)
-DEFINES		:= -DSGIP_DEBUG
+DEFINES		:= -DSGIP_DEBUG -DDSWIFI_LOGS
 endif
 
 # Libraries

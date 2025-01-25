@@ -5,6 +5,7 @@
 
 #include <nds.h>
 
+#include "arm7/debug.h"
 #include "arm7/flash.h"
 #include "common/wifi_shared.h"
 
@@ -64,6 +65,8 @@ static int wifi_crc16_slow(u8 *data, int length)
 
 void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 {
+    WLOG_PUTS("W: Loading WFC AP settings:\n");
+
     u8 ap_data[256];
 
     u32 wfcBase = Wifi_FlashReadBytes(F_USER_SETTINGS_OFFSET, 2) * 8 - 0x400;
@@ -132,6 +135,8 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
             WifiData->wfc_subnet_mask[c] = s;
 
+            WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc_ap[c].ssid);
+
             // Start filling next DSWiFi slot
             c++;
         }
@@ -141,4 +146,7 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             // TODO: Support this
         }
     }
+
+    WLOG_PRINTF("W: %d valid AP found\n", c);
+    WLOG_FLUSH();
 }
