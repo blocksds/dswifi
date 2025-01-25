@@ -344,67 +344,89 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
     u8 wepmode  = 0;
     u16 maxrate = 0;
-    if (((u16 *)data)[5 + 12] & 0x0010)
+    if (((u16 *)data)[5 + 12] & CAPS_PRIVACY)
     {
         // capability info, WEP bit
         wepmode = 1;
     }
     u8 fromsta     = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
-    u16 curloc     = 12 + 24; // 12 fixed bytes, 24 802.11 header
+    u16 curloc     = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
     u16 compatible = 1;
     u16 ptr_ssid   = 0;
     u8 channel     = WifiData->curChannel;
     u8 wpamode     = 0;
     rateset[0]     = 0;
 
-    u8 segtype, seglen;
-    u16 i, j;
-
     do
     {
         if (curloc >= datalen)
             break;
-        segtype = data[curloc++];
-        seglen  = data[curloc++];
+
+        u32 segtype = data[curloc++];
+        u32 seglen  = data[curloc++];
 
         switch (segtype)
         {
-            case 0: // SSID element
+            case MGT_FIE_ID_SSID: // SSID element
                 ptr_ssid = curloc - 2;
                 break;
 
-            case 1: // rate set (make sure we're compatible)
+            case MGT_FIE_ID_SUPPORTED_RATES: // rate set (make sure we're compatible)
+            {
                 compatible = 0;
                 maxrate    = 0;
-                j          = 0;
-                for (i = 0; i < seglen; i++)
+
+                int curr_rate = 0;
+
+                // Add mandatory rates to the "rateset" array right away, but
+                // only keep track of the max rate for the optional ones.
+                for (int i = 0; i < seglen; i++)
                 {
-                    if ((data[curloc + i] & 0x7F) > maxrate)
-                        maxrate = data[curloc + i] & 0x7F;
-                    if (j < 15 && data[curloc + i] & 0x80)
-                        rateset[j++] = data[curloc + i];
+                    if ((data[curloc + i] & RATE_SPEED_MASK) > maxrate)
+                        maxrate = data[curloc + i] & RATE_SPEED_MASK;
+
+                    if ((curr_rate < 15) && (data[curloc + i] & RATE_MANDATORY))
+                        rateset[curr_rate++] = data[curloc + i];
                 }
-                for (i = 0; i < seglen; i++)
+
+                // Re-read the list of rates and look for some specific
+                // frequencies
+                for (int i = 0; i < seglen; i++)
                 {
-                    if (data[curloc + i] == 0x82 || data[curloc + i] == 0x84)
-                        compatible = 1; // 1-2mbit, fully compatible
-                    else if (data[curloc + i] == 0x8B || data[curloc + i] == 0x96)
-                        compatible = 2; // 5.5,11mbit, have to fake our way in.
-                    else if (data[curloc + i] & 0x80)
+                    u8 thisrate = data[curloc + i];
+
+                    if ((thisrate == (RATE_MANDATORY | RATE_1_MBPS)) ||
+                        (thisrate == (RATE_MANDATORY | RATE_2_MBPS)))
+                    {
+                        // 1-2 Mbit: Fully compatible
+                        compatible = 1;
+                    }
+                    else if ((thisrate == (RATE_MANDATORY | RATE_5_5_MBPS)) ||
+                             (thisrate == (RATE_MANDATORY | RATE_11_MBPS)))
+                    {
+                        // 5.5, 11mbit, have to fake our way in.
+                        compatible = 2;
+                        // TODO: This isn't actually supported. Eventually this
+                        // sets WFLAG_APDATA_EXTCOMPATIBLE in the AP information
+                        // struct, but it isn't used anywhere.
+                    }
+                    else if (thisrate & RATE_MANDATORY)
                     {
                         compatible = 0;
                         break;
                     }
                 }
-                rateset[j] = 0;
+                rateset[curr_rate] = 0; // Finish array with a 0
                 break;
+            }
 
-            case 3: // DS set (current channel)
+            case MGT_FIE_ID_DS_PARAM_SET: // DS set (current channel)
                 channel = data[curloc];
                 break;
 
-            case 48: // RSN(A) field- WPA enabled.
-                j = curloc;
+            case MGT_FIE_ID_RSN: // RSN(A) field- WPA enabled.
+            {
+                int j = curloc;
                 if (seglen >= 10 && data[j] == 0x01 && data[j + 1] == 0x00)
                 {
                     j += 6; // Skip multicast
@@ -433,9 +455,11 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                     }
                 }
                 break;
+            }
 
-            case 221: // vendor specific;
-                j = curloc;
+            case MGT_FIE_ID_VENDOR: // vendor specific;
+            {
+                int j = curloc;
                 if (seglen >= 14 && data[j] == 0x00 && data[j + 1] == 0x50
                     && data[j + 2] == 0xF2 && data[j + 3] == 0x01 && data[j + 4] == 0x01
                     && data[j + 5] == 0x00)
@@ -467,6 +491,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                     }
                 }
                 break;
+            }
 
             default:
                 // Don't care about the others.
@@ -480,13 +505,17 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     if (wpamode == 1)
         compatible = 0;
 
-    seglen  = 0;
-    segtype = 255;
-    for (i = 0; i < WIFI_MAX_AP; i++)
+    // Now, check the list of APs that we have found so far. If the AP of this
+    // frame is already in the list, store it there. If not, this loop will
+    // finish without doing any work, and we will add it to the list later.
+    bool in_aplist = false;
+    int free_slot = -1;
+    for (int i = 0; i < WIFI_MAX_AP; i++)
     {
         if (Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + 16))
         {
-            seglen++;
+            in_aplist = true;
+
             if (Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
             {
                 WifiData->aplist[i].timectr = 0;
@@ -508,10 +537,10 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                     WifiData->aplist[i].ssid_len = data[ptr_ssid + 1];
                     if (WifiData->aplist[i].ssid_len > 32)
                         WifiData->aplist[i].ssid_len = 32;
+
+                    int j;
                     for (j = 0; j < WifiData->aplist[i].ssid_len; j++)
-                    {
                         WifiData->aplist[i].ssid[j] = data[ptr_ssid + 2 + j];
-                    }
                     WifiData->aplist[i].ssid[j] = 0;
                 }
                 if (WifiData->curChannel == channel)
@@ -533,7 +562,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                     }
                     else
                     {
-                        for (j = 0; j < 7; j++)
+                        for (int j = 0; j < 7; j++)
                         {
                             WifiData->aplist[i].rssi_past[j] =
                                 WifiData->aplist[i].rssi_past[j + 1];
@@ -543,7 +572,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 }
                 WifiData->aplist[i].channel = channel;
 
-                for (j = 0; j < 16; j++)
+                for (int j = 0; j < 16; j++)
                     WifiData->aplist[i].base_rates[j] = rateset[j];
                 Spinlock_Release(WifiData->aplist[i]);
             }
@@ -560,32 +589,34 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
             }
             else
             {
-                if (segtype == 255)
-                    segtype = i;
+                if (free_slot == -1)
+                    free_slot = i;
             }
         }
     }
-    if (seglen == 0)
+
+    // If the AP isn't in the list of found APs, add it.
+    if (!in_aplist)
     {
-        // we couldn't find an existing record
-        if (segtype == 255)
+        // If we didn't find a free slot, look for the AP with the longest time
+        // without any updates and replace it.
+        if (free_slot == -1)
         {
-            j = 0;
+            int max_timectr = 0;
+            free_slot = 0;
 
-            segtype = 0; // prevent heap corruption if wifilib detects >WIFI_MAX_AP
-                            // APs before entering scan mode.
-            for (i = 0; i < WIFI_MAX_AP; i++)
+            for (int i = 0; i < WIFI_MAX_AP; i++)
             {
-                if (WifiData->aplist[i].timectr > j)
+                if (WifiData->aplist[i].timectr > max_timectr)
                 {
-                    j = WifiData->aplist[i].timectr;
-
-                    segtype = i;
+                    max_timectr = WifiData->aplist[i].timectr;
+                    free_slot = i;
                 }
             }
         }
-        // stuff new data in
-        i = segtype;
+
+        // Replace the provided slot by the new AP
+        int i = free_slot;
         if (Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
         {
             Wifi_CopyMacAddr(WifiData->aplist[i].bssid, data + 16);   // bssid: +16
@@ -607,6 +638,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 WifiData->aplist[i].ssid_len = data[ptr_ssid + 1];
                 if (WifiData->aplist[i].ssid_len > 32)
                     WifiData->aplist[i].ssid_len = 32;
+                int j;
                 for (j = 0; j < WifiData->aplist[i].ssid_len; j++)
                 {
                     WifiData->aplist[i].ssid[j] = data[ptr_ssid + 2 + j];
@@ -647,7 +679,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
             }
 
             WifiData->aplist[i].channel = channel;
-            for (j = 0; j < 16; j++)
+            for (int j = 0; j < 16; j++)
                 WifiData->aplist[i].base_rates[j] = rateset[j];
 
             Spinlock_Release(WifiData->aplist[i]);

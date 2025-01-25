@@ -120,6 +120,14 @@
 
 #define MGT_FIE_ID_SSID                 0
 #define MGT_FIE_ID_SUPPORTED_RATES      1
+#define MGT_FIE_ID_FH_PARAM_SET         2
+#define MGT_FIE_ID_DS_PARAM_SET         3
+#define MGT_FIE_ID_CF_PARAM_SET         4
+#define MGT_FIE_ID_TIM                  5
+#define MGT_FIE_ID_IBSS_PARAM_SET       6
+#define MGT_FIE_ID_CHALLENGE_TEXT       16
+#define MGT_FIE_ID_RSN                  48 // Robust Security Network
+#define MGT_FIE_ID_VENDOR               221
 
 // Capability information
 
@@ -139,11 +147,9 @@
 
 #define RATE_SPEED_MASK 0x7F
 
-#define RATE_0_5_MBPS   1
 #define RATE_1_MBPS     2
-#define RATE_1_5_MBPS   3
 #define RATE_2_MBPS     4
-#define RATE_2_5_MBPS   5
-// And so on...
+#define RATE_5_5_MBPS   11
+#define RATE_11_MBPS    22
 
 #endif // DSWIFI_IEEE_DEFS_H__
