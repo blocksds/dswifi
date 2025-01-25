@@ -29,6 +29,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <nds/ndstypes.h>
+
 #include "dswifi_version.h"
 
 // Well, some flags and stuff are just stuffed in here and not documented very
