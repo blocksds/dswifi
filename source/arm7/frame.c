@@ -131,7 +131,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 {
     u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
 
-    WLOG_PUTS("W: [S] Auth (WEP)\n");
+    WLOG_PUTS("W: [S] Auth (Shared Key, 2nd)\n");
 
     u8 data[320];
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
