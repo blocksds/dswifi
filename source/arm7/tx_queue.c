@@ -9,6 +9,7 @@
 #include "arm7/mac.h"
 #include "arm7/rf.h"
 #include "arm7/update.h"
+#include "common/ieee_defs.h"
 
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
@@ -193,17 +194,19 @@ int Wifi_TxArm9QueueFlush(void)
     if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
         W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
 
+    u32 ieee_base = HDR_TX_SIZE;
+
     // Ensure that the IEEE header has all required information. This header
     // goes after the TX header.
 
-    if (W_MACMEM(0xC) & 0x4000)
+    if (W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & FC_PROTECTED_FRAME)
     {
-        // wep is enabled, fill in the IV.
-        W_MACMEM(0x24) = (W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0xFFFF;
-        W_MACMEM(0x26) =
-            ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF) | (WifiData->wepkeyid7 << 14);
+        // WEP is enabled, fill in the IV.
+        W_MACMEM(0x24) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
+        W_MACMEM(0x26) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
+                       | (WifiData->wepkeyid7 << 14);
     }
-    if ((W_MACMEM(0xC) & 0x00FF) == 0x0080)
+    if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
     {
         // 2400 = 0x960 (out of 0x2000 bytes)
         Wifi_LoadBeacon(0, 2400); // TX 0-2399, RX 0x4C00-0x5F5F

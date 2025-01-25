@@ -8,6 +8,8 @@
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"
+#include "common/common_defs.h"
+#include "common/ieee_defs.h"
 
 static u16 beacon_channel = 0;
 static int chdata_save5 = 0;
@@ -92,9 +94,9 @@ void Wifi_LoadBeacon(int from, int to)
     u8 data[512];
     int type, seglen;
 
-    int packetlen = Wifi_MACReadHWord(from, 10);
+    int packetlen = Wifi_MACReadHWord(from, HDR_TX_IEEE_FRAME_SIZE);
 
-    int len = (packetlen + 12 - 4);
+    int len = packetlen + HDR_TX_SIZE - 4;
     int i   = 12 + 24 + 12;
     if (len <= i)
     {
@@ -116,13 +118,12 @@ void Wifi_LoadBeacon(int from, int to)
             case 3: // Channel
                 beacon_channel = to + i;
                 break;
-            case 5:                        // TIM
+
+            case 5: // TIM
                 W_TXBUF_TIM = i - 12 - 24; // TIM offset within beacon
                 W_LISTENINT = data[i + 1]; // listen interval
                 if (W_LISTENCOUNT >= W_LISTENINT)
-                {
                     W_LISTENCOUNT = 0;
-                }
                 break;
         }
         i += seglen;
