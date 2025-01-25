@@ -347,14 +347,14 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     rateset[0] = 0;
     u16 compatible = 1; // Assume that the AP is compatible
 
-    u8 wepmode = 0;
-    u8 wpamode = 0;
+    bool wepmode = false;
+    bool wpamode = false;
 
     // Capability info, WEP bit
     if (((u16 *)data)[5 + 12] & CAPS_PRIVACY)
-        wepmode = 1;
+        wepmode = true;
 
-    u8 fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
+    bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
 
     u16 ptr_ssid = 0;
 
@@ -362,7 +362,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     u8 channel = WifiData->curChannel;
 
     // Pointer we're going to use to iterate through the frame
-    u16 curloc = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
+    u32 curloc = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
 
     do
     {
@@ -387,7 +387,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
                 // Add mandatory rates to the "rateset" array right away, but
                 // only keep track of the max rate for the optional ones.
-                for (int i = 0; i < seglen; i++)
+                for (unsigned int i = 0; i < seglen; i++)
                 {
                     if ((data[curloc + i] & RATE_SPEED_MASK) > maxrate)
                         maxrate = data[curloc + i] & RATE_SPEED_MASK;
@@ -398,7 +398,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
                 // Re-read the list of rates and look for some specific
                 // frequencies
-                for (int i = 0; i < seglen; i++)
+                for (unsigned int i = 0; i < seglen; i++)
                 {
                     u8 thisrate = data[curloc + i];
 
@@ -433,30 +433,39 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
             case MGT_FIE_ID_RSN: // RSN(A) field- WPA enabled.
             {
-                int j = curloc;
-                if (seglen >= 10 && data[j] == 0x01 && data[j + 1] == 0x00)
+                unsigned int j = curloc;
+
+                // Check if there is enough space for at least one cipher, and
+                // that the version number is 1.
+                if ((seglen >= 10) && (data[j] == 0x01) && (data[j + 1] == 0x00))
                 {
-                    j += 6; // Skip multicast
+                    j += 2 + 4; // Go past the version number and multicast cipher
+
                     u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
                     j += 2;
+
+                    // Check group cipher suites
                     while (num_uni_ciphers-- && (j <= (curloc + seglen - 4)))
                     {
-                        // check first 3 bytes
-                        if (data[j] == 0x00 && data[j + 1] == 0x0f && data[j + 2] == 0xAC)
+                        // Check magic numbers in first 3 bytes
+                        if ((data[j] == 0x00) && (data[j + 1] == 0x0f) && (data[j + 2] == 0xAC))
                         {
-                            j += 3;
+                            j += 3; // Skip magic numbers
+
                             switch (data[j++])
                             {
                                 case 2: // TKIP
                                 case 3: // AES WRAP
                                 case 4: // AES CCMP
-                                    wpamode = 1;
+                                    wpamode = true;
                                     break;
                                 case 1: // WEP64
                                 case 5: // WEP128
-                                    wepmode = 1;
+                                    wepmode = true;
                                     break;
-                                    // others : 0:NONE
+                                default:
+                                    // Others: Reserved/Ignored
+                                    break;
                             }
                         }
                     }
@@ -466,33 +475,42 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
             case MGT_FIE_ID_VENDOR: // vendor specific;
             {
-                int j = curloc;
-                if (seglen >= 14 && data[j] == 0x00 && data[j + 1] == 0x50
-                    && data[j + 2] == 0xF2 && data[j + 3] == 0x01 && data[j + 4] == 0x01
-                    && data[j + 5] == 0x00)
+                unsigned int j = curloc;
+                // Check that the segment is long enough
+                if ((seglen >= 14) &&
+                    // Check magic
+                    (data[j] == 0x00) && (data[j + 1] == 0x50) &&
+                    (data[j + 2] == 0xF2) && (data[j + 3] == 0x01) &&
+                    // Check version
+                    (data[j + 4] == 0x01) && (data[j + 5] == 0x00))
                 {
                     // WPA IE type 1 version 1
-                    // Skip multicast cipher suite
-                    j += 10;
+                    j += 2 + 4 + 4; // Skip magic, version and multicast cipher suite
+
                     u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
                     j += 2;
-                    while (num_uni_ciphers-- && j <= (curloc + seglen - 4))
+
+                    // Check group cipher suites
+                    while (num_uni_ciphers-- && (j <= (curloc + seglen - 4)))
                     {
-                        // check first 3 bytes
+                        // Check magic numbers in first 3 bytes
                         if (data[j] == 0x00 && data[j + 1] == 0x50 && data[j + 2] == 0xF2)
                         {
-                            j += 3;
+                            j += 3; // Skip magic numbers
+
                             switch (data[j++])
                             {
                                 case 2: // TKIP
                                 case 3: // AES WRAP
                                 case 4: // AES CCMP
-                                    wpamode = 1;
+                                    wpamode = true;
                                     break;
                                 case 1: // WEP64
                                 case 5: // WEP128
-                                    wepmode = 1;
-                                    // others : 0:NONE
+                                    wepmode = true;
+                                default:
+                                    // Others: Reserved/Ignored
+                                    break;
                             }
                         }
                     }
@@ -509,7 +527,8 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     }
     while (curloc < datalen);
 
-    if (wpamode == 1)
+    // Regular DS consoles aren't compatible with WPA
+    if (wpamode)
         compatible = 0;
 
     // Now, check the list of APs that we have found so far. If the AP of this
@@ -559,7 +578,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         if (compatible == 2)
             WifiData->aplist[i].flags |= WFLAG_APDATA_EXTCOMPATIBLE;
 
-        if (wpamode == 1)
+        if (wpamode)
             WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
 
         // Save the mas rate as well as the rates array in the IEEE format
@@ -604,6 +623,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
             }
             else
             {
+                // Shift past measurements by one slot and add new measurement
                 for (int j = 0; j < 7; j++)
                 {
                     WifiData->aplist[i].rssi_past[j] =
@@ -627,7 +647,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         // without any updates and replace it.
         if (free_slot == -1)
         {
-            int max_timectr = 0;
+            unsigned int max_timectr = 0;
             free_slot = 0;
 
             for (int i = 0; i < WIFI_MAX_AP; i++)
@@ -660,7 +680,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
             if (compatible == 2)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_EXTCOMPATIBLE;
 
-            if (wpamode == 1)
+            if (wpamode)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
 
             // Save the mas rate as well as the rates array in the IEEE format
@@ -674,11 +694,10 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 WifiData->aplist[i].ssid_len = data[ptr_ssid + 1];
                 if (WifiData->aplist[i].ssid_len > 32)
                     WifiData->aplist[i].ssid_len = 32;
+
                 int j;
                 for (j = 0; j < WifiData->aplist[i].ssid_len; j++)
-                {
                     WifiData->aplist[i].ssid[j] = data[ptr_ssid + 2 + j];
-                }
                 WifiData->aplist[i].ssid[j] = 0;
             }
             else
@@ -720,7 +739,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         }
         else
         {
-            // couldn't update beacon - oh well :\ there'll be other beacons.
+            // Couldn't update beacon - oh well :\ there'll be other beacons.
         }
     }
 
