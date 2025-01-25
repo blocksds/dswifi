@@ -331,7 +331,6 @@ int Wifi_SendPSPollFrame(void)
 static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 {
     u8 data[512];
-    u8 rateset[16];
 
     //WLOG_PUTS("W: [R] Beacon/ProbeResp\n");
 
@@ -342,20 +341,28 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     // Read IEEE frame, right after the hardware RX header
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
-    u8 wepmode  = 0;
+    // Information about the data rates
     u16 maxrate = 0;
+    u8 rateset[16];
+    rateset[0] = 0;
+    u16 compatible = 1; // Assume that the AP is compatible
+
+    u8 wepmode = 0;
+    u8 wpamode = 0;
+
+    // Capability info, WEP bit
     if (((u16 *)data)[5 + 12] & CAPS_PRIVACY)
-    {
-        // capability info, WEP bit
         wepmode = 1;
-    }
-    u8 fromsta     = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
-    u16 curloc     = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
-    u16 compatible = 1;
-    u16 ptr_ssid   = 0;
-    u8 channel     = WifiData->curChannel;
-    u8 wpamode     = 0;
-    rateset[0]     = 0;
+
+    u8 fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
+
+    u16 ptr_ssid = 0;
+
+    // Assume that the channel of the AP is the current one
+    u8 channel = WifiData->curChannel;
+
+    // Pointer we're going to use to iterate through the frame
+    u16 curloc = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
 
     do
     {
@@ -512,87 +519,105 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     int free_slot = -1;
     for (int i = 0; i < WIFI_MAX_AP; i++)
     {
-        if (Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + 16))
+        // Check if the BSSID of the new AP matches the entry in the AP array.
+        if (!Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + 16))
         {
-            in_aplist = true;
-
-            if (Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
-            {
-                WifiData->aplist[i].timectr = 0;
-                WifiData->aplist[i].flags   = WFLAG_APDATA_ACTIVE
-                                            | (wepmode ? WFLAG_APDATA_WEP : 0)
-                                            | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
-                if (compatible == 1)
-                    WifiData->aplist[i].flags |= WFLAG_APDATA_COMPATIBLE;
-                if (compatible == 2)
-                    WifiData->aplist[i].flags |= WFLAG_APDATA_EXTCOMPATIBLE;
-                if (wpamode == 1)
-                    WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
-                WifiData->aplist[i].maxrate = maxrate;
-
-                // src: +10
-                Wifi_CopyMacAddr(WifiData->aplist[i].macaddr, data + 10);
-                if (ptr_ssid)
-                {
-                    WifiData->aplist[i].ssid_len = data[ptr_ssid + 1];
-                    if (WifiData->aplist[i].ssid_len > 32)
-                        WifiData->aplist[i].ssid_len = 32;
-
-                    int j;
-                    for (j = 0; j < WifiData->aplist[i].ssid_len; j++)
-                        WifiData->aplist[i].ssid[j] = data[ptr_ssid + 2 + j];
-                    WifiData->aplist[i].ssid[j] = 0;
-                }
-                if (WifiData->curChannel == channel)
-                {
-                    // only use RSSI when we're on the right channel
-                    if (WifiData->aplist[i].rssi_past[0] == 0)
-                    {
-                        // min rssi is 2, heh.
-                        int tmp = packetheader->rssi_ & 255;
-
-                        WifiData->aplist[i].rssi_past[0] = tmp;
-                        WifiData->aplist[i].rssi_past[1] = tmp;
-                        WifiData->aplist[i].rssi_past[2] = tmp;
-                        WifiData->aplist[i].rssi_past[3] = tmp;
-                        WifiData->aplist[i].rssi_past[4] = tmp;
-                        WifiData->aplist[i].rssi_past[5] = tmp;
-                        WifiData->aplist[i].rssi_past[6] = tmp;
-                        WifiData->aplist[i].rssi_past[7] = tmp;
-                    }
-                    else
-                    {
-                        for (int j = 0; j < 7; j++)
-                        {
-                            WifiData->aplist[i].rssi_past[j] =
-                                WifiData->aplist[i].rssi_past[j + 1];
-                        }
-                        WifiData->aplist[i].rssi_past[7] = packetheader->rssi_ & 255;
-                    }
-                }
-                WifiData->aplist[i].channel = channel;
-
-                for (int j = 0; j < 16; j++)
-                    WifiData->aplist[i].base_rates[j] = rateset[j];
-                Spinlock_Release(WifiData->aplist[i]);
-            }
-            else
-            {
-                // couldn't update beacon - oh well :\ there'll be other beacons.
-            }
-        }
-        else
-        {
-            if (WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE)
-            {
-                // WifiData->aplist[i].timectr++;
-            }
-            else
+            // It doesn't match. If it's unused, we can at least save the slot
+            // for later in case we need it.
+            if (!(WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE))
             {
                 if (free_slot == -1)
                     free_slot = i;
             }
+
+            // Check next AP in the array
+            continue;
         }
+
+        // If this point is reached, the BSSID of the new AP matches this entry
+        // in the AP array. We need to update it.
+
+        in_aplist = true;
+
+        // Try to acquire the lock. If it can't be acquired, don't wait. Just
+        // continue, we will receive more beacons in the future.
+        if (!Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
+            continue;
+
+        // We have managed to acquire the lock. Update the AP data.
+        // --------------------------------------------------------
+
+        // Set the counter to 0 to mark the AP as just updated
+        WifiData->aplist[i].timectr = 0;
+
+        WifiData->aplist[i].flags = WFLAG_APDATA_ACTIVE
+                                  | (wepmode ? WFLAG_APDATA_WEP : 0)
+                                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
+
+        if (compatible == 1)
+            WifiData->aplist[i].flags |= WFLAG_APDATA_COMPATIBLE;
+        if (compatible == 2)
+            WifiData->aplist[i].flags |= WFLAG_APDATA_EXTCOMPATIBLE;
+
+        if (wpamode == 1)
+            WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
+
+        // Save the mas rate as well as the rates array in the IEEE format
+        WifiData->aplist[i].maxrate = maxrate;
+
+        for (int j = 0; j < 16; j++)
+            WifiData->aplist[i].base_rates[j] = rateset[j];
+
+        // src: +10
+        Wifi_CopyMacAddr(WifiData->aplist[i].macaddr, data + 10);
+
+        if (ptr_ssid)
+        {
+            WifiData->aplist[i].ssid_len = data[ptr_ssid + 1];
+            if (WifiData->aplist[i].ssid_len > 32)
+                WifiData->aplist[i].ssid_len = 32;
+
+            int j;
+            for (j = 0; j < WifiData->aplist[i].ssid_len; j++)
+                WifiData->aplist[i].ssid[j] = data[ptr_ssid + 2 + j];
+            WifiData->aplist[i].ssid[j] = 0;
+        }
+
+        WifiData->aplist[i].channel = channel;
+
+        // Only use RSSI when we're on the right channel
+        if (WifiData->curChannel == channel)
+        {
+            if (WifiData->aplist[i].rssi_past[0] == 0)
+            {
+                // min rssi is 2, heh.
+                int tmp = packetheader->rssi_ & 255;
+
+                WifiData->aplist[i].rssi_past[0] = tmp;
+                WifiData->aplist[i].rssi_past[1] = tmp;
+                WifiData->aplist[i].rssi_past[2] = tmp;
+                WifiData->aplist[i].rssi_past[3] = tmp;
+                WifiData->aplist[i].rssi_past[4] = tmp;
+                WifiData->aplist[i].rssi_past[5] = tmp;
+                WifiData->aplist[i].rssi_past[6] = tmp;
+                WifiData->aplist[i].rssi_past[7] = tmp;
+            }
+            else
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    WifiData->aplist[i].rssi_past[j] =
+                        WifiData->aplist[i].rssi_past[j + 1];
+                }
+                WifiData->aplist[i].rssi_past[7] = packetheader->rssi_ & 255;
+            }
+        }
+
+        // Release lock
+        Spinlock_Release(WifiData->aplist[i]);
+
+        // There can't be another entry with this BSSID, so we can exit the loop
+        break;
     }
 
     // If the AP isn't in the list of found APs, add it.
@@ -619,19 +644,30 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         int i = free_slot;
         if (Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
         {
+            // Save the BSSID and MAC address
             Wifi_CopyMacAddr(WifiData->aplist[i].bssid, data + 16);   // bssid: +16
             Wifi_CopyMacAddr(WifiData->aplist[i].macaddr, data + 10); // src: +10
+
+            // Set the counter to 0 to mark the AP as just updated
             WifiData->aplist[i].timectr = 0;
+
             WifiData->aplist[i].flags   = WFLAG_APDATA_ACTIVE
                                         | (wepmode ? WFLAG_APDATA_WEP : 0)
                                         | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
+
             if (compatible == 1)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_COMPATIBLE;
             if (compatible == 2)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_EXTCOMPATIBLE;
+
             if (wpamode == 1)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
+
+            // Save the mas rate as well as the rates array in the IEEE format
             WifiData->aplist[i].maxrate = maxrate;
+
+            for (int j = 0; j < 16; j++)
+                WifiData->aplist[i].base_rates[j] = rateset[j];
 
             if (ptr_ssid)
             {
@@ -650,6 +686,8 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 WifiData->aplist[i].ssid[0]  = 0;
                 WifiData->aplist[i].ssid_len = 0;
             }
+
+            WifiData->aplist[i].channel = channel;
 
             if (WifiData->curChannel == channel)
             {
@@ -677,10 +715,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 WifiData->aplist[i].rssi_past[6] = 0;
                 WifiData->aplist[i].rssi_past[7] = 0;
             }
-
-            WifiData->aplist[i].channel = channel;
-            for (int j = 0; j < 16; j++)
-                WifiData->aplist[i].base_rates[j] = rateset[j];
 
             Spinlock_Release(WifiData->aplist[i]);
         }
