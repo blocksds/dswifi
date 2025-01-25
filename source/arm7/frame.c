@@ -240,6 +240,10 @@ int Wifi_SendAssocPacket(void)
             WifiData->baserates7[j] &= ~RATE_MANDATORY;
     }
 
+    // The maximum number of rates we can send is 8
+    if (numrates > 8)
+        numrates = 8;
+
     body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
     body[body_size++] = numrates; // Number of rates
     for (int j = 0; j < numrates; j++)
