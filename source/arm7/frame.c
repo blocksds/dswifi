@@ -87,7 +87,7 @@ int Wifi_SendOpenSystemAuthPacket(void)
     u16 *tx_header = (u16 *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
-    body[0] = 0; // Authentication algorithm number (0=open system)
+    body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
     body[1] = 1; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
@@ -113,7 +113,7 @@ int Wifi_SendSharedKeyAuthPacket(void)
     u16 *tx_header = (u16 *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
-    body[0] = 1; // Authentication algorithm number (1=shared key)
+    body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
     body[1] = 1; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
@@ -139,7 +139,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     u16 *tx_header = (u16 *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
-    body[0] = 1; // Authentication algorithm number (1=shared key)
+    body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
     body[1] = 3; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
@@ -174,41 +174,58 @@ int Wifi_SendAssocPacket(void)
 
     size_t body_size = 0;
 
+    // Fixed-length fields
+    // -------------------
+
     if (WifiData->wepmode7)
-        ((u16 *)body)[0] = 0x0031; // CAPS info
+        ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
     else
-        ((u16 *)body)[0] = 0x0021; // CAPS info
+        ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info
 
     ((u16 *)body)[1] = W_LISTENINT; // Listen interval
 
     body_size += 4;
 
-    body[body_size++] = 0; // SSID element
-    body[body_size++] = WifiData->ssid7[0];
-    for (int j = 0; j < WifiData->ssid7[0]; j++)
+    // Management Frame Information Elements
+    // -------------------------------------
+
+    // SSID
+
+    body[body_size++] = MGT_FIE_ID_SSID; // Element ID: Service Set Identity (SSID)
+    body[body_size++] = WifiData->ssid7[0]; // SSID length
+    for (int j = 0; j < WifiData->ssid7[0]; j++) // 0 to 32 bytes: SSID
         body[body_size++] = WifiData->ssid7[1 + j];
 
-    // Base rate handling
+    // Supported rates
 
+    int numrates;
+
+    // We need to make sure that the rates that are supported by the DS are in
+    // the array, and they are the first two entries. 1 Mb/s is mandatory, and 2
+    // Mb/s is optional.
     {
-        if ((WifiData->baserates7[0] & 0x7f) != 2)
+        // If the first entry isn't 1 Mb/s, move up one slot all of the rates
+        // and add it to the first slot.
+        if ((WifiData->baserates7[0] & RATE_SPEED_MASK) != RATE_1_MBPS)
         {
             for (int j = 1; j < 16; j++)
                 WifiData->baserates7[j] = WifiData->baserates7[j - 1];
         }
-        WifiData->baserates7[0] = 0x82;
-        if ((WifiData->baserates7[1] & 0x7f) != 4)
+        WifiData->baserates7[0] = RATE_1_MBPS | RATE_MANDATORY;
+
+        // If the second entry isn't 2 Mb/s, move up one slot all of the other
+        // rates and insert 2 Mb/s to the second slot.
+        if ((WifiData->baserates7[1] & RATE_SPEED_MASK) != RATE_2_MBPS)
         {
             for (int j = 2; j < 16; j++)
                 WifiData->baserates7[j] = WifiData->baserates7[j - 1];
         }
-        WifiData->baserates7[1] = 0x04;
+        WifiData->baserates7[1] = RATE_2_MBPS | RATE_OPTIONAL;
+
+        // Make sure that we terminate the array
         WifiData->baserates7[15] = 0;
-    }
 
-    int numrates;
-
-    {
+        // Count the final number of entries in our array
         int r;
         for (r = 0; r < 16; r++)
         {
@@ -216,14 +233,19 @@ int Wifi_SendAssocPacket(void)
                 break;
         }
         numrates = r;
+
+        // Remove the RATE_MANDATORY bit from all the entries that aren't the
+        // first two entries.
         for (int j = 2; j < numrates; j++)
-            WifiData->baserates7[j] &= 0x7F;
+            WifiData->baserates7[j] &= ~RATE_MANDATORY;
     }
 
-    body[body_size++] = 1; // rate set
-    body[body_size++] = numrates;
+    body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+    body[body_size++] = numrates; // Number of rates
     for (int j = 0; j < numrates; j++)
         body[body_size++] = WifiData->baserates7[j];
+
+    // Done
 
     tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
     tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
@@ -654,7 +676,7 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
         return;
 
-    WLOG_PUTS("W: [R] AssocResponse\n");
+    WLOG_PUTS("W: [R] Assoc Response\n");
 
     if (((u16 *)(data + 24))[1] == 0)
     {
@@ -667,7 +689,7 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
         for (int i = 0; i < ((u8 *)(data + 24))[7]; i++)
         {
-            if ((((u8 *)(data + 24))[8 + i] == 0x84) || (((u8 *)(data + 24))[8 + i] == 0x04))
+            if ((((u8 *)(data + 24))[8 + i] & RATE_SPEED_MASK) == RATE_2_MBPS)
                 WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
         }
 
@@ -714,15 +736,15 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_PUTS("W: [R] Authentication\n");
 
-    if (((u16 *)(data + 24))[0] == 0)
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+
+    if (body[0] == AUTH_ALGO_OPEN_SYSTEM)
     {
         WLOG_PUTS("W: Open auth\n");
 
-        // open system auth
-        if (((u16 *)(data + 24))[1] == 2)
+        if (body[1] == 2) // seq 2, should be final sequence
         {
-            // seq 2, should be final sequence
-            if (((u16 *)(data + 24))[2] == 0)
+            if (body[2] == 0)
             {
                 // status code: successful
                 if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
@@ -741,38 +763,33 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             }
         }
     }
-    else if (((u16 *)(data + 24))[0] == 1)
+    else if (body[0] == AUTH_ALGO_SHARED_KEY)
     {
         WLOG_PUTS("W: Shared key auth\n");
 
-        // shared key auth
-        if (((u16 *)(data + 24))[1] == 2)
+        if (body[1] == 2) // seq 2, challenge text
         {
-            // seq 2, challenge text
-            if (((u16 *)(data + 24))[2] == 0)
+            if (body[2] == 0) // Success
             {
-                // status code: successful
                 // scrape challenge text and send challenge reply
-                if (data[24 + 6] == 0x10)
+                // 16 = challenge text - this value must be 0x10 or else!
+                if (data[HDR_MGT_MAC_SIZE + 6] == 0x10)
                 {
-                    // 16 = challenge text - this value must be 0x10 or else!
-                    Wifi_SendSharedKeyAuthPacket2(data[24 + 7], data + 24 + 8);
+                    Wifi_SendSharedKeyAuthPacket2(data[HDR_MGT_MAC_SIZE + 7],
+                                                  data + HDR_MGT_MAC_SIZE + 8);
                     WLOG_PUTS("W: Send challenge\n");
                 }
             }
-            else
+            else // Rejection
             {
-                // rejected, just give up.
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
                 WLOG_PUTS("W: Rejected\n");
             }
         }
-        else if (((u16 *)(data + 24))[1] == 4)
+        else if (body[1] == 4) // seq 4, accept/deny
         {
-            // seq 4, accept/deny
-            if (((u16 *)(data + 24))[2] == 0)
+            if (body[2] == 0) // Success
             {
-                // status code: successful
                 if (WifiData->authlevel == WIFI_AUTHLEVEL_DISCONNECTED)
                 {
                     WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
@@ -781,9 +798,8 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                     WLOG_PUTS("W: Authenticated\n");
                 }
             }
-            else
+            else // Rejection
             {
-                // status code: rejected. Cry in the corner.
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
                 WLOG_PUTS("W: Rejected\n");
             }

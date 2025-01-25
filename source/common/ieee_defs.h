@@ -108,4 +108,42 @@
 #define TYPE_QOS_CF_POLL                FORM_DATA(0xE)
 #define TYPE_QOS_CF_POLL_CF_ACK         FORM_DATA(0xF)
 
+// Frame fields
+// ------------
+
+// Authentication types
+
+#define AUTH_ALGO_OPEN_SYSTEM           0
+#define AUTH_ALGO_SHARED_KEY            1
+
+// Management frame information element IDs
+
+#define MGT_FIE_ID_SSID                 0
+#define MGT_FIE_ID_SUPPORTED_RATES      1
+
+// Capability information
+
+#define CAPS_ESS                    BIT(0)
+#define CAPS_IBSS                   BIT(1)
+#define CAPS_CF_POLLABLE            BIT(2)
+#define CAPS_CF_POLL_REQUEST        BIT(3)
+#define CAPS_PRIVACY                BIT(4)
+#define CAPS_SHORT_PREAMBLE         BIT(5)
+#define CAPS_PBCC                   BIT(6)
+#define CAPS_CHANNEL_AGILITY        BIT(7)
+
+// Supported rates
+
+#define RATE_MANDATORY  BIT(7)
+#define RATE_OPTIONAL   0
+
+#define RATE_SPEED_MASK 0x7F
+
+#define RATE_0_5_MBPS   1
+#define RATE_1_MBPS     2
+#define RATE_1_5_MBPS   3
+#define RATE_2_MBPS     4
+#define RATE_2_5_MBPS   5
+// And so on...
+
 #endif // DSWIFI_IEEE_DEFS_H__
