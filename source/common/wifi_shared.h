@@ -197,7 +197,7 @@ typedef struct WIFI_RXHEADER
 
 typedef struct WIFI_ACCESSPOINT
 {
-    char ssid[33]; // 0-32byte data, zero
+    char ssid[33]; // 0-32 character long string + nul character
     char ssid_len;
     u8 bssid[6];
     u8 macaddr[6];
