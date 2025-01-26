@@ -843,15 +843,18 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                 {
                     WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
                     WifiData->authctr   = 0;
-                    Wifi_SendAssocPacket();
+
                     WLOG_PUTS("W: Authenticated\n");
+
+                    Wifi_SendAssocPacket();
                 }
             }
             else
             {
+                WLOG_PUTS("W: Rejected\n");
+
                 // status code: rejected, try something else
                 Wifi_SendSharedKeyAuthPacket();
-                WLOG_PUTS("W: Rejected\n");
             }
         }
     }
@@ -867,9 +870,10 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                 // 16 = challenge text - this value must be 0x10 or else!
                 if (data[HDR_MGT_MAC_SIZE + 6] == 0x10)
                 {
+                    WLOG_PUTS("W: Send challenge\n");
+
                     Wifi_SendSharedKeyAuthPacket2(data[HDR_MGT_MAC_SIZE + 7],
                                                   data + HDR_MGT_MAC_SIZE + 8);
-                    WLOG_PUTS("W: Send challenge\n");
                 }
             }
             else // Rejection
@@ -886,8 +890,10 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                 {
                     WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
                     WifiData->authctr   = 0;
-                    Wifi_SendAssocPacket();
+
                     WLOG_PUTS("W: Authenticated\n");
+
+                    Wifi_SendAssocPacket();
                 }
             }
             else // Rejection
