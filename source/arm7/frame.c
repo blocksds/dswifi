@@ -159,12 +159,17 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
-// This function gets information from the IPC struct
+// This function can send an association request frame with the real data rates
+// supported by the NDS (802.11 standard), or with the complete 802.11b rate
+// set, even if it isn't fully supported by the NDS. This may be required as
+// most APs reject connections with just the 802.11 rate set.
+//
+// Note: This function gets information from the IPC struct.
 int Wifi_SendAssocPacket(void)
 {
     u16 frame_control = TYPE_ASSOC_REQUEST;
 
-    WLOG_PUTS("W: [S] Assoc Request\n");
+    WLOG_PRINTF("W: [S] Assoc Request (%s)\n", WifiData->realRates ? "Real" : "Fake");
 
     u8 data[96];
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
@@ -198,56 +203,32 @@ int Wifi_SendAssocPacket(void)
 
     // Supported rates
 
-    int numrates;
-
-    // We need to make sure that the rates that are supported by the DS are in
-    // the array, and they are the first two entries. 1 Mb/s is mandatory, and 2
-    // Mb/s is optional.
+    if (WifiData->realRates)
     {
-        // If the first entry isn't 1 Mb/s, move up one slot all of the rates
-        // and add it to the first slot.
-        if ((WifiData->baserates7[0] & RATE_SPEED_MASK) != RATE_1_MBPS)
-        {
-            for (int j = 1; j < 16; j++)
-                WifiData->baserates7[j] = WifiData->baserates7[j - 1];
-        }
-        WifiData->baserates7[0] = RATE_1_MBPS | RATE_MANDATORY;
-
-        // If the second entry isn't 2 Mb/s, move up one slot all of the other
-        // rates and insert 2 Mb/s to the second slot.
-        if ((WifiData->baserates7[1] & RATE_SPEED_MASK) != RATE_2_MBPS)
-        {
-            for (int j = 2; j < 16; j++)
-                WifiData->baserates7[j] = WifiData->baserates7[j - 1];
-        }
-        WifiData->baserates7[1] = RATE_2_MBPS | RATE_OPTIONAL;
-
-        // Make sure that we terminate the array
-        WifiData->baserates7[15] = 0;
-
-        // Count the final number of entries in our array
-        int r;
-        for (r = 0; r < 16; r++)
-        {
-            if (WifiData->baserates7[r] == 0)
-                break;
-        }
-        numrates = r;
-
-        // Remove the RATE_MANDATORY bit from all the entries that aren't the
-        // first two entries.
-        for (int j = 2; j < numrates; j++)
-            WifiData->baserates7[j] &= ~RATE_MANDATORY;
+        // Try with the real rates supported by the NDS. They are the two values
+        // defined in the first 802.11 standard.
+        body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+        body[body_size++] = 2; // Number of rates
+        body[body_size++] = RATE_1_MBPS | RATE_MANDATORY;
+        body[body_size++] = RATE_2_MBPS | RATE_OPTIONAL;
     }
-
-    // The maximum number of rates we can send is 8
-    if (numrates > 8)
-        numrates = 8;
-
-    body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
-    body[body_size++] = numrates; // Number of rates
-    for (int j = 0; j < numrates; j++)
-        body[body_size++] = WifiData->baserates7[j];
+    else
+    {
+        // The DS isn't actually compliant with IEEE 802.11b because it only
+        // supports 1 and 2 Mbit/s. However, APs don't like it when you only
+        // support those two, they tend to only support 802.11b at the minimum,
+        // we get rejected right away.
+        //
+        // The idea is to lie about the rates that we support to pretend that we
+        // are compliant with the 802.11b standard and hope that the AP replies
+        // using with the rate we set as mandatory (1 Mbit/s).
+        body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+        body[body_size++] = 4; // Number of rates
+        body[body_size++] = RATE_1_MBPS | RATE_MANDATORY;
+        body[body_size++] = RATE_2_MBPS | RATE_OPTIONAL;
+        body[body_size++] = RATE_5_5_MBPS | RATE_OPTIONAL;
+        body[body_size++] = RATE_11_MBPS | RATE_OPTIONAL;
+    }
 
     // Done
 
@@ -342,9 +323,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Information about the data rates
-    u16 maxrate = 0;
-    u8 rateset[16];
-    rateset[0] = 0;
     u16 compatible = 1; // Assume that the AP is compatible
 
     bool wepmode = false;
@@ -378,26 +356,11 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                 ptr_ssid = curloc - 2;
                 break;
 
-            case MGT_FIE_ID_SUPPORTED_RATES: // rate set (make sure we're compatible)
+            case MGT_FIE_ID_SUPPORTED_RATES: // Rate set
             {
                 compatible = 0;
-                maxrate    = 0;
 
-                int curr_rate = 0;
-
-                // Add mandatory rates to the "rateset" array right away, but
-                // only keep track of the max rate for the optional ones.
-                for (unsigned int i = 0; i < seglen; i++)
-                {
-                    if ((data[curloc + i] & RATE_SPEED_MASK) > maxrate)
-                        maxrate = data[curloc + i] & RATE_SPEED_MASK;
-
-                    if ((curr_rate < 15) && (data[curloc + i] & RATE_MANDATORY))
-                        rateset[curr_rate++] = data[curloc + i];
-                }
-
-                // Re-read the list of rates and look for some specific
-                // frequencies
+                // Read the list of rates and look for some specific frequencies
                 for (unsigned int i = 0; i < seglen; i++)
                 {
                     u8 thisrate = data[curloc + i];
@@ -405,17 +368,17 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                     if ((thisrate == (RATE_MANDATORY | RATE_1_MBPS)) ||
                         (thisrate == (RATE_MANDATORY | RATE_2_MBPS)))
                     {
-                        // 1-2 Mbit: Fully compatible
+                        // 1, 2 Mbit: Fully compatible
                         compatible = 1;
                     }
                     else if ((thisrate == (RATE_MANDATORY | RATE_5_5_MBPS)) ||
                              (thisrate == (RATE_MANDATORY | RATE_11_MBPS)))
                     {
-                        // 5.5, 11mbit, have to fake our way in.
+                        // 5.5, 11 Mbit: This will be present in an AP
+                        // compatible with the 802.11b standard. We can still
+                        // try to connect to this AP, but we need to be lucky
+                        // and hope that the AP uses the NDS rates.
                         compatible = 2;
-                        // TODO: This isn't actually supported. Eventually this
-                        // sets WFLAG_APDATA_EXTCOMPATIBLE in the AP information
-                        // struct, but it isn't used anywhere.
                     }
                     else if (thisrate & RATE_MANDATORY)
                     {
@@ -423,7 +386,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
                         break;
                     }
                 }
-                rateset[curr_rate] = 0; // Finish array with a 0
                 break;
             }
 
@@ -581,12 +543,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         if (wpamode)
             WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
 
-        // Save the mas rate as well as the rates array in the IEEE format
-        WifiData->aplist[i].maxrate = maxrate;
-
-        for (int j = 0; j < 16; j++)
-            WifiData->aplist[i].base_rates[j] = rateset[j];
-
         // src: +10
         Wifi_CopyMacAddr(WifiData->aplist[i].macaddr, data + 10);
 
@@ -685,12 +641,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
             if (wpamode)
                 WifiData->aplist[i].flags |= WFLAG_APDATA_WPA;
-
-            // Save the mas rate as well as the rates array in the IEEE format
-            WifiData->aplist[i].maxrate = maxrate;
-
-            for (int j = 0; j < 16; j++)
-                WifiData->aplist[i].base_rates[j] = rateset[j];
 
             if (ptr_ssid)
             {
@@ -802,8 +752,25 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     {
         // Status code = failure!
 
-        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
         WLOG_PRINTF("W: Failed: %u\n", status_code);
+
+        // Error 18 is expected, and it means that the mobile station (the NDS)
+        // doesn't support all the data rates required by the BSS (Basic Service
+        // Set). For that reason, let's retry from the start pretending that we
+        // support all 802.11b rates, and hope the router uses one of the rates
+        // supported by the NDS.
+
+        if (WifiData->realRates)
+        {
+            WifiData->realRates = false;
+
+            WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+            Wifi_SendOpenSystemAuthPacket();
+        }
+        else
+        {
+            WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+        }
     }
 
     WLOG_FLUSH();

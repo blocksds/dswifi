@@ -143,6 +143,8 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
         }
     }
 
+    WifiData->realRates = true;
+
     i = Wifi_FindMatchingAP(1, apdata, &ap);
     if (i == 0)
     {
@@ -154,8 +156,6 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
             WifiData->ssid9[i + 1] = ap.ssid[i];
         }
         WifiData->apchannel9 = ap.channel;
-        for (i = 0; i < 16; i++)
-            WifiData->baserates9[i] = ap.base_rates[i];
         WifiData->reqMode = WIFIMODE_NORMAL;
         WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
         wifi_connect_state = 1;
@@ -240,8 +240,6 @@ int Wifi_AssocStatus(void)
                         WifiData->ssid9[i + 1] = ap.ssid[i];
                     }
                     WifiData->apchannel9 = ap.channel;
-                    for (i = 0; i < 16; i++)
-                        WifiData->baserates9[i] = ap.base_rates[i];
                     WifiData->reqMode = WIFIMODE_NORMAL;
                     WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
                     wifi_connect_state = 1;
@@ -373,8 +371,6 @@ int Wifi_AssocStatus(void)
                         WifiData->ssid9[i + 1] = ap.ssid[i];
                     }
                     WifiData->apchannel9 = ap.channel;
-                    for (i = 0; i < 16; i++)
-                        WifiData->baserates9[i] = ap.base_rates[i];
                     WifiData->reqMode = WIFIMODE_NORMAL;
                     WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
                     wifi_connect_state = 1;

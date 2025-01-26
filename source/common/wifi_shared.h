@@ -201,15 +201,12 @@ typedef struct WIFI_ACCESSPOINT
     char ssid_len;
     u8 bssid[6];
     u8 macaddr[6];
-    u16 maxrate; // max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented as 11, or
-                 // 0x0B
     u32 timectr;
     u16 rssi;
     u16 flags;
     u32 spinlock;
     u8 channel;
     u8 rssi_past[8];
-    u8 base_rates[16]; // terminated by a 0 entry
 } Wifi_AccessPoint;
 
 typedef struct WIFI_MAINSTRUCT
@@ -235,9 +232,9 @@ typedef struct WIFI_MAINSTRUCT
     char wepmode7, wepmode9;
     char wepkeyid7, wepkeyid9;
     u8 wepkey7[20], wepkey9[20];
-    u8 baserates7[16], baserates9[16];
     u8 apchannel7, apchannel9;
     u8 maxrate7;
+    bool realRates;
     u16 ap_rssi;
     u16 pspoll_period;
 

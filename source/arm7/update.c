@@ -114,8 +114,6 @@ void Wifi_Update(void)
                         WifiData->wepkey7[i] = WifiData->wepkey9[i];
                     for (int i = 0; i < 34; i++)
                         WifiData->ssid7[i] = WifiData->ssid9[i];
-                    for (int i = 0; i < 16; i++)
-                        WifiData->baserates7[i] = WifiData->baserates9[i];
                     if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
                         WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
                     else
