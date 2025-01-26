@@ -21,6 +21,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text);
 int Wifi_SendAssocPacket(void);
 int Wifi_SendNullFrame(void);
 int Wifi_SendPSPollFrame(void);
+
 int Wifi_ProcessReceivedFrame(int macbase, int framelen);
 
 #ifdef __cplusplus

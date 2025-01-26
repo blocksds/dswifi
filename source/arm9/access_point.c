@@ -150,11 +150,11 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     {
         Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
         Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+
         WifiData->ssid9[0] = ap.ssid_len;
         for (i = 0; i < 32; i++)
-        {
             WifiData->ssid9[i + 1] = ap.ssid[i];
-        }
+
         WifiData->apchannel9 = ap.channel;
         WifiData->reqMode = WIFIMODE_NORMAL;
         WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
@@ -234,11 +234,11 @@ int Wifi_AssocStatus(void)
                 {
                     Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
                     Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+
                     WifiData->ssid9[0] = ap.ssid_len;
                     for (i = 0; i < 32; i++)
-                    {
                         WifiData->ssid9[i + 1] = ap.ssid[i];
-                    }
+
                     WifiData->apchannel9 = ap.channel;
                     WifiData->reqMode = WIFIMODE_NORMAL;
                     WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
@@ -330,7 +330,7 @@ int Wifi_AssocStatus(void)
                 }
             }
 #else
-                // should never get here (dhcp state) without sgIP!
+            // should never get here (dhcp state) without sgIP!
             Wifi_DisconnectAP();
             wifi_connect_state = -1;
             return ASSOCSTATUS_CANNOTCONNECT;
@@ -344,8 +344,10 @@ int Wifi_AssocStatus(void)
             {
                 int n, i;
                 for (n = 0; n < 3; n++)
+                {
                     if (!(WifiData->wfc_enable[n] & 0x80))
                         break;
+                }
                 Wifi_AccessPoint ap;
                 n = Wifi_FindMatchingAP(n, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
                 if (n != -1)
@@ -359,17 +361,15 @@ int Wifi_AssocStatus(void)
                     WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                     WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
                     for (i = 0; i < 16; i++)
-                    {
                         WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
-                    }
 
                     Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
                     Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+
                     WifiData->ssid9[0] = ap.ssid_len;
                     for (i = 0; i < 32; i++)
-                    {
                         WifiData->ssid9[i + 1] = ap.ssid[i];
-                    }
+
                     WifiData->apchannel9 = ap.channel;
                     WifiData->reqMode = WIFIMODE_NORMAL;
                     WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;

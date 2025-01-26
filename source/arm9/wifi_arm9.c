@@ -172,7 +172,6 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     int base, framelen, hdrlen, writelen;
     int copytotal, copyexpect;
     u16 framehdr[6 + 12 + 2];
-    sgIP_memblock *t;
     framelen = mb->totallength - 14 + 8 + (WifiData->wepmode7 ? 4 : 0);
 
     if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
@@ -247,7 +246,10 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
-    t        = mb;
+    // Save the pointer to the initial block in the list so that we can free it
+    // later.
+    sgIP_memblock *t = mb;
+
     writelen = (mb->thislength - 14);
     if (writelen)
     {
@@ -259,7 +261,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     }
     while (mb->next)
     {
-        mb       = mb->next;
+        mb = mb->next;
+
         writelen = mb->thislength;
         Wifi_TxBufferWrite(base * 2, writelen, (u16 *)mb->datastart);
         base += (writelen + 1) / 2;
@@ -268,7 +271,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
     if (WifiData->wepmode7)
-    { // add required extra bytes
+    {
+        // Add required extra bytes for WEP
         base += 2;
         copytotal += 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
@@ -429,12 +433,12 @@ void Wifi_Update(void)
     }
     if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED && WifiData->flags9 & WFLAG_ARM9_NETUP)
     {
-        WifiData->flags9 &= ~(WFLAG_ARM9_NETUP);
+        WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
     }
     else if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED
              && !(WifiData->flags9 & WFLAG_ARM9_NETUP))
     {
-        WifiData->flags9 |= (WFLAG_ARM9_NETUP);
+        WifiData->flags9 |= WFLAG_ARM9_NETUP;
     }
 
 #endif
