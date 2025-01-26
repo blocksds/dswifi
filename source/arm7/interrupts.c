@@ -91,13 +91,15 @@ void Wifi_Interrupt(void)
         }
         if (wIF & IRQ_RX_EVENT_HALF_OVERFLOW) // Count Overflow
         {
-            W_IF = IRQ_RX_EVENT_HALF_OVERFLOW;
             Wifi_Intr_CntOverflow();
+            // Acknowledge interrupt after reading counters
+            W_IF = IRQ_RX_EVENT_HALF_OVERFLOW;
         }
         if (wIF & IRQ_TX_ERROR_HALF_OVERFLOW) // ACK count overflow
         {
-            W_IF = IRQ_TX_ERROR_HALF_OVERFLOW;
             Wifi_Intr_CntOverflow();
+            // Acknowledge interrupt after reading counters
+            W_IF = IRQ_TX_ERROR_HALF_OVERFLOW;
         }
         if (wIF & IRQ_RX_START)
         {
