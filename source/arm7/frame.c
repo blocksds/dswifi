@@ -242,8 +242,8 @@ int Wifi_SendAssocPacket(void)
 
 int Wifi_SendNullFrame(void)
 {
-    // We can't use Wifi_GenMgtHeader(): Null frames don't include the BSSID,
-    // and Wifi_GenMgtHeader() always includes it.
+    // We can't use Wifi_GenMgtHeader() because Null frames are data frames, not
+    // management frames.
 
     WLOG_PUTS("W: [S] Null\n");
 
@@ -266,7 +266,7 @@ int Wifi_SendNullFrame(void)
     // ------------------
 
     // "Functions of address fields in data frames"
-    // ToDS=1, FromDS=0 -> Addr1=BSSID, Addr2=SA, Addr3=DA
+    // With ToDS=1, FromDS=0: Addr1=BSSID, Addr2=SA, Addr3=DA
 
     ieee_header[HDR_DATA_FRAME_CONTROL / 2] = frame_control;
     ieee_header[HDR_DATA_DURATION / 2] = 0;
