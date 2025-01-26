@@ -664,6 +664,9 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         int i = free_slot;
         if (Spinlock_Acquire(WifiData->aplist[i]) == SPINLOCK_OK)
         {
+            // Ensure that we don't leave any data uninitialized
+            memset((void *)&(WifiData->aplist[i]), 0, sizeof(WifiData->aplist[i]));
+
             // Save the BSSID and MAC address
             Wifi_CopyMacAddr(WifiData->aplist[i].bssid, data + 16);   // bssid: +16
             Wifi_CopyMacAddr(WifiData->aplist[i].macaddr, data + 10); // src: +10
