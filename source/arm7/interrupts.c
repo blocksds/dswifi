@@ -49,11 +49,13 @@ void Wifi_Interrupt(void)
     if (!WifiData)
     {
         W_IF = W_IF;
+        REG_IF = IRQ_WIFI;
         return;
     }
     if (!(WifiData->flags7 & WFLAG_ARM7_RUNNING))
     {
         W_IF = W_IF;
+        REG_IF = IRQ_WIFI;
         return;
     }
 
