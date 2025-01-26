@@ -31,7 +31,7 @@ uint32_t Wifi_FlashReadBytes(uint32_t address, size_t numbytes)
 {
     uint32_t dataout = 0;
 
-    for (int i = 0; i < numbytes; i++)
+    for (unsigned int i = 0; i < numbytes; i++)
         dataout |= Wifi_FlashReadByte(i + address) << (i * 8);
 
     return dataout;
@@ -83,7 +83,7 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
         // Skip AP entries that are completely zeroed
         // TODO: Replace this by checking AP_CONNECTION_SETUP
         bool entry_is_zeroed = true;
-        for (int j = 0; j < sizeof(ap_data); j++)
+        for (unsigned int j = 0; j < sizeof(ap_data); j++)
         {
             if (ap_data[j] != 0)
             {
