@@ -770,7 +770,9 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_PUTS("W: [R] Assoc Response\n");
 
-    if (((u16 *)(data + 24))[1] == 0)
+    u16 status_code = ((u16 *)(data + 24))[1];
+
+    if (status_code == 0)
     {
         // Status code, 0==success
 
@@ -801,7 +803,7 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         // Status code = failure!
 
         WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-        WLOG_PUTS("W: Failed\n");
+        WLOG_PRINTF("W: Failed: %u\n", status_code);
     }
 
     WLOG_FLUSH();
