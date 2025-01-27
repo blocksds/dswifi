@@ -533,7 +533,7 @@ void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
 #define WFC_CONNECT true
-/// Initi library only, don't try to connect to AP. Used by Wifi_InitDefault().
+/// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
 #define INIT_ONLY false
 
 /// Initializes WiFi library.
