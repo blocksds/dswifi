@@ -242,16 +242,12 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     tx->tx_length = framelen + hdrlen - HDR_TX_SIZE + 4; // Checksum
 
-    int copyexpect = (framelen + hdrlen + 1) & ~1; // Round up
-    int copytotal  = 0;
-
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen;
 
     int base = WifiData->txbufOut;
     Wifi_TxBufferWrite(base * 2, hdrlen, framehdr);
     base += hdrlen / 2;
-    copytotal += hdrlen;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -266,7 +262,6 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     Wifi_TxBufferWrite(base * 2, 8, framehdr);
     base += 8 / 2;
-    copytotal += 8;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -282,7 +277,6 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     {
         Wifi_TxBufferWrite(base * 2, writelen, ((u16 *)mb->datastart) + 7);
         base += (writelen + 1) / 2;
-        copytotal += (writelen + 1) & ~1;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
@@ -294,7 +288,6 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         writelen = mb->thislength;
         Wifi_TxBufferWrite(base * 2, writelen, (u16 *)mb->datastart);
         base += (writelen + 1) / 2;
-        copytotal += (writelen + 1) & ~1;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
@@ -305,18 +298,13 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         // allocate 4 bytes in the TX buffer. However, don't write anything. It
         // just has to be left empty for the hardware to fill it.
         base += 4 / 2;
-        copytotal += 4;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
+
     WifiData->txbufOut = base; // update fifo out pos, done sending packet.
 
     sgIP_memblock_free(t); // free packet, as we're the last stop on this chain.
-
-    if (copytotal != copyexpect)
-    {
-        SGIP_DEBUG_MESSAGE(("Tx exp:%i que:%i", copyexpect, copytotal));
-    }
 
     Wifi_CallSyncHandler();
 
