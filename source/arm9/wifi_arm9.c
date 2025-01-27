@@ -165,14 +165,16 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
     (void)hw;
 
-    // convert ethernet frame into wireless frame and output.
-    // ethernet header: 6byte dest, 6byte src, 2byte protocol_id
-    // assumes individual pbuf len is >=14 bytes, it's pretty likely ;) - also hopes pbuf len is a
-    // multiple of 2 :|
-    int base, framelen, hdrlen, writelen;
-    int copytotal, copyexpect;
+    // Convert ethernet frame into wireless frame and transmit it.
+    //
+    // Ethernet header: 6 byte dest, 6 byte src, 2 byte protocol ID
+    //
+    // This function assumes individual pbuf len is >=14 bytes, it's pretty
+    // likely ;) - also hopes pbuf len is a multiple of 2 :|
+
     u16 framehdr[6 + 12 + 2];
-    framelen = mb->totallength - 14 + 8 + (WifiData->wepmode7 ? 4 : 0);
+    int framelen = mb->totallength - 14 + 8
+                 + (WifiData->wepmode7 ? 4 : 0); // WEP IV
 
     if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
     {
@@ -189,56 +191,78 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     }
 
     ethhdr_print('T', mb->datastart);
-    framehdr[0] = 0;
-    framehdr[1] = 0;
-    framehdr[2] = 0;
-    framehdr[3] = 0;
-    framehdr[4] = 0; // rate, will be filled in by the arm7.
-    hdrlen      = 18;
-    framehdr[7] = 0;
+
+    // Copy hardware TX and IEEE headers
+    // =================================
+
+    Wifi_TxHeader *tx = (void *)framehdr;
+    IEEE_DataFrameHeader *ieee = (void *)(((u8 *)framehdr) + sizeof(Wifi_TxHeader));
+
+    // Hardware TX header
+    // ------------------
+
+    // Let the ARM7 fill in the data transfer rate. We will only fill the IEEE
+    // frame length later.
+    memset(tx, 0, sizeof(Wifi_TxHeader));
+
+    // IEEE 802.11 header
+    // ------------------
+
+    int hdrlen  = (sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader)) / 2; // Halfwords
 
     if (WifiData->curReqFlags & WFLAG_REQ_APADHOC) // adhoc mode
     {
-        framehdr[6] = 0x0008;
-        Wifi_CopyMacAddr(framehdr + 14, WifiData->bssid7);
-        Wifi_CopyMacAddr(framehdr + 11, WifiData->MacAddr);
-        Wifi_CopyMacAddr(framehdr + 8, ((u8 *)mb->datastart));
+        ieee->frame_control = TYPE_DATA;
+        ieee->duration = 0;
+        Wifi_CopyMacAddr(ieee->addr_1, ((u8 *)mb->datastart));
+        Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
+        Wifi_CopyMacAddr(ieee->addr_3, WifiData->bssid7);
+        ieee->seq_ctl = 0;
     }
     else
     {
-        framehdr[6] = 0x0108;
-        Wifi_CopyMacAddr(framehdr + 8, WifiData->bssid7);
-        Wifi_CopyMacAddr(framehdr + 11, WifiData->MacAddr);
-        Wifi_CopyMacAddr(framehdr + 14, ((u8 *)mb->datastart));
+        ieee->frame_control = FC_TO_DS | TYPE_DATA;
+        ieee->duration = 0;
+        Wifi_CopyMacAddr(ieee->addr_1, WifiData->bssid7);
+        Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
+        Wifi_CopyMacAddr(ieee->addr_3, ((u8 *)mb->datastart));
+        ieee->seq_ctl = 0;
     }
+
     if (WifiData->wepmode7)
     {
-        framehdr[6] |= 0x4000;
-        hdrlen = 20;
-    }
-    framehdr[17] = 0;
-    framehdr[18] = 0; // wep IV, will be filled in if needed on the arm7 side.
-    framehdr[19] = 0;
+        ieee->frame_control |= FC_PROTECTED_FRAME;
 
-    framehdr[5] = framelen + hdrlen * 2 - 12 + 4;
-    copyexpect  = ((framelen + hdrlen * 2 - 12 + 4) + 12 - 4 + 1) / 2;
-    copytotal   = 0;
+        // WEP IV, will be filled in if needed on the ARM7 side.
+        ((u16 *)ieee->body)[0] = 0;
+        ((u16 *)ieee->body)[1] = 0;
+
+        hdrlen += 4 / 2; // Halfwords
+    }
+
+    tx->tx_length = framelen + (hdrlen * 2) - HDR_TX_SIZE + 4; // Checksum
+
+    int copyexpect = (framelen + (hdrlen * 2) + 1) / 2; // Round up
+    int copytotal  = 0;
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen * 2;
 
-    base = WifiData->txbufOut;
+    int base = WifiData->txbufOut;
     Wifi_TxBufferWrite(base * 2, hdrlen * 2, framehdr);
     base += hdrlen;
     copytotal += hdrlen;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
-    // add LLC header
+    // Copy LLC header
+    // ===============
+
+    // Re-use the previous struct to generate LLC header
     framehdr[0] = 0xAAAA;
     framehdr[1] = 0x0003;
     framehdr[2] = 0x0000;
-    framehdr[3] = ((u16 *)mb->datastart)[6]; // frame type
+    framehdr[3] = ((u16 *)mb->datastart)[6]; // Frame type
 
     Wifi_TxBufferWrite(base * 2, 8, framehdr);
     base += 4;
@@ -246,11 +270,14 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
+    // Copy data
+    // =========
+
     // Save the pointer to the initial block in the list so that we can free it
     // later.
     sgIP_memblock *t = mb;
 
-    writelen = (mb->thislength - 14);
+    int writelen = (mb->thislength - 14);
     if (writelen)
     {
         Wifi_TxBufferWrite(base * 2, writelen, ((u16 *)mb->datastart) + 7);
@@ -259,6 +286,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
+
     while (mb->next)
     {
         mb = mb->next;
@@ -270,9 +298,12 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
+
     if (WifiData->wepmode7)
     {
-        // Add required extra bytes for WEP
+        // Add required extra 4 bytes for the WEP ICV to the total count, and
+        // allocate 4 bytes in the TX buffer. However, don't write anything. It
+        // just has to be left empty for the hardware to fill it.
         base += 2;
         copytotal += 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
