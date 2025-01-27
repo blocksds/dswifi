@@ -32,12 +32,13 @@ static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
     return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
 }
 
-// This returns the size in bytes of the TX and IEEE 802.11 headers combined (so
-// it returns an index in bytes to the start of the body of the frame).
+// This returns the size in bytes that have been added to the body due to WEP
+// encryption. The size of the TX and IEEE 802.11 management frame headers is
+// well-known.
 //
-// It doesn't fill the transfer rate or the size in the TX header. That must be
-// done by the caller of the function
-static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
+// It doesn't fill the transfer rate or the size in the NDS TX header. That must
+// be done by the caller of the function
+static size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 {
     Wifi_TxHeader *tx = (void *)data;
     IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
@@ -60,20 +61,18 @@ static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
     // Fill in WEP-specific stuff
     if (headerflags & FC_PROTECTED_FRAME)
     {
-        u32 *p = (u32 *)&(ieee->body[0]);
+        u32 *iv_key_id = (u32 *)&(ieee->body[0]);
 
         // TODO: This isn't done to spec
-        *p = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
-           | (WifiData->wepkeyid7 << 30);
-
-        size_t body_size = 4;
+        *iv_key_id = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
+                   | (WifiData->wepkeyid7 << 30);
 
         // The body is already 4 bytes in size
-        return sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader) + body_size;
+        return 4;
     }
     else
     {
-        return sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader);
+        return 0;
     }
 }
 
@@ -83,24 +82,27 @@ int Wifi_SendOpenSystemAuthPacket(void)
 
     WLOG_PUTS("W: [S] Auth (Open)\n");
 
-    u16 frame_control = TYPE_AUTHENTICATION;
-    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
+    size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
 
     Wifi_TxHeader *tx = (void *)data;
-    u16 *body = (u16 *)(data + hdr_size);
+    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
     body[1] = 1; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
-    size_t body_size = 6;
+    body_size += 6;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
 
     tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
+    tx->tx_length = ieee_size + 4; // Checksum
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket(void)
@@ -109,24 +111,27 @@ int Wifi_SendSharedKeyAuthPacket(void)
 
     WLOG_PUTS("W: [S] Auth (Shared Key)\n");
 
-    u16 frame_control = TYPE_AUTHENTICATION;
-    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
+    size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
 
     Wifi_TxHeader *tx = (void *)data;
-    u16 *body = (u16 *)(data + hdr_size);
+    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
     body[1] = 1; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
-    size_t body_size = 6;
+    body_size += 6;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
 
     tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
+    tx->tx_length = ieee_size + 4; // Checksum
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
@@ -136,29 +141,35 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     WLOG_PUTS("W: [S] Auth (Shared Key, 2nd)\n");
 
     u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
-    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
+    size_t body_size = Wifi_GenMgtHeader(data, frame_control);
 
     Wifi_TxHeader *tx = (void *)data;
-    u16 *body = (u16 *)(data + hdr_size);
+    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
     body[1] = 3; // Authentication sequence number
     body[2] = 0; // Authentication status code (reserved for this message, =0)
 
-    data[hdr_size + 6] = 0x10; // 16=challenge text block
-    data[hdr_size + 7] = challenge_length;
+    u8 *ch_out = (u8 *)&(body[3]);
+
+    ch_out[0] = 0x10; // 16=challenge text block
+    ch_out[1] = challenge_length;
 
     for (int j = 0; j < challenge_length; j++)
-        data[hdr_size + j + 8] = challenge_Text[j];
+        ch_out[2 + j] = challenge_Text[j];
 
-    size_t body_size = 6 + 2 + challenge_length;
+    body_size += 6 + 2 + challenge_length;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
 
     tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4 + 4;
+    tx->tx_length = ieee_size + 4 + 4; // Checksums
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
 // This function can send an association request frame with the real data rates
@@ -173,13 +184,11 @@ int Wifi_SendAssocPacket(void)
 
     WLOG_PRINTF("W: [S] Assoc Request (%s)\n", WifiData->realRates ? "Real" : "Fake");
 
-    u16 frame_control = TYPE_ASSOC_REQUEST;
-    size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
+    size_t body_size = Wifi_GenMgtHeader(data, TYPE_ASSOC_REQUEST);
 
     Wifi_TxHeader *tx = (void *)data;
-    u8 *body = (u8 *)(data + hdr_size);
-
-    size_t body_size = 0;
+    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u8 *body = (u8 *)(ieee->body + body_size);
 
     // Fixed-length fields
     // -------------------
@@ -191,6 +200,7 @@ int Wifi_SendAssocPacket(void)
 
     ((u16 *)body)[1] = W_LISTENINT; // Listen interval
 
+    body += 4;
     body_size += 4;
 
     // Management Frame Information Elements
@@ -198,10 +208,12 @@ int Wifi_SendAssocPacket(void)
 
     // SSID
 
-    body[body_size++] = MGT_FIE_ID_SSID; // Element ID: Service Set Identity (SSID)
-    body[body_size++] = WifiData->ssid7[0]; // SSID length
+    *body++ = MGT_FIE_ID_SSID; // Element ID: Service Set Identity (SSID)
+    *body++ = WifiData->ssid7[0]; // SSID length
     for (int j = 0; j < WifiData->ssid7[0]; j++) // 0 to 32 bytes: SSID
-        body[body_size++] = WifiData->ssid7[1 + j];
+        *body++ = WifiData->ssid7[1 + j];
+
+    body_size += 2 + WifiData->ssid7[0];
 
     // Supported rates
 
@@ -209,10 +221,12 @@ int Wifi_SendAssocPacket(void)
     {
         // Try with the real rates supported by the NDS. They are the two values
         // defined in the first 802.11 standard.
-        body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
-        body[body_size++] = 2; // Number of rates
-        body[body_size++] = RATE_1_MBPS | RATE_MANDATORY;
-        body[body_size++] = RATE_2_MBPS | RATE_OPTIONAL;
+        *body++ = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+        *body++ = 2; // Number of rates
+        *body++ = RATE_1_MBPS | RATE_MANDATORY;
+        *body++ = RATE_2_MBPS | RATE_OPTIONAL;
+
+        body_size += 4;
     }
     else
     {
@@ -224,22 +238,27 @@ int Wifi_SendAssocPacket(void)
         // The idea is to lie about the rates that we support to pretend that we
         // are compliant with the 802.11b standard and hope that the AP replies
         // using with the rate we set as mandatory (1 Mbit/s).
-        body[body_size++] = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
-        body[body_size++] = 4; // Number of rates
-        body[body_size++] = RATE_1_MBPS | RATE_MANDATORY;
-        body[body_size++] = RATE_2_MBPS | RATE_OPTIONAL;
-        body[body_size++] = RATE_5_5_MBPS | RATE_OPTIONAL;
-        body[body_size++] = RATE_11_MBPS | RATE_OPTIONAL;
+        *body++ = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+        *body++ = 4; // Number of rates
+        *body++ = RATE_1_MBPS | RATE_MANDATORY;
+        *body++ = RATE_2_MBPS | RATE_OPTIONAL;
+        *body++ = RATE_5_5_MBPS | RATE_OPTIONAL;
+        *body++ = RATE_11_MBPS | RATE_OPTIONAL;
+
+        body_size += 6;
     }
 
     // Done
 
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
     tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
+    tx->tx_length = ieee_size + 4; // Checksum
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
 int Wifi_SendNullFrame(void)
@@ -278,13 +297,15 @@ int Wifi_SendNullFrame(void)
     tx->countup = 0;
     tx->beaconfreq = 0;
     tx->tx_rate = WifiData->maxrate7;
-    tx->tx_length = sizeof(IEEE_DataFrameHeader) + 4;
 
-    size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
+    size_t ieee_size = sizeof(IEEE_DataFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
+    tx->tx_length = ieee_size + 4; // Checksum
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
 #if 0 // TODO: This is unused
