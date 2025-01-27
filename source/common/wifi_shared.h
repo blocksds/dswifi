@@ -182,7 +182,7 @@ typedef struct WIFI_TXHEADER
     u16 countup;
     u16 beaconfreq;
     u16 tx_rate;
-    u16 tx_length;
+    u16 tx_length; // Full IEEE frame size (including checksums) in bytes
 } Wifi_TxHeader;
 
 typedef struct WIFI_RXHEADER
@@ -194,6 +194,28 @@ typedef struct WIFI_RXHEADER
     u16 byteLength;
     u16 rssi_;
 } Wifi_RxHeader;
+
+typedef struct
+{
+    u16 frame_control;
+    u16 duration;
+    u16 da[3];
+    u16 sa[3];
+    u16 bssid[3];
+    u16 seq_ctl;
+    u16 body[0];
+} IEEE_MgtFrameHeader;
+
+typedef struct
+{
+    u16 frame_control;
+    u16 duration;
+    u16 addr_1[3];
+    u16 addr_2[3];
+    u16 addr_3[3];
+    u16 seq_ctl;
+    u16 body[0];
+} IEEE_DataFrameHeader;
 
 typedef struct WIFI_ACCESSPOINT
 {

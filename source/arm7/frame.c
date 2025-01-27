@@ -39,52 +39,54 @@ static int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
 // done by the caller of the function
 static int Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 {
-    u8 *tx_header = data;
-    u16 *ieee_header = (u16 *)(data + HDR_TX_SIZE);
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
 
     // Hardware TX header
     // ------------------
 
-    memset(tx_header, 0, HDR_TX_SIZE);
+    memset(tx, 0, sizeof(Wifi_TxHeader));
 
     // IEEE 802.11 header
     // ------------------
 
-    ieee_header[HDR_MGT_FRAME_CONTROL / 2] = headerflags;
-    ieee_header[HDR_MGT_DURATION / 2] = 0;
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_DA / 2, WifiData->apmac7);
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_SA / 2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee_header + HDR_MGT_BSSID / 2, WifiData->bssid7);
-    ieee_header[HDR_MGT_SEQ_CTL / 2] = 0;
+    ieee->frame_control = headerflags;
+    ieee->duration = 0;
+    Wifi_CopyMacAddr(ieee->da, WifiData->apmac7);
+    Wifi_CopyMacAddr(ieee->sa, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee->bssid, WifiData->bssid7);
+    ieee->seq_ctl = 0;
 
     // Fill in WEP-specific stuff
     if (headerflags & FC_PROTECTED_FRAME)
     {
-        u32 *p = (u32 *)&ieee_header[HDR_MGT_BODY / 2];
+        u32 *p = (u32 *)&(ieee->body[0]);
 
         // TODO: This isn't done to spec
         *p = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
            | (WifiData->wepkeyid7 << 30);
 
+        size_t body_size = 4;
+
         // The body is already 4 bytes in size
-        return HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 4;
+        return sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader) + body_size;
     }
     else
     {
-        return HDR_TX_SIZE + HDR_MGT_MAC_SIZE;
+        return sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader);
     }
 }
 
 int Wifi_SendOpenSystemAuthPacket(void)
 {
-    u16 frame_control = TYPE_AUTHENTICATION;
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
 
     WLOG_PUTS("W: [S] Auth (Open)\n");
 
-    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    u16 frame_control = TYPE_AUTHENTICATION;
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    u16 *tx_header = (u16 *)data;
+    Wifi_TxHeader *tx = (void *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
     body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
@@ -93,8 +95,8 @@ int Wifi_SendOpenSystemAuthPacket(void)
 
     size_t body_size = 6;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
-    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
 
     WLOG_FLUSH();
 
@@ -103,14 +105,14 @@ int Wifi_SendOpenSystemAuthPacket(void)
 
 int Wifi_SendSharedKeyAuthPacket(void)
 {
-    u16 frame_control = TYPE_AUTHENTICATION;
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
 
     WLOG_PUTS("W: [S] Auth (Shared Key)\n");
 
-    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    u16 frame_control = TYPE_AUTHENTICATION;
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    u16 *tx_header = (u16 *)data;
+    Wifi_TxHeader *tx = (void *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
@@ -119,8 +121,8 @@ int Wifi_SendSharedKeyAuthPacket(void)
 
     size_t body_size = 6;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
-    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
 
     WLOG_FLUSH();
 
@@ -129,14 +131,14 @@ int Wifi_SendSharedKeyAuthPacket(void)
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 {
-    u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
+    u8 data[320];
 
     WLOG_PUTS("W: [S] Auth (Shared Key, 2nd)\n");
 
-    u8 data[320];
+    u16 frame_control = TYPE_AUTHENTICATION | FC_PROTECTED_FRAME;
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    u16 *tx_header = (u16 *)data;
+    Wifi_TxHeader *tx = (void *)data;
     u16 *body = (u16 *)(data + hdr_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
@@ -151,8 +153,8 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 
     size_t body_size = 6 + 2 + challenge_length;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
-    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4 + 4;
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4 + 4;
 
     WLOG_FLUSH();
 
@@ -167,14 +169,14 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 // Note: This function gets information from the IPC struct.
 int Wifi_SendAssocPacket(void)
 {
-    u16 frame_control = TYPE_ASSOC_REQUEST;
+    u8 data[96];
 
     WLOG_PRINTF("W: [S] Assoc Request (%s)\n", WifiData->realRates ? "Real" : "Fake");
 
-    u8 data[96];
+    u16 frame_control = TYPE_ASSOC_REQUEST;
     size_t hdr_size = Wifi_GenMgtHeader(data, frame_control);
 
-    u16 *tx_header = (u16 *)data;
+    Wifi_TxHeader *tx = (void *)data;
     u8 *body = (u8 *)(data + hdr_size);
 
     size_t body_size = 0;
@@ -232,8 +234,8 @@ int Wifi_SendAssocPacket(void)
 
     // Done
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WIFI_TRANSFER_RATE_1MBPS;
-    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size + body_size - HDR_TX_SIZE + 4;
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = hdr_size + body_size - sizeof(Wifi_TxHeader) + 4;
 
     WLOG_FLUSH();
 
@@ -245,45 +247,44 @@ int Wifi_SendNullFrame(void)
     // We can't use Wifi_GenMgtHeader() because Null frames are data frames, not
     // management frames.
 
-    WLOG_PUTS("W: [S] Null\n");
-
-    u16 frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
-
     u8 data[50]; // Max size is 40 = 12 + 24 + 4
 
-    u16 *tx_header = (u16 *)data;
-    u16 *ieee_header = (u16 *)(data + HDR_TX_SIZE);
+    WLOG_PUTS("W: [S] Null\n");
 
-    // Hardware TX header
-    // ------------------
-
-    tx_header[HDR_TX_STATUS / 2]     = 0;
-    tx_header[HDR_TX_UNKNOWN_02 / 2] = 0;
-    tx_header[HDR_TX_UNKNOWN_04 / 2] = 0;
-    tx_header[HDR_TX_UNKNOWN_06 / 2] = 0;
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
 
     // IEEE 802.11 header
     // ------------------
 
+    u16 frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
+
     // "Functions of address fields in data frames"
     // With ToDS=1, FromDS=0: Addr1=BSSID, Addr2=SA, Addr3=DA
 
-    ieee_header[HDR_DATA_FRAME_CONTROL / 2] = frame_control;
-    ieee_header[HDR_DATA_DURATION / 2] = 0;
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_1 / 2, WifiData->bssid7);
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_2 / 2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee_header + HDR_DATA_ADDRESS_3 / 2, WifiData->apmac7);
-    ieee_header[HDR_DATA_SEQ_CTL / 2] = 0;
+    ieee->frame_control = frame_control;
+    ieee->duration = 0;
+    Wifi_CopyMacAddr(ieee->addr_1, WifiData->apmac7);
+    Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee->addr_3, WifiData->bssid7);
+    ieee->seq_ctl = 0;
 
-    size_t hdr_size = HDR_TX_SIZE + HDR_DATA_MAC_SIZE;
-    // body size = 0
+    size_t body_size = 0;
 
-    tx_header[HDR_TX_TRANSFER_RATE / 2]   = WifiData->maxrate7;
-    tx_header[HDR_TX_IEEE_FRAME_SIZE / 2] = hdr_size - HDR_TX_SIZE + 4;
+    // Hardware TX header
+    // ------------------
+
+    tx->unknown = 0;
+    tx->countup = 0;
+    tx->beaconfreq = 0;
+    tx->tx_rate = WifiData->maxrate7;
+    tx->tx_length = sizeof(IEEE_DataFrameHeader) + 4;
+
+    size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size);
+    return Wifi_TxArm7QueueAdd((u16 *)data, hdr_size + body_size);
 }
 
 #if 0 // TODO: This is unused
