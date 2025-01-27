@@ -208,7 +208,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // IEEE 802.11 header
     // ------------------
 
-    int hdrlen  = (sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader)) / 2; // Halfwords
+    int hdrlen = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
 
     if (WifiData->curReqFlags & WFLAG_REQ_APADHOC) // adhoc mode
     {
@@ -237,20 +237,20 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         ((u16 *)ieee->body)[0] = 0;
         ((u16 *)ieee->body)[1] = 0;
 
-        hdrlen += 4 / 2; // Halfwords
+        hdrlen += 4;
     }
 
-    tx->tx_length = framelen + (hdrlen * 2) - HDR_TX_SIZE + 4; // Checksum
+    tx->tx_length = framelen + hdrlen - HDR_TX_SIZE + 4; // Checksum
 
-    int copyexpect = (framelen + (hdrlen * 2) + 1) / 2; // Round up
+    int copyexpect = (framelen + hdrlen + 1) & ~1; // Round up
     int copytotal  = 0;
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen * 2;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen;
 
     int base = WifiData->txbufOut;
-    Wifi_TxBufferWrite(base * 2, hdrlen * 2, framehdr);
-    base += hdrlen;
+    Wifi_TxBufferWrite(base * 2, hdrlen, framehdr);
+    base += hdrlen / 2;
     copytotal += hdrlen;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
@@ -265,8 +265,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     framehdr[3] = ((u16 *)mb->datastart)[6]; // Frame type
 
     Wifi_TxBufferWrite(base * 2, 8, framehdr);
-    base += 4;
-    copytotal += 4;
+    base += 8 / 2;
+    copytotal += 8;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -282,7 +282,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     {
         Wifi_TxBufferWrite(base * 2, writelen, ((u16 *)mb->datastart) + 7);
         base += (writelen + 1) / 2;
-        copytotal += (writelen + 1) / 2;
+        copytotal += (writelen + 1) & ~1;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
@@ -294,7 +294,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         writelen = mb->thislength;
         Wifi_TxBufferWrite(base * 2, writelen, (u16 *)mb->datastart);
         base += (writelen + 1) / 2;
-        copytotal += (writelen + 1) / 2;
+        copytotal += (writelen + 1) & ~1;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
@@ -304,8 +304,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         // Add required extra 4 bytes for the WEP ICV to the total count, and
         // allocate 4 bytes in the TX buffer. However, don't write anything. It
         // just has to be left empty for the hardware to fill it.
-        base += 2;
-        copytotal += 2;
+        base += 4 / 2;
+        copytotal += 4;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
