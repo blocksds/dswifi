@@ -25,6 +25,8 @@ int Wifi_DisconnectAP(void);
 
 void Wifi_AutoConnect(void);
 
+int Wifi_AssocStatus(void);
+
 #ifdef __cplusplus
 };
 #endif

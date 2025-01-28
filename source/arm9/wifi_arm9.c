@@ -20,6 +20,23 @@
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
+WifiPacketHandler packethandler = NULL;
+
+void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
+{
+    packethandler = wphfunc;
+}
+
+void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
+{
+    volatile u16 *d = dest;
+    volatile u16 *s = src;
+
+    d[0] = s[0];
+    d[1] = s[1];
+    d[2] = s[2];
+}
+
 #ifdef WIFI_USE_TCP_SGIP
 
 #    include "arm9/heap.h"
@@ -107,27 +124,6 @@ static void ethhdr_print(char f, void *d)
     SGIP_DEBUG_MESSAGE((buffer));
 }
 #endif // SGIP_DEBUG
-
-#endif // WIFI_USE_TCP_SGIP
-
-WifiPacketHandler packethandler = NULL;
-
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
-{
-    volatile u16 *d = dest;
-    volatile u16 *s = src;
-
-    d[0] = s[0];
-    d[1] = s[1];
-    d[2] = s[2];
-}
-
-void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
-{
-    packethandler = wphfunc;
-}
-
-#ifdef WIFI_USE_TCP_SGIP
 
 int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
@@ -304,17 +300,6 @@ int Wifi_Interface_Init(sgIP_Hub_HWInterface *hw)
     return 0;
 }
 
-#endif
-
-void Wifi_Timer(int num_ms)
-{
-    Wifi_Update();
-#ifdef WIFI_USE_TCP_SGIP
-    sgIP_Timer(num_ms);
-#endif
-}
-
-#ifdef WIFI_USE_TCP_SGIP
 static void Wifi_sgIpHandlePackage(int base, int len)
 {
     // Do sgIP interfacing for RX packets here.
@@ -429,7 +414,65 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     // Done generating recieved data packet... now distribute it.
     sgIP_Hub_ReceiveHardwarePacket(wifi_hw, mb);
 }
+
+u32 Wifi_GetIP(void)
+{
+    if (wifi_hw)
+        return wifi_hw->ipaddr;
+    return 0;
+}
+
+struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
+                              struct in_addr *pDns1, struct in_addr *pDns2)
+{
+    struct in_addr ip = { INADDR_NONE };
+    if (wifi_hw)
+    {
+        if (pGateway)
+            pGateway->s_addr = wifi_hw->gateway;
+        if (pSnmask)
+            pSnmask->s_addr = wifi_hw->snmask;
+        if (pDns1)
+            pDns1->s_addr = wifi_hw->dns[0];
+        if (pDns2)
+            pDns2->s_addr = wifi_hw->dns[1];
+
+        ip.s_addr = wifi_hw->ipaddr;
+    }
+    return ip;
+}
+
+void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2)
+{
+    if (wifi_hw)
+    {
+        SGIP_DEBUG_MESSAGE(("SetIP%08X %08X %08X", IPaddr, gateway, subnetmask));
+        wifi_hw->ipaddr  = IPaddr;
+        wifi_hw->gateway = gateway;
+        wifi_hw->snmask  = subnetmask;
+        wifi_hw->dns[0]  = dns1;
+        wifi_hw->dns[1]  = dns2;
+        // reset arp cache...
+        sgIP_ARP_FlushInterface(wifi_hw);
+    }
+}
+
+void Wifi_SetDHCP(void)
+{
+}
+
+#endif // WIFI_USE_TCP_SGIP
+
+// Functions that behave differently with sgIP and without it
+// ==========================================================
+
+void Wifi_Timer(int num_ms)
+{
+    Wifi_Update();
+#ifdef WIFI_USE_TCP_SGIP
+    sgIP_Timer(num_ms);
 #endif
+}
 
 void Wifi_Update(void)
 {
@@ -492,55 +535,3 @@ void Wifi_Update(void)
             break;
     }
 }
-
-//////////////////////////////////////////////////////////////////////////
-// Ip addr get/set functions
-#ifdef WIFI_USE_TCP_SGIP
-
-u32 Wifi_GetIP(void)
-{
-    if (wifi_hw)
-        return wifi_hw->ipaddr;
-    return 0;
-}
-
-struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
-                              struct in_addr *pDns1, struct in_addr *pDns2)
-{
-    struct in_addr ip = { INADDR_NONE };
-    if (wifi_hw)
-    {
-        if (pGateway)
-            pGateway->s_addr = wifi_hw->gateway;
-        if (pSnmask)
-            pSnmask->s_addr = wifi_hw->snmask;
-        if (pDns1)
-            pDns1->s_addr = wifi_hw->dns[0];
-        if (pDns2)
-            pDns2->s_addr = wifi_hw->dns[1];
-
-        ip.s_addr = wifi_hw->ipaddr;
-    }
-    return ip;
-}
-
-void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2)
-{
-    if (wifi_hw)
-    {
-        SGIP_DEBUG_MESSAGE(("SetIP%08X %08X %08X", IPaddr, gateway, subnetmask));
-        wifi_hw->ipaddr  = IPaddr;
-        wifi_hw->gateway = gateway;
-        wifi_hw->snmask  = subnetmask;
-        wifi_hw->dns[0]  = dns1;
-        wifi_hw->dns[1]  = dns2;
-        // reset arp cache...
-        sgIP_ARP_FlushInterface(wifi_hw);
-    }
-}
-
-void Wifi_SetDHCP(void)
-{
-}
-
-#endif

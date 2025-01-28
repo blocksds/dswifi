@@ -42,15 +42,13 @@ void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
-int Wifi_AssocStatus(void);
-
+void Wifi_Timer(int num_ms);
 void Wifi_Update(void);
 
 #ifdef WIFI_USE_TCP_SGIP
 
 #    include "arm9/sgIP/sgIP.h"
 
-void Wifi_Timer(int num_ms);
 void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 u32 Wifi_GetIP(void);
 
