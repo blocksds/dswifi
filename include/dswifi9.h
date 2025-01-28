@@ -263,9 +263,6 @@ typedef struct WIFI_ACCESSPOINT
     /// rssi_past indicates the RSSI values for the last 8 beacons received ([7]
     /// is the most recent) [not required to connect]
     uint8_t rssi_past[8];
-    /// List of the base rates "required" by the AP (same format as maxrate).
-    /// Zero-terminated list [not required to connect]
-    uint8_t base_rates[16];
 } Wifi_AccessPoint;
 
 /// Wifi Packet Handler function
