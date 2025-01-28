@@ -45,6 +45,9 @@ void sgIP_IntrWaitEvent(void)
     swiDelay(20000);
 }
 
+#ifdef SGIP_DEBUG
+// Function that prints an ethernet header (and prefixes it with the character
+// passed in the first argument)
 static void ethhdr_print(char f, void *d)
 {
     char buffer[33];
@@ -103,8 +106,9 @@ static void ethhdr_print(char f, void *d)
     }
     SGIP_DEBUG_MESSAGE((buffer));
 }
+#endif // SGIP_DEBUG
 
-#endif
+#endif // WIFI_USE_TCP_SGIP
 
 WifiPacketHandler packethandler = 0;
 
@@ -195,7 +199,9 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         return 0; //?
     }
 
+#ifdef SGIP_DEBUG
     ethhdr_print('T', mb->datastart);
+#endif
 
     // Copy hardware TX and IEEE headers
     // =================================
@@ -452,7 +458,9 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     // header and the IEEE data frame header. We want to read the last halfword.
     eth->protocol = framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 6) / 2];
 
+#ifdef SGIP_DEBUG
     ethhdr_print('R', mb->datastart);
+#endif
 
     // Done generating recieved data packet... now distribute it.
     sgIP_Hub_ReceiveHardwarePacket(wifi_hw, mb);
