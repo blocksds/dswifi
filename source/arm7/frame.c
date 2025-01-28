@@ -778,7 +778,7 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             }
             else
             {
-                WLOG_PUTS("W: Rejected\n");
+                WLOG_PRINTF("W: Rejected: %d\n", body[2]);
 
                 // status code: rejected, try something else
                 Wifi_SendSharedKeyAuthPacket();
@@ -806,7 +806,7 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             else // Rejection
             {
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-                WLOG_PUTS("W: Rejected\n");
+                WLOG_PRINTF("W: Rejected: %d\n", body[2]);
             }
         }
         else if (body[1] == 4) // seq 4, accept/deny
@@ -826,7 +826,7 @@ static void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             else // Rejection
             {
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-                WLOG_PUTS("W: Rejected\n");
+                WLOG_PRINTF("W: Rejected: %d\n", body[2]);
             }
         }
     }
