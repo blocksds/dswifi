@@ -189,3 +189,39 @@ u32 Wifi_GetStats(int statnum)
         return 0;
     return WifiData->stats[statnum];
 }
+
+void Wifi_DisableWifi(void)
+{
+    WifiData->reqMode = WIFIMODE_DISABLED;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+void Wifi_EnableWifi(void)
+{
+    WifiData->reqMode = WIFIMODE_NORMAL;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+void Wifi_SetPromiscuousMode(int enable)
+{
+    if (enable)
+        WifiData->reqReqFlags |= WFLAG_REQ_PROMISC;
+    else
+        WifiData->reqReqFlags &= ~WFLAG_REQ_PROMISC;
+}
+
+void Wifi_ScanMode(void)
+{
+    WifiData->reqMode = WIFIMODE_SCAN;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+void Wifi_SetChannel(int channel)
+{
+    if (channel < 1 || channel > 13)
+        return;
+    if (WifiData->reqMode == WIFIMODE_NORMAL || WifiData->reqMode == WIFIMODE_SCAN)
+    {
+        WifiData->reqChannel = channel;
+    }
+}

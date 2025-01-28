@@ -32,6 +32,12 @@ void Wifi_Sync(void);
 int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
 u32 Wifi_GetStats(int statnum);
 
+void Wifi_DisableWifi(void);
+void Wifi_EnableWifi(void);
+void Wifi_SetPromiscuousMode(int enable);
+void Wifi_ScanMode(void);
+void Wifi_SetChannel(int channel);
+
 #ifdef __cplusplus
 };
 #endif

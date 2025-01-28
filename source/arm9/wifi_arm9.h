@@ -42,12 +42,6 @@ void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
 
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
-void Wifi_DisableWifi(void);
-void Wifi_EnableWifi(void);
-void Wifi_SetPromiscuousMode(int enable);
-void Wifi_ScanMode(void);
-void Wifi_SetChannel(int channel);
-
 int Wifi_AssocStatus(void);
 
 void Wifi_Update(void);
