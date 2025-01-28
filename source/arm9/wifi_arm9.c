@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
-
-// DS Wifi interface code
-// ARM9 wifi support code
+// Copyright (C) 2025 Antonio Niño Díaz
 
 #include <netinet/in.h>
 #include <stdarg.h>
