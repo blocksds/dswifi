@@ -329,13 +329,13 @@ int Wifi_AssocStatus(void)
                     }
                 }
             }
+            return ASSOCSTATUS_ACQUIRINGDHCP;
 #else
             // should never get here (dhcp state) without sgIP!
             Wifi_DisconnectAP();
             wifi_connect_state = -1;
             return ASSOCSTATUS_CANNOTCONNECT;
 #endif
-            return ASSOCSTATUS_ACQUIRINGDHCP;
 
         case 3: // connected!
             return ASSOCSTATUS_ASSOCIATED;
