@@ -172,6 +172,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // This function assumes individual pbuf len is >=14 bytes, it's pretty
     // likely ;) - also hopes pbuf len is a multiple of 2 :|
 
+    sgIP_Header_Ethernet *eth = (void *)mb->datastart;
+
     u16 framehdr[6 + 12 + 2];
     int framelen = mb->totallength - 14 + 8
                  + (WifiData->wepmode7 ? 4 : 0); // WEP IV
@@ -214,7 +216,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     {
         ieee->frame_control = TYPE_DATA;
         ieee->duration = 0;
-        Wifi_CopyMacAddr(ieee->addr_1, ((u8 *)mb->datastart));
+        Wifi_CopyMacAddr(ieee->addr_1, eth->dest_mac);
         Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
         Wifi_CopyMacAddr(ieee->addr_3, WifiData->bssid7);
         ieee->seq_ctl = 0;
@@ -225,7 +227,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         ieee->duration = 0;
         Wifi_CopyMacAddr(ieee->addr_1, WifiData->bssid7);
         Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-        Wifi_CopyMacAddr(ieee->addr_3, ((u8 *)mb->datastart));
+        Wifi_CopyMacAddr(ieee->addr_3, eth->dest_mac);
         ieee->seq_ctl = 0;
     }
 
@@ -246,6 +248,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen;
 
     int base = WifiData->txbufOut;
+
     Wifi_TxBufferWrite(base * 2, hdrlen, framehdr);
     base += hdrlen / 2;
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
@@ -258,7 +261,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     framehdr[0] = 0xAAAA;
     framehdr[1] = 0x0003;
     framehdr[2] = 0x0000;
-    framehdr[3] = ((u16 *)mb->datastart)[6]; // Frame type
+    framehdr[3] = eth->protocol; // Frame type
 
     Wifi_TxBufferWrite(base * 2, 8, framehdr);
     base += 8 / 2;
@@ -272,10 +275,11 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // later.
     sgIP_memblock *t = mb;
 
-    int writelen = (mb->thislength - 14);
-    if (writelen)
+    int writelen = mb->thislength - sizeof(sgIP_Header_Ethernet);
+    if (writelen > 0)
     {
-        Wifi_TxBufferWrite(base * 2, writelen, ((u16 *)mb->datastart) + 7);
+        Wifi_TxBufferWrite(base * 2, writelen,
+                           mb->datastart + sizeof(sgIP_Header_Ethernet));
         base += (writelen + 1) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
@@ -286,7 +290,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         mb = mb->next;
 
         writelen = mb->thislength;
-        Wifi_TxBufferWrite(base * 2, writelen, (u16 *)mb->datastart);
+        Wifi_TxBufferWrite(base * 2, writelen, mb->datastart);
         base += (writelen + 1) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
@@ -302,7 +306,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
 
-    WifiData->txbufOut = base; // update fifo out pos, done sending packet.
+    WifiData->txbufOut = base; // Update FIFO out pos, done sending packet.
 
     sgIP_memblock_free(t); // free packet, as we're the last stop on this chain.
 
@@ -340,7 +344,7 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     // Do sgIP interfacing for RX packets here.
 
     int hdr_rx_base = base;
-    int hdr_ieee_base = hdr_rx_base + HDR_RX_SIZE / 2; // 6
+    int hdr_ieee_base = hdr_rx_base + HDR_RX_SIZE / 2;
 
     // Only check packets if they are of non-null data type, and if they are
     // coming from the AP (toDS=0).
@@ -365,6 +369,8 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     if (!(Wifi_CmpMacAddr(address_1, WifiData->MacAddr) ||
           Wifi_CmpMacAddr(address_1, (void *)&broadcast_address)))
         return;
+
+    // Okay, the frame is addressed to us (or to everyone). Let's parse it.
 
     int hdrlen;
     int base2 = base;
@@ -399,32 +405,35 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     if (mb == NULL)
         return;
 
+    sgIP_Header_Ethernet *eth = (void *)mb->datastart;
+
     if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
         base2 -= (WIFI_RXBUFFER_SIZE / 2);
 
     // TODO: Improve this to read correctly in the case that the packet buffer
     // is fragmented
     Wifi_RxRawReadPacket(base2 * 2, (len - 8 - hdrlen) & (~1),
-                         ((u16 *)mb->datastart) + 7);
+                         mb->datastart + sizeof(sgIP_Header_Ethernet));
     if (len & 1)
     {
-        ((u8 *)mb->datastart)[len + 14 - 1 - 8 - hdrlen] =
+        ((u8 *)mb->datastart)[len + sizeof(sgIP_Header_Ethernet) - 1 - 8 - hdrlen] =
             Wifi_RxReadHWordOffset(base2 * 2, (len - 8 - hdrlen) & ~1) & 255;
     }
-    Wifi_CopyMacAddr(mb->datastart, ieeehdr + 2); // copy dest
+
+    Wifi_CopyMacAddr(eth->dest_mac, ieeehdr + 2); // copy dest
     if (Wifi_RxReadHWordOffset(hdr_ieee_base * 2, 0) & 0x0200)
     {
         // from DS set?
         // copy src from adrs3
-        Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 8);
+        Wifi_CopyMacAddr(eth->src_mac, ieeehdr + 8);
     }
     else
     {
         // copy src from adrs2
-        Wifi_CopyMacAddr(((u8 *)mb->datastart) + 6, ieeehdr + 5);
+        Wifi_CopyMacAddr(eth->src_mac, ieeehdr + 5);
     }
     // assume LLC exists and is 8 bytes.
-    ((u16 *)mb->datastart)[6] = framehdr[(hdrlen / 2) + 6 + 3];
+    eth->protocol = framehdr[(hdrlen / 2) + 6 + 3];
 
     ethhdr_print('R', mb->datastart);
 
