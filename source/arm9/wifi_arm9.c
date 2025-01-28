@@ -457,10 +457,6 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2)
     }
 }
 
-void Wifi_SetDHCP(void)
-{
-}
-
 #endif // WIFI_USE_TCP_SGIP
 
 // Functions that behave differently with sgIP and without it
