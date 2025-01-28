@@ -174,8 +174,11 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     sgIP_Header_Ethernet *eth = (void *)mb->datastart;
 
-    u16 framehdr[6 + 12 + 2];
-    int framelen = mb->totallength - 14 + 8
+    // Max size for the combined headers plus the WEP IV
+    u16 framehdr[(HDR_TX_SIZE + HDR_DATA_MAC_SIZE + 4) / sizeof(u16)];
+
+    // Actual size that we are going to use of framehdr
+    int framelen = mb->totallength - sizeof(sgIP_Header_Ethernet) + 8
                  + (WifiData->wepmode7 ? 4 : 0); // WEP IV
 
     if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
@@ -184,7 +187,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         sgIP_memblock_free(mb);
         return 0; // ?
     }
-    if (framelen + 40 > Wifi_TxBufferBytesAvailable())
+    if ((framelen + 40) > Wifi_TxBufferBytesAvailable())
     {
         // error, can't send this much!
         SGIP_DEBUG_MESSAGE(("Transmit:err_space"));
@@ -275,6 +278,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // later.
     sgIP_memblock *t = mb;
 
+    // The data may be split into multiple blocks. Only the first one will have
+    // an ethernet header. Skip it.
     int writelen = mb->thislength - sizeof(sgIP_Header_Ethernet);
     if (writelen > 0)
     {
@@ -285,6 +290,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
 
+    // All other blocks have to be copied without any modification.
     while (mb->next)
     {
         mb = mb->next;
@@ -298,9 +304,9 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     if (WifiData->wepmode7)
     {
-        // Add required extra 4 bytes for the WEP ICV to the total count, and
-        // allocate 4 bytes in the TX buffer. However, don't write anything. It
-        // just has to be left empty for the hardware to fill it.
+        // Allocate 4 more bytes for the WEP ICV in the TX buffer. However,
+        // don't write anything. We just need to remember to not fill it and to
+        // reserve that space so that the hardware can fill it.
         base += 4 / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
@@ -352,88 +358,99 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     if (!((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) == TYPE_DATA))
         return;
 
-    u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 4 + 8) / sizeof(u16)];
-    u16 *ieeehdr = framehdr + HDR_RX_SIZE / 2;
+    u16 framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 8 + 4) / sizeof(u16)];
+    IEEE_DataFrameHeader *ieee = (void *)(((u8 *)framehdr) + sizeof(Wifi_TxHeader));
 
-    Wifi_RxRawReadPacket(base * 2, 22 * 2, framehdr);
+    Wifi_RxRawReadPacket(base * 2, sizeof(framehdr), framehdr);
 
     // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
     // (Receiver Address / Destination Address), which is the final recipient of
     // the frame. Only accept messages addressed to our MAC address or to all
     // devices.
 
-    u16 *address_1 = ieeehdr + (HDR_DATA_ADDRESS_1 / 2);
     const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
 
-    // ethhdr_print('!', address_1);
-    if (!(Wifi_CmpMacAddr(address_1, WifiData->MacAddr) ||
-          Wifi_CmpMacAddr(address_1, (void *)&broadcast_address)))
+    // ethhdr_print('!', ieee->addr_1);
+    if (!(Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr) ||
+          Wifi_CmpMacAddr(ieee->addr_1, (void *)&broadcast_address)))
         return;
 
     // Okay, the frame is addressed to us (or to everyone). Let's parse it.
 
     int hdrlen;
-    int base2 = base;
+    int base2 = base; // Index in the circular buffer to the RX header
 
-    // if(ieeehdr[0] & 0x4000)
+    // TODO: Delete this code, and leave the comment?
+    // if(ieee->frame_control & FC_PROTECTED_FRAME)
     // {
     //     // WEP enabled. When receiving WEP packets, the IV is stripped for us!
     //     // How nice :|
-    //     base2 += 24;
-    //     hdrlen = 28;
+    //     // Add the LLC header size (8) and the WEP IV (4)
+    //     base2 += (HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 8 + 4) / 2;
+    //     hdrlen = HDR_DATA_MAC_SIZE + 8 + 4;
     //     base2 += [wifi hdr 12byte] + [802 header hdrlen] + [slip hdr 8byte]
     // }
     // else
     // {
-    base2 += 22;
-    hdrlen = 24;
+
+    // Index to the start of the data after the LLC header
+    base2 += (HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 8) / 2; // LLC header is 8 bit
+    hdrlen = HDR_DATA_MAC_SIZE + 8;
+
     // }
 
-    //  SGIP_DEBUG_MESSAGE(("%04X %04X %04X %04X %04X",
-    //                     Wifi_RxReadHWordOffset((base2 - 8) * 2, 0),
-    //                     Wifi_RxReadHWordOffset((base2 - 7) * 2, 0),
-    //                     Wifi_RxReadHWordOffset((base2 - 6) * 2, 0),
-    //                     Wifi_RxReadHWordOffset((base2 - 5) * 2, 0),
-    //                     Wifi_RxReadHWordOffset((base2 - 4) * 2, 0)));
-    // check for LLC/SLIP header...
-    if (!((Wifi_RxReadHWordOffset((base2 - 4) * 2, 0) == 0xAAAA)
-        && (Wifi_RxReadHWordOffset((base2 - 4) * 2, 2) == 0x0003)
-        && (Wifi_RxReadHWordOffset((base2 - 4) * 2, 4) == 0)))
+    int llc_base = base + ((HDR_RX_SIZE + HDR_DATA_MAC_SIZE) / 2);
+
+    // Check for LLC/SLIP header...
+    if (!((Wifi_RxReadHWordOffset(llc_base * 2, 0) == 0xAAAA)
+        && (Wifi_RxReadHWordOffset(llc_base * 2, 2) == 0x0003)
+        && (Wifi_RxReadHWordOffset(llc_base * 2, 4) == 0)))
         return;
 
-    sgIP_memblock *mb = sgIP_memblock_allocHW(14, len - 8 - hdrlen);
+    // Size in bytes of the actual contents received excluding the IEEE 802.11
+    // header and the LLC header.
+    size_t datalen = len - hdrlen;
+
+    // The sgIP block will need to contain the ethernet header and the data.
+    sgIP_memblock *mb = sgIP_memblock_allocHW(sizeof(sgIP_Header_Ethernet),
+                                              datalen);
     if (mb == NULL)
         return;
 
     sgIP_Header_Ethernet *eth = (void *)mb->datastart;
 
-    if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
-        base2 -= (WIFI_RXBUFFER_SIZE / 2);
+    if (base2 >= WIFI_RXBUFFER_SIZE / 2)
+        base2 -= WIFI_RXBUFFER_SIZE / 2;
 
     // TODO: Improve this to read correctly in the case that the packet buffer
     // is fragmented
-    Wifi_RxRawReadPacket(base2 * 2, (len - 8 - hdrlen) & (~1),
+
+    // This will read all data into the memory block. It's done in halfwords,
+    // so it will skip the last byte if the size isn't a multiple of 16 bits.
+    Wifi_RxRawReadPacket(base2 * 2, datalen & ~1,
                          mb->datastart + sizeof(sgIP_Header_Ethernet));
     if (len & 1)
     {
-        ((u8 *)mb->datastart)[len + sizeof(sgIP_Header_Ethernet) - 1 - 8 - hdrlen] =
-            Wifi_RxReadHWordOffset(base2 * 2, (len - 8 - hdrlen) & ~1) & 255;
+        // Read the last byte
+        char *p = mb->datastart + sizeof(sgIP_Header_Ethernet) + datalen - 1;
+        *p = Wifi_RxReadHWordOffset(base2 * 2, datalen & ~1) & 255;
     }
 
-    Wifi_CopyMacAddr(eth->dest_mac, ieeehdr + 2); // copy dest
-    if (Wifi_RxReadHWordOffset(hdr_ieee_base * 2, 0) & 0x0200)
+    Wifi_CopyMacAddr(eth->dest_mac, ieee->addr_1); // Copy destination
+    if (Wifi_RxReadHWordOffset(hdr_ieee_base * 2, 0) & FC_FROM_DS)
     {
-        // from DS set?
-        // copy src from adrs3
-        Wifi_CopyMacAddr(eth->src_mac, ieeehdr + 8);
+        // From DS set? Copy src from addr 3.
+        Wifi_CopyMacAddr(eth->src_mac, ieee->addr_3);
     }
     else
     {
-        // copy src from adrs2
-        Wifi_CopyMacAddr(eth->src_mac, ieeehdr + 5);
+        // From DS not set? Copy src from addr 2.
+        Wifi_CopyMacAddr(eth->src_mac, ieee->addr_2);
     }
-    // assume LLC exists and is 8 bytes.
-    eth->protocol = framehdr[(hdrlen / 2) + 6 + 3];
+
+    // Assume LLC exists and is 8 bytes. It goes right after the hardware RX
+    // header and the IEEE data frame header. We want to read the last halfword.
+    eth->protocol = framehdr[(HDR_RX_SIZE + HDR_DATA_MAC_SIZE + 6) / 2];
 
     ethhdr_print('R', mb->datastart);
 
