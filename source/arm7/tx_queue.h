@@ -20,7 +20,14 @@ extern "C" {
 bool Wifi_TxIsBusy(void);
 
 // Copy data to the TX buffer in MAC RAM (right at the start of MAC RAM). This
-// bypasses the ARM7 transfer queue. The size is specified in bytes.
+// bypasses the ARM7 transfer queue. The size is specified in bytes, and it
+// excludes the size of the FCS.
+//
+// TODO: The callers of this function don't allocate space in MAC RAM for the
+// FCS right now. This isn't a problem at the moment because we copy packets
+// one by one, so we never need to write a packet after the first one. It will
+// be a problem if we ever support writing more than one packet at the same
+// time.
 void Wifi_TxRaw(u16 *data, int datalen);
 
 // Copy enqueued data to the MAC and start a transfer. Note that this function

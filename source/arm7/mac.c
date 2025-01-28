@@ -29,7 +29,11 @@ void Wifi_MacInit(void)
     W_PREAMBLE      = 1;
     W_CONFIG_0D4    = 3;
     W_CONFIG_0D8    = 4;
+
+    // Crop 6 words from WEP packets (IV + ICV + FCS) 2 words from for non-WEP
+    // packets (FCS).
     W_RX_LEN_CROP   = 0x0602;
+
     W_TXBUF_GAPDISP = 0;
 }
 

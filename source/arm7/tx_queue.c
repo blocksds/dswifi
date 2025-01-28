@@ -206,6 +206,10 @@ int Wifi_TxArm9QueueFlush(void)
         W_MACMEM(0x26) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
                        | (WifiData->wepkeyid7 << 14);
     }
+
+    // If we are sending a beacon frame, save it somewhere in MAC RAM so that
+    // the hardware can send it automatically later. This is used when the NDS
+    // is in multiplayer mode working as a host.
     if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
     {
         // 2400 = 0x960 (out of 0x2000 bytes)
