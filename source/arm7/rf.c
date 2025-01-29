@@ -12,7 +12,10 @@
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 
-static u16 beacon_channel = 0;
+// Addess to the channel inside the beacon frame saved in MAC RAM. Note that
+// this isn't required to be aligned to a halfword.
+static u16 beacon_channel_addr = 0;
+
 static int chdata_save5 = 0;
 
 void Wifi_RFWrite(int writedata)
@@ -93,65 +96,77 @@ void Wifi_RFInit(void)
 void Wifi_LoadBeacon(int from, int to)
 {
     u8 data[512];
-    int type, seglen;
 
     int packetlen = Wifi_MACReadHWord(from, HDR_TX_IEEE_FRAME_SIZE);
-
     int len = packetlen + HDR_TX_SIZE - 4;
-    int i   = 12 + 24 + 12;
+
+    int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 12;
     if (len <= i)
     {
+        // Disable beacon transmission if we don't have a valid beacon
         W_TXBUF_BEACON &= ~0x8000;
         W_BEACONINT = 0x64;
         return;
     }
+
     if (len > 512)
         return;
 
+    // Save the frame in a specific location in MAC RAM
     Wifi_MACRead((u16 *)data, from, 0, len);
     Wifi_MACWrite((u16 *)data, to, len);
+
     while (i < len)
     {
-        type   = data[i++];
-        seglen = data[i++];
+        int type   = data[i++];
+        int seglen = data[i++];
+
         switch (type)
         {
-            case 3: // Channel
-                beacon_channel = to + i;
-                WLOG_PRINTF("W: Beacon channel %d\n", beacon_channel);
+            case MGT_FIE_ID_DS_PARAM_SET: // Channel
+                // Address in MAC RAM to the channel field in the beacon frame
+                beacon_channel_addr = to + i;
                 break;
 
-            case 5: // TIM
-                W_TXBUF_TIM = i - 12 - 24; // TIM offset within beacon
-                W_LISTENINT = data[i + 1]; // listen interval
+            case MGT_FIE_ID_TIM: // TIM
+
+                // TIM offset within beacon frame body (skipping headers)
+                W_TXBUF_TIM = i - HDR_TX_SIZE - HDR_MGT_MAC_SIZE;
+
+                W_LISTENINT = data[i + 1]; // Listen interval
                 if (W_LISTENCOUNT >= W_LISTENINT)
                     W_LISTENCOUNT = 0;
-                WLOG_PRINTF("W: Beacon listen int %d\n", data[i + 1]);
+
                 break;
         }
         i += seglen;
     }
 
-    W_TXBUF_BEACON = (0x8000 | (to >> 1));             // beacon location
-    W_BEACONINT    = ((u16 *)data)[(12 + 24 + 8) / 2]; // beacon interval
+    // Enable beacon transmission now that we have a valid beacon
+    W_TXBUF_BEACON = BIT(15) | (to >> 1); // Start transfer. Set frame address
+
+    // Beacon interval
+    W_BEACONINT = ((u16 *)data)[(HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8) / 2];
 
     WLOG_FLUSH();
 }
 
 void Wifi_SetBeaconChannel(int channel)
 {
+    // This function edits the channel of the beacon frame that we have saved in
+    // MAC RAM (if we have saved one!).
+
     if (W_TXBUF_BEACON & 0x8000)
     {
-        if (beacon_channel & 1)
-        {
-            W_MACMEM(beacon_channel - 1) =
-                (W_MACMEM(beacon_channel - 1) & 0x00FF) | (channel << 8);
-        }
+        // We can only read/write this RAM in 16-bit units, so we need to check
+        // which of the two halves of the halfword needs to be edited.
+
+        u16 addr = beacon_channel_addr & ~1;
+
+        if (beacon_channel_addr & 1)
+            W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (channel << 8);
         else
-        {
-            W_MACMEM(beacon_channel) =
-                (W_MACMEM(beacon_channel) & 0xFF00) | channel;
-        }
+            W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (channel << 0);
     }
 }
 
