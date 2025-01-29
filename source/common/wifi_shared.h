@@ -220,7 +220,7 @@ typedef struct
 typedef struct WIFI_ACCESSPOINT
 {
     char ssid[33]; // 0-32 character long string + nul character
-    char ssid_len;
+    u8 ssid_len;
     u8 bssid[6];
     u8 macaddr[6];
     u32 timectr;

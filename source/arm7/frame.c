@@ -604,6 +604,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
             for (int j = 0; j < ap->ssid_len; j++)
                 ap->ssid[j] = data[ptr_ssid + 2 + j];
+            ap->ssid[ap->ssid_len] = '\0';
         }
 
         ap->channel = channel;
