@@ -43,6 +43,12 @@ bool Wifi_TxArm7QueueIsEmpty(void);
 // to enqueue the data in a 1024 halfword buffer to be sent after the transfer
 // is finished. If it can't be enqueued, this function will return 0. On success
 // it returns 1.
+//
+// TODO: The callers of this function don't allocate space in MAC RAM for the
+// FCS right now. This isn't a problem at the moment because we copy packets
+// one by one, so we never need to write a packet after the first one. It will
+// be a problem if we ever support writing more than one packet at the same
+// time.
 int Wifi_TxArm7QueueAdd(u16 *data, int datalen);
 
 // This function checks if there is any data that the ARM9 has requested to
