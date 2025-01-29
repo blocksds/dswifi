@@ -17,7 +17,7 @@ void Wifi_Deinit(void);
 void Wifi_Start(void);
 void Wifi_Stop(void);
 
-void Wifi_SetWepKey(void *wepkey);
+void Wifi_SetWepKey(void *wepkey, int wepmode);
 void Wifi_SetWepMode(int wepmode);
 void Wifi_SetSleepMode(int mode);
 void Wifi_DisableTempPowerSave(void);

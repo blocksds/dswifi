@@ -14,14 +14,42 @@
 #include "arm7/setup.h"
 #include "common/spinlock.h"
 
-void Wifi_SetWepKey(void *wepkey)
+void Wifi_SetWepKey(void *wepkey, int wepmode)
 {
-    for (int i = 0; i < 16; i++)
+    if (wepmode == WEPMODE_NONE)
+        return;
+
+    int len = 0;
+
+    if (wepmode == WEPMODE_40BIT)
+        len = 5;
+    else if (wepmode == WEPMODE_128BIT)
+        len = 13;
+
+#if DSWIFI_LOGS
+    WLOG_PUTS("W: WEP: ");
+    char *c = wepkey;
+    for (int i = 0; i < len; i++)
+        WLOG_PRINTF("%x", c[i]);
+    WLOG_PUTS("\n");
+    WLOG_FLUSH();
+#endif
+
+    int hwords = (len + 1) / 2;
+
+    for (int i = 0; i < hwords; i++)
     {
         W_WEPKEY_0[i] = ((u16 *)wepkey)[i];
         W_WEPKEY_1[i] = ((u16 *)wepkey)[i];
         W_WEPKEY_2[i] = ((u16 *)wepkey)[i];
         W_WEPKEY_3[i] = ((u16 *)wepkey)[i];
+    }
+    for (int i = hwords; i < 32; i++)
+    {
+        W_WEPKEY_0[i] = 0;
+        W_WEPKEY_1[i] = 0;
+        W_WEPKEY_2[i] = 0;
+        W_WEPKEY_3[i] = 0;
     }
 }
 

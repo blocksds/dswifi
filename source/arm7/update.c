@@ -119,7 +119,7 @@ void Wifi_Update(void)
                     else
                         WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
                 }
-                Wifi_SetWepKey((void *)WifiData->wepkey7);
+                Wifi_SetWepKey((void *)WifiData->wepkey7, WifiData->wepmode7);
                 Wifi_SetWepMode(WifiData->wepmode7);
                 // latch BSSID
                 W_BSSID[0] = WifiData->bssid7[0];
