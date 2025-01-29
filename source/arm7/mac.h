@@ -12,6 +12,37 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
+// MAC RAM memory map
+// ==================
+//
+// Base address: 0x4000
+// Size:         0x2000 bytes
+//
+//     Offsets     |    Addresses    | Size | Notes
+// ----------------+-----------------+------+-----------------------
+// 0x0000 - 0x095F | 0x4000 - 0x495F | 2400 | TX buffer: Not a circular buffer
+// 0x0960 - 0xBFFF | 0x4960 - 0x4BFF |  672 | Beacon frame
+// 0x0C00 - 0x1F5F | 0x4C00 - 0x5F5F | 4960 | RX buffer: Circular buffer
+// 0x1F60 - 0x1FFF | 0x5F60 - 0x5FFF |  160 | Internal use (WEP keys, etc)
+
+#define MAC_BASE_ADDRESS            0x4000
+#define MAC_SIZE                    0x2000
+
+#define MAC_TXBUF_START_OFFSET      0x0000
+#define MAC_TXBUF_END_OFFSET        0x0960
+
+#define MAC_TXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_TXBUF_START_OFFSET)
+#define MAC_TXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_TXBUF_END_OFFSET)
+
+#define MAC_BEACON_START_OFFSET     0x0960
+#define MAC_BEACON_END_OFFSET       0x0C00
+
+#define MAC_RXBUF_START_OFFSET      0x0C00
+#define MAC_RXBUF_END_OFFSET        0x1F60
+
+#define MAC_RXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_RXBUF_START_OFFSET)
+#define MAC_RXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_RXBUF_END_OFFSET)
+
 // This initializes registers related to the MAC RAM.
 void Wifi_MacInit(void);
 

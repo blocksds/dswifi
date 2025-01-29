@@ -167,13 +167,22 @@ static void Wifi_RxSetup(void)
             break;
     }
 #endif
-    W_RXBUF_BEGIN    = 0x4C00;
-    W_RXBUF_WR_ADDR  = 0x0600;
+    W_RXBUF_BEGIN   = MAC_RXBUF_START_ADDRESS;
+    W_RXBUF_WR_ADDR = MAC_RXBUF_START_OFFSET >> 1;
 
-    W_RXBUF_END     = 0x5F60;
+    W_RXBUF_END     = MAC_RXBUF_END_ADDRESS;
     W_RXBUF_READCSR = (W_RXBUF_BEGIN & 0x3FFF) >> 1;
-    W_RXBUF_GAP     = 0x5F5E;
-    W_RXCNT         = 0x8001;
+
+    // TODO: This should really be disabled. W_RXBUF_GAPDISP is never
+    // initialized, so this gap will always be ignored. Also, it doesn't even
+    // work reliably:
+    //
+    // "On the DS-Lite, after adding it to W_RXBUF_RD_ADDR, the W_RXBUF_GAPDISP
+    // setting is destroyed (reset to 0000h) by hardware. The original DS leaves
+    // W_RXBUF_GAPDISP intact."
+    W_RXBUF_GAP     = MAC_RXBUF_END_ADDRESS - 2;
+
+    W_RXCNT = 0x8001;
 }
 
 void Wifi_WakeUp(void)
