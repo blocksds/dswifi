@@ -139,9 +139,12 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // Max size for the combined headers plus the WEP IV
     u16 framehdr[(HDR_TX_SIZE + HDR_DATA_MAC_SIZE + 4) / sizeof(u16)];
 
-    // Actual size that we are going to use of framehdr
-    int framelen = mb->totallength - sizeof(sgIP_Header_Ethernet) + 8
-                 + (WifiData->wepmode7 ? 4 : 0); // WEP IV
+    // Total amount of bytes to be written to TX buffer after the IEEE header
+    // (and after the WEP IV)
+    size_t body_size = (WifiData->wepmode7 ? 4 + 4 : 0) // WEP IV + ICV
+                     + 8 // LLC header
+                     // Actual size of the data in the memory block
+                     + mb->totallength - sizeof(sgIP_Header_Ethernet);
 
     if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
     {
@@ -149,7 +152,12 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         sgIP_memblock_free(mb);
         return 0; // ?
     }
-    if ((framelen + 40) > Wifi_TxBufferBytesAvailable())
+
+    size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
+
+    // TODO: We need space for the final checksum in the TX buffer even if we
+    // don't write it to the buffer (it gets filled in by the hardware in RAM).
+    if ((hdr_size + body_size + 4) > Wifi_TxBufferBytesAvailable())
     {
         // error, can't send this much!
         SGIP_DEBUG_MESSAGE(("Transmit:err_space"));
@@ -209,10 +217,10 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
         hdrlen += 4;
     }
 
-    tx->tx_length = framelen + hdrlen - HDR_TX_SIZE + 4; // Checksum
+    tx->tx_length = hdrlen - HDR_TX_SIZE + body_size + 4; // Checksum
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += framelen + hdrlen;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += hdrlen + body_size;
 
     int base = WifiData->txbufOut;
 
@@ -277,6 +285,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     }
 
     WifiData->txbufOut = base; // Update FIFO out pos, done sending packet.
+
+    // Note that the ICV is included in the TX buffer, but the FCS isn't.
 
     sgIP_memblock_free(t); // free packet, as we're the last stop on this chain.
 
