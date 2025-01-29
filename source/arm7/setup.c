@@ -86,87 +86,13 @@ void Wifi_DisableTempPowerSave(void)
 
 static void Wifi_TxSetup(void)
 {
-#if 0
-    switch(W_MODE_WEP & 7)
-    {
-        case 0: //
-            // 4170,  4028, 4000
-            // TxqEndData, TxqEndManCtrl, TxqEndPsPoll
-            W_MACMEM(0x24) = 0xB6B8;
-            W_MACMEM(0x26) = 0x1D46;
-            W_MACMEM(0x16C) = 0xB6B8;
-            W_MACMEM(0x16E) = 0x1D46;
-            W_MACMEM(0x790) = 0xB6B8;
-            W_MACMEM(0x792) = 0x1D46;
-            W_TXREQ_SET = 1;
-            break;
-
-        case 1: //
-            // 4AA0, 4958, 4334
-            // TxqEndData, TxqEndManCtrl, TxqEndBroadCast
-            // 4238, 4000
-            W_MACMEM(0x234) = 0xB6B8;
-            W_MACMEM(0x236) = 0x1D46;
-            W_MACMEM(0x330) = 0xB6B8;
-            W_MACMEM(0x332) = 0x1D46;
-            W_MACMEM(0x954) = 0xB6B8;
-            W_MACMEM(0x956) = 0x1D46;
-            W_MACMEM(0xA9C) = 0xB6B8;
-            W_MACMEM(0xA9E) = 0x1D46;
-            W_MACMEM(0x10C0) = 0xB6B8;
-            W_MACMEM(0x10C2) = 0x1D46;
-            //...
-            break;
-
-        case 2:
-            // 45D8, 4490, 4468
-            // TxqEndData, TxqEndManCtrl, TxqEndPsPoll
-
-            W_MACMEM(0x230) = 0xB6B8;
-            W_MACMEM(0x232) = 0x1D46;
-            W_MACMEM(0x464) = 0xB6B8;
-            W_MACMEM(0x466) = 0x1D46;
-            W_MACMEM(0x48C) = 0xB6B8;
-            W_MACMEM(0x48E) = 0x1D46;
-            W_MACMEM(0x5D4) = 0xB6B8;
-            W_MACMEM(0x5D6) = 0x1D46;
-            W_MACMEM(0xBF8) = 0xB6B8;
-            W_MACMEM(0xBFA) = 0x1D46;
-#endif
     W_TXREQ_SET = 0x000D;
-#if 0
-    }
-#endif
 }
 
 static void Wifi_RxSetup(void)
 {
     W_RXCNT = 0x8000;
-#if 0
-    switch(W_MODE_WEP & 7)
-    {
-        case 0:
-            W_RXBUF_BEGIN = 0x4794;
-            W_RXBUF_WR_ADDR = 0x03CA;
-            // 17CC ?
-            break;
-        case 1:
-            W_RXBUF_BEGIN = 0x50C4;
-            W_RXBUF_WR_ADDR = 0x0862;
-            // 0E9C ?
-            break;
-        case 2:
-            W_RXBUF_BEGIN = 0x4BFC;
-            W_RXBUF_WR_ADDR = 0x05FE;
-            // 1364 ?
-            break;
-        case 3:
-            W_RXBUF_BEGIN = 0x4794;
-            W_RXBUF_WR_ADDR = 0x03CA;
-            // 17CC ?
-            break;
-    }
-#endif
+
     W_RXBUF_BEGIN   = MAC_RXBUF_START_ADDRESS;
     W_RXBUF_WR_ADDR = MAC_RXBUF_START_OFFSET >> 1;
 
