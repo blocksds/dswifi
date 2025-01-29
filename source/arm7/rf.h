@@ -39,10 +39,6 @@ extern "C" {
 void Wifi_RFWrite(int writedata);
 void Wifi_RFInit(void);
 
-void Wifi_LoadBeacon(int from, int to);
-void Wifi_SetBeaconChannel(int channel);
-void Wifi_SetBeaconPeriod(int beacon_period);
-
 void Wifi_SetChannel(int channel);
 
 #ifdef __cplusplus

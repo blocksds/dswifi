@@ -3,11 +3,11 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/beacon.h"
 #include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/registers.h"
 #include "arm7/mac.h"
-#include "arm7/rf.h"
 #include "arm7/update.h"
 #include "common/ieee_defs.h"
 
