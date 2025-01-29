@@ -100,7 +100,12 @@ extern "C" {
 #define W_AID_FULL          WIFI_REG(0x802A)
 #define W_TX_RETRYLIMIT     WIFI_REG(0x802C)
 // WIFI_REG(0x802E)
+
 #define W_RXCNT             WIFI_REG(0x8030)
+
+#define RXCNT_EMPTY_RXBUF   BIT(0) // W_RXBUF_WR_ADDR -> W_RXBUF_WRCSR
+#define RXCNT_MP_SWAP_TXBUF BIT(7) // W_TXBUF_REPLY1 -> W_TXBUF_REPLY2; 0 -> W_TXBUF_REPLY1
+#define RXCNT_ENABLE_RX     BIT(15)
 
 #define W_WEP_CNT           WIFI_REG(0x8032)
 
@@ -142,7 +147,12 @@ extern "C" {
 #define W_TXBUF_GAP         WIFI_REG(0x8074)
 #define W_TXBUF_GAPDISP     WIFI_REG(0x8076)
 // WIFI_REG(0x8078)
+
 #define W_TXBUF_BEACON      WIFI_REG(0x8080)
+
+#define TXBUF_BEACON_ENABLE     BIT(15)
+#define TXBUF_BEACON_DISABLE    0
+
 #define W_TXBUF_TIM         WIFI_REG(0x8084)
 #define W_LISTENCOUNT       WIFI_REG(0x8088)
 #define W_BEACONINT         WIFI_REG(0x808C)
@@ -151,9 +161,14 @@ extern "C" {
 #define W_TXBUF_REPLY1      WIFI_REG(0x8094)
 #define W_TXBUF_REPLY2      WIFI_REG(0x8098)
 // WIFI_REG(0x809C)
+
 #define W_TXBUF_LOC1        WIFI_REG(0x80A0)
 #define W_TXBUF_LOC2        WIFI_REG(0x80A4)
 #define W_TXBUF_LOC3        WIFI_REG(0x80A8)
+
+#define TXBUF_LOCN_ENABLE   BIT(15)
+#define TXBUF_LOCN_DISABLE  0
+
 #define W_TXREQ_RESET       WIFI_REG(0x80AC)
 #define W_TXREQ_SET         WIFI_REG(0x80AE)
 #define W_TXREQ_READ        WIFI_REG(0x80B0)

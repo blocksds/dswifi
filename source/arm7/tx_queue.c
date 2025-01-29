@@ -27,9 +27,10 @@ void Wifi_TxRaw(u16 *data, int datalen)
     datalen = (datalen + 3) & (~3);
     Wifi_MACWrite(data, MAC_TXBUF_START_OFFSET, datalen);
 
+    // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_LOC3    = BIT(15) | (MAC_TXBUF_START_OFFSET >> 1); // Request transfer
+    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = 0x000D;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
@@ -224,9 +225,10 @@ int Wifi_TxArm9QueueFlush(void)
 
     // Send all other types of frames normally
 
+    // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
-    W_TX_RETRYLIMIT = 0x0707; // This has to be set before every transfer
-    W_TXBUF_LOC3    = BIT(15) | (MAC_TXBUF_START_OFFSET >> 1); // Request transfer
+    W_TX_RETRYLIMIT = 0x0707;
+    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = 0x000D;
 
     return 1;
@@ -234,7 +236,8 @@ int Wifi_TxArm9QueueFlush(void)
 
 void Wifi_TxAllQueueFlush(void)
 {
-    WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & 0x8000) | (W_TXBUSY & 0x7FFF);
+    WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & TXBUF_LOCN_ENABLE)
+                                 | (W_TXBUSY & 0x7FFF);
 
     // If TX is still busy it means that some packet has just been sent but
     // there are more waiting to be sent in the MAC RAM.

@@ -104,7 +104,7 @@ void Wifi_LoadBeacon(int from, int to)
     if (len <= i)
     {
         // Disable beacon transmission if we don't have a valid beacon
-        W_TXBUF_BEACON &= ~0x8000;
+        W_TXBUF_BEACON &= ~TXBUF_BEACON_ENABLE;
         W_BEACONINT = 0x64;
         return;
     }
@@ -143,7 +143,7 @@ void Wifi_LoadBeacon(int from, int to)
     }
 
     // Enable beacon transmission now that we have a valid beacon
-    W_TXBUF_BEACON = BIT(15) | (to >> 1); // Start transfer. Set frame address
+    W_TXBUF_BEACON = TXBUF_BEACON_ENABLE | (to >> 1);
 
     // Beacon interval
     W_BEACONINT = ((u16 *)data)[(HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8) / 2];
@@ -156,7 +156,7 @@ void Wifi_SetBeaconChannel(int channel)
     // This function edits the channel of the beacon frame that we have saved in
     // MAC RAM (if we have saved one!).
 
-    if (W_TXBUF_BEACON & 0x8000)
+    if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
     {
         // We can only read/write this RAM in 16-bit units, so we need to check
         // which of the two halves of the halfword needs to be edited.

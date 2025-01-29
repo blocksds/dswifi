@@ -91,7 +91,7 @@ static void Wifi_TxSetup(void)
 
 static void Wifi_RxSetup(void)
 {
-    W_RXCNT = 0x8000;
+    W_RXCNT = RXCNT_ENABLE_RX;
 
     W_RXBUF_BEGIN   = MAC_RXBUF_START_ADDRESS;
     W_RXBUF_WR_ADDR = MAC_RXBUF_START_OFFSET >> 1;
@@ -107,7 +107,9 @@ static void Wifi_RxSetup(void)
     W_RXBUF_GAP     = 0;
     W_RXBUF_GAPDISP = 0;
 
-    W_RXCNT = 0x8001;
+    // Enable reception of packages and clear RX buffer (copy W_RXBUF_WR_ADDR to
+    // W_RXBUF_WRCSR).
+    W_RXCNT = RXCNT_ENABLE_RX | RXCNT_EMPTY_RXBUF;
 }
 
 void Wifi_WakeUp(void)
@@ -247,7 +249,7 @@ void Wifi_Start(void)
     Wifi_TxSetup();
     Wifi_RxSetup();
 
-    W_RXCNT = 0x8000;
+    W_RXCNT = RXCNT_ENABLE_RX;
 
 #if 0
     switch (W_MODE_WEP & 7)
@@ -347,7 +349,7 @@ void Wifi_Stop(void)
     W_US_COUNTCNT   = 0;
     W_TXSTATCNT     = 0;
     W_X_00A         = 0;
-    W_TXBUF_BEACON  = 0;
+    W_TXBUF_BEACON  = TXBUF_BEACON_DISABLE;
     W_TXREQ_RESET   = 0xFFFF;
     W_TXBUF_RESET   = 0xFFFF;
 
