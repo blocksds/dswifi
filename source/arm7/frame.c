@@ -350,8 +350,10 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     bool wepmode = false;
     bool wpamode = false;
 
-    // Capability info, WEP bit
-    if (((u16 *)data)[5 + 12] & CAPS_PRIVACY)
+    // Capability info, WEP bit. It goes after the 8 byte timestamp and the 2
+    // byte beacon interval.
+    u32 caps_index = HDR_MGT_MAC_SIZE + 8 + 2;
+    if (*(u16 *)(data + caps_index) & CAPS_PRIVACY)
         wepmode = true;
 
     bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
@@ -361,8 +363,9 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     // Assume that the channel of the AP is the current one
     u8 channel = WifiData->curChannel;
 
-    // Pointer we're going to use to iterate through the frame
-    u32 curloc = HDR_RX_SIZE + HDR_MGT_MAC_SIZE; // HW header + 802.11 header
+    // Pointer we're going to use to iterate through the frame. Get a pointer to
+    // the field right after the capabilities field.
+    u32 curloc = caps_index + 2;
 
     do
     {
