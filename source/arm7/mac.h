@@ -56,7 +56,10 @@ u16 Wifi_MACReadHWord(u32 MAC_Base, u32 MAC_Offset);
 // ir required. This is only meant to be used to read from the RX buffer.
 //
 // It reads "length" bytes starting from "MAC_Base + MAC_Offset".
-void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length);
+//
+// If length isn't a multiple of 16 bits, this function will read an additional
+// byte at the end of the loop.
+void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length);
 
 // This function writes data to MAC RAM, and it is meant to be used only to
 // write data to the TX buffer.
@@ -64,7 +67,10 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, u32 length);
 // The TX process doesn't involve a circular buffer. DSWiFi writes everything to
 // the start of the TX buffer and waits until it is sent to write new data and
 // send it.
-void Wifi_MACWrite(u16 *src, u32 MAC_Base, u32 length);
+//
+// If length isn't a multiple of 16 bits, this function will write an additional
+// byte at the end of the loop.
+void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length);
 
 #ifdef __cplusplus
 };
