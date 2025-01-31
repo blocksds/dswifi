@@ -116,13 +116,21 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
     return ap_match;
 }
 
-// -1==error, 0==searching, 1==associating, 2==dhcp'ing, 3==done, 4=searching wfc data
-int wifi_connect_state = 0;
-Wifi_AccessPoint wifi_connect_point;
+typedef enum {
+    WIFI_CONNECT_ERROR          = -1,
+    WIFI_CONNECT_SEARCHING      = 0,
+    WIFI_CONNECT_ASSOCIATING    = 1,
+    WIFI_CONNECT_DHCPING        = 2,
+    WIFI_CONNECT_DONE           = 3,
+    WIFI_CONNECT_SEARCHING_WFC  = 4,
+} WIFI_CONNECT_STATE;
+
+static WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
+static Wifi_AccessPoint wifi_connect_point;
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
-    wifi_connect_state = -1;
+    wifi_connect_state = WIFI_CONNECT_ERROR;
 
     if (!apdata)
         return -1;
@@ -131,7 +139,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     Wifi_DisconnectAP();
 
-    wifi_connect_state = 0;
+    wifi_connect_state = WIFI_CONNECT_SEARCHING;
 
     WifiData->wepmode9  = wepmode; // copy data
     WifiData->wepkeyid9 = wepkeyid;
@@ -159,7 +167,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
         WifiData->apchannel9 = ap.channel;
         WifiData->reqMode = WIFIMODE_NORMAL;
         WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
-        wifi_connect_state = 1;
+        wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
     }
     else
     {
@@ -175,7 +183,7 @@ int Wifi_DisconnectAP(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->flags9 &= ~WFLAG_ARM9_NETREADY;
 
-    wifi_connect_state = -1;
+    wifi_connect_state = WIFI_CONNECT_ERROR;
     return 0;
 }
 
@@ -183,7 +191,7 @@ void Wifi_AutoConnect(void)
 {
     if (!(WifiData->wfc_enable[0] & 0x80))
     {
-        wifi_connect_state = -1;
+        wifi_connect_state = WIFI_CONNECT_ERROR;
     }
     else
     {
@@ -223,10 +231,10 @@ int Wifi_AssocStatus(void)
 {
     switch (wifi_connect_state)
     {
-        case -1: // error
+        case WIFI_CONNECT_ERROR:
             return ASSOCSTATUS_CANNOTCONNECT;
 
-        case 0: // searching
+        case WIFI_CONNECT_SEARCHING:
         {
             Wifi_AccessPoint ap;
             int error = Wifi_FindMatchingAP(1, &wifi_connect_point, &ap);
@@ -242,12 +250,12 @@ int Wifi_AssocStatus(void)
                 WifiData->apchannel9 = ap.channel;
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
-                wifi_connect_state = 1;
+                wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
             }
             return ASSOCSTATUS_SEARCHING;
         }
 
-        case 1: // associating
+        case WIFI_CONNECT_ASSOCIATING:
             switch (WifiData->curMode)
             {
                 case WIFIMODE_DISABLED:
@@ -273,13 +281,13 @@ int Wifi_AssocStatus(void)
                                 if (!(wifi_hw->ipaddr))
                                 {
                                     sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                                    wifi_connect_state = 2;
+                                    wifi_connect_state = WIFI_CONNECT_DHCPING;
                                     return ASSOCSTATUS_ACQUIRINGDHCP;
                                 }
                             }
                             sgIP_ARP_SendGratARP(wifi_hw);
 #endif
-                            wifi_connect_state = 3;
+                            wifi_connect_state = WIFI_CONNECT_DONE;
                             WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                             return ASSOCSTATUS_ASSOCIATED;
                     }
@@ -291,13 +299,13 @@ int Wifi_AssocStatus(void)
                         if (!(wifi_hw->ipaddr))
                         {
                             sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                            wifi_connect_state = 2;
+                            wifi_connect_state = WIFI_CONNECT_DHCPING;
                             return ASSOCSTATUS_ACQUIRINGDHCP;
                         }
                     }
                     sgIP_ARP_SendGratARP(wifi_hw);
 #endif
-                    wifi_connect_state = 3;
+                    wifi_connect_state = WIFI_CONNECT_DONE;
                     WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                     return ASSOCSTATUS_ASSOCIATED;
                 case WIFIMODE_CANNOTASSOCIATE:
@@ -305,7 +313,7 @@ int Wifi_AssocStatus(void)
             }
             return ASSOCSTATUS_DISCONNECTED;
 
-        case 2: // dhcp'ing
+        case WIFI_CONNECT_DHCPING:
 #ifdef WIFI_USE_TCP_SGIP
         {
             int i = sgIP_DHCP_Update();
@@ -314,7 +322,7 @@ int Wifi_AssocStatus(void)
                 switch (i)
                 {
                     case SGIP_DHCP_STATUS_SUCCESS:
-                        wifi_connect_state = 3;
+                        wifi_connect_state = WIFI_CONNECT_DONE;
                         WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                         sgIP_ARP_SendGratARP(wifi_hw);
                         sgIP_DNS_Record_Localhost();
@@ -323,7 +331,7 @@ int Wifi_AssocStatus(void)
                     case SGIP_DHCP_STATUS_IDLE:
                     case SGIP_DHCP_STATUS_FAILED:
                         Wifi_DisconnectAP();
-                        wifi_connect_state = -1;
+                        wifi_connect_state = WIFI_CONNECT_ERROR;
                         return ASSOCSTATUS_CANNOTCONNECT;
                 }
             }
@@ -332,14 +340,14 @@ int Wifi_AssocStatus(void)
 #else
             // should never get here (dhcp state) without sgIP!
             Wifi_DisconnectAP();
-            wifi_connect_state = -1;
+            wifi_connect_state = WIFI_CONNECT_ERROR;
             return ASSOCSTATUS_CANNOTCONNECT;
 #endif
 
-        case 3: // connected!
+        case WIFI_CONNECT_DONE: // connected!
             return ASSOCSTATUS_ASSOCIATED;
 
-        case 4: // search nintendo WFC data for a suitable AP
+        case WIFI_CONNECT_SEARCHING_WFC: // search nintendo WFC data for a suitable AP
         {
             int numap;
             for (numap = 0; numap < 3; numap++)
@@ -373,7 +381,7 @@ int Wifi_AssocStatus(void)
                 WifiData->apchannel9 = ap.channel;
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
-                wifi_connect_state = 1;
+                wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
                 return ASSOCSTATUS_SEARCHING;
             }
             return ASSOCSTATUS_SEARCHING;

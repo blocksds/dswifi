@@ -132,12 +132,19 @@ enum WIFI_STATS
 
 enum WIFI_MODE
 {
+    // The WiFi hardware is off.
     WIFIMODE_DISABLED,
+    // The WiFi hardware is on, but idle.
     WIFIMODE_NORMAL,
+    // The ARM7 is iterating through all channels looking for access points.
     WIFIMODE_SCAN,
+    // The ARM7 is trying to connect to an AP
     WIFIMODE_ASSOCIATE,
+    // The ARM7 is connected to the AP.
     WIFIMODE_ASSOCIATED,
+    // The ARM7 has connected to the AP.
     WIFIMODE_DISASSOCIATE,
+    // The ARM7 is unable to connect to the AP.
     WIFIMODE_CANNOTASSOCIATE,
 };
 
