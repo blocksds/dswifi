@@ -220,8 +220,7 @@ void Wifi_SetChannel(int channel)
 {
     if (channel < 1 || channel > 13)
         return;
-    if (WifiData->reqMode == WIFIMODE_NORMAL || WifiData->reqMode == WIFIMODE_SCAN)
-    {
+
+    if (WifiData->reqMode == WIFIMODE_NORMAL)
         WifiData->reqChannel = channel;
-    }
 }
