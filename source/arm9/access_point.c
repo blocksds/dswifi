@@ -63,23 +63,24 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
 
 int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *match_dest)
 {
-    int ap_match, i, j, n;
-    Wifi_AccessPoint ap;
-    u16 macaddrzero[3] = { 0, 0, 0 }; // check for empty mac addr
-
-    ap_match = -1;
-    for (i = 0; i < Wifi_GetNumAP(); i++)
+    int ap_match = -1;
+    for (int i = 0; i < Wifi_GetNumAP(); i++)
     {
+        Wifi_AccessPoint ap;
         Wifi_GetAPData(i, &ap);
-        for (j = 0; j < numaps; j++)
+
+        for (int j = 0; j < numaps; j++)
         {
             if (apdata[j].ssid_len > 32 || ((signed char)apdata[j].ssid_len) < 0)
                 continue;
+
             if (apdata[j].ssid_len > 0)
             {
                 // compare SSIDs
                 if (apdata[j].ssid_len != ap.ssid_len)
                     continue;
+
+                int n;
                 for (n = 0; n < apdata[j].ssid_len; n++)
                 {
                     if (apdata[j].ssid[n] != ap.ssid[n])
@@ -88,6 +89,8 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
                 if (n != apdata[j].ssid_len)
                     continue;
             }
+
+            u16 macaddrzero[3] = { 0, 0, 0 }; // check for empty mac addr
             if (!Wifi_CmpMacAddr(apdata[j].macaddr, macaddrzero))
             {
                 // compare mac addr
@@ -119,8 +122,6 @@ Wifi_AccessPoint wifi_connect_point;
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
-    int i;
-    Wifi_AccessPoint ap;
     wifi_connect_state = -1;
 
     if (!apdata)
@@ -137,22 +138,22 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (wepmode != WEPMODE_NONE && wepkey)
     {
-        for (i = 0; i < 20; i++)
-        {
+        for (int i = 0; i < 20; i++)
             WifiData->wepkey9[i] = wepkey[i];
-        }
     }
 
     WifiData->realRates = true;
 
-    i = Wifi_FindMatchingAP(1, apdata, &ap);
-    if (i == 0)
+    Wifi_AccessPoint ap;
+
+    int error = Wifi_FindMatchingAP(1, apdata, &ap);
+    if (error == 0)
     {
         Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
         Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
 
         WifiData->ssid9[0] = ap.ssid_len;
-        for (i = 0; i < 32; i++)
+        for (int i = 0; i < 32; i++)
             WifiData->ssid9[i + 1] = ap.ssid[i];
 
         WifiData->apchannel9 = ap.channel;
@@ -213,7 +214,7 @@ static void sgIP_DNS_Record_Localhost(void)
     rec->addrclass   = AF_INET;
 
     rec->flags = SGIP_DNS_FLAG_ACTIVE | SGIP_DNS_FLAG_BUSY | SGIP_DNS_FLAG_RESOLVED
-                 | SGIP_DNS_FLAG_PERMANENT;
+                | SGIP_DNS_FLAG_PERMANENT;
 }
 
 #endif // WIFI_USE_TCP_SGIP
@@ -226,26 +227,25 @@ int Wifi_AssocStatus(void)
             return ASSOCSTATUS_CANNOTCONNECT;
 
         case 0: // searching
+        {
+            Wifi_AccessPoint ap;
+            int error = Wifi_FindMatchingAP(1, &wifi_connect_point, &ap);
+            if (error == 0)
             {
-                int i;
-                Wifi_AccessPoint ap;
-                i = Wifi_FindMatchingAP(1, &wifi_connect_point, &ap);
-                if (i == 0)
-                {
-                    Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
-                    Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
 
-                    WifiData->ssid9[0] = ap.ssid_len;
-                    for (i = 0; i < 32; i++)
-                        WifiData->ssid9[i + 1] = ap.ssid[i];
+                WifiData->ssid9[0] = ap.ssid_len;
+                for (int i = 0; i < 32; i++)
+                    WifiData->ssid9[i + 1] = ap.ssid[i];
 
-                    WifiData->apchannel9 = ap.channel;
-                    WifiData->reqMode = WIFIMODE_NORMAL;
-                    WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
-                    wifi_connect_state = 1;
-                }
+                WifiData->apchannel9 = ap.channel;
+                WifiData->reqMode = WIFIMODE_NORMAL;
+                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
+                wifi_connect_state = 1;
             }
             return ASSOCSTATUS_SEARCHING;
+        }
 
         case 1: // associating
             switch (WifiData->curMode)
@@ -307,29 +307,28 @@ int Wifi_AssocStatus(void)
 
         case 2: // dhcp'ing
 #ifdef WIFI_USE_TCP_SGIP
+        {
+            int i = sgIP_DHCP_Update();
+            if (i != SGIP_DHCP_STATUS_WORKING)
             {
-                int i;
-                i = sgIP_DHCP_Update();
-                if (i != SGIP_DHCP_STATUS_WORKING)
+                switch (i)
                 {
-                    switch (i)
-                    {
-                        case SGIP_DHCP_STATUS_SUCCESS:
-                            wifi_connect_state = 3;
-                            WifiData->flags9 |= WFLAG_ARM9_NETREADY;
-                            sgIP_ARP_SendGratARP(wifi_hw);
-                            sgIP_DNS_Record_Localhost();
-                            return ASSOCSTATUS_ASSOCIATED;
-                        default:
-                        case SGIP_DHCP_STATUS_IDLE:
-                        case SGIP_DHCP_STATUS_FAILED:
-                            Wifi_DisconnectAP();
-                            wifi_connect_state = -1;
-                            return ASSOCSTATUS_CANNOTCONNECT;
-                    }
+                    case SGIP_DHCP_STATUS_SUCCESS:
+                        wifi_connect_state = 3;
+                        WifiData->flags9 |= WFLAG_ARM9_NETREADY;
+                        sgIP_ARP_SendGratARP(wifi_hw);
+                        sgIP_DNS_Record_Localhost();
+                        return ASSOCSTATUS_ASSOCIATED;
+                    default:
+                    case SGIP_DHCP_STATUS_IDLE:
+                    case SGIP_DHCP_STATUS_FAILED:
+                        Wifi_DisconnectAP();
+                        wifi_connect_state = -1;
+                        return ASSOCSTATUS_CANNOTCONNECT;
                 }
             }
             return ASSOCSTATUS_ACQUIRINGDHCP;
+        }
 #else
             // should never get here (dhcp state) without sgIP!
             Wifi_DisconnectAP();
@@ -341,43 +340,48 @@ int Wifi_AssocStatus(void)
             return ASSOCSTATUS_ASSOCIATED;
 
         case 4: // search nintendo WFC data for a suitable AP
+        {
+            int numap;
+            for (numap = 0; numap < 3; numap++)
             {
-                int n, i;
-                for (n = 0; n < 3; n++)
-                {
-                    if (!(WifiData->wfc_enable[n] & 0x80))
-                        break;
-                }
-                Wifi_AccessPoint ap;
-                n = Wifi_FindMatchingAP(n, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
-                if (n != -1)
-                {
+                if (!(WifiData->wfc_enable[numap] & 0x80))
+                    break;
+            }
+
+            Wifi_AccessPoint ap;
+            int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
+            if (n != -1)
+            {
 #ifdef WIFI_USE_TCP_SGIP
-                    Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
-                               WifiData->wfc_subnet_mask[n],
-                               WifiData->wfc_dns_primary[n],
-                               WifiData->wfc_dns_secondary[n]);
+                Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
+                           WifiData->wfc_subnet_mask[n],
+                           WifiData->wfc_dns_primary[n],
+                           WifiData->wfc_dns_secondary[n]);
 #endif
-                    WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
-                    WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
-                    for (i = 0; i < 16; i++)
-                        WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
+                WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
+                WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
+                for (int i = 0; i < 16; i++)
+                    WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
 
-                    Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
-                    Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
 
-                    WifiData->ssid9[0] = ap.ssid_len;
-                    for (i = 0; i < 32; i++)
-                        WifiData->ssid9[i + 1] = ap.ssid[i];
+                WifiData->ssid9[0] = ap.ssid_len;
+                for (int i = 0; i < 32; i++)
+                    WifiData->ssid9[i + 1] = ap.ssid[i];
 
-                    WifiData->apchannel9 = ap.channel;
-                    WifiData->reqMode = WIFIMODE_NORMAL;
-                    WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
-                    wifi_connect_state = 1;
-                    return ASSOCSTATUS_SEARCHING;
-                }
+                WifiData->apchannel9 = ap.channel;
+                WifiData->reqMode = WIFIMODE_NORMAL;
+                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
+                wifi_connect_state = 1;
+                return ASSOCSTATUS_SEARCHING;
             }
             return ASSOCSTATUS_SEARCHING;
+        }
+
+        default:
+            break;
     }
+
     return ASSOCSTATUS_CANNOTCONNECT;
 }

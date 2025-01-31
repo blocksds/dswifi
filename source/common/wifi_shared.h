@@ -269,7 +269,7 @@ typedef struct WIFI_MAINSTRUCT
     char probe9_ssid[WIFI_MAX_PROBE][32];
 
     // WFC data
-    u8 wfc_enable[4]; // wep mode, or 0x80 for "enabled"
+    u8 wfc_enable[4]; // (WEP mode) | (0x80 for "enabled")
     Wifi_AccessPoint wfc_ap[3];
     u32 wfc_ip[3];
     u32 wfc_gateway[3];
