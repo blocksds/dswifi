@@ -47,6 +47,47 @@ static void Wifi_SetLedState(int state)
     }
 }
 
+static void Wifi_UpdateAssociate(void)
+{
+    // 20 units is around 1 second
+    if (((u16)(W_US_COUNT1 - WifiData->counter7)) <= 20)
+        return;
+
+    WifiData->counter7 = W_US_COUNT1;
+
+    // If this point is reached, we haven't received any reply to one of our
+    // packets. We need to send one again to try to connect.
+
+    // Give up after too many retries
+    WifiData->authctr++;
+    if (WifiData->authctr > WIFI_MAX_ASSOC_RETRY)
+    {
+        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+        return;
+    }
+
+    switch (WifiData->authlevel)
+    {
+        case WIFI_AUTHLEVEL_DISCONNECTED:
+            if (!(WifiData->curReqFlags & WFLAG_REQ_APADHOC))
+            {
+                Wifi_SendOpenSystemAuthPacket();
+                break;
+            }
+            WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
+            break;
+
+        case WIFI_AUTHLEVEL_DEASSOCIATED:
+        case WIFI_AUTHLEVEL_AUTHENTICATED:
+            Wifi_SendAssocPacket();
+            break;
+
+        case WIFI_AUTHLEVEL_ASSOCIATED:
+            WifiData->curMode = WIFIMODE_ASSOCIATED;
+            break;
+    }
+}
+
 void Wifi_Update(void)
 {
     static const u8 scanlist[] = {
@@ -203,35 +244,7 @@ void Wifi_Update(void)
                 break;
             }
 
-            if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 20)
-            {
-                // ~1 second, reattempt connect stage
-                WifiData->counter7 = W_US_COUNT1;
-                WifiData->authctr++;
-                if (WifiData->authctr > WIFI_MAX_ASSOC_RETRY)
-                {
-                    WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
-                    break;
-                }
-                switch (WifiData->authlevel)
-                {
-                    case WIFI_AUTHLEVEL_DISCONNECTED: // send auth packet
-                        if (!(WifiData->curReqFlags & WFLAG_REQ_APADHOC))
-                        {
-                            Wifi_SendOpenSystemAuthPacket();
-                            break;
-                        }
-                        WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
-                        break;
-                    case WIFI_AUTHLEVEL_DEASSOCIATED:
-                    case WIFI_AUTHLEVEL_AUTHENTICATED: // send assoc packet
-                        Wifi_SendAssocPacket();
-                        break;
-                    case WIFI_AUTHLEVEL_ASSOCIATED:
-                        WifiData->curMode = WIFIMODE_ASSOCIATED;
-                        break;
-                }
-            }
+            Wifi_UpdateAssociate();
 
             // If we have been asked to stop trying to connect, go back to idle
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
