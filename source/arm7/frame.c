@@ -330,7 +330,6 @@ int Wifi_SendPSPollFrame(void)
 }
 #endif
 
-// TODO: Clean this
 static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 {
     u8 data[512];
