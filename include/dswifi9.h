@@ -137,26 +137,6 @@ enum WIFI_STATS
     NUM_WIFI_STATS
 };
 
-// user code should NEVER have to use the WIFI_MODE or WIFI_AUTHLEVEL enums...
-// it is here in case I want to have some debug code...
-enum WIFI_MODE
-{
-    WIFIMODE_DISABLED,
-    WIFIMODE_NORMAL,
-    WIFIMODE_SCAN,
-    WIFIMODE_ASSOCIATE,
-    WIFIMODE_ASSOCIATED,
-    WIFIMODE_DISASSOCIATE,
-    WIFIMODE_CANNOTASSOCIATE,
-};
-enum WIFI_AUTHLEVEL
-{
-    WIFI_AUTHLEVEL_DISCONNECTED,
-    WIFI_AUTHLEVEL_AUTHENTICATED,
-    WIFI_AUTHLEVEL_ASSOCIATED,
-    WIFI_AUTHLEVEL_DEASSOCIATED,
-};
-
 /// User code uses members of the WIFIGETDATA structure in calling Wifi_GetData
 /// to retreive miscellaneous odd information.
 enum WIFIGETDATA
