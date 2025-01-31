@@ -159,31 +159,35 @@ void Wifi_Update(void)
             }
             if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 6)
             {
-                // jump ship!
+                // Request changing channel
                 WifiData->counter7   = W_US_COUNT1;
                 WifiData->reqChannel = scanlist[wifi_scan_index];
+
+                // Update timeout counters of all APs.
+                for (int i = 0; i < WIFI_MAX_AP; i++)
                 {
-                    for (int i = 0; i < WIFI_MAX_AP; i++)
+                    if (WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE)
                     {
-                        if (WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE)
+                        WifiData->aplist[i].timectr++;
+
+                        // If we haven't seen an AP for a long time, clear RSSI
+                        // information (it's not up-to-date, anyway).
+                        if (WifiData->aplist[i].timectr > WIFI_AP_TIMEOUT)
                         {
-                            WifiData->aplist[i].timectr++;
-                            if (WifiData->aplist[i].timectr > WIFI_AP_TIMEOUT)
-                            {
-                                // update rssi later.
-                                WifiData->aplist[i].rssi         = 0;
-                                WifiData->aplist[i].rssi_past[0] = 0;
-                                WifiData->aplist[i].rssi_past[1] = 0;
-                                WifiData->aplist[i].rssi_past[2] = 0;
-                                WifiData->aplist[i].rssi_past[3] = 0;
-                                WifiData->aplist[i].rssi_past[4] = 0;
-                                WifiData->aplist[i].rssi_past[5] = 0;
-                                WifiData->aplist[i].rssi_past[6] = 0;
-                                WifiData->aplist[i].rssi_past[7] = 0;
-                            }
+                            // update rssi later.
+                            WifiData->aplist[i].rssi         = 0;
+                            WifiData->aplist[i].rssi_past[0] = 0;
+                            WifiData->aplist[i].rssi_past[1] = 0;
+                            WifiData->aplist[i].rssi_past[2] = 0;
+                            WifiData->aplist[i].rssi_past[3] = 0;
+                            WifiData->aplist[i].rssi_past[4] = 0;
+                            WifiData->aplist[i].rssi_past[5] = 0;
+                            WifiData->aplist[i].rssi_past[6] = 0;
+                            WifiData->aplist[i].rssi_past[7] = 0;
                         }
                     }
                 }
+
                 wifi_scan_index++;
                 if (wifi_scan_index == scanlist_size)
                     wifi_scan_index = 0;
@@ -192,11 +196,13 @@ void Wifi_Update(void)
 
         case WIFIMODE_ASSOCIATE:
             Wifi_SetLedState(LED_BLINK_SLOW);
+
             if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
                 break;
             }
+
             if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 20)
             {
                 // ~1 second, reattempt connect stage
@@ -226,6 +232,8 @@ void Wifi_Update(void)
                         break;
                 }
             }
+
+            // If we have been asked to stop trying to connect, go back to idle
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
