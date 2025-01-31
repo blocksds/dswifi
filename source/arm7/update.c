@@ -69,12 +69,12 @@ static void Wifi_UpdateAssociate(void)
     switch (WifiData->authlevel)
     {
         case WIFI_AUTHLEVEL_DISCONNECTED:
-            if (!(WifiData->curReqFlags & WFLAG_REQ_APADHOC))
+            if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
             {
-                Wifi_SendOpenSystemAuthPacket();
+                WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
                 break;
             }
-            WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
+            Wifi_SendOpenSystemAuthPacket();
             break;
 
         case WIFI_AUTHLEVEL_DEASSOCIATED:
