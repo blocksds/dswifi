@@ -25,6 +25,18 @@ void Wifi_RFWrite(int writedata)
     while (W_RF_BUSY & 1);
 }
 
+void Wifi_RFWriteType2(int index, int value)
+{
+    // 0: Write
+    Wifi_RFWrite((value & 0x3FF) | ((index & 0x1F) << 18) | (0 << 23));
+}
+
+void Wifi_RFWriteType3(int index, int value)
+{
+    // 5: Write command
+    Wifi_RFWrite((value & 0xFF) | ((index & 0xFF) << 8) | (0x5 << 16));
+}
+
 void Wifi_RFInit(void)
 {
     W_CONFIG_146 = Wifi_FlashReadHWord(F_WIFI_CFG_044);
@@ -59,16 +71,16 @@ void Wifi_RFInit(void)
 
     W_RF_CNT = ((rf_entry_bits >> 7) << 8) | (rf_entry_bits & 0x7F);
 
+    int rf_chip_type = Wifi_FlashReadByte(F_RF_CHIP_TYPE);
+
     int j = 0xCE;
 
-    if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 3)
+    if (rf_chip_type == 3)
     {
-        for (int i = 0; i < rf_num_entries; i++)
-        {
-            Wifi_RFWrite(Wifi_FlashReadByte(j++) | (i << 8) | 0x50000);
-        }
+        for (int index = 0; index < rf_num_entries; index++)
+            Wifi_RFWriteType3(index, Wifi_FlashReadByte(j++));
     }
-    else if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 2)
+    else if (rf_chip_type == 2)
     {
         for (int i = 0; i < rf_num_entries; i++)
         {
@@ -76,7 +88,7 @@ void Wifi_RFInit(void)
             Wifi_RFWrite(temp);
             j += rf_entry_bytes;
 
-            if ((temp >> 18) == 9)
+            if ((temp >> 18) == 9) // If the address is 9
                 chdata_save5 = temp & ~0x7C00;
         }
     }
@@ -92,7 +104,6 @@ void Wifi_RFInit(void)
 
 void Wifi_SetChannel(int channel)
 {
-    int i, n, l;
     if (channel < 1 || channel > 13)
         return;
 
@@ -100,53 +111,57 @@ void Wifi_SetChannel(int channel)
     WLOG_FLUSH();
 
     Wifi_SetBeaconChannel(channel);
-    channel -= 1;
 
     switch (Wifi_FlashReadByte(F_RF_CHIP_TYPE))
     {
         case 2:
         case 5:
-            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + channel * 6, 3));
-            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + 3 + channel * 6, 3));
+        {
+            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + (channel - 1) * 6, 3));
+            Wifi_RFWrite(Wifi_FlashReadBytes(F_T2_RF_CHANNEL_CFG1 + 3 + (channel - 1) * 6, 3));
 
             swiDelay(12583); // 1500 us delay
 
-            if (chdata_save5 & 0x10000)
-            {
-                if (chdata_save5 & 0x8000)
-                    break;
-                n = Wifi_FlashReadByte(F_T2_RF_CHANNEL_CFG2 + channel);
-                Wifi_RFWrite(chdata_save5 | ((n & 0x1F) << 10));
-            }
-            else
+            if ((chdata_save5 & BIT(16)) == 0)
             {
                 Wifi_BBWrite(REG_MM3218_EXT_GAIN,
-                             Wifi_FlashReadByte(F_T2_BB_CHANNEL_CFG + channel));
+                             Wifi_FlashReadByte(F_T2_BB_CHANNEL_CFG + (channel - 1)));
+            }
+            else if ((chdata_save5 & BIT(15)) == 0)
+            {
+                int n = Wifi_FlashReadByte(F_T2_RF_CHANNEL_CFG2 + (channel - 1)) & 0x1F;
+                Wifi_RFWrite(chdata_save5 | (n << 10));
             }
 
             break;
+        }
 
         case 3:
-            n = Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
-            n += 0xCF;
-            l = Wifi_FlashReadByte(n - 1);
-            for (i = 0; i < l; i++)
+        {
+            int addr = 0xCE + Wifi_FlashReadByte(F_RF_NUM_OF_ENTRIES);
+            int num_bb_writes = Wifi_FlashReadByte(addr);
+            int num_rf_writes = Wifi_FlashReadByte(F_UNKNOWN_043);
+            addr++;
+
+            for (int i = 0; i < num_bb_writes; i++)
             {
-                Wifi_BBWrite(Wifi_FlashReadByte(n), Wifi_FlashReadByte(n + channel + 1));
-                n += 15;
+                Wifi_BBWrite(Wifi_FlashReadByte(addr), Wifi_FlashReadByte(addr + channel));
+                addr += 15;
             }
-            for (i = 0; i < Wifi_FlashReadByte(F_UNKNOWN_043); i++)
+
+            for (int i = 0; i < num_rf_writes; i++)
             {
-                Wifi_RFWrite((Wifi_FlashReadByte(n) << 8) | Wifi_FlashReadByte(n + channel + 1) | 0x050000);
-                n += 15;
+                Wifi_RFWriteType3(Wifi_FlashReadByte(addr), Wifi_FlashReadByte(addr + channel));
+                addr += 15;
             }
 
             swiDelay(12583); // 1500 us delay
 
             break;
-
+        }
         default:
             break;
     }
-    WifiData->curChannel = channel + 1;
+
+    WifiData->curChannel = channel;
 }
