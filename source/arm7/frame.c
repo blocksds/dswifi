@@ -355,8 +355,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     if (*(u16 *)(data + caps_index) & CAPS_PRIVACY)
         wepmode = true;
 
-    bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
-
     u16 ptr_ssid = 0;
 
     // Assume that the channel of the AP is the current one
@@ -578,17 +576,18 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
         // Save the BSSID only if this is a new AP (the BSSID is used to
         // identify APs that are already in the list).
         if (!in_aplist)
-            Wifi_CopyMacAddr(ap->bssid, data + 16);
+            Wifi_CopyMacAddr(ap->bssid, data + HDR_MGT_BSSID);
 
         // Save MAC address
-        Wifi_CopyMacAddr(ap->macaddr, data + 10);
+        Wifi_CopyMacAddr(ap->macaddr, data + HDR_MGT_SA);
 
         // Set the counter to 0 to mark the AP as just updated
         ap->timectr = 0;
 
+        bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
         ap->flags = WFLAG_APDATA_ACTIVE
-                                  | (wepmode ? WFLAG_APDATA_WEP : 0)
-                                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
+                  | (wepmode ? WFLAG_APDATA_WEP : 0)
+                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
 
         if (compatible == 1)
             ap->flags |= WFLAG_APDATA_COMPATIBLE;

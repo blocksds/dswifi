@@ -50,7 +50,7 @@ static void Wifi_SetLedState(int state)
 static void Wifi_UpdateAssociate(void)
 {
     // 20 units is around 1 second
-    if (((u16)(W_US_COUNT1 - WifiData->counter7)) <= 20)
+    if ((W_US_COUNT1 - WifiData->counter7) <= 20)
         return;
 
     WifiData->counter7 = W_US_COUNT1;
@@ -198,7 +198,7 @@ void Wifi_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
-            if (((u16)(W_US_COUNT1 - WifiData->counter7)) > 6)
+            if ((W_US_COUNT1 - WifiData->counter7) > 6)
             {
                 // Request changing channel
                 WifiData->counter7   = W_US_COUNT1;
@@ -262,7 +262,7 @@ void Wifi_Update(void)
                 Wifi_KeepaliveCountReset();
                 Wifi_SendNullFrame();
             }
-            if ((u16)(W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
+            if ((W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
             {
                 WifiData->pspoll_period = W_US_COUNT1;
                 // Wifi_SendPSPollFrame();
