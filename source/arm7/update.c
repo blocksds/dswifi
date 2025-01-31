@@ -5,6 +5,7 @@
 
 #include <nds.h>
 
+#include "arm7/beacon.h"
 #include "arm7/frame.h"
 #include "arm7/interrupts.h"
 #include "arm7/ipc.h"
@@ -292,6 +293,12 @@ void Wifi_Update(void)
     if (WifiData->curChannel != WifiData->reqChannel)
     {
         Wifi_SetChannel(WifiData->reqChannel);
+    }
+
+    if (WifiData->reqReqFlags & WFLAG_REQ_STOPBEACON)
+    {
+        Wifi_BeaconStop();
+        WifiData->reqReqFlags &= ~WFLAG_REQ_STOPBEACON;
     }
 
     // First, check if we have received anything and handle it

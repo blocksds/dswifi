@@ -14,7 +14,13 @@
 // this isn't required to be aligned to a halfword.
 static u16 beacon_channel_addr = 0;
 
-void Wifi_LoadBeacon(int from, int to)
+void Wifi_BeaconStop(void)
+{
+    W_TXBUF_BEACON &= ~TXBUF_BEACON_ENABLE;
+    W_BEACONINT = 0x64;
+}
+
+void Wifi_BeaconLoad(int from, int to)
 {
     u8 data[512];
 
@@ -25,13 +31,14 @@ void Wifi_LoadBeacon(int from, int to)
     if (len <= i)
     {
         // Disable beacon transmission if we don't have a valid beacon
-        W_TXBUF_BEACON &= ~TXBUF_BEACON_ENABLE;
-        W_BEACONINT = 0x64;
+        Wifi_BeaconStop();
         return;
     }
 
     if (len > 512)
         return;
+
+    WLOG_PUTS("W: Beacon setup\n");
 
     // Save the frame in a specific location in MAC RAM
     Wifi_MACRead((u16 *)data, from, 0, len);

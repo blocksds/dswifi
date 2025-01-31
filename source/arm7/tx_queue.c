@@ -211,7 +211,7 @@ int Wifi_TxArm9QueueFlush(void)
                               | (WifiData->wepkeyid7 << 14);
     }
 
-    // If this is a beacon frame, don't send it. Instead, call Wifi_LoadBeacon()
+    // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
     // so that it saves to a specific location in MAC RAM and we can use the TX
     // beacon registers. The WiFi chip will then take care of sending it at
     // regular intervals. This is required when the DS is acting as a host in
@@ -219,7 +219,7 @@ int Wifi_TxArm9QueueFlush(void)
     if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
     {
         // Copy from TX buffer to beacon buffer
-        Wifi_LoadBeacon(MAC_TXBUF_START_OFFSET, MAC_BEACON_START_OFFSET);
+        Wifi_BeaconLoad(MAC_TXBUF_START_OFFSET, MAC_BEACON_START_OFFSET);
         return 1;
     }
 

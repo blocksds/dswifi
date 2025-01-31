@@ -302,6 +302,21 @@ void Wifi_SetPromiscuousMode(int enable);
 /// and record information from beacons given off by APs.
 void Wifi_ScanMode(void);
 
+/// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
+///
+/// This beacon frame announces that this console is acting as an access point
+/// (for example, to act as a host of a multiplayer group). Beacon frames are
+/// be sent periodically by the hardware, you only need to call this function
+/// once. If you call Wifi_SetChannel(), the beacon will start announcing the
+/// presence of the AP in the new channel.
+///
+/// @param
+///     SSID to use for the access point.
+int Wifi_BeaconStart(const char *ssid);
+
+// Stops retransmiting a previously loaded beacon.
+int Wifi_BeaconStop(void);
+
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.
 ///

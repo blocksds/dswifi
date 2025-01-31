@@ -123,7 +123,7 @@
 #define MGT_FIE_ID_FH_PARAM_SET         2
 #define MGT_FIE_ID_DS_PARAM_SET         3
 #define MGT_FIE_ID_CF_PARAM_SET         4
-#define MGT_FIE_ID_TIM                  5
+#define MGT_FIE_ID_TIM                  5 // Traffic indication map
 #define MGT_FIE_ID_IBSS_PARAM_SET       6
 #define MGT_FIE_ID_CHALLENGE_TEXT       16
 #define MGT_FIE_ID_RSN                  48 // Robust Security Network
