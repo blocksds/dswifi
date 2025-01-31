@@ -283,14 +283,16 @@ int Wifi_CheckInit(void);
 /// Instructs the ARM7 to disengage wireless and stop receiving or transmitting.
 void Wifi_DisableWifi(void);
 
-/// Instructs the ARM7 to go into a basic "active" mode, not actually associated
-/// to an AP, but actively receiving and potentially transmitting.
+/// Instructs the ARM7 to go into a basic "active" mode.
+///
+/// The hardware is powered on, but not associated or doing anything useful. It
+/// can still receive and transmit packets.
 void Wifi_EnableWifi(void);
 
 /// Allows the DS to enter or leave a "promsicuous" mode.
 ///
 /// In this mode all data that can be received is forwarded to the ARM9 for user
-/// processing.  Best used with Wifi_RawSetPacketHandler, to allow user code to
+/// processing. Best used with Wifi_RawSetPacketHandler, to allow user code to
 /// use the data (well, the lib won't use 'em, so they're just wasting CPU
 /// otherwise.)
 ///
@@ -301,6 +303,12 @@ void Wifi_SetPromiscuousMode(int enable);
 /// Instructs the ARM7 to periodically rotate through the channels to pick up
 /// and record information from beacons given off by APs.
 void Wifi_ScanMode(void);
+
+/// Sets the WiFI hardware in "active" mode.
+///
+/// The hardware is powered on, but not associated or doing anything useful. It
+/// can still receive and transmit packets.
+void Wifi_IdleMode(void);
 
 /// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
 ///
@@ -319,6 +327,10 @@ int Wifi_BeaconStop(void);
 
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.
+///
+/// The WiFi system must be in "active" mode for this to work as expected. If it
+/// is in scanning mode, it will change channel automatically every second or
+/// so.
 ///
 /// @param channel
 ///     The channel to change to, in the range of 1-13.

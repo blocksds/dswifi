@@ -216,6 +216,12 @@ void Wifi_ScanMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
+void Wifi_IdleMode(void)
+{
+    WifiData->reqMode = WIFIMODE_NORMAL;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
 void Wifi_SetChannel(int channel)
 {
     if (channel < 1 || channel > 13)

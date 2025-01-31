@@ -36,6 +36,7 @@ void Wifi_DisableWifi(void);
 void Wifi_EnableWifi(void);
 void Wifi_SetPromiscuousMode(int enable);
 void Wifi_ScanMode(void);
+void Wifi_IdleMode(void);
 void Wifi_SetChannel(int channel);
 
 #ifdef __cplusplus
