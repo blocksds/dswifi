@@ -364,7 +364,7 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
     // the field right after the capabilities field.
     u32 curloc = caps_index + 2;
 
-    do
+    while (1)
     {
         if (curloc >= datalen)
             break;
@@ -509,7 +509,6 @@ static void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int m
 
         curloc += seglen;
     }
-    while (curloc < datalen);
 
     // Regular DS consoles aren't compatible with WPA
     if (wpamode)
