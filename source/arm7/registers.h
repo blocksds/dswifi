@@ -410,6 +410,8 @@ extern "C" {
 #define W_WEPKEY_2          WIFI_REG_ARR(0x5FC0)
 #define W_WEPKEY_3          WIFI_REG_ARR(0x5FE0)
 
+#define WEP_KEY_MAX_SIZE    32
+
 #ifdef __cplusplus
 };
 #endif

@@ -44,7 +44,7 @@ void Wifi_SetWepKey(void *wepkey, int wepmode)
         W_WEPKEY_2[i] = ((u16 *)wepkey)[i];
         W_WEPKEY_3[i] = ((u16 *)wepkey)[i];
     }
-    for (int i = hwords; i < 32; i++)
+    for (int i = hwords; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
     {
         W_WEPKEY_0[i] = 0;
         W_WEPKEY_1[i] = 0;
