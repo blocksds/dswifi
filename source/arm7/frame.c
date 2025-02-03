@@ -85,7 +85,7 @@ int Wifi_SendOpenSystemAuthPacket(void)
     size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
 
     Wifi_TxHeader *tx = (void *)data;
-    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
     u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
@@ -114,7 +114,7 @@ int Wifi_SendSharedKeyAuthPacket(void)
     size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
 
     Wifi_TxHeader *tx = (void *)data;
-    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
     u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
@@ -144,7 +144,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     size_t body_size = Wifi_GenMgtHeader(data, frame_control);
 
     Wifi_TxHeader *tx = (void *)data;
-    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
     u16 *body = (u16 *)(ieee->body + body_size);
 
     body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
@@ -187,7 +187,7 @@ int Wifi_SendAssocPacket(void)
     size_t body_size = Wifi_GenMgtHeader(data, TYPE_ASSOC_REQUEST);
 
     Wifi_TxHeader *tx = (void *)data;
-    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
     u8 *body = (u8 *)(ieee->body + body_size);
 
     // Fixed-length fields
