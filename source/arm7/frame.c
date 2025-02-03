@@ -153,7 +153,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 
     u8 *ch_out = (u8 *)&(body[3]);
 
-    ch_out[0] = 0x10; // 16=challenge text block
+    ch_out[0] = MGT_FIE_ID_CHALLENGE_TEXT;
     ch_out[1] = challenge_length;
 
     for (int j = 0; j < challenge_length; j++)
