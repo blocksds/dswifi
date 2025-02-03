@@ -211,7 +211,7 @@ typedef struct
     u16 sa[3];
     u16 bssid[3];
     u16 seq_ctl;
-    u16 body[0];
+    u8 body[0];
 } IEEE_MgtFrameHeader;
 
 typedef struct
@@ -222,7 +222,7 @@ typedef struct
     u16 addr_2[3];
     u16 addr_3[3];
     u16 seq_ctl;
-    u16 body[0];
+    u8 body[0];
 } IEEE_DataFrameHeader;
 
 typedef struct WIFI_ACCESSPOINT
