@@ -19,12 +19,7 @@ void Wifi_SetWepKey(void *wepkey, int wepmode)
     if (wepmode == WEPMODE_NONE)
         return;
 
-    int len = 0;
-
-    if (wepmode == WEPMODE_40BIT)
-        len = 5;
-    else if (wepmode == WEPMODE_128BIT)
-        len = 13;
+    int len = Wifi_WepKeySize(wepmode);
 
 #if DSWIFI_LOGS
     WLOG_PUTS("W: WEP: ");
@@ -35,21 +30,28 @@ void Wifi_SetWepKey(void *wepkey, int wepmode)
     WLOG_FLUSH();
 #endif
 
-    int hwords = (len + 1) / 2;
-
-    for (int i = 0; i < hwords; i++)
-    {
-        W_WEPKEY_0[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY_1[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY_2[i] = ((u16 *)wepkey)[i];
-        W_WEPKEY_3[i] = ((u16 *)wepkey)[i];
-    }
-    for (int i = hwords; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
+    for (int i = 0; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
     {
         W_WEPKEY_0[i] = 0;
         W_WEPKEY_1[i] = 0;
         W_WEPKEY_2[i] = 0;
         W_WEPKEY_3[i] = 0;
+    }
+
+    // Copy the WEP key carefully. The source array may not be aligned to 16 bit
+    int src = 0;
+    int dest = 0;
+    while (src < len)
+    {
+        u16 value = ((u8 *)wepkey)[src++];
+        if (src < len)
+            value |= ((u8 *)wepkey)[src++] << 8;
+
+        W_WEPKEY_0[dest] = value;
+        W_WEPKEY_1[dest] = value;
+        W_WEPKEY_2[dest] = value;
+        W_WEPKEY_3[dest] = value;
+        dest++;
     }
 }
 

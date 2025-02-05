@@ -152,8 +152,12 @@ void Wifi_Update(void)
                     WifiData->apchannel7 = WifiData->apchannel9;
                     Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
                     Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
-                    for (int i = 0; i < 20; i++)
+
+                    // Copy the full array to clear the original trailing data
+                    // if the new key is shorter than the old one.
+                    for (int i = 0; i < sizeof(WifiData->wepkey7); i++)
                         WifiData->wepkey7[i] = WifiData->wepkey9[i];
+
                     for (int i = 0; i < 34; i++)
                         WifiData->ssid7[i] = WifiData->ssid9[i];
                     if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)

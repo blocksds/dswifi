@@ -112,7 +112,7 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
-            for (int n = 0; n < 16; n++)
+            for (int n = 0; n < Wifi_WepKeySize(wepmode); n++)
                 WifiData->wfc_wepkey[c][n] = ap_data[AP_WEP_KEY_1 + n];
 
             for (int n = 0; n < 32; n++)

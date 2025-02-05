@@ -151,10 +151,13 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     WifiData->wepmode9  = wepmode; // copy data
     WifiData->wepkeyid9 = wepkeyid;
 
-    if (wepmode != WEPMODE_NONE && wepkey)
+    if (wepmode != WEPMODE_NONE)
     {
-        for (int i = 0; i < 20; i++)
+        int i;
+        for (i = 0; i < Wifi_WepKeySize(wepmode); i++)
             WifiData->wepkey9[i] = wepkey[i];
+        for ( ; i < sizeof(WifiData->wepkey9); i++)
+            WifiData->wepkey9[i] = 0;
     }
 
     WifiData->realRates = true;
@@ -181,6 +184,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
         WifiData->reqMode  = WIFIMODE_SCAN;
         wifi_connect_point = *apdata;
     }
+
     return 0;
 }
 
@@ -375,7 +379,7 @@ int Wifi_AssocStatus(void)
 #endif
                 WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                 WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
-                for (int i = 0; i < 16; i++)
+                for (int i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
                     WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
 
                 Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);

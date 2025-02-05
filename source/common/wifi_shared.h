@@ -164,6 +164,19 @@ enum WEPMODES
     WEPMODE_128BIT = 2
 };
 
+// Returns the size in bytes
+static inline int Wifi_WepKeySize(enum WEPMODES wepmode)
+{
+    if (wepmode == WEPMODE_NONE)
+        return 0;
+    else if (wepmode == WEPMODE_40BIT)
+        return 5;
+    else if (wepmode == WEPMODE_128BIT)
+        return 13;
+
+    return -1;
+}
+
 enum WIFI_ASSOCSTATUS
 {
     ASSOCSTATUS_DISCONNECTED,   // not *trying* to connect
@@ -261,7 +274,7 @@ typedef struct WIFI_MAINSTRUCT
     u8 apmac7[6], apmac9[6];
     char wepmode7, wepmode9;
     char wepkeyid7, wepkeyid9;
-    u8 wepkey7[20], wepkey9[20];
+    u8 wepkey7[13], wepkey9[13]; // Max size: 13 bytes (WEPMODE_128BIT)
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
@@ -284,7 +297,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 wfc_subnet_mask[3];
     u32 wfc_dns_primary[3];
     u32 wfc_dns_secondary[3];
-    u8 wfc_wepkey[3][16];
+    u8 wfc_wepkey[3][13]; // Max size: 13 bytes (WEPMODE_128BIT)
 
     // wifi data
     u32 rxbufIn, rxbufOut;                 // bufIn/bufOut have 2-byte granularity.
