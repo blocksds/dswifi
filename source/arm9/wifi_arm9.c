@@ -127,6 +127,13 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
     (void)hw;
 
+    if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
+    {
+        SGIP_DEBUG_MESSAGE(("Transmit:err_netdown"));
+        sgIP_memblock_free(mb);
+        return 0; // ?
+    }
+
     // Convert ethernet frame into wireless frame and transmit it.
     //
     // Ethernet header: 6 byte dest, 6 byte src, 2 byte protocol ID
@@ -146,17 +153,10 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
                      // Actual size of the data in the memory block
                      + mb->totallength - sizeof(sgIP_Header_Ethernet);
 
-    if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
-    {
-        SGIP_DEBUG_MESSAGE(("Transmit:err_netdown"));
-        sgIP_memblock_free(mb);
-        return 0; // ?
-    }
-
     size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
 
-    // TODO: We need space for the final checksum in the TX buffer even if we
-    // don't write it to the buffer (it gets filled in by the hardware in RAM).
+    // We need space for the FCS in the TX buffer even if we don't write it to
+    // the buffer (it gets filled in by the hardware in RAM).
     if ((hdr_size + body_size + 4) > Wifi_TxBufferBytesAvailable())
     {
         // error, can't send this much!
@@ -218,9 +218,6 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     }
 
     tx->tx_length = hdrlen - HDR_TX_SIZE + body_size + 4; // Checksum
-
-    WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += hdrlen + body_size;
 
     int base = WifiData->txbufOut;
 
@@ -288,9 +285,13 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     WifiData->txbufOut = base; // Update FIFO out pos, done sending packet.
 
-    // Note that the ICV is included in the TX buffer, but the FCS isn't.
+    // Note that the ICV is included in the circular ARM9->ARM7 TX buffer, but
+    // the FCS isn't.
 
     sgIP_memblock_free(t); // free packet, as we're the last stop on this chain.
+
+    WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += hdrlen + body_size;
 
     Wifi_CallSyncHandler();
 

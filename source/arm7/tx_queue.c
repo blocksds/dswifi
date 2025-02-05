@@ -126,7 +126,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
 {
     int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE);
     int readbase  = WifiData->txbufIn;
-    int length    = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
+    int length    = (packetlen + HDR_TX_SIZE - 4 + 1) / 2; // Round to halfwords
 
     int max = WifiData->txbufOut - WifiData->txbufIn;
     if (max < 0)
