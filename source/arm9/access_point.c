@@ -137,6 +137,13 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     if (((signed char)apdata->ssid_len) < 0 || apdata->ssid_len > 32)
         return -1;
 
+    // If WEP encryption is enabled, the key must be provided
+    if ((wepmode != WEPMODE_NONE) && (wepkey == NULL))
+        return -1;
+    // Check that the encryption mode is valid
+    if (wepmode < WEPMODE_NONE || wepmode > WEPMODE_128BIT)
+        return -1;
+
     Wifi_DisconnectAP();
 
     wifi_connect_state = WIFI_CONNECT_SEARCHING;

@@ -100,9 +100,13 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
         if (ap_data[AP_STATUS] == 0x00)
         {
+            u8 wepmode = ap_data[AP_WEP_MODE] & 0x0F;
+            if (wepmode > 2) // Invalid WEP mode
+                continue;
+
             // Normal network
 
-            WifiData->wfc_enable[c]     = 0x80 | (ap_data[AP_WEP_MODE] & 0x0F);
+            WifiData->wfc_enable[c]     = 0x80 | wepmode;
             WifiData->wfc_ap[c].channel = 0;
 
             for (int n = 0; n < 6; n++)
