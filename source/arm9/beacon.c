@@ -17,7 +17,9 @@ int Wifi_BeaconStart(const char *ssid)
 {
     u8 data[512];
 
-    size_t ssid_len = strlen(ssid);
+    size_t ssid_len = 0;
+    if (ssid != NULL)
+        ssid_len = strlen(ssid);
     if (ssid_len > 32)
         return -1;
 
@@ -34,7 +36,7 @@ int Wifi_BeaconStart(const char *ssid)
     // ------------------
 
     memset(tx, 0, sizeof(Wifi_TxHeader));
-    tx->tx_rate = WIFI_TRANSFER_RATE_2MBPS;
+    tx->tx_rate = WIFI_TRANSFER_RATE_2MBPS; // This is always 2 Mbit/s
 
     // IEEE 802.11 header
     // ------------------
@@ -74,11 +76,14 @@ int Wifi_BeaconStart(const char *ssid)
 
     // SSID
 
-    *body++ = MGT_FIE_ID_SSID;
-    *body++ = ssid_len;
-    for (size_t i = 0; i < ssid_len; i++)
-        *body++ = ssid[i];
-    body_size += 2 + ssid_len;
+    if (ssid_len > 0)
+    {
+        *body++ = MGT_FIE_ID_SSID;
+        *body++ = ssid_len;
+        for (size_t i = 0; i < ssid_len; i++)
+            *body++ = ssid[i];
+        body_size += 2 + ssid_len;
+    }
 
     // Supported rates
 
