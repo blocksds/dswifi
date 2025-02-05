@@ -148,7 +148,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     // Total amount of bytes to be written to TX buffer after the IEEE header
     // (and after the WEP IV)
-    size_t body_size = (WifiData->wepmode7 ? 4 + 4 : 0) // WEP IV + ICV
+    size_t body_size = (WifiData->wepmode7 ? 4 : 0) // WEP IV + (exclude ICV)
                      + 8 // LLC/SNAP header
                      // Actual size of the data in the memory block
                      + mb->totallength - sizeof(sgIP_Header_Ethernet);
