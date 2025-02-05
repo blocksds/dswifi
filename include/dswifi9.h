@@ -376,12 +376,13 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 /// @param apdata
 ///     Basic data on the AP.
 /// @param wepmode
-///     Indicates whether WEP is used, and what kind (WEPMODES).
+///     Indicates whether WEP is used, and what kind (WEPMODES). Use
+///     WEPMODE_NONE if WEP isn't required.
 /// @param wepkeyid
-///     Indicates which WEP key ID to use for transmitting.
+///     Indicates which WEP key ID to use for transmitting (normally 0).
 /// @param wepkey
-///     The WEP key, to be used in all 4 key slots (should make this more
-///     flexible in the future).
+///     The WEP key, to be used in all 4 key slots. For WEPMODE_40BIT it is a 5
+///     byte long array. For WEPMODE_128BIT it is a 13 byte long array.
 ///
 /// @return
 ///     0 for ok, -1 for error with input data.
