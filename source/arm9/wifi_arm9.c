@@ -142,7 +142,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // Total amount of bytes to be written to TX buffer after the IEEE header
     // (and after the WEP IV)
     size_t body_size = (WifiData->wepmode7 ? 4 + 4 : 0) // WEP IV + ICV
-                     + 8 // LLC header
+                     + 8 // LLC/SNAP header
                      // Actual size of the data in the memory block
                      + mb->totallength - sizeof(sgIP_Header_Ethernet);
 
@@ -229,14 +229,16 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     if (base >= (WIFI_TXBUFFER_SIZE / 2))
         base -= WIFI_TXBUFFER_SIZE / 2;
 
-    // Copy LLC header
-    // ===============
+    // Copy LLC/SNAP encapsulation information
+    // =======================================
 
-    // Re-use the previous struct to generate LLC header
+    // Reuse the previous struct to generate SNAP header
     framehdr[0] = 0xAAAA;
     framehdr[1] = 0x0003;
     framehdr[2] = 0x0000;
-    framehdr[3] = eth->protocol; // Frame type
+
+    // After the SNAP header add the protocol type
+    framehdr[3] = eth->protocol;
 
     Wifi_TxBufferWrite(base * 2, 8, framehdr);
     base += 8 / 2;
@@ -321,12 +323,12 @@ static void Wifi_sgIpHandlePackage(int base, int len)
     if ((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) != TYPE_DATA)
         return;
 
-    // Read IEEE header and LLC
+    // Read IEEE header and LLC/SNAP
     u16 framehdr[(HDR_DATA_MAC_SIZE + 8) / sizeof(u16)];
     Wifi_RxRawReadPacket(base * 2, sizeof(framehdr), framehdr);
 
     IEEE_DataFrameHeader *ieee = (void *)framehdr;
-    u16 *llc = (u16*)(((u8 *)framehdr) + sizeof(IEEE_DataFrameHeader));
+    u16 *snap = (u16*)(((u8 *)framehdr) + sizeof(IEEE_DataFrameHeader));
 
     // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
     // (Receiver Address / Destination Address), which is the final recipient of
@@ -342,15 +344,16 @@ static void Wifi_sgIpHandlePackage(int base, int len)
 
     // Okay, the frame is addressed to us (or to everyone). Let's parse it.
 
-    // Check for LLC/SLIP header. Assume it exists and it's 8 bytes. It goes
-    // right after the IEEE data frame header.
-    if ((llc[0] != 0xAAAA) || (llc[1] != 0x0003) || (llc[2] != 0x0000))
+    // Check for LLC/SNAP header. Assume it exists. It's 6 bytes for the SNAP
+    // header plus 2 bytes for the type (8 bytes in total). It goes right after
+    // the IEEE data frame header.
+    if ((snap[0] != 0xAAAA) || (snap[1] != 0x0003) || (snap[2] != 0x0000))
         return;
 
-    u16 eth_protocol = llc[3];
+    u16 eth_protocol = snap[3];
 
     // Calculate size in bytes of the actual contents received in the data frame
-    // (excluding the IEEE 802.11 header and the LLC header).
+    // (excluding the IEEE 802.11 header and the SNAP header).
     size_t datalen = len - (HDR_DATA_MAC_SIZE + 8);
 
     // The sgIP block will need to contain the ethernet header and the data.
@@ -379,9 +382,8 @@ static void Wifi_sgIpHandlePackage(int base, int len)
 
     // Copy data
 
-    // Index to the start of the data, after the LLC header
+    // Index to the start of the data, after the LLC/SNAP header
     int data_base = base + ((HDR_DATA_MAC_SIZE + 8) / 2);
-
     if (data_base >= WIFI_RXBUFFER_SIZE / 2)
         data_base -= WIFI_RXBUFFER_SIZE / 2;
 
