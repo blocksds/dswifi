@@ -40,7 +40,7 @@ void Wifi_Sync(void)
 }
 
 // wifi timer function, to update internals of sgIP
-static void Timer_50ms(void)
+static void Wifi_Timer_50ms(void)
 {
     Wifi_Timer(50);
 }
@@ -126,14 +126,10 @@ bool Wifi_InitDefault(bool useFirmwareSettings)
     if (!wifi_pass)
         return false;
 
-    irqSet(IRQ_TIMER3, Timer_50ms); // setup timer IRQ
-    irqEnable(IRQ_TIMER3);
-
     Wifi_SetSyncHandler(arm9_synctoarm7); // tell wifi lib to use our handler to notify arm7
 
-    // set timer3
-    TIMER3_DATA = -6553;  // 6553.1 * 256 cycles = ~50ms;
-    TIMER3_CR   = 0x00C2; // enable, irq, 1/256 clock
+    // Setup timer 3. Call handler 20 times per second (every 50 ms).
+    timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
 
     fifoSendAddress(FIFO_DSWIFI, (void *)wifi_pass);
 
