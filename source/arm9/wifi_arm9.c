@@ -283,7 +283,10 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
 
-    WifiData->txbufOut = base; // Update FIFO out pos, done sending packet.
+    // Only update the pointer after the whole packet has been writen to RAM or
+    // the ARM7 may see that the pointer has changed and send whatever is in the
+    // buffer at that point.
+    WifiData->txbufOut = base;
 
     // Note that the ICV is included in the circular ARM9->ARM7 TX buffer, but
     // the FCS isn't.
