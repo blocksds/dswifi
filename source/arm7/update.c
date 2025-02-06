@@ -69,6 +69,17 @@ static void Wifi_UpdateAssociate(void)
 
     switch (WifiData->authlevel)
     {
+        case WIFI_AUTHLEVEL_DEASSOCIATED:
+        case WIFI_AUTHLEVEL_AUTHENTICATED:
+            // The whole authentication and association process should take much
+            // less than one second. To make things easier, if we're stuck in an
+            // intermediate state, start again from the start. The alternative
+            // is to call Wifi_SendAssocPacket(), but that doesn't work reliably
+            // when the process gets stuck after authentication.
+            WifiData->realRates = true;
+            WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+            // Fallthrough
+
         case WIFI_AUTHLEVEL_DISCONNECTED:
             if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
             {
@@ -78,11 +89,6 @@ static void Wifi_UpdateAssociate(void)
                 break;
             }
             Wifi_SendOpenSystemAuthPacket();
-            break;
-
-        case WIFI_AUTHLEVEL_DEASSOCIATED:
-        case WIFI_AUTHLEVEL_AUTHENTICATED:
-            Wifi_SendAssocPacket();
             break;
 
         case WIFI_AUTHLEVEL_ASSOCIATED:
