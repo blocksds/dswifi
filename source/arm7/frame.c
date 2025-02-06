@@ -703,6 +703,7 @@ static void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
             (WifiData->authlevel == WIFI_AUTHLEVEL_DEASSOCIATED))
         {
             WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
+            WifiData->curMode   = WIFIMODE_ASSOCIATED;
             WifiData->authctr   = 0;
             WLOG_PUTS("W: Associated\n");
         }

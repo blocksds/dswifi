@@ -72,7 +72,9 @@ static void Wifi_UpdateAssociate(void)
         case WIFI_AUTHLEVEL_DISCONNECTED:
             if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
             {
+                // For ad hoc APs we don't need to do this
                 WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
+                WifiData->curMode   = WIFIMODE_ASSOCIATED;
                 break;
             }
             Wifi_SendOpenSystemAuthPacket();
@@ -84,6 +86,8 @@ static void Wifi_UpdateAssociate(void)
             break;
 
         case WIFI_AUTHLEVEL_ASSOCIATED:
+            // We should have reached this point when authlevel was set to
+            // WIFI_AUTHLEVEL_ASSOCIATED. Refresh curMode anyway.
             WifiData->curMode = WIFIMODE_ASSOCIATED;
             break;
     }
