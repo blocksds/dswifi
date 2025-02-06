@@ -5,7 +5,6 @@
 
 #include <nds.h>
 
-#include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/registers.h"
 #include "arm7/rx_queue.h"

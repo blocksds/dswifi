@@ -6,7 +6,9 @@
 #include <nds.h>
 
 #include "arm7/beacon.h"
-#include "arm7/frame.h"
+#include "arm7/ieee_802_11/association.h"
+#include "arm7/ieee_802_11/authentication.h"
+#include "arm7/ieee_802_11/other.h"
 #include "arm7/interrupts.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"

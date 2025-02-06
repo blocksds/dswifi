@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_FRAME_H__
-#define DSWIFI_ARM7_FRAME_H__
+#ifndef DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__
+#define DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,20 +12,17 @@ extern "C" {
 
 #include <nds/ndstypes.h>
 
-#include "common/common_defs.h"
-
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
+#include "common/wifi_shared.h"
 
 int Wifi_SendOpenSystemAuthPacket(void);
+int Wifi_SendSharedKeyAuthPacket(void);
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text);
-int Wifi_SendAssocPacket(void);
-int Wifi_SendNullFrame(void);
-int Wifi_SendPSPollFrame(void);
 
-int Wifi_ProcessReceivedFrame(int macbase, int framelen);
+void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase);
+void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase);
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // DSWIFI_ARM7_FRAME_H__
+#endif // DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__

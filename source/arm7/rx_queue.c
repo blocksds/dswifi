@@ -3,12 +3,14 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#include "arm7/frame.h"
+#include "arm7/ieee_802_11/process.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"
 #include "arm7/rx_queue.h"
 #include "arm7/update.h"
+#include "common/common_defs.h"
+#include "common/ieee_defs.h"
 
 // This function tries to read up to "len" bytes from the RX queue in MAC RAM
 // and writes them to the circular RX buffer shared with the ARM9.

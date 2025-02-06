@@ -6,7 +6,6 @@
 #include "arm7/baseband.h"
 #include "arm7/debug.h"
 #include "arm7/flash.h"
-#include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"

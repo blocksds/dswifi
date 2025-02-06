@@ -4,11 +4,11 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/beacon.h"
-#include "arm7/frame.h"
 #include "arm7/ipc.h"
 #include "arm7/registers.h"
 #include "arm7/mac.h"
 #include "arm7/update.h"
+#include "common/common_defs.h"
 #include "common/ieee_defs.h"
 
 static u16 wifi_tx_queue[1024];

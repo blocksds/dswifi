@@ -7,6 +7,24 @@
 #include "arm7/registers.h"
 #include "arm7/flash.h"
 
+int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
+{
+    volatile u16 *m1 = mac1;
+    volatile u16 *m2 = mac2;
+
+    return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
+}
+
+void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
+{
+    volatile u16 *d = dest;
+    volatile u16 *s = src;
+
+    d[0] = s[0];
+    d[1] = s[1];
+    d[2] = s[2];
+}
+
 void Wifi_MacInit(void)
 {
     W_MODE_RST      = 0;
