@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef WIFI_ARM9_H
-#define WIFI_ARM9_H
+#ifndef DSWIFI_ARM9_WIFI_ARM9_H__
+#define DSWIFI_ARM9_WIFI_ARM9_H__
 
 #include <nds/ndstypes.h>
 
@@ -49,4 +49,4 @@ u32 Wifi_GetIP(void);
 extern sgIP_Hub_HWInterface *wifi_hw;
 #endif
 
-#endif
+#endif // DSWIFI_ARM9_WIFI_ARM9_H__

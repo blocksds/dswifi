@@ -4,8 +4,8 @@
 
 // Shared structures to be used by arm9 and arm7
 
-#ifndef WIFI_SHARED_H
-#define WIFI_SHARED_H
+#ifndef DSWIFI_ARM9_WIFI_SHARED_H__
+#define DSWIFI_ARM9_WIFI_SHARED_H__
 
 #include <nds.h>
 
@@ -319,4 +319,4 @@ typedef struct WIFI_MAINSTRUCT
 
 } Wifi_MainStruct;
 
-#endif
+#endif // DSWIFI_ARM9_WIFI_SHARED_H__
