@@ -6,15 +6,7 @@
 #ifndef DSWIFI_ARM7_IEEE_802_11_OTHER_H__
 #define DSWIFI_ARM7_IEEE_802_11_OTHER_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int Wifi_SendNullFrame(void);
 int Wifi_SendPSPollFrame(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_IEEE_802_11_OTHER_H__

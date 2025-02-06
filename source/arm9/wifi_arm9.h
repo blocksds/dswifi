@@ -6,10 +6,6 @@
 #ifndef WIFI_ARM9_H
 #define WIFI_ARM9_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 #include "common/wifi_shared.h"
@@ -51,10 +47,6 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 u32 Wifi_GetIP(void);
 
 extern sgIP_Hub_HWInterface *wifi_hw;
-#endif
-
-#ifdef __cplusplus
-};
 #endif
 
 #endif

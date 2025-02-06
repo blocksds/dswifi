@@ -6,16 +6,8 @@
 #ifndef DSWIFI_ARM7_UPDATE_H__
 #define DSWIFI_ARM7_UPDATE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void Wifi_KeepaliveCountReset(void);
 
 void Wifi_Update(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_UPDATE_H__

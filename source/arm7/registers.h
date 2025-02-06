@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_REGISTERS_H__
 #define DSWIFI_ARM7_REGISTERS_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds.h>
 
 // DS Registers
@@ -411,9 +407,5 @@ extern "C" {
 #define W_WEPKEY_3          WIFI_REG_ARR(0x5FE0)
 
 #define WEP_KEY_MAX_SIZE    32
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_REGISTERS_H__

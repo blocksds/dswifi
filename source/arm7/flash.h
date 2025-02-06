@@ -6,14 +6,6 @@
 #ifndef DSWIFI_ARM7_FLASH_H__
 #define DSWIFI_ARM7_FLASH_H__
 
-#ifndef ARM7
-#    error Wifi is only accessible from the ARM7
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -122,9 +114,5 @@ uint32_t Wifi_FlashReadBytes(uint32_t address, size_t numbytes);
 uint16_t Wifi_FlashReadHWord(uint32_t address);
 
 void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_FLASH_H__

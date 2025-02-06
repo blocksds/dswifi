@@ -7,10 +7,6 @@
 #ifndef DSWIFI_COMMON_SPINLOCK_H__
 #define DSWIFI_COMMON_SPINLOCK_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 #include "common/spinlock_asm.h"
@@ -22,9 +18,5 @@ extern "C" {
 
 u32 SLasm_Acquire(volatile u32 *lockaddr, u32 lockvalue);
 u32 SLasm_Release(volatile u32 *lockaddr, u32 lockvalue);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_COMMON_SPINLOCK_H__

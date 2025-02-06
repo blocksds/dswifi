@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM9_RX_TX_QUEUE_H__
 #define DSWIFI_ARM9_RX_TX_QUEUE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 // Returns the number of bytes available in the TX buffer.
@@ -38,9 +34,5 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 // The base address and offset are specified in bytes. The base must be aligned
 // to 16 bit and the offset must be a multiple of 16 bits.
 u16 Wifi_RxReadHWordOffset(u32 base, u32 offset);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM9_RX_TX_QUEUE_H__

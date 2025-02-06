@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM9_ACCESS_POINT_H__
 #define DSWIFI_ARM9_ACCESS_POINT_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 #include "common/wifi_shared.h"
@@ -26,9 +22,5 @@ int Wifi_DisconnectAP(void);
 void Wifi_AutoConnect(void);
 
 int Wifi_AssocStatus(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM9_ACCESS_POINT_H__

@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_BASEBAND_H__
 #define DSWIFI_ARM7_BASEBAND_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "arm7/registers.h"
 
 /// BB-Chip Mitsumi MM3155 (DS) or BB/RF-Chip Mitsumi MM3218 (DS-Lite)
@@ -32,9 +28,5 @@ static inline void Wifi_BBPowerOff(void)
 {
     W_BB_POWER = 0x800D;
 }
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_BASEBAND_H__

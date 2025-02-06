@@ -6,14 +6,6 @@
 #ifndef DSWIFI_ARM7_IEEE_802_11_PROCESS_H__
 #define DSWIFI_ARM7_IEEE_802_11_PROCESS_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int Wifi_ProcessReceivedFrame(int macbase, int framelen);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_IEEE_802_11_PROCESS_H__

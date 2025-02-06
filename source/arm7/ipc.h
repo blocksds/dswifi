@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_IPC_H__
 #define DSWIFI_ARM7_IPC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "common/wifi_shared.h"
 
 // Struct used to communicate between ARM7 and ARM9.
@@ -23,9 +19,5 @@ typedef void (*WifiSyncHandler)(void);
 void Wifi_CallSyncHandler(void);
 
 void installWifiFIFO(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_IPC_H__

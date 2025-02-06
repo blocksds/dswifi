@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_RF_H__
 #define DSWIFI_ARM7_RF_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 // Hardware definitions for the RF9008 transceiver chip.
 
 #define REG_RF9008_CFG1     0x00
@@ -40,9 +36,5 @@ void Wifi_RFWrite(int writedata);
 void Wifi_RFInit(void);
 
 void Wifi_SetChannel(int channel);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_RF_H__

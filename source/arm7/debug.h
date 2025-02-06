@@ -6,14 +6,6 @@
 #ifndef DSWIFI_ARM7_DEBUG_H__
 #define DSWIFI_ARM7_DEBUG_H__
 
-#ifndef ARM7
-#    error Wifi is only accessible from the ARM7
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 
 #include <nds.h>
@@ -30,10 +22,6 @@ extern "C" {
 #define WLOG_PUTS(s)
 #define WLOG_FLUSH()
 
-#endif
-
-#ifdef __cplusplus
-};
 #endif
 
 #endif // DSWIFI_ARM7_DEBUG_H__

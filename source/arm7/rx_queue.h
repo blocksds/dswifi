@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_RX_QUEUE_H__
 #define DSWIFI_ARM7_RX_QUEUE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 // Handling packets can take time, and this handling is done inside an interrupt
@@ -23,9 +19,5 @@ extern "C" {
 // will first analyze which type of packet each frame is, process some of them,
 // and send the rest to the RX ARM9 queue to be handled by the ARM9.
 void Wifi_RxQueueFlush(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_RX_QUEUE_H__

@@ -6,14 +6,6 @@
 #ifndef DSWIFI_ARM7_INTERRUPTS_H__
 #define DSWIFI_ARM7_INTERRUPTS_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void Wifi_Interrupt(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_INTERRUPTS_H__

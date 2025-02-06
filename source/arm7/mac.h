@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_MAC_H__
 #define DSWIFI_ARM7_MAC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 // MAC RAM memory map
@@ -74,9 +70,5 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length);
 // If length isn't a multiple of 16 bits, this function will write an additional
 // byte at the end of the loop.
 void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_MAC_H__

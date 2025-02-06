@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM9_IPC_H__
 #define DSWIFI_ARM9_IPC_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 #include "common/wifi_shared.h"
@@ -38,9 +34,5 @@ void Wifi_SetPromiscuousMode(int enable);
 void Wifi_ScanMode(void);
 void Wifi_IdleMode(void);
 void Wifi_SetChannel(int channel);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM9_IPC_H__

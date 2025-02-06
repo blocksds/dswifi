@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__
 #define DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 #include "common/wifi_shared.h"
@@ -20,9 +16,5 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text);
 
 void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase);
 void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__

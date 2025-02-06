@@ -6,10 +6,6 @@
 #ifndef DSWIFI_ARM7_TX_QUEUE_H__
 #define DSWIFI_ARM7_TX_QUEUE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <nds/ndstypes.h>
 
 // If you want to transfer data out of the DS, use Wifi_TxQueueAdd(). This
@@ -61,9 +57,5 @@ int Wifi_TxArm9QueueFlush(void);
 // check the ARM7 queue and flush it if it has enqueued data. If not, it will
 // try with the ARM9 queue.
 void Wifi_TxAllQueueFlush(void);
-
-#ifdef __cplusplus
-};
-#endif
 
 #endif // DSWIFI_ARM7_TX_QUEUE_H__
