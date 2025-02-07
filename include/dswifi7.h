@@ -16,7 +16,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "dswifi_version.h"
+
+#include <dswifi_version.h>
 
 /// Wifi Sync Handler function.
 ///

@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 
 #include <nds.h>
+#include <dswifi9.h>
 
 #include "arm9/access_point.h"
 #include "arm9/ipc.h"

@@ -4,6 +4,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include <nds.h>
+#include <dswifi_common.h>
 
 #include "arm7/beacon.h"
 #include "arm7/ieee_802_11/association.h"

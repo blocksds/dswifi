@@ -10,25 +10,9 @@
 
 #include "common/wifi_shared.h"
 
-// default option is to use 128k heap
-#define WIFIINIT_OPTION_USEHEAP_128    0x0000
-#define WIFIINIT_OPTION_USEHEAP_64     0x1000
-#define WIFIINIT_OPTION_USEHEAP_256    0x2000
-#define WIFIINIT_OPTION_USEHEAP_512    0x3000
-#define WIFIINIT_OPTION_USECUSTOMALLOC 0x4000
-#define WIFIINIT_OPTION_HEAPMASK       0xF000
-
 // Uncached mirror of the WiFi struct. This needs to be used from the ARM9 so
 // that there aren't cache management issues.
 extern volatile Wifi_MainStruct *WifiData;
-
-enum WIFIGETDATA
-{
-    WIFIGETDATA_MACADDRESS, // MACADDRESS: returns data in the buffer, requires at least 6 bytes
-    WIFIGETDATA_NUMWFCAPS,  // NUM WFC APS: returns number between 0 and 3, doesn't use buffer.
-
-    MAX_WIFIGETDATA
-};
 
 typedef void (*WifiPacketHandler)(int, int);
 

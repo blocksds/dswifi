@@ -8,8 +8,7 @@
 #define DSWIFI_ARM9_WIFI_SHARED_H__
 
 #include <nds.h>
-
-#define WIFIINIT_OPTION_USELED 0x0002
+#include <dswifi_common.h>
 
 // If for whatever reason you want to ditch SGIP and use your own stack, comment out the following
 // line.
@@ -24,13 +23,6 @@
 #define WIFI_MAX_PROBE 4
 
 #define WIFI_AP_TIMEOUT 40
-
-#define WFLAG_PACKET_DATA   0x0001
-#define WFLAG_PACKET_MGT    0x0002
-#define WFLAG_PACKET_BEACON 0x0004
-#define WFLAG_PACKET_CTRL   0x0008
-
-#define WFLAG_PACKET_ALL 0xFFFF
 
 #define WFLAG_ARM7_ACTIVE  0x0001
 #define WFLAG_ARM7_RUNNING 0x0002
@@ -55,81 +47,6 @@
 
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000
-
-#define WFLAG_APDATA_ADHOC         0x0001
-#define WFLAG_APDATA_WEP           0x0002
-#define WFLAG_APDATA_WPA           0x0004
-#define WFLAG_APDATA_COMPATIBLE    0x0008
-#define WFLAG_APDATA_EXTCOMPATIBLE 0x0010
-#define WFLAG_APDATA_SHORTPREAMBLE 0x0020
-#define WFLAG_APDATA_ACTIVE        0x8000
-
-enum WIFI_RETURN
-{
-    WIFI_RETURN_OK         = 0, // Everything went ok
-    WIFI_RETURN_LOCKFAILED = 1, // the spinlock attempt failed (it wasn't retried cause that could
-                                // lock both cpus- retry again after a delay.
-    WIFI_RETURN_ERROR      = 2, // There was an error in attempting to complete the requested task.
-    WIFI_RETURN_PARAMERROR = 3, // There was an error in the parameters passed to the function.
-};
-
-enum WIFI_STATS
-{
-    // software stats
-    WSTAT_RXQUEUEDPACKETS,  // number of packets queued into the rx fifo
-    WSTAT_TXQUEUEDPACKETS,  // number of packets queued into the tx fifo
-    WSTAT_RXQUEUEDBYTES,    // number of bytes queued into the rx fifo
-    WSTAT_TXQUEUEDBYTES,    // number of bytes queued into the tx fifo
-    WSTAT_RXQUEUEDLOST,     // number of packets lost due to space limitations in queuing
-    WSTAT_TXQUEUEDREJECTED, // number of packets rejected due to space limitations in queuing
-    WSTAT_RXPACKETS,
-    WSTAT_RXBYTES,
-    WSTAT_RXDATABYTES,
-    WSTAT_TXPACKETS,
-    WSTAT_TXBYTES,
-    WSTAT_TXDATABYTES,
-    WSTAT_ARM7_UPDATES,
-    WSTAT_DEBUG,
-    // harware stats (function mostly unknown.)
-    WSTAT_HW_1B0,
-    WSTAT_HW_1B1,
-    WSTAT_HW_1B2,
-    WSTAT_HW_1B3,
-    WSTAT_HW_1B4,
-    WSTAT_HW_1B5,
-    WSTAT_HW_1B6,
-    WSTAT_HW_1B7,
-    WSTAT_HW_1B8,
-    WSTAT_HW_1B9,
-    WSTAT_HW_1BA,
-    WSTAT_HW_1BB,
-    WSTAT_HW_1BC,
-    WSTAT_HW_1BD,
-    WSTAT_HW_1BE,
-    WSTAT_HW_1BF,
-    WSTAT_HW_1C0,
-    WSTAT_HW_1C1,
-    WSTAT_HW_1C4,
-    WSTAT_HW_1C5,
-    WSTAT_HW_1D0,
-    WSTAT_HW_1D1,
-    WSTAT_HW_1D2,
-    WSTAT_HW_1D3,
-    WSTAT_HW_1D4,
-    WSTAT_HW_1D5,
-    WSTAT_HW_1D6,
-    WSTAT_HW_1D7,
-    WSTAT_HW_1D8,
-    WSTAT_HW_1D9,
-    WSTAT_HW_1DA,
-    WSTAT_HW_1DB,
-    WSTAT_HW_1DC,
-    WSTAT_HW_1DD,
-    WSTAT_HW_1DE,
-    WSTAT_HW_1DF,
-
-    NUM_WIFI_STATS
-};
 
 enum WIFI_MODE
 {
@@ -157,13 +74,6 @@ enum WIFI_AUTHLEVEL
     WIFI_AUTHLEVEL_DEASSOCIATED,
 };
 
-enum WEPMODES
-{
-    WEPMODE_NONE   = 0,
-    WEPMODE_40BIT  = 1,
-    WEPMODE_128BIT = 2
-};
-
 // Returns the size in bytes
 static inline int Wifi_WepKeySize(enum WEPMODES wepmode)
 {
@@ -177,44 +87,11 @@ static inline int Wifi_WepKeySize(enum WEPMODES wepmode)
     return -1;
 }
 
-enum WIFI_ASSOCSTATUS
-{
-    ASSOCSTATUS_DISCONNECTED,   // not *trying* to connect
-    ASSOCSTATUS_SEARCHING,      // data given does not completely specify an AP, looking for AP that
-                                // matches the data.
-    ASSOCSTATUS_AUTHENTICATING, // connecting...
-    ASSOCSTATUS_ASSOCIATING,    // connecting...
-    ASSOCSTATUS_ACQUIRINGDHCP,  // connected to AP, but getting IP data from DHCP
-    ASSOCSTATUS_ASSOCIATED,     // Connected! (COMPLETE if Wifi_ConnectAP was called to start)
-    ASSOCSTATUS_CANNOTCONNECT,  // error in connecting... (COMPLETE if Wifi_ConnectAP was called to
-                                // start)
-};
-
 enum WIFI_TRANSFERRATES
 {
     WIFI_TRANSFER_RATE_1MBPS = 0x0A, // 1 Mbit/s
     WIFI_TRANSFER_RATE_2MBPS = 0x14, // 1 Mbit/s
 };
-
-typedef struct WIFI_TXHEADER
-{
-    u16 enable_flags;
-    u16 unknown;
-    u16 countup;
-    u16 beaconfreq;
-    u16 tx_rate;
-    u16 tx_length; // Full IEEE frame size (including checksums) in bytes
-} Wifi_TxHeader;
-
-typedef struct WIFI_RXHEADER
-{
-    u16 a;
-    u16 b;
-    u16 c;
-    u16 d;
-    u16 byteLength;
-    u16 rssi_;
-} Wifi_RxHeader;
 
 typedef struct
 {
@@ -237,20 +114,6 @@ typedef struct
     u16 seq_ctl;
     u8 body[0];
 } IEEE_DataFrameHeader;
-
-typedef struct WIFI_ACCESSPOINT
-{
-    char ssid[33]; // 0-32 character long string + nul character
-    u8 ssid_len;
-    u8 bssid[6];
-    u8 macaddr[6];
-    u32 timectr;
-    u16 rssi;
-    u16 flags;
-    u32 spinlock;
-    u8 channel;
-    u8 rssi_past[8];
-} Wifi_AccessPoint;
 
 typedef struct WIFI_MAINSTRUCT
 {
