@@ -56,8 +56,6 @@ enum WIFI_MODE
     WIFIMODE_ASSOCIATE,
     // The ARM7 is connected to the AP.
     WIFIMODE_ASSOCIATED,
-    // The ARM7 has connected to the AP.
-    WIFIMODE_DISASSOCIATE,
     // The ARM7 is unable to connect to the AP.
     WIFIMODE_CANNOTASSOCIATE,
 };

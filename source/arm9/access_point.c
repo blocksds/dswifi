@@ -272,7 +272,6 @@ int Wifi_AssocStatus(void)
             {
                 case WIFIMODE_DISABLED:
                 case WIFIMODE_NORMAL:
-                case WIFIMODE_DISASSOCIATE:
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_SCAN:
                     if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
