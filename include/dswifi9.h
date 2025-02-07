@@ -158,8 +158,11 @@ void Wifi_IdleMode(void);
 /// once. If you call Wifi_SetChannel(), the beacon will start announcing the
 /// presence of the AP in the new channel.
 ///
-/// @param
+/// @param ssid
 ///     SSID to use for the access point.
+///
+/// @return
+///     0 on success, a negative value on error.
 int Wifi_BeaconStart(const char *ssid);
 
 // Stops retransmiting a previously loaded beacon.
@@ -337,7 +340,7 @@ uint32_t Wifi_GetStats(int statnum);
 /// @param rate
 ///     The rate to transmit at (Specified as mbits/10, 1mbit=0x000A,
 ///     2mbit=0x0014)
-/// @param data
+/// @param src
 ///     Pointer to the data to send (should be halfword-aligned).
 ///
 /// @return
@@ -354,9 +357,9 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 ///
 /// @param base
 ///     The base address of the packet in the internal buffer.
-/// @param readlength
+/// @param size_bytes
 ///     Number of bytes to read. It actually reads ((number + 1) & ~1) bytes
-/// @param data
+/// @param dst
 ///     Location for the data to be read into. It must be aligned to 16 bits.
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 
