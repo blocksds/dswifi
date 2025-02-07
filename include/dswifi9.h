@@ -190,7 +190,7 @@ typedef struct WIFI_TXHEADER
     uint16_t countup;
     uint16_t beaconfreq;
     uint16_t tx_rate;
-    uint16_t tx_length;
+    uint16_t tx_length; // Full IEEE frame size (including checksums) in bytes
 } Wifi_TxHeader;
 
 typedef struct WIFI_RXHEADER
@@ -268,7 +268,9 @@ typedef void (*WifiSyncHandler)(void);
 /// Initializes the WiFi library (ARM9 side) and the sgIP library.
 ///
 /// @param initflags
-///     Set up some optional things, like controlling the LED blinking.
+///     Set up some optional things, like controlling the LED blinking
+///     (WIFIINIT_OPTION_USELED) and the size of the sgIP heap
+///     (WIFIINIT_OPTION_USEHEAP_xxx).
 ///
 /// @return
 ///     A 32bit value that *must* be passed to ARM7.
