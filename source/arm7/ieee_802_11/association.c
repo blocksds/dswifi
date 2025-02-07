@@ -124,21 +124,39 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_PUTS("W: [R] Assoc Response\n");
 
-    u16 status_code = ((u16 *)(data + 24))[1];
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+
+    u16 status_code = body[1];
 
     if (status_code == 0)
     {
         // Status code, 0==success
 
-        W_AID_LOW  = ((u16 *)(data + 24))[2];
-        W_AID_FULL = ((u16 *)(data + 24))[2];
+        u16 association_id = body[2];
 
-        // Set max rate
+        W_AID_LOW  = association_id & 0xF;
+        W_AID_FULL = association_id;
+
+        // Determine max rate
+
         WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
-        for (int i = 0; i < ((u8 *)(data + 24))[7]; i++)
+
+        if (((u8 *)body)[6] == MGT_FIE_ID_SUPPORTED_RATES)
         {
-            if ((((u8 *)(data + 24))[8 + i] & RATE_SPEED_MASK) == RATE_2_MBPS)
-                WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
+            int num_rates = ((u8 *)body)[7];
+            u8 *rates = ((u8 *)body) + 8;
+            for (int i = 0; i < num_rates; i++)
+            {
+                if ((rates[i] & RATE_SPEED_MASK) == RATE_2_MBPS)
+                {
+                    WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            WLOG_PUTS("W: Rates not found\n");
         }
 
         WLOG_PRINTF("W: Rate: %c Mb/s\n",
