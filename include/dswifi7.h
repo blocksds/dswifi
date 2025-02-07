@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#include <nds/ndstypes.h>
 
 #include <dswifi_version.h>
 
@@ -46,10 +46,10 @@ void Wifi_Update(void);
 /// This function also enables power to the WiFi system, which will shorten
 /// battery life.
 ///
-/// @param WifiData
+/// @param wifidata
 ///     You must pass the 32bit value returned by the call to Wifi_Init() on the
 ///     ARM9.
-void Wifi_Init(uint32_t WifiData);
+void Wifi_Init(u32 wifidata);
 
 /// In case it is necessary, this function cuts power to the WiFi system.
 ///

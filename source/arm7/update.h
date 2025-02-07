@@ -8,6 +8,4 @@
 
 void Wifi_KeepaliveCountReset(void);
 
-void Wifi_Update(void);
-
 #endif // DSWIFI_ARM7_UPDATE_H__

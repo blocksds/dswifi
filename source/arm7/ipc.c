@@ -3,7 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#include "arm7/interrupts.h"
+#include <dswifi7.h>
+
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/update.h"
@@ -16,7 +17,7 @@ static void wifiAddressHandler(void *address, void *userdata)
 {
     (void)userdata;
 
-    Wifi_Init(address);
+    Wifi_Init((u32)address);
 
     // Setup WiFi interrupt after we have setup the IPC struct pointer
     irqSet(IRQ_WIFI, Wifi_Interrupt);
@@ -49,7 +50,7 @@ void Wifi_CallSyncHandler(void)
         synchandler();
 }
 
-static void Wifi_SetSyncHandler(WifiSyncHandler sh)
+void Wifi_SetSyncHandler(WifiSyncHandler sh)
 {
     synchandler = sh;
 }

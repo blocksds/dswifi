@@ -4,13 +4,13 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include <nds.h>
+#include <dswifi7.h>
 #include <dswifi_common.h>
 
 #include "arm7/beacon.h"
 #include "arm7/ieee_802_11/association.h"
 #include "arm7/ieee_802_11/authentication.h"
 #include "arm7/ieee_802_11/other.h"
-#include "arm7/interrupts.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"

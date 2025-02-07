@@ -144,7 +144,7 @@ void Wifi_Shutdown(void)
     W_POWER_US = 1;
 }
 
-void Wifi_Init(void *wifidata)
+void Wifi_Init(u32 wifidata)
 {
     WLOG_PUTS("W: Init\n");
 

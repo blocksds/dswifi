@@ -8,8 +8,6 @@
 
 void Wifi_WakeUp(void);
 void Wifi_Shutdown(void);
-void Wifi_Init(void *WifiData);
-void Wifi_Deinit(void);
 void Wifi_Start(void);
 void Wifi_Stop(void);
 

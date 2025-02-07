@@ -112,7 +112,7 @@ typedef void (*WifiSyncHandler)(void);
 ///
 /// @return
 ///     A 32bit value that *must* be passed to ARM7.
-uint32_t Wifi_Init(int initflags);
+u32 Wifi_Init(int initflags);
 
 /// Verifies when the ARM7 has been successfully initialized.
 ///
@@ -165,8 +165,8 @@ void Wifi_IdleMode(void);
 ///     0 on success, a negative value on error.
 int Wifi_BeaconStart(const char *ssid);
 
-// Stops retransmiting a previously loaded beacon.
-int Wifi_BeaconStop(void);
+/// Stops retransmiting a previously loaded beacon.
+void Wifi_BeaconStop(void);
 
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.
@@ -266,7 +266,7 @@ void Wifi_Timer(int num_ms);
 ///
 /// @return
 ///     The current IP address of the DS
-unsigned long Wifi_GetIP(void);
+u32 Wifi_GetIP(void);
 
 /// Returns IP information.
 ///
@@ -301,8 +301,7 @@ struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
 ///     value is zero, dns1 and dns2 will be allocated via DHCP).
 /// @param dns2
 ///     The new secondary dns server
-void Wifi_SetIP(unsigned long IPaddr, unsigned long gateway, unsigned long subnetmask,
-                unsigned long dns1, unsigned long dns2);
+void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 
 /// Retrieve an arbitrary or misc. piece of data from the WiFi hardware.
 ///
@@ -327,7 +326,7 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
 ///
 /// @return
 ///     The requested stat, or 0 for failure.
-uint32_t Wifi_GetStats(int statnum);
+u32 Wifi_GetStats(int statnum);
 
 //////////////////////////////////////////////////////////////////////////
 // Raw Send/Receive functions
