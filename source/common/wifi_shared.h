@@ -10,10 +10,6 @@
 #include <nds.h>
 #include <dswifi_common.h>
 
-// If for whatever reason you want to ditch SGIP and use your own stack, comment out the following
-// line.
-#define WIFI_USE_TCP_SGIP 1
-
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
 #define WIFI_MAX_AP          32
