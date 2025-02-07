@@ -97,7 +97,10 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
         case TYPE_CF_ACK_CF_POLL: // 0111 10 CF-Ack + CF-Poll
             return WFLAG_PACKET_DATA;
 
-        //case TYPE_QOS_DATA: // TODO: Ignored, should we handle them?
+        // QoS frames are ignored. When we send the capability information of
+        // the DS the QoS bit isn't set.
+
+        //case TYPE_QOS_DATA:
         //case TYPE_QOS_DATA_CF_ACK:
         //case TYPE_QOS_DATA_CF_POLL:
         //case TYPE_QOS_DATA_CF_ACK_CF_POLL:

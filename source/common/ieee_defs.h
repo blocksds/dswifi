@@ -139,6 +139,7 @@
 #define CAPS_SHORT_PREAMBLE         BIT(5)
 #define CAPS_PBCC                   BIT(6)
 #define CAPS_CHANNEL_AGILITY        BIT(7)
+#define CAPS_QOS                    BIT(9)
 
 // Supported rates
 
