@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
-
-// DSWifi Project - ARM9 library header file (dswifi9.h)
+// Copyright (C) 2025 Antonio Niño Díaz
 
 /// @file dswifi9.h
 ///
