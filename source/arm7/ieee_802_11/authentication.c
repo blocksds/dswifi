@@ -171,13 +171,16 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             if (body[2] == 0) // Success
             {
                 // scrape challenge text and send challenge reply
-                // 16 = challenge text - this value must be 0x10 or else!
-                if (data[HDR_MGT_MAC_SIZE + 6] == 0x10)
+                if (data[HDR_MGT_MAC_SIZE + 6] == MGT_FIE_ID_CHALLENGE_TEXT)
                 {
                     WLOG_PUTS("W: Send challenge\n");
 
                     Wifi_SendSharedKeyAuthPacket2(data[HDR_MGT_MAC_SIZE + 7],
                                                   data + HDR_MGT_MAC_SIZE + 8);
+                }
+                else
+                {
+                    WLOG_PUTS("W: Challenge not found\n");
                 }
             }
             else // Rejection
@@ -205,6 +208,10 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                 WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
                 WLOG_PRINTF("W: Rejected: %d\n", body[2]);
             }
+        }
+        else // Incorrect sequence number
+        {
+            WLOG_PRINTF("W: Bad seq number: %d\n", body[1]);
         }
     }
 

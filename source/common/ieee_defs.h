@@ -153,4 +153,29 @@
 #define RATE_5_5_MBPS   11
 #define RATE_11_MBPS    22
 
+// Status codes
+// ------------
+
+#define STATUS_SUCCESS                              0
+#define STATUS_UNSPECIFIED                          1
+#define STATUS_UNSUPPORTED_CAPABILITIES             10
+#define STATUS_CANT_CONFIRM_ASSOC                   11
+#define STATUS_ASSOC_DENIED                         12
+#define STATUS_AUTH_BAD_ALGORITHM                   13
+#define STATUS_AUTH_BAD_SEQ_NUMBER                  14
+#define STATUS_AUTH_CHALLENGE_FAILURE               15
+#define STATUS_AUTH_TIMEOUT                         16
+#define STATUS_ASSOC_TOO_MANY_DEVICES               17
+#define STATUS_ASSOC_BAD_RATES                      18
+#define STATUS_ASSOC_UNSUPPORTED_SHORT_PREAMBLE     19
+#define STATUS_ASSOC_UNSUPPORTED_PBCC_MODULATION    20
+#define STATUS_ASSOC_UNSUPPORTED_CHANNEL_AGILITY    21
+#define STATUS_ASSOC_UNSUPPORTED_SPECTRUM_MGMT      22
+#define STATUS_ASSOC_UNSUPPORTED_POWER_CAPS         23
+#define STATUS_ASSOC_UNSUPPORTED_CHANNELS           24
+#define STATUS_ASSOC_UNSUPPORTED_SHORT_TIME_SLOT    25
+#define STATUS_ASSOC_UNSUPPORTED_DSSS_OFDM          26
+#define STATUS_ASSOC_UNSUPPORTED_HIGH_THROUGHPUT    27
+#define STATUS_ASSOC_RETRY_LATER                    30
+
 #endif // DSWIFI_IEEE_DEFS_H__

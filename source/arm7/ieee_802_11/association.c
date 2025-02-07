@@ -128,10 +128,8 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
     u16 status_code = body[1];
 
-    if (status_code == 0)
+    if (status_code == STATUS_SUCCESS)
     {
-        // Status code, 0==success
-
         u16 association_id = body[2];
 
         W_AID_LOW  = association_id & 0xF;

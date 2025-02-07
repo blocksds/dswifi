@@ -216,7 +216,7 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 /// Connect to an Access Point.
 ///
 /// @param apdata
-///     Basic data on the AP.
+///     Basic data about the AP.
 /// @param wepmode
 ///     Indicates whether WEP is used, and what kind (WEPMODES). Use
 ///     WEPMODE_NONE if WEP isn't required.
