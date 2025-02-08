@@ -113,7 +113,8 @@ typedef struct
 
 typedef struct WIFI_MAINSTRUCT
 {
-    unsigned long dummy1[8];
+    unsigned long padding1[8]; // Padding with the size of a cache line
+
     // wifi status
     u16 curChannel, reqChannel;
     u16 curMode, reqMode;
@@ -174,8 +175,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 random; // semirandom number updated at the convenience of the arm7. use for initial seeds &
                 // such.
 
-    unsigned long dummy2[8];
-
+    unsigned long padding2[8]; // Padding with the size of a cache line
 } Wifi_MainStruct;
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__
