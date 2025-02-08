@@ -315,7 +315,7 @@ int Wifi_Interface_Init(sgIP_Hub_HWInterface *hw)
     return 0;
 }
 
-static void Wifi_sgIpHandlePackage(int base, int len)
+static void Wifi_sgIpHandlePacket(int base, int len)
 {
     // Do sgIP interfacing for RX packets here.
     //
@@ -512,7 +512,9 @@ void Wifi_Update(void)
             base2 -= WIFI_RXBUFFER_SIZE / 2;
 
 #ifdef WIFI_USE_TCP_SGIP
-        Wifi_sgIpHandlePackage(base2, len);
+        // If the AP is another DS, don't send packets to sgIP
+        if (!WifiData->ap_is_multiplay_host)
+            Wifi_sgIpHandlePacket(base2, len);
 #endif
 
         // check if we have a handler

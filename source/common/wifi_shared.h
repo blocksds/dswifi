@@ -138,6 +138,7 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
+    bool ap_is_multiplay_host; // true if the AP is another DS
     u16 ap_rssi;
     u16 pspoll_period;
 

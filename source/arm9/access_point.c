@@ -129,7 +129,8 @@ typedef enum {
 static WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
 static Wifi_AccessPoint wifi_connect_point;
 
-int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
+static int Wifi_ConnectAPInternal(Wifi_AccessPoint *apdata, int wepmode,
+                                  int wepkeyid, u8 *wepkey)
 {
     wifi_connect_state = WIFI_CONNECT_ERROR;
 
@@ -189,9 +190,16 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     return 0;
 }
 
+int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
+{
+    WifiData->ap_is_multiplay_host = false; // AP has access to the Internet
+    return Wifi_ConnectAPInternal(apdata, wepmode, wepkeyid, wepkey);
+}
+
 int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata)
 {
-    return Wifi_ConnectAP(apdata, 0, 0, NULL);
+    WifiData->ap_is_multiplay_host = true; // AP is another DS acting as host
+    return Wifi_ConnectAPInternal(apdata, 0, 0, NULL);
 }
 
 int Wifi_DisconnectAP(void)
@@ -292,16 +300,21 @@ int Wifi_AssocStatus(void)
                             return ASSOCSTATUS_ASSOCIATING;
                         case WIFI_AUTHLEVEL_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                            if (wifi_hw)
+                            // We only need to acquire DHCP if we are connected
+                            // to an AP that isn't a DS.
+                            if (!WifiData->ap_is_multiplay_host)
                             {
-                                if (!(wifi_hw->ipaddr))
+                                if (wifi_hw)
                                 {
-                                    sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                                    wifi_connect_state = WIFI_CONNECT_DHCPING;
-                                    return ASSOCSTATUS_ACQUIRINGDHCP;
+                                    if (!(wifi_hw->ipaddr))
+                                    {
+                                        sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
+                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
+                                        return ASSOCSTATUS_ACQUIRINGDHCP;
+                                    }
                                 }
+                                sgIP_ARP_SendGratARP(wifi_hw);
                             }
-                            sgIP_ARP_SendGratARP(wifi_hw);
 #endif
                             wifi_connect_state = WIFI_CONNECT_DONE;
                             WifiData->flags9 |= WFLAG_ARM9_NETREADY;
@@ -310,16 +323,21 @@ int Wifi_AssocStatus(void)
                     break;
                 case WIFIMODE_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                    if (wifi_hw)
+                    // We only need to acquire DHCP if we are connected to an AP
+                    // that isn't a DS.
+                    if (!WifiData->ap_is_multiplay_host)
                     {
-                        if (!(wifi_hw->ipaddr))
+                        if (wifi_hw)
                         {
-                            sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                            wifi_connect_state = WIFI_CONNECT_DHCPING;
-                            return ASSOCSTATUS_ACQUIRINGDHCP;
+                            if (!(wifi_hw->ipaddr))
+                            {
+                                sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
+                                wifi_connect_state = WIFI_CONNECT_DHCPING;
+                                return ASSOCSTATUS_ACQUIRINGDHCP;
+                            }
                         }
+                        sgIP_ARP_SendGratARP(wifi_hw);
                     }
-                    sgIP_ARP_SendGratARP(wifi_hw);
 #endif
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     WifiData->flags9 |= WFLAG_ARM9_NETREADY;
@@ -332,6 +350,11 @@ int Wifi_AssocStatus(void)
         case WIFI_CONNECT_DHCPING:
 #ifdef WIFI_USE_TCP_SGIP
         {
+            // We only need to acquire DHCP if we are connected to an AP
+            // that isn't a DS.
+            if (WifiData->ap_is_multiplay_host)
+                return ASSOCSTATUS_ASSOCIATED;
+
             int i = sgIP_DHCP_Update();
             if (i != SGIP_DHCP_STATUS_WORKING)
             {
