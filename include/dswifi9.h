@@ -149,6 +149,13 @@ void Wifi_ScanMode(void);
 /// can still receive and transmit packets.
 void Wifi_IdleMode(void);
 
+/// Sets the WiFI hardware in mulitplayer host mode.
+///
+/// While in host mode, call Wifi_BeaconStart() to start announcing that this DS
+/// is acting as an access point. This will allow other consoles to connect
+/// discover it and connect to it.
+void Wifi_MultiplayerHostMode(void);
+
 /// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
 ///
 /// This beacon frame announces that this console is acting as an access point

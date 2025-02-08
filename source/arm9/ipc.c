@@ -219,6 +219,12 @@ void Wifi_IdleMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
+void Wifi_MultiplayerHostMode(void)
+{
+    WifiData->reqMode = WIFIMODE_MULTIPLAYER_HOST;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
 void Wifi_SetChannel(int channel)
 {
     if (channel < 1 || channel > 13)

@@ -58,6 +58,8 @@ enum WIFI_MODE
     WIFIMODE_ASSOCIATED,
     // The ARM7 is unable to connect to the AP.
     WIFIMODE_CANNOTASSOCIATE,
+    // The WiFi hardware is on and acting as an AP (multiplayer host).
+    WIFIMODE_MULTIPLAYER_HOST,
 };
 
 enum WIFI_AUTHLEVEL

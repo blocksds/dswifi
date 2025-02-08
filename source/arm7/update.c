@@ -8,6 +8,7 @@
 #include <dswifi_common.h>
 
 #include "arm7/beacon.h"
+#include "arm7/debug.h"
 #include "arm7/ieee_802_11/association.h"
 #include "arm7/ieee_802_11/authentication.h"
 #include "arm7/ieee_802_11/other.h"
@@ -133,6 +134,14 @@ void Wifi_Update(void)
             {
                 Wifi_Stop();
                 WifiData->curMode = WIFIMODE_DISABLED;
+                break;
+            }
+            if (WifiData->reqMode == WIFIMODE_MULTIPLAYER_HOST)
+            {
+                WLOG_PUTS("W: Multiplayer host\n");
+                W_AID_LOW  = 0;
+                W_AID_FULL = 0;
+                WifiData->curMode = WIFIMODE_MULTIPLAYER_HOST;
                 break;
             }
             if (WifiData->reqMode == WIFIMODE_SCAN)
@@ -304,6 +313,11 @@ void Wifi_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
+            break;
+
+        case WIFIMODE_MULTIPLAYER_HOST:
+            if (WifiData->reqMode != WIFIMODE_MULTIPLAYER_HOST)
+                WifiData->curMode = WIFIMODE_NORMAL;
             break;
     }
 
