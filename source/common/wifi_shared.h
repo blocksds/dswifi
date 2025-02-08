@@ -8,6 +8,7 @@
 #define DSWIFI_ARM9_WIFI_SHARED_H__
 
 #include <nds.h>
+#include <nds/arm9/cp15_asm.h>
 #include <dswifi_common.h>
 
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
@@ -111,10 +112,20 @@ typedef struct
     u8 body[0];
 } IEEE_DataFrameHeader;
 
+// This struct is allocated in main RAM, but it is only accessed through an
+// uncached mirror. We use aligned_alloc() to ensure that the beginning of the
+// struct isn't in the same cache line as other variables, but we need to pad
+// the end of the struct to fill a cache line so that variables that follow the
+// struct are in a different line.
+//
+// Without this padding, the ARM9 may access a variable right next to this
+// struct, so a cache line will be loaded, including the current values of the
+// variables at the start or end of this struct (the ones that share the same
+// line). Later, the ARM7 may modify them, but they will be restored to their
+// previous value when the ARM9 flushes the line. With the additional padding
+// this can't happen.
 typedef struct WIFI_MAINSTRUCT
 {
-    unsigned long padding1[8]; // Padding with the size of a cache line
-
     // wifi status
     u16 curChannel, reqChannel;
     u16 curMode, reqMode;
@@ -176,7 +187,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 random; // semirandom number updated at the convenience of the arm7. use for initial seeds &
                 // such.
 
-    unsigned long padding2[8]; // Padding with the size of a cache line
+    u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__

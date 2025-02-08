@@ -3,7 +3,10 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <stdlib.h>
+
 #include <nds.h>
+#include <nds/arm9/cp15_asm.h>
 #include <dswifi9.h>
 
 #include "arm9/access_point.h"
@@ -70,7 +73,8 @@ u32 Wifi_Init(int initflags)
 {
     if (Wifi_Data_Struct == NULL)
     {
-        Wifi_Data_Struct = malloc(sizeof(Wifi_MainStruct));
+        // See comment at the top of Wifi_MainStruct
+        Wifi_Data_Struct = aligned_alloc(CACHE_LINE_SIZE, sizeof(Wifi_MainStruct));
         if (Wifi_Data_Struct == NULL)
             return 0;
     }
