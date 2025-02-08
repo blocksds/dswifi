@@ -51,6 +51,10 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
 
         case TYPE_ASSOC_REQUEST: // 0000 00 Assoc Request
         case TYPE_REASSOC_REQUEST: // 0010 00 Reassoc Request
+            if (WifiData->curMode == WIFIMODE_MULTIPLAYER_HOST)
+                Wifi_ProcessAssocRequest(&packetheader, macbase);
+            return WFLAG_PACKET_MGT;
+
         case TYPE_PROBE_REQUEST: // 0100 00 Probe Request
         case TYPE_ATIM: // 1001 00 ATIM
         case TYPE_DISASSOCIATION: // 1010 00 Disassociation
@@ -58,7 +62,11 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
 
         case TYPE_AUTHENTICATION: // 1011 00 Authentication
             // check auth response to ensure we're in
-            Wifi_ProcessAuthentication(&packetheader, macbase);
+            if (WifiData->curMode == WIFIMODE_MULTIPLAYER_HOST)
+                Wifi_MPHost_ProcessAuthentication(&packetheader, macbase);
+            else
+                Wifi_ProcessAuthentication(&packetheader, macbase);
+
             return WFLAG_PACKET_MGT;
 
         case TYPE_DEAUTHENTICATION: // 1100 00 Deauthentication

@@ -132,6 +132,8 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     {
         u16 association_id = body[2];
 
+        WLOG_PRINTF("W: AID: %x\n", association_id);
+
         W_AID_LOW  = association_id & 0xF;
         W_AID_FULL = association_id;
 
@@ -195,4 +197,156 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
     }
 
     WLOG_FLUSH();
+}
+
+// Used when acting as a multiplayer host
+static int Wifi_MPHost_SendAssocResponsePacket(void *guest_mac, u16 status_code,
+                                               u16 association_id)
+{
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+
+    WLOG_PUTS("W: [S] Assoc Response (MP)\n");
+
+    Wifi_MPHost_GenMgtHeader(data, TYPE_ASSOC_RESPONSE, guest_mac);
+
+    size_t body_size = 0;
+
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u8 *body = (u8 *)(ieee->body + body_size);
+
+    // Fixed-length fields
+    // -------------------
+
+    if (WifiData->wepmode7)
+        ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
+    else
+        ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info
+
+    ((u16 *)body)[1] = status_code;
+    ((u16 *)body)[2] = association_id;
+
+    WLOG_PRINTF("W: AID: %x\n", association_id);
+
+    body += 6;
+    body_size += 6;
+
+    // Management Frame Information Elements
+    // -------------------------------------
+
+    // Supported rates
+
+    // We are acting as a host. Always report the real rates supported by the
+    // NDS. They are the two values defined in the first 802.11 standard.
+    *body++ = MGT_FIE_ID_SUPPORTED_RATES; // Element ID: Supported Rates
+    *body++ = 2; // Number of rates
+    *body++ = RATE_1_MBPS | RATE_MANDATORY;
+    *body++ = RATE_2_MBPS | RATE_OPTIONAL;
+
+    body_size += 4;
+
+    // Done
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = ieee_size + 4; // Checksum
+
+    WLOG_FLUSH();
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+}
+
+void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
+{
+    u8 data[128];
+
+    int datalen = packetheader->byteLength;
+    if (datalen > 128)
+        datalen = 128;
+
+    // Read IEEE frame, right after the hardware RX header
+    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
+
+    // Check if packet is indeed sent to us.
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
+        return;
+
+    // TODO: Check that the packet comes from an authenticated device
+    void *guest_mac = data + HDR_MGT_SA;
+    //if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
+    //    return;
+
+    WLOG_PUTS("W: [R] Assoc Request (MP)\n");
+
+    // Check body information
+    // ----------------------
+
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+
+    u16 capability_information = body[0];
+    u16 required_capabilities = CAPS_ESS | CAPS_SHORT_PREAMBLE;
+    if ((capability_information & 0x00FF) != required_capabilities)
+    {
+        WLOG_PRINTF("W: Unsupported caps: %x\n", capability_information);
+        Wifi_MPHost_SendAssocResponsePacket(guest_mac,
+                                            STATUS_UNSUPPORTED_CAPABILITIES, 0);
+        return;
+    }
+
+    //u16 listen_interval = body[1];
+
+    // Management Frame Information Elements
+    // -------------------------------------
+
+    int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 4; // Skip CAPS and listen interval
+
+    while (i < datalen)
+    {
+        int type   = data[i++];
+        int seglen = data[i++];
+
+        switch (type)
+        {
+            case MGT_FIE_ID_SSID:
+                // TODO: Check that it matches our SSID
+                break;
+
+            case MGT_FIE_ID_SUPPORTED_RATES:
+            {
+                // Check that we are asked the right rates
+                u8 num_rates = data[i];
+                bool ok = false;
+                for (int j = 0; j < num_rates; j++)
+                {
+                    u8 rate = data[i + 1 + j] & RATE_SPEED_MASK;
+                    if ((rate == RATE_1_MBPS) || (rate == RATE_2_MBPS))
+                    {
+                        ok = true;
+                        break;
+                    }
+                }
+                if (!ok)
+                {
+                    WLOG_PUTS("W: Unsupported rates\n");
+                    Wifi_MPHost_SendAssocResponsePacket(guest_mac,
+                                                        STATUS_ASSOC_BAD_RATES, 0);
+                    return;
+                }
+            }
+
+            default:
+                break;
+        }
+
+        i += seglen;
+    }
+
+    WLOG_PUTS("W: Valid request\n");
+    WLOG_FLUSH();
+
+    // Send response with a new AID
+    // TODO: Send AID based on the MAC
+    Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_SUCCESS, 1);
 }

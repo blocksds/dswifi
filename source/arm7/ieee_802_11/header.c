@@ -54,3 +54,26 @@ size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
         return 0;
     }
 }
+
+// It doesn't fill the transfer rate or the size in the NDS TX header. That must
+// be done by the caller of the function
+void Wifi_MPHost_GenMgtHeader(u8 *data, u16 headerflags, void *dest_mac)
+{
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+
+    // Hardware TX header
+    // ------------------
+
+    memset(tx, 0, sizeof(Wifi_TxHeader));
+
+    // IEEE 802.11 header
+    // ------------------
+
+    ieee->frame_control = headerflags;
+    ieee->duration = 0;
+    Wifi_CopyMacAddr(ieee->da, dest_mac);
+    Wifi_CopyMacAddr(ieee->sa, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee->bssid, WifiData->MacAddr);
+    ieee->seq_ctl = 0;
+}

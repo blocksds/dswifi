@@ -10,4 +10,6 @@
 
 size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags);
 
+void Wifi_MPHost_GenMgtHeader(u8 *data, u16 headerflags, void *dest_mac);
+
 #endif // DSWIFI_ARM7_IEEE_802_11_HEADER_H__

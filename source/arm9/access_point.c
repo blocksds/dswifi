@@ -189,6 +189,11 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     return 0;
 }
 
+int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata)
+{
+    return Wifi_ConnectAP(apdata, 0, 0, NULL);
+}
+
 int Wifi_DisconnectAP(void)
 {
     WifiData->reqMode = WIFIMODE_NORMAL;

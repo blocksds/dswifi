@@ -253,3 +253,86 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_FLUSH();
 }
+
+static int Wifi_MPHost_SendOpenSystemAuthPacket(void *guest_mac, u16 status_code)
+{
+    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+
+    WLOG_PUTS("W: [S] Auth (MP)\n");
+
+    Wifi_MPHost_GenMgtHeader(data, TYPE_AUTHENTICATION, guest_mac);
+
+    size_t body_size = 0;
+
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
+
+    body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
+    body[1] = 2; // Authentication sequence number
+    body[2] = status_code; // Authentication status code
+
+    body_size += 6;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = ieee_size + 4; // Checksum
+
+    WLOG_FLUSH();
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+}
+
+void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
+{
+    u8 data[128];
+
+    int datalen = packetheader->byteLength;
+    if (datalen > 128)
+        datalen = 128;
+
+    // Read IEEE frame, right after the hardware RX header
+    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
+
+    // Check if packet is indeed sent to us.
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
+        return;
+
+    void *guest_mac = data + HDR_MGT_SA;
+
+    WLOG_PUTS("W: [R] Authentication (MP)\n");
+
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+
+    if (body[0] == AUTH_ALGO_OPEN_SYSTEM)
+    {
+        if (body[1] == 1) // Seq 1, other device wants to connect to us
+        {
+            if (body[2] == STATUS_SUCCESS)
+            {
+                // TODO: Record MAC address of the sender in internal array of
+                // connected guests.
+                Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_SUCCESS);
+            }
+            else
+            {
+                WLOG_PRINTF("W: Invalid status: %d\n", body[2]);
+                Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_UNSPECIFIED);
+            }
+        }
+        else
+        {
+            WLOG_PRINTF("W: Invalid seq number: %d\n", body[1]);
+            Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_AUTH_BAD_SEQ_NUMBER);
+        }
+    }
+    else
+    {
+        WLOG_PRINTF("W: Invalid algorithm: %d\n", body[0]);
+        Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_AUTH_BAD_ALGORITHM);
+    }
+
+    WLOG_FLUSH();
+}

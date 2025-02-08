@@ -141,6 +141,8 @@ void Wifi_Update(void)
                 WLOG_PUTS("W: Multiplayer host\n");
                 W_AID_LOW  = 0;
                 W_AID_FULL = 0;
+                for (int i = 0; i < sizeof(WifiData->ssid7); i++)
+                    WifiData->ssid7[i] = WifiData->ssid9[i];
                 WifiData->curMode = WIFIMODE_MULTIPLAYER_HOST;
                 break;
             }

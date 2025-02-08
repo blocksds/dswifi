@@ -237,6 +237,15 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 ///     0 for ok, -1 for error with input data.
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned char *wepkey);
 
+/// Connect to a DS acting as multiplayer host.
+///
+/// @param apdata
+///     Basic data about the AP.
+///
+/// @return
+///     0 for ok, -1 for error with input data.
+int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata);
+
 /// Connect to an Access Point specified by the WFC data in the firmware.
 void Wifi_AutoConnect(void);
 
