@@ -178,6 +178,28 @@ typedef struct WIFI_ACCESSPOINT
     uint8_t rssi_past[8];
 } Wifi_AccessPoint;
 
+/// Possible states of a guest
+typedef enum {
+    /// This guest is disconnected.
+    WIFI_GUEST_DISCONNECTED = 0,
+    /// The guest is authenticated but not associated.
+    WIFI_GUEST_AUTHENTICATED,
+    // The guest is associated and ready to communicate data.
+    WIFI_GUEST_ASSOCIATED,
+} Wifi_ConnectedGuestState;
+
+/// Structure that represents a DS connected to a host DS
+typedef struct {
+    /// MAC address of the guest
+    u16 macaddr[3];
+    /// Association ID (1 to 15)
+    u16 association_id;
+    /// Ticks since the last time we received a message from the guest
+    u16 ticks_since_response;
+    /// One of the values of Wifi_ConnectedGuestState
+    u8 state;
+} Wifi_ConnectedGuest;
+
 #ifdef __cplusplus
 }
 #endif

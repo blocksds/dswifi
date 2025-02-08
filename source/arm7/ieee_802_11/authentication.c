@@ -9,6 +9,7 @@
 #include "arm7/ieee_802_11/header.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
+#include "arm7/mp_guests.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
@@ -312,9 +313,19 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
         {
             if (body[2] == STATUS_SUCCESS)
             {
-                // TODO: Record MAC address of the sender in internal array of
-                // connected guests.
-                Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_SUCCESS);
+                // Add guest to list
+                int index = Wifi_MPHost_GuestAuthenticate(guest_mac);
+                if (index >= 0)
+                {
+                    WLOG_PRINTF("W: New guest: %d\n", index);
+                    Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_SUCCESS);
+                }
+                else
+                {
+                    WLOG_PUTS("W: Too many guests\n");
+                    // This error code is for association, not authentication...
+                    Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_ASSOC_TOO_MANY_DEVICES);
+                }
             }
             else
             {

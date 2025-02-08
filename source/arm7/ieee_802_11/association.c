@@ -8,6 +8,7 @@
 #include "arm7/ieee_802_11/header.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
+#include "arm7/mp_guests.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
@@ -273,12 +274,16 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
     if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
         return;
 
-    // TODO: Check that the packet comes from an authenticated device
-    void *guest_mac = data + HDR_MGT_SA;
-    //if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
-    //    return;
-
     WLOG_PUTS("W: [R] Assoc Request (MP)\n");
+
+    void *guest_mac = data + HDR_MGT_SA;
+
+    // Check that the packet comes from an authenticated device
+    if (Wifi_MPHost_GuestGetByMacAddr(guest_mac) < 0)
+    {
+        WLOG_PUTS("W: Not authenticated\n");
+        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_ASSOC_DENIED, 0);
+    }
 
     // Check body information
     // ----------------------
@@ -344,9 +349,21 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
     }
 
     WLOG_PUTS("W: Valid request\n");
-    WLOG_FLUSH();
 
-    // Send response with a new AID
-    // TODO: Send AID based on the MAC
-    Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_SUCCESS, 1);
+    int aid = Wifi_MPHost_GuestAssociate(guest_mac);
+    if (aid < 0)
+    {
+        // This shouldn't happen, the limit of devices should be enforced at
+        // authentication time.
+        WLOG_PUTS("W: Can't associate\n");
+        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_ASSOC_DENIED, 0);
+    }
+    else
+    {
+        // Send response with a new AID
+        WLOG_PRINTF("W: Authenticated. AID: %x\n", aid);
+        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_SUCCESS, aid);
+    }
+
+    WLOG_FLUSH();
 }

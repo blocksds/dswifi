@@ -111,6 +111,9 @@ u32 Wifi_Init(int initflags)
 
 #endif
 
+    // Start with the default maximum of guests
+    WifiData->max_guests = 15;
+
     WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK);
     return (u32)Wifi_Data_Struct;
 }

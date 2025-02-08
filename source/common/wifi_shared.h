@@ -187,6 +187,11 @@ typedef struct WIFI_MAINSTRUCT
     u32 random; // semirandom number updated at the convenience of the arm7. use for initial seeds &
                 // such.
 
+    // Local multiplay information
+
+    Wifi_ConnectedGuest guestlist[15]; // Up to 15 connected guests (plus host)
+    u8 max_guests; // Max number of allowed guests by the application
+
     u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;
 

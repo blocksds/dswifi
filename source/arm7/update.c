@@ -14,6 +14,7 @@
 #include "arm7/ieee_802_11/other.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
+#include "arm7/mp_guests.h"
 #include "arm7/registers.h"
 #include "arm7/rf.h"
 #include "arm7/rx_queue.h"
@@ -143,6 +144,7 @@ void Wifi_Update(void)
                 W_AID_FULL = 0;
                 for (int i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
+                Wifi_MPHost_ResetGuests();
                 WifiData->curMode = WIFIMODE_MULTIPLAYER_HOST;
                 break;
             }
