@@ -235,6 +235,7 @@ void Wifi_Update(void)
                 // Request changing channel
                 WifiData->counter7   = W_US_COUNT1;
                 WifiData->reqChannel = scanlist[wifi_scan_index];
+                Wifi_SetChannel(WifiData->reqChannel);
 
                 // Update timeout counters of all APs.
                 for (int i = 0; i < WIFI_MAX_AP; i++)
