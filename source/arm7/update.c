@@ -334,9 +334,14 @@ void Wifi_Update(void)
             break;
     }
 
-    if (WifiData->curChannel != WifiData->reqChannel)
+    // Only allow manual changes of the channel if scan mode isn't active
+    // because scan mode changes the channel periodically anyway.
+    if (WifiData->curMode != WIFIMODE_SCAN)
     {
-        Wifi_SetChannel(WifiData->reqChannel);
+        if (WifiData->curChannel != WifiData->reqChannel)
+        {
+            Wifi_SetChannel(WifiData->reqChannel);
+        }
     }
 
     if (WifiData->reqReqFlags & WFLAG_REQ_STOPBEACON)
