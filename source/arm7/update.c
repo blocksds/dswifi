@@ -145,6 +145,7 @@ void Wifi_Update(void)
                 for (int i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetGuests();
+                WifiData->curMaxGuests = WifiData->reqMaxGuests;
                 WifiData->curMode = WIFIMODE_MULTIPLAYER_HOST;
                 break;
             }

@@ -190,7 +190,7 @@ typedef struct WIFI_MAINSTRUCT
     // Local multiplay information
 
     Wifi_ConnectedGuest guestlist[15]; // Up to 15 connected guests (plus host)
-    u8 max_guests; // Max number of allowed guests by the application
+    u8 curMaxGuests, reqMaxGuests; // Max number of allowed guests by the host
 
     u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;

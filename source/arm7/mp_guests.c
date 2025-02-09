@@ -19,7 +19,7 @@ void Wifi_MPHost_ResetGuests(void)
 
 int Wifi_MPHost_GuestGetByMacAddr(void *macaddr)
 {
-    for (int i = 0; i < WifiData->max_guests; i++)
+    for (int i = 0; i < WifiData->curMaxGuests; i++)
     {
         volatile Wifi_ConnectedGuest *guest = &(WifiData->guestlist[i]);
 
@@ -35,7 +35,7 @@ int Wifi_MPHost_GuestGetByMacAddr(void *macaddr)
 
 int Wifi_MPHost_GuestGetByAID(u16 association_id)
 {
-    for (int i = 0; i < WifiData->max_guests; i++)
+    for (int i = 0; i < WifiData->curMaxGuests; i++)
     {
         volatile Wifi_ConnectedGuest *guest = &(WifiData->guestlist[i]);
 
@@ -59,7 +59,7 @@ int Wifi_MPHost_GuestAuthenticate(void *macaddr)
         return index;
     }
 
-    for (int i = 0; i < WifiData->max_guests; i++)
+    for (int i = 0; i < WifiData->curMaxGuests; i++)
     {
         volatile Wifi_ConnectedGuest *guest = &(WifiData->guestlist[i]);
 

@@ -154,7 +154,11 @@ void Wifi_IdleMode(void);
 /// While in host mode, call Wifi_BeaconStart() to start announcing that this DS
 /// is acting as an access point. This will allow other consoles to connect
 /// discover it and connect to it.
-void Wifi_MultiplayerHostMode(void);
+///
+/// @param max_guests
+///     Maximum number of allowed guests connected to the console. The minimum
+///     is 1, the maximum is 15.
+void Wifi_MultiplayerHostMode(int max_guests);
 
 /// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
 ///
