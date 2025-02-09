@@ -230,26 +230,59 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     // Read IEEE frame, right after the hardware RX header
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
-    // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
+    IEEE_MgtFrameHeader *ieee = (void *)data;
+
+    const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
+
+    // Check if packet is indeed sent to us (or everyone).
+    if (!(Wifi_CmpMacAddr(ieee->da, WifiData->MacAddr) ||
+          Wifi_CmpMacAddr(ieee->da, (void *)&broadcast_address)))
         return;
 
-    // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->bssid7))
+    // Check if packet is indeed from the base station we're associated to (or
+    // trying to associate to).
+    if (!Wifi_CmpMacAddr(ieee->bssid, WifiData->bssid7))
         return;
 
     WLOG_PUTS("W: [R] Deauthentication\n");
 
-    // They have booted us. Back to square 1.
-    if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+    u16 reason_code = body[0];
+
+    WLOG_PRINTF("W: Reason: %d\n", reason_code);
+
+    // Check reason. If the AP is leaving or it can't handle more devices, don't
+    // try to reconnect.
+
+    bool reconnect = true;
+
+    switch (reason_code)
     {
-        WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
-        Wifi_SendAssocPacket();
+        case REASON_THIS_STATION_LEFT_DEAUTH:
+        case REASON_THIS_STATION_LEFT_DISASSOC:
+        case REASON_CANT_HANDLE_ALL_STATIONS:
+            reconnect = false;
+            break;
+    }
+
+    if (reconnect)
+    {
+        // They have booted us. Back to square 1.
+        if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
+        {
+            WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
+            Wifi_SendAssocPacket();
+        }
+        else
+        {
+            WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+            Wifi_SendOpenSystemAuthPacket();
+        }
     }
     else
     {
-        WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
-        Wifi_SendOpenSystemAuthPacket();
+        // Stop trying to connect to this AP
+        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
     }
 
     WLOG_FLUSH();

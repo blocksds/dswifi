@@ -178,4 +178,17 @@
 #define STATUS_ASSOC_UNSUPPORTED_HIGH_THROUGHPUT    27
 #define STATUS_ASSOC_RETRY_LATER                    30
 
+// Reason codes
+// ------------
+
+#define REASON_UNSPECIFIED                          1
+#define REASON_PRIOR_AUTH_INVALID                   2
+#define REASON_THIS_STATION_LEFT_DEAUTH             3
+#define REASON_INACTIVITY                           4
+#define REASON_CANT_HANDLE_ALL_STATIONS             5
+#define REASON_CLASS_2_FRAME_FROM_UNAUTH_STATION    6
+#define REASON_CLASS_3_FRAME_FROM_UNASSOC_STATION   7
+#define REASON_THIS_STATION_LEFT_DISASSOC           8
+#define REASON_ASSOCIATION_BEFORE_AUTH              9
+
 #endif // DSWIFI_IEEE_DEFS_H__
