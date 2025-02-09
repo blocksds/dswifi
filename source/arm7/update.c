@@ -322,7 +322,10 @@ void Wifi_Update(void)
 
         case WIFIMODE_MULTIPLAYER_HOST:
             if (WifiData->reqMode != WIFIMODE_MULTIPLAYER_HOST)
+            {
+                Wifi_BeaconStop();
                 WifiData->curMode = WIFIMODE_NORMAL;
+            }
 
             if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWGUESTS)
                 WifiData->curReqFlags |= WFLAG_REQ_ALLOWGUESTS;
