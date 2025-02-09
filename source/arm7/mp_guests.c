@@ -59,6 +59,9 @@ int Wifi_MPHost_GuestAuthenticate(void *macaddr)
         return index;
     }
 
+    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWGUESTS))
+        return -1;
+
     for (int i = 0; i < WifiData->curMaxGuests; i++)
     {
         volatile Wifi_ConnectedGuest *guest = &(WifiData->guestlist[i]);

@@ -233,6 +233,15 @@ void Wifi_MultiplayerHostMode(int max_guests)
     WifiData->reqMaxGuests = max_guests;
     WifiData->reqMode = WIFIMODE_MULTIPLAYER_HOST;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+    WifiData->reqReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+}
+
+void Wifi_MultiplayerAllowNewGuests(bool allow)
+{
+    if (allow)
+        WifiData->reqReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+    else
+        WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWGUESTS;
 }
 
 void Wifi_SetChannel(int channel)
