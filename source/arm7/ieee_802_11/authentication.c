@@ -16,62 +16,73 @@
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"
 
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_MgtFrameHeader ieee;
+    struct {
+        u16 auth_algorithm;
+        u16 seq_number;
+        u16 status_code;
+    } body;
+} TxIeeeAuthenticationFrame;
+
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_MgtFrameHeader ieee;
+    struct {
+        u16 reason_code;
+    } body;
+} TxIeeeDeauthenticationFrame;
+
+typedef struct {
+    IEEE_MgtFrameHeader ieee;
+    struct {
+        u16 reason_code;
+    } body;
+} IeeeDeauthenticationFrame;
+
 int Wifi_SendOpenSystemAuthPacket(void)
 {
-    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    TxIeeeAuthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Auth (Open)\n");
 
-    size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
+    Wifi_GenMgtHeader((u8 *)&frame, TYPE_AUTHENTICATION);
 
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
-    u16 *body = (u16 *)(ieee->body + body_size);
+    frame.body.auth_algorithm = AUTH_ALGO_OPEN_SYSTEM;
+    frame.body.seq_number = 1;
+    frame.body.status_code = 0; // Reserved for this message
 
-    body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
-    body[1] = 1; // Authentication sequence number
-    body[2] = 0; // Authentication status code (reserved for this message, =0)
+    size_t ieee_size = sizeof(frame.ieee) + sizeof(frame.body);
 
-    body_size += 6;
-
-    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
-
-    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 int Wifi_SendSharedKeyAuthPacket(void)
 {
-    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    TxIeeeAuthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Auth (Shared Key)\n");
 
-    size_t body_size = Wifi_GenMgtHeader(data, TYPE_AUTHENTICATION);
+    Wifi_GenMgtHeader((u8 *)&frame, TYPE_AUTHENTICATION);
 
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
-    u16 *body = (u16 *)(ieee->body + body_size);
+    frame.body.auth_algorithm = AUTH_ALGO_SHARED_KEY;
+    frame.body.seq_number = 1;
+    frame.body.status_code = 0; // Reserved for this message
 
-    body[0] = AUTH_ALGO_SHARED_KEY; // Authentication algorithm (shared key)
-    body[1] = 1; // Authentication sequence number
-    body[2] = 0; // Authentication status code (reserved for this message, =0)
+    size_t ieee_size = sizeof(frame.ieee) + sizeof(frame.body);
 
-    body_size += 6;
-
-    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
-
-    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
@@ -105,7 +116,7 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
     size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
 
     tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4 + 4; // Checksums
+    tx->tx_length = ieee_size + 4 + 4; // FCS
 
     WLOG_FLUSH();
 
@@ -221,42 +232,39 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
 
 void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
 {
-    u8 data[64];
+    IeeeDeauthenticationFrame frame;
 
-    int datalen = packetheader->byteLength;
-    if (datalen > 64)
-        datalen = 64;
+    if (packetheader->byteLength < sizeof(frame))
+    {
+        WLOG_PUTS("W: [R] Deauthentication (Malformed)\n");
+        return;
+    }
 
     // Read IEEE frame, right after the hardware RX header
-    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
-
-    IEEE_MgtFrameHeader *ieee = (void *)data;
+    Wifi_MACRead((u16 *)&frame, macbase, HDR_RX_SIZE, sizeof(frame));
 
     const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
 
     // Check if packet is indeed sent to us (or everyone).
-    if (!(Wifi_CmpMacAddr(ieee->da, WifiData->MacAddr) ||
-          Wifi_CmpMacAddr(ieee->da, (void *)&broadcast_address)))
+    if (!(Wifi_CmpMacAddr(frame.ieee.da, WifiData->MacAddr) ||
+          Wifi_CmpMacAddr(frame.ieee.da, (void *)&broadcast_address)))
         return;
 
     // Check if packet is indeed from the base station we're associated to (or
     // trying to associate to).
-    if (!Wifi_CmpMacAddr(ieee->bssid, WifiData->bssid7))
+    if (!Wifi_CmpMacAddr(frame.ieee.bssid, WifiData->bssid7))
         return;
 
     WLOG_PUTS("W: [R] Deauthentication\n");
 
-    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
-    u16 reason_code = body[0];
-
-    WLOG_PRINTF("W: Reason: %d\n", reason_code);
+    WLOG_PRINTF("W: Reason: %d\n", frame.body.reason_code);
 
     // Check reason. If the AP is leaving or it can't handle more devices, don't
     // try to reconnect.
 
     bool reconnect = true;
 
-    switch (reason_code)
+    switch (frame.body.reason_code)
     {
         case REASON_THIS_STATION_LEFT_DEAUTH:
         case REASON_THIS_STATION_LEFT_DISASSOC:
@@ -290,64 +298,46 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
 
 int Wifi_SendDeauthentication(u16 reason_code)
 {
-    u8 data[48]; // Max size is 42 = 12 + 24 + 2 + 4
+    TxIeeeDeauthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Deauth\n");
 
-    Wifi_GenMgtHeader(data, TYPE_DEAUTHENTICATION);
-
-    size_t body_size = 0;
-
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
-    u16 *body = (u16 *)(ieee->body + body_size);
+    Wifi_GenMgtHeader((u8 *)&frame, TYPE_DEAUTHENTICATION);
 
     WLOG_PRINTF("W: Reason: %d\n", reason_code);
 
-    body[0] = reason_code;
+    frame.body.reason_code = reason_code;
 
-    body_size += 2;
+    size_t ieee_size = sizeof(frame.ieee) + sizeof(frame.body);
 
-    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
-
-    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 static int Wifi_MPHost_SendOpenSystemAuthPacket(void *guest_mac, u16 status_code)
 {
-    u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
+    TxIeeeAuthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Auth (MP)\n");
 
-    Wifi_MPHost_GenMgtHeader(data, TYPE_AUTHENTICATION, guest_mac);
+    Wifi_MPHost_GenMgtHeader((u8 *)&frame, TYPE_AUTHENTICATION, guest_mac);
 
-    size_t body_size = 0;
+    frame.body.auth_algorithm = AUTH_ALGO_OPEN_SYSTEM;
+    frame.body.seq_number = 2;
+    frame.body.status_code = status_code;
 
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
-    u16 *body = (u16 *)(ieee->body + body_size);
+    size_t ieee_size = sizeof(frame.ieee) + sizeof(frame.body);
 
-    body[0] = AUTH_ALGO_OPEN_SYSTEM; // Authentication algorithm (open system)
-    body[1] = 2; // Authentication sequence number
-    body[2] = status_code; // Authentication status code
-
-    body_size += 6;
-
-    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
-
-    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
@@ -414,62 +404,48 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
 
 int Wifi_MPHost_SendDeauthentication(void *dest_mac, u16 reason_code)
 {
-    u8 data[48]; // Max size is 42 = 12 + 24 + 2 + 4
+    TxIeeeDeauthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Deauth (MP)\n");
 
-    Wifi_MPHost_GenMgtHeader(data, TYPE_DEAUTHENTICATION, dest_mac);
-
-    size_t body_size = 0;
-
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
-    u16 *body = (u16 *)(ieee->body + body_size);
+    Wifi_MPHost_GenMgtHeader((u8 *)&frame, TYPE_DEAUTHENTICATION, dest_mac);
 
     WLOG_PRINTF("W: Reason: %d\n", reason_code);
 
-    body[0] = reason_code;
+    frame.body.reason_code = reason_code;
 
-    body_size += 2;
+    size_t ieee_size = sizeof(frame.ieee) + sizeof(frame.body);
 
-    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
-
-    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
 {
-    u8 data[64];
+    IeeeDeauthenticationFrame frame;
 
-    int datalen = packetheader->byteLength;
-    if (datalen > 64)
-        datalen = 64;
+    if (packetheader->byteLength < sizeof(frame))
+    {
+        WLOG_PUTS("W: [R] Deauthentication (Malformed)\n");
+        return;
+    }
 
     // Read IEEE frame, right after the hardware RX header
-    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
-
-    IEEE_MgtFrameHeader *ieee = (void *)data;
+    Wifi_MACRead((u16 *)&frame, macbase, HDR_RX_SIZE, sizeof(frame));
 
     // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(ieee->da, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(frame.ieee.da, WifiData->MacAddr))
         return;
 
     WLOG_PUTS("W: [R] Deauthentication (MP)\n");
 
-#if DSWIFI_LOGS
-    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
-    u16 reason_code = body[0];
+    WLOG_PRINTF("W: Reason: %d\n", frame.body.reason_code);
 
-    WLOG_PRINTF("W: Reason: %d\n", reason_code);
-#endif // DSWIFI_LOGS
-
-    if (Wifi_MPHost_GuestDisconnect(ieee->sa) < 0)
+    if (Wifi_MPHost_GuestDisconnect(frame.ieee.sa) < 0)
     {
         WLOG_PUTS("W: Can't dissociate\n");
     }

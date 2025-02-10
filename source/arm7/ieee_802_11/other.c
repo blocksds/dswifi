@@ -13,51 +13,45 @@
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"
 
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_DataFrameHeader ieee; // This is a data frame, not a management frame!
+} TxIeeeNullFrame;
+
 int Wifi_SendNullFrame(void)
 {
-    // We can't use Wifi_GenMgtHeader() because Null frames are data frames, not
-    // management frames.
-
-    u8 data[50]; // Max size is 40 = 12 + 24 + 4
+    TxIeeeNullFrame frame;
 
     WLOG_PUTS("W: [S] Null\n");
-
-    Wifi_TxHeader *tx = (void *)data;
-    IEEE_DataFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
 
     // IEEE 802.11 header
     // ------------------
 
-    u16 frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
-
     // "Functions of address fields in data frames"
     // With ToDS=1, FromDS=0: Addr1=BSSID, Addr2=SA, Addr3=DA
 
-    ieee->frame_control = frame_control;
-    ieee->duration = 0;
-    Wifi_CopyMacAddr(ieee->addr_1, WifiData->apmac7);
-    Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee->addr_3, WifiData->bssid7);
-    ieee->seq_ctl = 0;
-
-    size_t body_size = 0;
+    frame.ieee.frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
+    frame.ieee.duration = 0;
+    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->apmac7);
+    Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->bssid7);
+    frame.ieee.seq_ctl = 0;
 
     // Hardware TX header
     // ------------------
 
-    tx->unknown = 0;
-    tx->countup = 0;
-    tx->beaconfreq = 0;
-    tx->tx_rate = WifiData->maxrate7;
+    frame.tx.unknown = 0;
+    frame.tx.countup = 0;
+    frame.tx.beaconfreq = 0;
+    frame.tx.tx_rate = WifiData->maxrate7;
 
-    size_t ieee_size = sizeof(IEEE_DataFrameHeader) + body_size;
-    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+    size_t ieee_size = sizeof(frame.ieee);
 
-    tx->tx_length = ieee_size + 4; // Checksum
+    frame.tx.tx_length = ieee_size + 4; // FCS
 
     WLOG_FLUSH();
 
-    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+    return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
 #if 0 // TODO: This is unused
