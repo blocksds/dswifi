@@ -231,7 +231,7 @@ void Wifi_MultiplayerHostMode(int max_guests)
         max_guests = 1;
 
     WifiData->reqMaxGuests = max_guests;
-    WifiData->reqMode = WIFIMODE_MULTIPLAYER_HOST;
+    WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->reqReqFlags |= WFLAG_REQ_ALLOWGUESTS;
 }

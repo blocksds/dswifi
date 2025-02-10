@@ -138,16 +138,17 @@ void Wifi_Update(void)
                 WifiData->curMode = WIFIMODE_DISABLED;
                 break;
             }
-            if (WifiData->reqMode == WIFIMODE_MULTIPLAYER_HOST)
+
+            if (WifiData->reqMode == WIFIMODE_ACCESSPOINT)
             {
-                WLOG_PUTS("W: Multiplayer host\n");
+                WLOG_PUTS("W: AP mode start\n");
                 W_AID_LOW  = 0;
                 W_AID_FULL = 0;
                 for (int i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetGuests();
                 WifiData->curMaxGuests = WifiData->reqMaxGuests;
-                WifiData->curMode = WIFIMODE_MULTIPLAYER_HOST;
+                WifiData->curMode = WIFIMODE_ACCESSPOINT;
                 break;
             }
             if (WifiData->reqMode == WIFIMODE_SCAN)
@@ -323,12 +324,14 @@ void Wifi_Update(void)
             }
             break;
 
-        case WIFIMODE_MULTIPLAYER_HOST:
-            if (WifiData->reqMode != WIFIMODE_MULTIPLAYER_HOST)
+        case WIFIMODE_ACCESSPOINT:
+            if (WifiData->reqMode != WIFIMODE_ACCESSPOINT)
             {
+                WLOG_PUTS("W: AP mode end\n");
                 Wifi_MPHost_GuestKickAll();
                 Wifi_BeaconStop();
                 WifiData->curMode = WIFIMODE_NORMAL;
+                break;
             }
 
             if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWGUESTS)
