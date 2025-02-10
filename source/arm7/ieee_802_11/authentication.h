@@ -17,6 +17,11 @@ int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text);
 void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase);
 void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase);
 
+int Wifi_SendDeauthentication(u16 reason_code);
+
+int Wifi_MPHost_SendDeauthentication(void *dest_mac, u16 reason_code);
+
 void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase);
+void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase);
 
 #endif // DSWIFI_ARM7_IEEE_802_11_AUTHENTICATION_H__

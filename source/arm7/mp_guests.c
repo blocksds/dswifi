@@ -9,8 +9,10 @@
 #include <dswifi_common.h>
 
 #include "arm7/debug.h"
+#include "arm7/ieee_802_11/authentication.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
+#include "common/ieee_defs.h"
 
 void Wifi_MPHost_ResetGuests(void)
 {
@@ -113,4 +115,12 @@ int Wifi_MPHost_GuestDisconnect(void *macaddr)
     guest->state = WIFI_GUEST_DISCONNECTED;
 
     return 0;
+}
+
+void Wifi_MPHost_GuestKickAll(void)
+{
+    u16 broadcast_addr[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
+    Wifi_MPHost_SendDeauthentication(broadcast_addr, REASON_THIS_STATION_LEFT_DEAUTH);
+
+    Wifi_MPHost_ResetGuests();
 }

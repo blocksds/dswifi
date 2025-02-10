@@ -288,6 +288,37 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     WLOG_FLUSH();
 }
 
+int Wifi_SendDeauthentication(u16 reason_code)
+{
+    u8 data[48]; // Max size is 42 = 12 + 24 + 2 + 4
+
+    WLOG_PUTS("W: [S] Deauth\n");
+
+    Wifi_GenMgtHeader(data, TYPE_DEAUTHENTICATION);
+
+    size_t body_size = 0;
+
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
+
+    WLOG_PRINTF("W: Reason: %d\n", reason_code);
+
+    body[0] = reason_code;
+
+    body_size += 2;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = ieee_size + 4; // Checksum
+
+    WLOG_FLUSH();
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+}
+
 static int Wifi_MPHost_SendOpenSystemAuthPacket(void *guest_mac, u16 status_code)
 {
     u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
@@ -376,6 +407,71 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     {
         WLOG_PRINTF("W: Invalid algorithm: %d\n", body[0]);
         Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_AUTH_BAD_ALGORITHM);
+    }
+
+    WLOG_FLUSH();
+}
+
+int Wifi_MPHost_SendDeauthentication(void *dest_mac, u16 reason_code)
+{
+    u8 data[48]; // Max size is 42 = 12 + 24 + 2 + 4
+
+    WLOG_PUTS("W: [S] Deauth (MP)\n");
+
+    Wifi_MPHost_GenMgtHeader(data, TYPE_DEAUTHENTICATION, dest_mac);
+
+    size_t body_size = 0;
+
+    Wifi_TxHeader *tx = (void *)data;
+    IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));
+    u16 *body = (u16 *)(ieee->body + body_size);
+
+    WLOG_PRINTF("W: Reason: %d\n", reason_code);
+
+    body[0] = reason_code;
+
+    body_size += 2;
+
+    size_t ieee_size = sizeof(IEEE_MgtFrameHeader) + body_size;
+    size_t tx_size = sizeof(Wifi_TxHeader) + ieee_size;
+
+    tx->tx_rate = WIFI_TRANSFER_RATE_1MBPS;
+    tx->tx_length = ieee_size + 4; // Checksum
+
+    WLOG_FLUSH();
+
+    return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
+}
+
+void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
+{
+    u8 data[64];
+
+    int datalen = packetheader->byteLength;
+    if (datalen > 64)
+        datalen = 64;
+
+    // Read IEEE frame, right after the hardware RX header
+    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
+
+    IEEE_MgtFrameHeader *ieee = (void *)data;
+
+    // Check if packet is indeed sent to us.
+    if (!Wifi_CmpMacAddr(ieee->da, WifiData->MacAddr))
+        return;
+
+    WLOG_PUTS("W: [R] Deauthentication (MP)\n");
+
+#if DSWIFI_LOGS
+    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
+    u16 reason_code = body[0];
+
+    WLOG_PRINTF("W: Reason: %d\n", reason_code);
+#endif // DSWIFI_LOGS
+
+    if (Wifi_MPHost_GuestDisconnect(ieee->sa) < 0)
+    {
+        WLOG_PUTS("W: Can't dissociate\n");
     }
 
     WLOG_FLUSH();

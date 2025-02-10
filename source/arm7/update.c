@@ -20,6 +20,7 @@
 #include "arm7/rx_queue.h"
 #include "arm7/tx_queue.h"
 #include "arm7/setup.h"
+#include "common/ieee_defs.h"
 
 // The keepalive counter is updated in Wifi_Update(), which is called once per
 // frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
@@ -302,6 +303,7 @@ void Wifi_Update(void)
             }
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
+                Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -324,6 +326,7 @@ void Wifi_Update(void)
         case WIFIMODE_MULTIPLAYER_HOST:
             if (WifiData->reqMode != WIFIMODE_MULTIPLAYER_HOST)
             {
+                Wifi_MPHost_GuestKickAll();
                 Wifi_BeaconStop();
                 WifiData->curMode = WIFIMODE_NORMAL;
             }

@@ -70,7 +70,10 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
             return WFLAG_PACKET_MGT;
 
         case TYPE_DEAUTHENTICATION: // 1100 00 Deauthentication
-            Wifi_ProcessDeauthentication(&packetheader, macbase);
+            if (WifiData->curMode == WIFIMODE_MULTIPLAYER_HOST)
+                Wifi_MPHost_ProcessDeauthentication(&packetheader, macbase);
+            else
+                Wifi_ProcessDeauthentication(&packetheader, macbase);
             return WFLAG_PACKET_MGT;
 
         //case TYPE_ACTION: // TODO: Ignored, should we handle it?
