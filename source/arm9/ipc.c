@@ -110,6 +110,7 @@ u32 Wifi_Init(int initflags)
     sgIP_Init();
 
 #endif
+    WifiData->reqLibraryMode = DSWIFI_INTERNET;
 
     WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK);
     return (u32)Wifi_Data_Struct;
@@ -230,6 +231,7 @@ void Wifi_MultiplayerHostMode(int max_guests)
     if (max_guests < 1)
         max_guests = 1;
 
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
     WifiData->reqMaxGuests = max_guests;
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;

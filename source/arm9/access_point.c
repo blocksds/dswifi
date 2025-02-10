@@ -192,13 +192,15 @@ static int Wifi_ConnectAPInternal(Wifi_AccessPoint *apdata, int wepmode,
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
-    WifiData->ap_is_multiplay_host = false; // AP has access to the Internet
+    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+
     return Wifi_ConnectAPInternal(apdata, wepmode, wepkeyid, wepkey);
 }
 
 int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata)
 {
-    WifiData->ap_is_multiplay_host = true; // AP is another DS acting as host
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
+
     return Wifi_ConnectAPInternal(apdata, 0, 0, NULL);
 }
 
@@ -214,6 +216,8 @@ int Wifi_DisconnectAP(void)
 
 void Wifi_AutoConnect(void)
 {
+    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+
     if (!(WifiData->wfc_enable[0] & 0x80))
     {
         wifi_connect_state = WIFI_CONNECT_ERROR;
@@ -300,9 +304,9 @@ int Wifi_AssocStatus(void)
                             return ASSOCSTATUS_ASSOCIATING;
                         case WIFI_AUTHLEVEL_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                            // We only need to acquire DHCP if we are connected
-                            // to an AP that isn't a DS.
-                            if (!WifiData->ap_is_multiplay_host)
+                            // We only need to use DHCP if we are connected to
+                            // an AP to access the Internet.
+                            if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                             {
                                 if (wifi_hw)
                                 {
@@ -323,9 +327,9 @@ int Wifi_AssocStatus(void)
                     break;
                 case WIFIMODE_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                    // We only need to acquire DHCP if we are connected to an AP
-                    // that isn't a DS.
-                    if (!WifiData->ap_is_multiplay_host)
+                    // We only need to use DHCP if we are connected to an AP to
+                    // access the Internet.
+                    if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                     {
                         if (wifi_hw)
                         {
@@ -350,9 +354,8 @@ int Wifi_AssocStatus(void)
         case WIFI_CONNECT_DHCPING:
 #ifdef WIFI_USE_TCP_SGIP
         {
-            // We only need to acquire DHCP if we are connected to an AP
-            // that isn't a DS.
-            if (WifiData->ap_is_multiplay_host)
+            // If we are in multiplayer client mode we are done.
+            if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 return ASSOCSTATUS_ASSOCIATED;
 
             int i = sgIP_DHCP_Update();

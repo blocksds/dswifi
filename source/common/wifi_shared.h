@@ -45,6 +45,16 @@
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000
 
+// Modes of operation of DSWifi
+typedef enum {
+    // Connect to an access point to access the Internet.
+    DSWIFI_INTERNET,
+    // Connect to a DS acting as access point for local multiplayer.
+    DSWIFI_MULTIPLAYER_CLIENT,
+    // Act as access point for other DSs to connect to for local multiplayer.
+    DSWIFI_MULTIPLAYER_HOST,
+} DSWifi_Mode;
+
 enum WIFI_MODE
 {
     // The WiFi hardware is off.
@@ -149,7 +159,6 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
-    bool ap_is_multiplay_host; // true if the AP is another DS
     u16 ap_rssi;
     u16 pspoll_period;
 
@@ -191,6 +200,9 @@ typedef struct WIFI_MAINSTRUCT
 
     Wifi_ConnectedGuest guestlist[15]; // Up to 15 connected guests (plus host)
     u8 curMaxGuests, reqMaxGuests; // Max number of allowed guests by the host
+
+    // Mode of operation of DSWifi. Check enum DSWifi_Mode
+    u8 curLibraryMode, reqLibraryMode;
 
     u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;

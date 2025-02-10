@@ -512,8 +512,8 @@ void Wifi_Update(void)
             base2 -= WIFI_RXBUFFER_SIZE / 2;
 
 #ifdef WIFI_USE_TCP_SGIP
-        // If the AP is another DS, don't send packets to sgIP
-        if (!WifiData->ap_is_multiplay_host)
+        // Only send packets to sgIP if we are trying to access the Internet
+        if (WifiData->curLibraryMode == DSWIFI_INTERNET)
             Wifi_sgIpHandlePacket(base2, len);
 #endif
 

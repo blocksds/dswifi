@@ -130,8 +130,12 @@ void Wifi_Update(void)
             }
             break;
 
-        case WIFIMODE_NORMAL: // main switcher function
+        case WIFIMODE_NORMAL:
             Wifi_SetLedState(LED_BLINK_SLOW);
+
+            // Only change library mode while not doing anything
+            WifiData->curLibraryMode = WifiData->reqLibraryMode;
+
             if (WifiData->reqMode == WIFIMODE_DISABLED)
             {
                 Wifi_Stop();
