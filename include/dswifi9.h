@@ -178,15 +178,15 @@ void Wifi_MultiplayerAllowNewGuests(bool allow);
 /// once. If you call Wifi_SetChannel(), the beacon will start announcing the
 /// presence of the AP in the new channel.
 ///
+/// Beacon packets need to be sent regularly while in AP mode. When leaving AP
+/// mode, DSWifi will stop sending them automatically.
+///
 /// @param ssid
 ///     SSID to use for the access point.
 ///
 /// @return
 ///     0 on success, a negative value on error.
 int Wifi_BeaconStart(const char *ssid);
-
-/// Stops retransmiting a previously loaded beacon.
-void Wifi_BeaconStop(void);
 
 /// If the WiFi system is not connected or connecting to an access point,
 /// instruct the chipset to change channel.

@@ -29,8 +29,6 @@ int Wifi_BeaconStart(const char *ssid)
     for (int i = 0; i < ssid_len; i++)
         WifiData->ssid9[1 + i] = ssid[i];
 
-    WifiData->reqReqFlags &= ~WFLAG_REQ_STOPBEACON;
-
     // Copy hardware TX and IEEE headers
     // =================================
 
@@ -135,9 +133,4 @@ int Wifi_BeaconStart(const char *ssid)
     Wifi_CallSyncHandler();
 
     return 0;
-}
-
-void Wifi_BeaconStop(void)
-{
-    WifiData->reqReqFlags |= WFLAG_REQ_STOPBEACON;
 }

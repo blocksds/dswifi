@@ -40,8 +40,7 @@
 #define WFLAG_REQ_APADHOC      0x0008
 #define WFLAG_REQ_PROMISC      0x0010
 #define WFLAG_REQ_USEWEP       0x0020
-#define WFLAG_REQ_STOPBEACON   0x0040
-#define WFLAG_REQ_ALLOWGUESTS  0x0080
+#define WFLAG_REQ_ALLOWGUESTS  0x0040
 
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000

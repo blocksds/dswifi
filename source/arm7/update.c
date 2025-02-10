@@ -348,12 +348,6 @@ void Wifi_Update(void)
         }
     }
 
-    if (WifiData->reqReqFlags & WFLAG_REQ_STOPBEACON)
-    {
-        Wifi_BeaconStop();
-        WifiData->reqReqFlags &= ~WFLAG_REQ_STOPBEACON;
-    }
-
     // First, check if we have received anything and handle it
     Wifi_RxQueueFlush();
 
