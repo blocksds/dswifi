@@ -199,7 +199,7 @@
 #define RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX BIT(10) ///< Same as bit 9
 #define RXFILTER_DATA_OTHER_BSSID              BIT(11) ///< Data frames with mismatched BSSID
 #define RXFILTER_UPDATE_WRCSR                  BIT(12) ///< Update W_RXBUF_WRCSR after IEEE header
-#define RXFILTER_ALL                           (0x1FFF) // Bits 13-15 don't exit
+#define RXFILTER_ALL                           (0x1FFF) // Bits 13-15 don't exist
 
 #define W_CONFIG_0D4        WIFI_REG(0x80D4)
 #define W_CONFIG_0D8        WIFI_REG(0x80D8)
