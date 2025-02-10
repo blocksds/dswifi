@@ -220,7 +220,7 @@ void Wifi_AutoConnect(void)
     }
     else
     {
-        wifi_connect_state = 4;
+        wifi_connect_state = WIFI_CONNECT_SEARCHING_WFC;
         WifiData->reqMode  = WIFIMODE_SCAN;
     }
 }
