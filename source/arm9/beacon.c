@@ -10,6 +10,30 @@
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 
+// Struct with information specific to DSWifi
+typedef struct {
+    u8 players_max;
+    u8 players_current;
+} DSWifiExtraData;
+
+// Vendor beacon info (Nintendo Co., Ltd.)
+typedef struct {
+    u8 oui[3]; // 0x00, 0x09, 0xBF
+    u8 oui_type; // 0x00
+    u8 stepping_offset[2];
+    u8 lcd_video_sync[2];
+    u8 fixed_id[4]; // 0x00400001
+    u8 game_id[4];
+    u8 stream_code[2];
+    u8 extra_data_size;
+    u8 beacon_type; // 1 = Multicart
+    u8 cmd_data_size[2]; // size in halfwords
+    u8 reply_data_size[2]; // size in halfwords
+    DSWifiExtraData extra_data;
+} FieVendorNintendo;
+
+static_assert(sizeof(FieVendorNintendo) == 26);
+
 // Access points created by official games acting as multiplayer hosts have no
 // encryption and no BSSID.
 
@@ -111,6 +135,24 @@ int Wifi_BeaconStart(const char *ssid)
     for (size_t i = 0; i < 6; i++)
         *body++ = 0; // This will be filled by the ARM7
     body_size += 8;
+
+    // Vendor (Nintendo)
+
+    *body++ = MGT_FIE_ID_VENDOR;
+    *body++ = sizeof(FieVendorNintendo);
+    body_size += 2;
+
+    FieVendorNintendo *fie = (void *)body;
+    memset(fie, 0, sizeof(FieVendorNintendo));
+
+    fie->oui[0] = 0x00;
+    fie->oui[1] = 0x09;
+    fie->oui[2] = 0xBF;
+    fie->oui_type = 0x00;
+    fie->extra_data_size = sizeof(DSWifiExtraData);
+    fie->beacon_type = 1;
+
+    body_size += sizeof(FieVendorNintendo);
 
     // Send frame to the ARM7
 

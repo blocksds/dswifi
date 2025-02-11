@@ -33,6 +33,8 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     bool wepmode = false;
     bool wpamode = false;
 
+    bool has_nintendo_info = false;
+
     // Capability info, WEP bit. It goes after the 8 byte timestamp and the 2
     // byte beacon interval.
     u32 caps_index = HDR_MGT_MAC_SIZE + 8 + 2;
@@ -144,6 +146,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
             case MGT_FIE_ID_VENDOR: // vendor specific;
             {
                 unsigned int j = curloc;
+
                 // Check that the segment is long enough
                 if ((seglen >= 14) &&
                     // Check magic
@@ -183,6 +186,18 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                         }
                     }
                 }
+
+                j = curloc;
+
+                // Nintendo
+                if ((seglen >= 24) &&
+                    // Check magic
+                    (data[j] == 0x00) && (data[j + 1] == 0x09) &&
+                    (data[j + 2] == 0xBF) && (data[j + 3] == 0x00))
+                {
+                    has_nintendo_info = true;
+                }
+
                 break;
             }
 
@@ -270,7 +285,8 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
         ap->flags = WFLAG_APDATA_ACTIVE
                   | (wepmode ? WFLAG_APDATA_WEP : 0)
-                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC);
+                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
+                  | (has_nintendo_info ? WFLAG_APDATA_NINTENDO_TAG : 0);
 
         if (compatible == 1)
             ap->flags |= WFLAG_APDATA_COMPATIBLE;
