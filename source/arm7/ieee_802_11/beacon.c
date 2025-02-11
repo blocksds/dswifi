@@ -14,6 +14,68 @@
 #include "common/spinlock.h"
 #include "common/wifi_shared.h"
 
+static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
+                                  bool *wpamode, bool *wepmode)
+{
+    if (len >= 14)
+    {
+        // Microsoft OUI
+        if ((data[0] == 0x00) && (data[1] == 0x50) && (data[2] == 0xF2) &&
+            (data[3] == 0x01) &&
+            // Version number
+            (data[4] == 0x01) && (data[5] == 0x00))
+        {
+            // WPA IE type 1 version 1
+
+            int j = 4 + 2 + 4; // Skip magic, version and multicast cipher suite
+
+            u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
+            j += 2;
+
+            // Check group cipher suites
+            while (num_uni_ciphers && (j <= (len - 4)))
+            {
+                num_uni_ciphers--;
+
+                // Check magic numbers in first 3 bytes
+                if (data[j] == 0x00 && data[j + 1] == 0x50 && data[j + 2] == 0xF2)
+                {
+                    j += 3; // Skip magic numbers
+
+                    switch (data[j++])
+                    {
+                        case 2: // TKIP
+                        case 3: // AES WRAP
+                        case 4: // AES CCMP
+                            *wpamode = true;
+                            break;
+                        case 1: // WEP64
+                        case 5: // WEP128
+                            *wepmode = true;
+                        default:
+                            // Others: Reserved/Ignored
+                            break;
+                    }
+                }
+            }
+
+            return;
+        }
+    }
+
+    if (len >= 24)
+    {
+        // Nintendo OUI
+        if ((data[0] == 0x00) && (data[1] == 0x09) && (data[2] == 0xBF) &&
+            (data[3] == 0x00))
+        {
+            *has_nintendo_info = true;
+            // TODO: Check max number of players and current number of players
+            return;
+        }
+    }
+}
+
 void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 {
     u8 data[512];
@@ -115,10 +177,12 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                     j += 2;
 
                     // Check group cipher suites
-                    while (num_uni_ciphers-- && (j <= (curloc + seglen - 4)))
+                    while (num_uni_ciphers && (j <= (curloc + seglen - 4)))
                     {
+                        num_uni_ciphers--;
+
                         // Check magic numbers in first 3 bytes
-                        if ((data[j] == 0x00) && (data[j + 1] == 0x0f) && (data[j + 2] == 0xAC))
+                        if ((data[j] == 0x00) && (data[j + 1] == 0x0F) && (data[j + 2] == 0xAC))
                         {
                             j += 3; // Skip magic numbers
 
@@ -143,61 +207,10 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                 break;
             }
 
-            case MGT_FIE_ID_VENDOR: // vendor specific;
+            case MGT_FIE_ID_VENDOR: // Vendor specific
             {
-                unsigned int j = curloc;
-
-                // Check that the segment is long enough
-                if ((seglen >= 14) &&
-                    // Check magic
-                    (data[j] == 0x00) && (data[j + 1] == 0x50) &&
-                    (data[j + 2] == 0xF2) && (data[j + 3] == 0x01) &&
-                    // Check version
-                    (data[j + 4] == 0x01) && (data[j + 5] == 0x00))
-                {
-                    // WPA IE type 1 version 1
-                    j += 2 + 4 + 4; // Skip magic, version and multicast cipher suite
-
-                    u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
-                    j += 2;
-
-                    // Check group cipher suites
-                    while (num_uni_ciphers-- && (j <= (curloc + seglen - 4)))
-                    {
-                        // Check magic numbers in first 3 bytes
-                        if (data[j] == 0x00 && data[j + 1] == 0x50 && data[j + 2] == 0xF2)
-                        {
-                            j += 3; // Skip magic numbers
-
-                            switch (data[j++])
-                            {
-                                case 2: // TKIP
-                                case 3: // AES WRAP
-                                case 4: // AES CCMP
-                                    wpamode = true;
-                                    break;
-                                case 1: // WEP64
-                                case 5: // WEP128
-                                    wepmode = true;
-                                default:
-                                    // Others: Reserved/Ignored
-                                    break;
-                            }
-                        }
-                    }
-                }
-
-                j = curloc;
-
-                // Nintendo
-                if ((seglen >= 24) &&
-                    // Check magic
-                    (data[j] == 0x00) && (data[j + 1] == 0x09) &&
-                    (data[j + 2] == 0xBF) && (data[j + 3] == 0x00))
-                {
-                    has_nintendo_info = true;
-                }
-
+                Wifi_ProcessVendorTag(data + curloc, seglen, &has_nintendo_info,
+                                      &wpamode, &wepmode);
                 break;
             }
 
