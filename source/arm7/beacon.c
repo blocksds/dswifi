@@ -3,6 +3,7 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/beacon.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -75,6 +76,9 @@ void Wifi_BeaconLoad(int from, int to)
 
     // Beacon interval
     W_BEACONINT = ((u16 *)data)[(HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8) / 2];
+
+    // Refresh channel
+    Wifi_SetBeaconChannel(WifiData->curChannel);
 
     WLOG_FLUSH();
 }
