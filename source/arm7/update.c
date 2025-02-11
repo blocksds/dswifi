@@ -281,6 +281,7 @@ void Wifi_Update(void)
 
         case WIFIMODE_SCAN:
             Wifi_SetLedState(LED_BLINK_SLOW);
+
             if ((WifiData->reqMode != WIFIMODE_SCAN) ||
                 (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
@@ -400,6 +401,8 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ACCESSPOINT:
+            Wifi_SetLedState(LED_BLINK_FAST);
+
             if ((WifiData->reqMode != WIFIMODE_ACCESSPOINT) ||
                 (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
