@@ -139,9 +139,35 @@ void Wifi_EnableWifi(void);
 ///     0 to disable promiscuous mode, nonzero to engage.
 void Wifi_SetPromiscuousMode(int enable);
 
-/// Instructs the ARM7 to periodically rotate through the channels to pick up
-/// and record information from beacons given off by APs.
+/// Makes the ARM7 go into scan mode, filterint out the requested device types.
+///
+/// The ARM7 periodically rotates through the channels to pick up and record
+/// information from beacons given off by APs.
+///
+/// @param flags
+///     Types of devices to include to the list of scanned devices.
+void Wifi_ScanModeFilter(Wifi_APScanFlags flags);
+
+/// Makes the ARM7 go into scan mode and list Internet APs.
+///
+/// The ARM7 periodically rotates through the channels to pick up and record
+/// information from beacons given off by APs.
+///
+/// This function is meant to be used to scan for Internet APs. It will list all
+/// detecetd APs, whether they are compatible with a DS or not (because of using
+/// WPA, for example). However, NDS devices acting as hosts are excluded.
 void Wifi_ScanMode(void);
+
+/// Makes the ARM7 go into scan mode and list NDS multiplayer hosts.
+///
+/// The ARM7 periodically rotates through the channels to pick up and record
+/// information from beacons given off by APs.
+///
+/// This function is meant to be used to scan for other NDS consoles acting as
+/// multiplayer hosts. It will filter out all devices that aren't NDS devices
+/// acting as multiplayer hosts (only devices that include Nintendo vendor
+/// information in their beacon packets are added to the list).
+void Wifi_MultiplayerScanMode(void);
 
 /// Sets the WiFI hardware in "active" mode.
 ///

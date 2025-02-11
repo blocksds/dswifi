@@ -21,6 +21,7 @@
 #include "arm7/tx_queue.h"
 #include "arm7/setup.h"
 #include "common/ieee_defs.h"
+#include "common/spinlock.h"
 
 // The keepalive counter is updated in Wifi_Update(), which is called once per
 // frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
@@ -105,6 +106,50 @@ static void Wifi_UpdateAssociate(void)
     }
 }
 
+void Wifi_ClearListOfAP(void)
+{
+    // Remove all APs of types that haven't bene requested
+
+    for (int i = 0; i < WIFI_MAX_AP; i++)
+    {
+        while (Spinlock_Acquire(WifiData->aplist[i]) != SPINLOCK_OK)
+            ;
+
+        volatile Wifi_AccessPoint *ap = &(WifiData->aplist[i]);
+
+        bool keep = false;
+
+        if (ap->flags & WFLAG_APDATA_COMPATIBLE)
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_AP_COMPATIBLE)
+                keep = true;
+        }
+        else
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_AP_INCOMPATIBLE)
+                keep = true;
+        }
+
+        if (ap->flags & WFLAG_APDATA_NINTENDO_TAG)
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_NDS_HOSTS)
+                keep = true;
+            else
+                keep = false;
+        }
+
+        if (!keep)
+        {
+            ap->flags = 0;
+            ap->bssid[0] = 0;
+            ap->bssid[1] = 0;
+            ap->bssid[2] = 0;
+        }
+
+        Spinlock_Release(WifiData->aplist[i]);
+    }
+}
+
 void Wifi_Update(void)
 {
     static const u8 scanlist[] = {
@@ -157,6 +202,10 @@ void Wifi_Update(void)
             }
             if (WifiData->reqMode == WIFIMODE_SCAN)
             {
+                // Refresh filter flags and clear list of APs based on them
+                WifiData->curApScanFlags = WifiData->reqApScanFlags;
+                Wifi_ClearListOfAP();
+
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_SCAN;
                 break;

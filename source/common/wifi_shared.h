@@ -164,6 +164,7 @@ typedef struct WIFI_MAINSTRUCT
 
     // AP data
     Wifi_AccessPoint aplist[WIFI_MAX_AP];
+    u8 curApScanFlags, reqApScanFlags;
 
     // probe stuff
     u8 probe9_numprobe;

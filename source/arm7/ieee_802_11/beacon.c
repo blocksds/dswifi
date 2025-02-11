@@ -213,6 +213,33 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     if (wpamode)
         compatible = 0;
 
+    // Apply filters to the AP list
+    {
+        bool keep = false;
+
+        if (compatible)
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_AP_COMPATIBLE)
+                keep = true;
+        }
+        else
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_AP_INCOMPATIBLE)
+                keep = true;
+        }
+
+        if (has_nintendo_info)
+        {
+            if (WifiData->curApScanFlags & WSCAN_LIST_NDS_HOSTS)
+                keep = true;
+            else
+                keep = false;
+        }
+
+        if (!keep)
+            return;
+    }
+
     // Now, check the list of APs that we have found so far. If the AP of this
     // frame is already in the list, store it there. If not, this loop will
     // finish without doing any work, and we will add it to the list later.

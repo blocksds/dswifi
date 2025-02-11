@@ -44,6 +44,21 @@ extern "C" {
 
 #define WFLAG_PACKET_ALL 0xFFFF
 
+/// List of which devices to add to the AP list while scanning for APs.
+typedef enum {
+    /// List unprotected and WEP APs to the list (excluding NDS hosts).
+    WSCAN_LIST_AP_COMPATIBLE   = 0x1,
+    /// List incompatible APs, such as the ones using WPA encryption
+    WSCAN_LIST_AP_INCOMPATIBLE = 0x2,
+    /// List all APs that aren't NDS hosts.
+    WSCAN_LIST_AP_ALL          = 0x3,
+    /// List NDS devices acting as multiplayer hosts. They are the ones that
+    /// include the Nintendo tag in their beacon frames.
+    WSCAN_LIST_NDS_HOSTS       = 0x4,
+    /// Add all APs that are found to the list.
+    WSCAN_LIST_ALL             = 0x7
+} Wifi_APScanFlags;
+
 /// Supported WEP modes.
 ///
 /// - 64 bit (40 bit) WEP mode:   5 ASCII characters (or 10 hex numbers).

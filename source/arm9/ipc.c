@@ -212,10 +212,23 @@ void Wifi_SetPromiscuousMode(int enable)
         WifiData->reqReqFlags &= ~WFLAG_REQ_PROMISC;
 }
 
-void Wifi_ScanMode(void)
+void Wifi_ScanModeFilter(Wifi_APScanFlags flags)
 {
+    WifiData->reqApScanFlags = flags;
     WifiData->reqMode = WIFIMODE_SCAN;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+void Wifi_ScanMode(void)
+{
+    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+    Wifi_ScanModeFilter(WSCAN_LIST_AP_ALL);
+}
+
+void Wifi_MultiplayerScanMode(void)
+{
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
+    Wifi_ScanModeFilter(WSCAN_LIST_NDS_HOSTS);
 }
 
 void Wifi_IdleMode(void)
