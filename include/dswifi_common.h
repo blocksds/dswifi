@@ -5,7 +5,7 @@
 
 /// @file dswifi_common.h
 ///
-/// @brief ARM9 and ARM7 common header of DSWifi.
+/// @brief ARM9 and ARM7 common definitions.
 
 #ifndef DSWIFI_COMMON_H
 #define DSWIFI_COMMON_H

@@ -15,9 +15,18 @@
 ///
 /// ## API documentation
 ///
-/// - @ref dswifi7.h "ARM7 DSWifi header"
-/// - @ref dswifi9.h "ARM9 DSWifi header"
-/// - @ref dswifi_common.h "ARM9 and ARM7 common header"
+/// - ARM9
+///   - @ref dswifi9_general "General state of the library."
+///   - @ref dswifi9_ap "Scan and connect to access points."
+///   - @ref dswifi9_mp_host "Local multiplayer host utilities."
+///   - @ref dswifi9_ip "Utilities related to Internet access."
+///   - @ref dswifi9_raw_tx_rx "Raw transfer/reception of packets."
+///
+/// - ARM7
+///   - @ref dswifi7.h "ARM7 DSWifi header"
+///
+/// - Common
+///   - @ref dswifi_common.h "ARM9 and ARM7 common definitions"
 
 #ifndef DSWIFI9_H
 #define DSWIFI9_H
@@ -34,22 +43,11 @@ extern "C" {
 #include <dswifi_common.h>
 #include <dswifi_version.h>
 
-/// Error codes for Wifi_GetAPData()
-enum WIFI_RETURN
-{
-    /// Everything went ok
-    WIFI_RETURN_OK = 0,
-    /// The spinlock attempt failed (it wasn't retried cause that could lock
-    /// both cpus- retry again after a delay.
-    WIFI_RETURN_LOCKFAILED = 1,
-    /// There was an error in attempting to complete the requested task.
-    WIFI_RETURN_ERROR = 2,
-    /// There was an error in the parameters passed to the function.
-    WIFI_RETURN_PARAMERROR = 3,
-};
+/// @defgroup dswifi9_general General state of the library.
+/// @{
 
-/// User code uses members of the WIFIGETDATA structure in calling Wifi_GetData
-/// to retreive miscellaneous odd information.
+/// User code uses members of the WIFIGETDATA structure in calling
+/// Wifi_GetData() to retreive miscellaneous odd information.
 enum WIFIGETDATA
 {
     /// MACADDRESS: returns data in the buffer, requires at least 6 bytes.
@@ -60,37 +58,6 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
-/// Returned by Wifi_AssocStatus() after calling Wifi_ConnectAPk
-enum WIFI_ASSOCSTATUS
-{
-    /// Not *trying* to connect
-    ASSOCSTATUS_DISCONNECTED,
-    /// Data given does not completely specify an AP, looking for AP that matches
-    /// the data.
-    ASSOCSTATUS_SEARCHING,
-    /// Connecting...
-    ASSOCSTATUS_AUTHENTICATING,
-    /// Connecting...
-    ASSOCSTATUS_ASSOCIATING,
-    /// Connected to AP, but getting IP data from DHCP
-    ASSOCSTATUS_ACQUIRINGDHCP,
-    /// Connected! (COMPLETE if Wifi_ConnectAP was called to start)
-    ASSOCSTATUS_ASSOCIATED,
-    /// Error in connecting... (COMPLETE if Wifi_ConnectAP was called to start)
-    ASSOCSTATUS_CANNOTCONNECT,
-};
-
-extern const char *ASSOCSTATUS_STRINGS[];
-
-/// Wifi Packet Handler function
-///
-/// The first parameter is the packet address. It is only valid while the called
-/// function is executing. The second parameter is packet length.
-///
-/// Call Wifi_RxRawReadPacket() while in the packet handler function, to
-/// retreive the data to a local buffer.
-typedef void (*WifiPacketHandler)(int, int);
-
 /// Wifi Sync Handler function.
 ///
 /// Callback function that is called when the ARM7 needs to be told to
@@ -99,8 +66,25 @@ typedef void (*WifiPacketHandler)(int, int);
 /// which will call Wifi_Sync() on ARM7.
 typedef void (*WifiSyncHandler)(void);
 
-//////////////////////////////////////////////////////////////////////////
-// Init/update/state management functions
+/// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
+#define WFC_CONNECT true
+/// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
+#define INIT_ONLY false
+
+/// Initializes WiFi library.
+///
+/// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
+/// the ARM7 side of the library, and it sets up timer 3 to be used by the
+/// DSWifi.
+///
+/// @param useFirmwareSettings
+///     If true, this function will initialize the hardware and try to connect
+///     to the Access Points stored in the firmware. If false, it will only
+///     initialize the library. You can use WFC_CONNECT and INIT_ONLY.
+///
+/// @return
+///     It returns true on success, false on failure.
+bool Wifi_InitDefault(bool useFirmwareSettings);
 
 /// Initializes the WiFi library (ARM9 side) and the sgIP library.
 ///
@@ -139,6 +123,111 @@ void Wifi_EnableWifi(void);
 ///     0 to disable promiscuous mode, nonzero to engage.
 void Wifi_SetPromiscuousMode(int enable);
 
+/// Sets the WiFI hardware in "active" mode.
+///
+/// The hardware is powered on, but not associated or doing anything useful. It
+/// can still receive and transmit packets.
+void Wifi_IdleMode(void);
+
+/// If the WiFi system is not connected or connecting to an access point,
+/// instruct the chipset to change channel.
+///
+/// The WiFi system must be in "active" mode for this to work as expected. If it
+/// is in scanning mode, it will change channel automatically every second or
+/// so.
+///
+/// @param channel
+///     The channel to change to, in the range of 1-13.
+void Wifi_SetChannel(int channel);
+
+/// This function should be called in a periodic interrupt.
+///
+/// It serves as the basis for all updating in the sgIP library, all
+/// retransmits, timeouts, and etc are based on this function being called.
+/// It's not timing critical but it is rather essential.
+///
+/// @param num_ms
+///     The number of milliseconds since the last time this function was called.
+void Wifi_Timer(int num_ms);
+
+/// Retrieve an arbitrary or misc. piece of data from the WiFi hardware.
+///
+/// See the WIFIGETDATA enum.
+///
+/// @param datatype
+///     Element from the WIFIGETDATA enum specifing what kind of data to get.
+/// @param bufferlen
+///     Length of the buffer to copy data to (not always used)
+/// @param buffer
+///     Buffer to copy element data to (not always used)
+///
+/// @return
+///     -1 for failure, the number of bytes written to the buffer, or the value
+///     requested if the buffer isn't used.
+int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
+
+/// Retreive an element of the WiFi statistics gathered
+///
+/// @param statnum
+///     Element from the WIFI_STATS enum, indicating what statistic to return.
+///
+/// @return
+///     The requested stat, or 0 for failure.
+u32 Wifi_GetStats(int statnum);
+
+/// Checks for new data from the ARM7 and initiates routing if data is available.
+void Wifi_Update(void);
+
+/// Call this function when requested to sync by the ARM7 side of the WiFi lib.
+void Wifi_Sync(void);
+
+/// Call this function to request notification of when the ARM7-side Wifi_Sync()
+/// function should be called.
+///
+/// @param sh
+///     Pointer to the function to be called for notification.
+void Wifi_SetSyncHandler(WifiSyncHandler sh);
+
+/// @}
+/// @defgroup dswifi9_ap Scan and connect to access points.
+/// @{
+
+/// Error codes for Wifi_GetAPData()
+enum WIFI_RETURN
+{
+    /// Everything went ok
+    WIFI_RETURN_OK = 0,
+    /// The spinlock attempt failed (it wasn't retried cause that could lock
+    /// both cpus- retry again after a delay.
+    WIFI_RETURN_LOCKFAILED = 1,
+    /// There was an error in attempting to complete the requested task.
+    WIFI_RETURN_ERROR = 2,
+    /// There was an error in the parameters passed to the function.
+    WIFI_RETURN_PARAMERROR = 3,
+};
+
+/// Returned by Wifi_AssocStatus() after calling Wifi_ConnectAP()
+enum WIFI_ASSOCSTATUS
+{
+    /// Not *trying* to connect
+    ASSOCSTATUS_DISCONNECTED,
+    /// Data given does not completely specify an AP, looking for AP that matches
+    /// the data.
+    ASSOCSTATUS_SEARCHING,
+    /// Connecting...
+    ASSOCSTATUS_AUTHENTICATING,
+    /// Connecting...
+    ASSOCSTATUS_ASSOCIATING,
+    /// Connected to AP, but getting IP data from DHCP
+    ASSOCSTATUS_ACQUIRINGDHCP,
+    /// Connected! (COMPLETE if Wifi_ConnectAP was called to start)
+    ASSOCSTATUS_ASSOCIATED,
+    /// Error in connecting... (COMPLETE if Wifi_ConnectAP was called to start)
+    ASSOCSTATUS_CANNOTCONNECT,
+};
+
+extern const char *ASSOCSTATUS_STRINGS[];
+
 /// Makes the ARM7 go into scan mode, filterint out the requested device types.
 ///
 /// The ARM7 periodically rotates through the channels to pick up and record
@@ -168,62 +257,6 @@ void Wifi_ScanMode(void);
 /// acting as multiplayer hosts (only devices that include Nintendo vendor
 /// information in their beacon packets are added to the list).
 void Wifi_MultiplayerScanMode(void);
-
-/// Sets the WiFI hardware in "active" mode.
-///
-/// The hardware is powered on, but not associated or doing anything useful. It
-/// can still receive and transmit packets.
-void Wifi_IdleMode(void);
-
-/// Sets the WiFI hardware in mulitplayer host mode.
-///
-/// While in host mode, call Wifi_BeaconStart() to start announcing that this DS
-/// is acting as an access point. This will allow other consoles to connect
-/// discover it and connect to it.
-///
-/// @param max_guests
-///     Maximum number of allowed guests connected to the console. The minimum
-///     is 1, the maximum is 15.
-void Wifi_MultiplayerHostMode(int max_guests);
-
-/// Allows or disallows new guests to connect to this console acting as host.
-///
-/// By default, guests can connect to the host when in host mode. You should
-/// disable new connections once you have enough players connected to you, and
-/// you aren't expecting new connections.
-///
-/// @param allow
-///     If true, allow new connections. If false, reject them.
-void Wifi_MultiplayerAllowNewGuests(bool allow);
-
-/// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
-///
-/// This beacon frame announces that this console is acting as an access point
-/// (for example, to act as a host of a multiplayer group). Beacon frames are
-/// be sent periodically by the hardware, you only need to call this function
-/// once. If you call Wifi_SetChannel(), the beacon will start announcing the
-/// presence of the AP in the new channel.
-///
-/// Beacon packets need to be sent regularly while in AP mode. When leaving AP
-/// mode, DSWifi will stop sending them automatically.
-///
-/// @param ssid
-///     SSID to use for the access point.
-///
-/// @return
-///     0 on success, a negative value on error.
-int Wifi_BeaconStart(const char *ssid);
-
-/// If the WiFi system is not connected or connecting to an access point,
-/// instruct the chipset to change channel.
-///
-/// The WiFi system must be in "active" mode for this to work as expected. If it
-/// is in scanning mode, it will change channel automatically every second or
-/// so.
-///
-/// @param channel
-///     The channel to change to, in the range of 1-13.
-void Wifi_SetChannel(int channel);
 
 /// Returns the current number of APs that are known and tracked internally.
 ///
@@ -304,15 +337,52 @@ int Wifi_AssocStatus(void);
 ///     It returns 0 on success.
 int Wifi_DisconnectAP(void);
 
-/// This function should be called in a periodic interrupt.
+/// @}
+/// @defgroup dswifi9_mp_host Local multiplayer host utilities.
+/// @{
+
+/// Sets the WiFI hardware in mulitplayer host mode.
 ///
-/// It serves as the basis for all updating in the sgIP library, all
-/// retransmits, timeouts, and etc are based on this function being called.
-/// It's not timing critical but it is rather essential.
+/// While in host mode, call Wifi_BeaconStart() to start announcing that this DS
+/// is acting as an access point. This will allow other consoles to connect
+/// discover it and connect to it.
 ///
-/// @param num_ms
-///     The number of milliseconds since the last time this function was called.
-void Wifi_Timer(int num_ms);
+/// @param max_guests
+///     Maximum number of allowed guests connected to the console. The minimum
+///     is 1, the maximum is 15.
+void Wifi_MultiplayerHostMode(int max_guests);
+
+/// Allows or disallows new guests to connect to this console acting as host.
+///
+/// By default, guests can connect to the host when in host mode. You should
+/// disable new connections once you have enough players connected to you, and
+/// you aren't expecting new connections.
+///
+/// @param allow
+///     If true, allow new connections. If false, reject them.
+void Wifi_MultiplayerAllowNewGuests(bool allow);
+
+/// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
+///
+/// This beacon frame announces that this console is acting as an access point
+/// (for example, to act as a host of a multiplayer group). Beacon frames are
+/// be sent periodically by the hardware, you only need to call this function
+/// once. If you call Wifi_SetChannel(), the beacon will start announcing the
+/// presence of the AP in the new channel.
+///
+/// Beacon packets need to be sent regularly while in AP mode. When leaving AP
+/// mode, DSWifi will stop sending them automatically.
+///
+/// @param ssid
+///     SSID to use for the access point.
+///
+/// @return
+///     0 on success, a negative value on error.
+int Wifi_BeaconStart(const char *ssid);
+
+/// @}
+/// @defgroup dswifi9_ip Utilities related to Internet access.
+/// @{
 
 /// It returns the current IP address of the DS.
 ///
@@ -358,33 +428,18 @@ struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
 ///     The new secondary dns server
 void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 
-/// Retrieve an arbitrary or misc. piece of data from the WiFi hardware.
-///
-/// See the WIFIGETDATA enum.
-///
-/// @param datatype
-///     Element from the WIFIGETDATA enum specifing what kind of data to get.
-/// @param bufferlen
-///     Length of the buffer to copy data to (not always used)
-/// @param buffer
-///     Buffer to copy element data to (not always used)
-///
-/// @return
-///     -1 for failure, the number of bytes written to the buffer, or the value
-///     requested if the buffer isn't used.
-int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
+/// @}
+/// @defgroup dswifi9_raw_tx_rx Raw transfer/reception of packets.
+/// @{
 
-/// Retreive an element of the WiFi statistics gathered
+/// Wifi Packet Handler function
 ///
-/// @param statnum
-///     Element from the WIFI_STATS enum, indicating what statistic to return.
+/// The first parameter is the packet address. It is only valid while the called
+/// function is executing. The second parameter is packet length.
 ///
-/// @return
-///     The requested stat, or 0 for failure.
-u32 Wifi_GetStats(int statnum);
-
-//////////////////////////////////////////////////////////////////////////
-// Raw Send/Receive functions
+/// Call Wifi_RxRawReadPacket() while in the packet handler function, to
+/// retreive the data to a local buffer.
+typedef void (*WifiPacketHandler)(int, int);
 
 /// Send a raw 802.11 frame at a specified rate.
 ///
@@ -417,41 +472,7 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 ///     Location for the data to be read into. It must be aligned to 16 bits.
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 
-//////////////////////////////////////////////////////////////////////////
-// Fast transfer support - update functions
-
-/// Checks for new data from the ARM7 and initiates routing if data is available.
-void Wifi_Update(void);
-
-/// Call this function when requested to sync by the ARM7 side of the WiFi lib.
-void Wifi_Sync(void);
-
-/// Call this function to request notification of when the ARM7-side Wifi_Sync()
-/// function should be called.
-///
-/// @param sh
-///     Pointer to the function to be called for notification.
-void Wifi_SetSyncHandler(WifiSyncHandler sh);
-
-/// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
-#define WFC_CONNECT true
-/// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
-#define INIT_ONLY false
-
-/// Initializes WiFi library.
-///
-/// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
-/// the ARM7 side of the library, and it sets up timer 3 to be used by the
-/// DSWifi.
-///
-/// @param useFirmwareSettings
-///     If true, this function will initialize the hardware and try to connect
-///     to the Access Points stored in the firmware. If false, it will only
-///     initialize the library.  You can use WFC_CONNECT and INIT_ONLY.
-///
-/// @return
-///     It returns true on success, false on failure.
-bool Wifi_InitDefault(bool useFirmwareSettings);
+/// @}
 
 #ifdef __cplusplus
 }
