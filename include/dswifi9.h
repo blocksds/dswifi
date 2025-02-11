@@ -75,7 +75,7 @@ typedef void (*WifiSyncHandler)(void);
 ///
 /// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
 /// the ARM7 side of the library, and it sets up timer 3 to be used by the
-/// DSWifi.
+/// DSWifi. It will start in Internet mode.
 ///
 /// @param useFirmwareSettings
 ///     If true, this function will initialize the hardware and try to connect
@@ -88,13 +88,17 @@ bool Wifi_InitDefault(bool useFirmwareSettings);
 
 /// Initializes the WiFi library (ARM9 side) and the sgIP library.
 ///
+/// @warning
+///     This function requires some manual handling of the returned value to
+///     fully initialize the library. Use Wifi_InitDefault(INIT_ONLY) instead.
+///
 /// @param initflags
 ///     Set up some optional things, like controlling the LED blinking
 ///     (WIFIINIT_OPTION_USELED) and the size of the sgIP heap
 ///     (WIFIINIT_OPTION_USEHEAP_xxx).
 ///
 /// @return
-///     A 32bit value that *must* be passed to ARM7.
+///     A 32bit value that *must* be passed to the ARM7 side of the library.
 u32 Wifi_Init(int initflags);
 
 /// Verifies when the ARM7 has been successfully initialized.
@@ -111,6 +115,16 @@ void Wifi_DisableWifi(void);
 /// The hardware is powered on, but not associated or doing anything useful. It
 /// can still receive and transmit packets.
 void Wifi_EnableWifi(void);
+
+/// Checks whether a library mode change has finished or not.
+///
+/// Use this function after calling Wifi_MultiplayerHostMode(),
+/// Wifi_MultiplayerClientMode() or Wifi_InternetMode() to verify that the
+/// library is ready.
+///
+/// @return
+///     It returns true if the mode change has finished, false otherwise.
+bool Wifi_LibraryModeReady(void);
 
 /// Allows the DS to enter or leave a "promsicuous" mode.
 ///
@@ -242,21 +256,17 @@ void Wifi_ScanModeFilter(Wifi_APScanFlags flags);
 /// The ARM7 periodically rotates through the channels to pick up and record
 /// information from beacons given off by APs.
 ///
-/// This function is meant to be used to scan for Internet APs. It will list all
-/// detecetd APs, whether they are compatible with a DS or not (because of using
-/// WPA, for example). However, NDS devices acting as hosts are excluded.
+/// When in DSWIFI_INTERNET mode, this function will scan looking for Internet
+/// APs. It will list all detecetd APs, whether they are compatible with a DS or
+/// not (because of using WPA, for example). However, NDS devices acting as
+/// hosts are excluded.
+///
+/// When in DSWIFI_MULTIPLAYER_CLIENT, this function will scan looking for other
+/// NDS consoles acting as multiplayer hosts. It will filter out all devices
+/// that aren't NDS devices acting as multiplayer hosts (only devices that
+/// include Nintendo vendor information in their beacon packets are added to the
+/// list).
 void Wifi_ScanMode(void);
-
-/// Makes the ARM7 go into scan mode and list NDS multiplayer hosts.
-///
-/// The ARM7 periodically rotates through the channels to pick up and record
-/// information from beacons given off by APs.
-///
-/// This function is meant to be used to scan for other NDS consoles acting as
-/// multiplayer hosts. It will filter out all devices that aren't NDS devices
-/// acting as multiplayer hosts (only devices that include Nintendo vendor
-/// information in their beacon packets are added to the list).
-void Wifi_MultiplayerScanMode(void);
 
 /// Returns the current number of APs that are known and tracked internally.
 ///
@@ -310,14 +320,14 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 ///     0 for ok, -1 for error with input data.
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned char *wepkey);
 
-/// Connect to a DS acting as multiplayer host.
+/// Connect to an AP without encryption (and NDS multiplayer hosts).
 ///
 /// @param apdata
 ///     Basic data about the AP.
 ///
 /// @return
 ///     0 for ok, -1 for error with input data.
-int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata);
+int Wifi_ConnectOpenAP(Wifi_AccessPoint *apdata);
 
 /// Connect to an Access Point specified by the WFC data in the firmware.
 void Wifi_AutoConnect(void);
@@ -347,10 +357,17 @@ int Wifi_DisconnectAP(void);
 /// is acting as an access point. This will allow other consoles to connect
 /// discover it and connect to it.
 ///
+/// Use Wifi_LibraryModeReady() to check when the mode change is finished.
+///
 /// @param max_guests
 ///     Maximum number of allowed guests connected to the console. The minimum
 ///     is 1, the maximum is 15.
 void Wifi_MultiplayerHostMode(int max_guests);
+
+/// Sets the WiFI hardware in mulitplayer client mode.
+///
+/// Use Wifi_LibraryModeReady() to check when the mode change is finished.
+void Wifi_MultiplayerClientMode(void);
 
 /// Allows or disallows new guests to connect to this console acting as host.
 ///
@@ -383,6 +400,11 @@ int Wifi_BeaconStart(const char *ssid);
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
 /// @{
+
+/// Sets the WiFI hardware in Internet mode.
+///
+/// Use Wifi_LibraryModeReady() to check when the mode change is finished.
+void Wifi_InternetMode(void);
 
 /// It returns the current IP address of the DS.
 ///

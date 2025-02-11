@@ -168,6 +168,7 @@ void Wifi_Update(void)
     {
         case WIFIMODE_DISABLED:
             Wifi_SetLedState(LED_ALWAYS_ON);
+
             if (WifiData->reqMode != WIFIMODE_DISABLED)
             {
                 Wifi_Start();
@@ -280,7 +281,8 @@ void Wifi_Update(void)
 
         case WIFIMODE_SCAN:
             Wifi_SetLedState(LED_BLINK_SLOW);
-            if (WifiData->reqMode != WIFIMODE_SCAN)
+            if ((WifiData->reqMode != WIFIMODE_SCAN) ||
+                (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
@@ -326,6 +328,12 @@ void Wifi_Update(void)
         case WIFIMODE_ASSOCIATE:
             Wifi_SetLedState(LED_BLINK_SLOW);
 
+            if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
+            {
+                WifiData->curMode = WIFIMODE_NORMAL;
+                break;
+            }
+
             if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
@@ -344,6 +352,13 @@ void Wifi_Update(void)
 
         case WIFIMODE_ASSOCIATED:
             Wifi_SetLedState(LED_BLINK_FAST);
+
+            if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
+            {
+                WifiData->curMode = WIFIMODE_NORMAL;
+                break;
+            }
+
             wifi_keepalive_time++; // TODO: track time more accurately.
             if (wifi_keepalive_time > WIFI_KEEPALIVE_COUNT)
             {
@@ -370,6 +385,13 @@ void Wifi_Update(void)
 
         case WIFIMODE_CANNOTASSOCIATE:
             Wifi_SetLedState(LED_BLINK_SLOW);
+
+            if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
+            {
+                WifiData->curMode = WIFIMODE_NORMAL;
+                break;
+            }
+
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -378,7 +400,8 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ACCESSPOINT:
-            if (WifiData->reqMode != WIFIMODE_ACCESSPOINT)
+            if ((WifiData->reqMode != WIFIMODE_ACCESSPOINT) ||
+                (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
                 WLOG_PUTS("W: AP mode end\n");
                 Wifi_MPHost_GuestKickAll();

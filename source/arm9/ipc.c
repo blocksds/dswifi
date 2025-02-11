@@ -110,6 +110,8 @@ u32 Wifi_Init(int initflags)
     sgIP_Init();
 
 #endif
+    // Start in Internet mode by default for compatibility with old code.
+    // Don't set mode to WIFIMODE_NORMAL, leave it as WIFIMODE_DISABLED.
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
 
     WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK);
@@ -221,18 +223,34 @@ void Wifi_ScanModeFilter(Wifi_APScanFlags flags)
 
 void Wifi_ScanMode(void)
 {
-    WifiData->reqLibraryMode = DSWIFI_INTERNET;
-    Wifi_ScanModeFilter(WSCAN_LIST_AP_ALL);
-}
-
-void Wifi_MultiplayerScanMode(void)
-{
-    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
-    Wifi_ScanModeFilter(WSCAN_LIST_NDS_HOSTS);
+    if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
+        Wifi_ScanModeFilter(WSCAN_LIST_NDS_HOSTS);
+    else if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+        Wifi_ScanModeFilter(WSCAN_LIST_AP_ALL);
+    // Don't switch to scan mode when acting as a multiplayer host
 }
 
 void Wifi_IdleMode(void)
 {
+    WifiData->reqMode = WIFIMODE_NORMAL;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+bool Wifi_LibraryModeReady(void)
+{
+    return WifiData->curLibraryMode == WifiData->reqLibraryMode;
+}
+
+void Wifi_InternetMode(void)
+{
+    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+    WifiData->reqMode = WIFIMODE_NORMAL;
+    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+}
+
+void Wifi_MultiplayerClientMode(void)
+{
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
     WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }

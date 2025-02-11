@@ -129,8 +129,7 @@ typedef enum {
 static WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
 static Wifi_AccessPoint wifi_connect_point;
 
-static int Wifi_ConnectAPInternal(Wifi_AccessPoint *apdata, int wepmode,
-                                  int wepkeyid, u8 *wepkey)
+int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
     wifi_connect_state = WIFI_CONNECT_ERROR;
 
@@ -190,18 +189,9 @@ static int Wifi_ConnectAPInternal(Wifi_AccessPoint *apdata, int wepmode,
     return 0;
 }
 
-int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
+int Wifi_ConnectOpenAP(Wifi_AccessPoint *apdata)
 {
-    WifiData->reqLibraryMode = DSWIFI_INTERNET;
-
-    return Wifi_ConnectAPInternal(apdata, wepmode, wepkeyid, wepkey);
-}
-
-int Wifi_ConnectMultiplayerHost(Wifi_AccessPoint *apdata)
-{
-    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
-
-    return Wifi_ConnectAPInternal(apdata, 0, 0, NULL);
+    return Wifi_ConnectAP(apdata, 0, 0, NULL);
 }
 
 int Wifi_DisconnectAP(void)
@@ -216,7 +206,7 @@ int Wifi_DisconnectAP(void)
 
 void Wifi_AutoConnect(void)
 {
-    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+    Wifi_InternetMode();
 
     if (!(WifiData->wfc_enable[0] & 0x80))
     {
