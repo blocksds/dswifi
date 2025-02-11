@@ -17,8 +17,6 @@
 #define WIFI_MAX_ASSOC_RETRY 30
 #define WIFI_PS_POLL_CONST   2
 
-#define WIFI_MAX_PROBE 4
-
 #define WIFI_AP_TIMEOUT 40
 
 #define WFLAG_ARM7_ACTIVE  0x0001
@@ -165,11 +163,6 @@ typedef struct WIFI_MAINSTRUCT
     // AP data
     Wifi_AccessPoint aplist[WIFI_MAX_AP];
     u8 curApScanFlags, reqApScanFlags;
-
-    // probe stuff
-    u8 probe9_numprobe;
-    u8 probe9_ssidlen[WIFI_MAX_PROBE];
-    char probe9_ssid[WIFI_MAX_PROBE][32];
 
     // WFC data
     u8 wfc_enable[4]; // (WEP mode) | (0x80 for "enabled")
