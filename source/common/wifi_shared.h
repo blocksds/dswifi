@@ -185,8 +185,6 @@ typedef struct WIFI_MAINSTRUCT
     // stats data
     u32 stats[NUM_WIFI_STATS];
 
-    u16 debug[30];
-
     u32 random; // semirandom number updated at the convenience of the arm7. use for initial seeds &
                 // such.
 
