@@ -392,10 +392,15 @@ void Wifi_MultiplayerAllowNewGuests(bool allow);
 ///
 /// @param ssid
 ///     SSID to use for the access point.
+/// @param game_id
+///     A 32-bit game ID included in beacon frames. It is used to identify which
+///     access points belong to Nintendo DS devices acting as multiplayer hosts
+///     of a game. Official games use IDs of the form 0x0040yyyy (except for
+///     Nintendo Zone: 0x00000857).
 ///
 /// @return
 ///     0 on success, a negative value on error.
-int Wifi_BeaconStart(const char *ssid);
+int Wifi_BeaconStart(const char *ssid, u32 game_id);
 
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.

@@ -37,7 +37,7 @@ static_assert(sizeof(FieVendorNintendo) == 26);
 // Access points created by official games acting as multiplayer hosts have no
 // encryption and no BSSID.
 
-int Wifi_BeaconStart(const char *ssid)
+int Wifi_BeaconStart(const char *ssid, u32 game_id)
 {
     u8 data[512];
 
@@ -149,6 +149,10 @@ int Wifi_BeaconStart(const char *ssid)
     fie->oui[1] = 0x09;
     fie->oui[2] = 0xBF;
     fie->oui_type = 0x00;
+    fie->game_id[0] = (game_id >> 24) & 0xFF;
+    fie->game_id[1] = (game_id >> 16) & 0xFF;
+    fie->game_id[2] = (game_id >> 8) & 0xFF;
+    fie->game_id[3] = (game_id >> 0) & 0xFF;
     fie->extra_data_size = sizeof(DSWifiExtraData);
     fie->beacon_type = 1;
     fie->extra_data.players_max = WifiData->curMaxGuests + 1; // Add host
