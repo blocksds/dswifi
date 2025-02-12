@@ -108,7 +108,7 @@ static void Wifi_UpdateAssociate(void)
 
 void Wifi_ClearListOfAP(void)
 {
-    // Remove all APs of types that haven't bene requested
+    // Remove all APs
 
     for (int i = 0; i < WIFI_MAX_AP; i++)
     {
@@ -117,34 +117,10 @@ void Wifi_ClearListOfAP(void)
 
         volatile Wifi_AccessPoint *ap = &(WifiData->aplist[i]);
 
-        bool keep = false;
-
-        if (ap->flags & WFLAG_APDATA_COMPATIBLE)
-        {
-            if (WifiData->curApScanFlags & WSCAN_LIST_AP_COMPATIBLE)
-                keep = true;
-        }
-        else
-        {
-            if (WifiData->curApScanFlags & WSCAN_LIST_AP_INCOMPATIBLE)
-                keep = true;
-        }
-
-        if (ap->flags & WFLAG_APDATA_NINTENDO_TAG)
-        {
-            if (WifiData->curApScanFlags & WSCAN_LIST_NDS_HOSTS)
-                keep = true;
-            else
-                keep = false;
-        }
-
-        if (!keep)
-        {
-            ap->flags = 0;
-            ap->bssid[0] = 0;
-            ap->bssid[1] = 0;
-            ap->bssid[2] = 0;
-        }
+        ap->flags = 0;
+        ap->bssid[0] = 0;
+        ap->bssid[1] = 0;
+        ap->bssid[2] = 0;
 
         Spinlock_Release(WifiData->aplist[i]);
     }
