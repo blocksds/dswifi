@@ -151,6 +151,8 @@ int Wifi_BeaconStart(const char *ssid)
     fie->oui_type = 0x00;
     fie->extra_data_size = sizeof(DSWifiExtraData);
     fie->beacon_type = 1;
+    fie->extra_data.players_max = WifiData->curMaxGuests + 1; // Add host
+    fie->extra_data.players_current = 1; // Add host. Updated from the ARM7
 
     body_size += sizeof(FieVendorNintendo);
 

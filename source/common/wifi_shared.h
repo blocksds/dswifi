@@ -192,6 +192,7 @@ typedef struct WIFI_MAINSTRUCT
 
     Wifi_ConnectedGuest guestlist[15]; // Up to 15 connected guests (plus host)
     u8 curMaxGuests, reqMaxGuests; // Max number of allowed guests by the host
+    u8 curGuests;
 
     // Mode of operation of DSWifi. Check enum DSWifi_Mode
     u8 curLibraryMode, reqLibraryMode;

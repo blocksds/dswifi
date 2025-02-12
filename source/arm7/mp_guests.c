@@ -8,6 +8,7 @@
 
 #include <dswifi_common.h>
 
+#include "arm7/beacon.h"
 #include "arm7/debug.h"
 #include "arm7/ieee_802_11/authentication.h"
 #include "arm7/ipc.h"
@@ -17,6 +18,9 @@
 void Wifi_MPHost_ResetGuests(void)
 {
     memset((void *)WifiData->guestlist, 0, sizeof(WifiData->guestlist));
+
+    WifiData->curGuests = 0;
+    Wifi_SetBeaconCurrentPlayers(WifiData->curGuests + 1);
 }
 
 int Wifi_MPHost_GuestGetByMacAddr(void *macaddr)
@@ -72,6 +76,8 @@ int Wifi_MPHost_GuestAuthenticate(void *macaddr)
         {
             guest->state = WIFI_GUEST_AUTHENTICATED;
             Wifi_CopyMacAddr(guest->macaddr, macaddr);
+            WifiData->curGuests++;
+            Wifi_SetBeaconCurrentPlayers(WifiData->curGuests + 1);
             return i;
         }
     }
@@ -113,6 +119,9 @@ int Wifi_MPHost_GuestDisconnect(void *macaddr)
 
     volatile Wifi_ConnectedGuest *guest = &(WifiData->guestlist[index]);
     guest->state = WIFI_GUEST_DISCONNECTED;
+
+    WifiData->curGuests--;
+    Wifi_SetBeaconCurrentPlayers(WifiData->curGuests + 1);
 
     return 0;
 }
