@@ -14,6 +14,12 @@
 extern "C" {
 #endif
 
+/// Maxmimum number of multiplayer clients that can connect to a host.
+///
+/// This is limited by W_AID_LOW, which can only go from 0 to 15 (with 0 being
+/// reserved by the host).
+#define WIFI_MAX_MULTIPLAYER_CLIENTS 15
+
 // Well, some flags and stuff are just stuffed in here and not documented very
 // well yet... Most of the important stuff is documented though.
 // Next version should clean up some of this a lot more :)
@@ -227,7 +233,7 @@ typedef enum {
 typedef struct {
     /// MAC address of the client
     u16 macaddr[3];
-    /// Association ID (1 to 15)
+    /// Association ID from 1 to 15 (WIFI_MAX_MULTIPLAYER_CLIENTS)
     u16 association_id;
     /// Ticks since the last time we received a message from the client
     u16 ticks_since_response;

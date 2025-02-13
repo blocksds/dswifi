@@ -257,8 +257,8 @@ void Wifi_MultiplayerClientMode(void)
 
 void Wifi_MultiplayerHostMode(int max_clients)
 {
-    if (max_clients > 15)
-        max_clients = 15;
+    if (max_clients > WIFI_MAX_MULTIPLAYER_CLIENTS)
+        max_clients = WIFI_MAX_MULTIPLAYER_CLIENTS;
     if (max_clients < 1)
         max_clients = 1;
 

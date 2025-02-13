@@ -121,8 +121,8 @@ typedef struct
 } IEEE_DataFrameHeader;
 
 typedef struct {
-    // List of clients connected. The max number of clients is 15.
-    Wifi_ConnectedClient list[15];
+    // List of clients connected
+    Wifi_ConnectedClient list[WIFI_MAX_MULTIPLAYER_CLIENTS];
 
     // Number of clients currently connected
     u8 num_connected;
