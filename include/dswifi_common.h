@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#include <nds/ndstypes.h>
+
 /// Maxmimum number of multiplayer clients that can connect to a host.
 ///
 /// This is limited by W_AID_LOW, which can only go from 0 to 15 (with 0 being
@@ -140,22 +142,22 @@ enum WIFI_STATS
 // most user code will never need to know about the WIFI_TXHEADER or WIFI_RXHEADER
 typedef struct WIFI_TXHEADER
 {
-    uint16_t enable_flags;
-    uint16_t unknown;
-    uint16_t countup;
-    uint16_t beaconfreq;
-    uint16_t tx_rate;
-    uint16_t tx_length; // Full IEEE frame size (including checksums) in bytes
+    u16 enable_flags;
+    u16 unknown;
+    u16 countup;
+    u16 beaconfreq;
+    u16 tx_rate;
+    u16 tx_length; // Full IEEE frame size (including checksums) in bytes
 } Wifi_TxHeader;
 
 typedef struct WIFI_RXHEADER
 {
-    uint16_t a;
-    uint16_t b;
-    uint16_t c;
-    uint16_t d;
-    uint16_t byteLength;
-    uint16_t rssi_;
+    u16 a;
+    u16 b;
+    u16 c;
+    u16 d;
+    u16 byteLength;
+    u16 rssi_;
 } Wifi_RxHeader;
 
 /// Information send by Nintendo DS hosts in beacon frames.
@@ -164,14 +166,14 @@ typedef struct WIFI_RXHEADER
 /// Wifi_AccessPoint struct.
 typedef struct {
     /// Maximum number of players allowed by the host (including the host)
-    uint8_t players_max;
+    u8 players_max;
     /// Current number of players connected to the host (including the host)
-    uint8_t players_current;
+    u8 players_current;
     /// Set to 1 if the host accepts new connections, 0 if not.
-    uint8_t allows_connections;
+    u8 allows_connections;
     /// Game ID of the host. It doesn't need to match your own ID (you could
     /// have two different games that can talk to each other).
-    uint32_t game_id;
+    u32 game_id;
 } Wifi_NintendoVendorInfo;
 
 /// Structure that defines how to connect to an access point.
@@ -186,34 +188,34 @@ typedef struct WIFI_ACCESSPOINT
     /// SSID will be ignored in trying to find an AP to connect to. [REQUIRED]
     char ssid[33];
     // Number of valid bytes in the ssid field (0-32) [REQUIRED]
-    uint8_t ssid_len;
+    u8 ssid_len;
     /// BSSID is the AP's SSID. Setting it to all 00's indicates this is not
     /// known and it will be ignored [REQUIRED]
-    uint8_t bssid[6];
+    u8 bssid[6];
     /// MAC address of the "AP" is only necessary in ad-hoc mode. [generally not
     /// required to connect].
-    uint8_t macaddr[6];
+    u8 macaddr[6];
     /// Max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented
     /// as 11, or 0x0B [not required to connect]
-    uint16_t maxrate;
+    u16 maxrate;
     // Internal information about how recently a beacon has been received [not
     // required to connect].
-    uint32_t timectr;
+    u32 timectr;
     /// Running average of the recent RSSI values for this AP, will be set to 0
     /// after not receiving beacons for a while. [not required to connect]
-    uint16_t rssi;
+    u16 rssi;
     /// Flags indicating various parameters for the AP. [not required, but the
     /// WFLAG_APDATA_ADHOC flag will be used]
-    uint16_t flags;
+    u16 flags;
     /// Internal data word used to lock the record to guarantee data coherence.
     /// [not required to connect]
-    uint32_t spinlock;
+    u32 spinlock;
     /// Valid channels are 1-13, setting the channel to 0 will indicate the
     /// system should search. [REQUIRED]
-    uint8_t channel;
+    u8 channel;
     /// rssi_past indicates the RSSI values for the last 8 beacons received ([7]
     /// is the most recent) [not required to connect]
-    uint8_t rssi_past[8];
+    u8 rssi_past[8];
     /// Information send by Nintendo DS hosts in beacon frames, used if
     /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".
     Wifi_NintendoVendorInfo nintendo;

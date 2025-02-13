@@ -12,14 +12,14 @@
 // Flash support functions
 // =======================
 
-static uint8_t WifiFlashData[512];
+static u8 WifiFlashData[512];
 
 void Wifi_FlashInitData(void)
 {
     readFirmware(0, WifiFlashData, 512);
 }
 
-uint8_t Wifi_FlashReadByte(uint32_t address)
+u8 Wifi_FlashReadByte(u32 address)
 {
     if (address > 511)
         return 0;
@@ -27,9 +27,9 @@ uint8_t Wifi_FlashReadByte(uint32_t address)
     return WifiFlashData[address];
 }
 
-uint32_t Wifi_FlashReadBytes(uint32_t address, size_t numbytes)
+u32 Wifi_FlashReadBytes(u32 address, size_t numbytes)
 {
-    uint32_t dataout = 0;
+    u32 dataout = 0;
 
     for (unsigned int i = 0; i < numbytes; i++)
         dataout |= Wifi_FlashReadByte(i + address) << (i * 8);
@@ -37,7 +37,7 @@ uint32_t Wifi_FlashReadBytes(uint32_t address, size_t numbytes)
     return dataout;
 }
 
-uint16_t Wifi_FlashReadHWord(uint32_t address)
+u16 Wifi_FlashReadHWord(u32 address)
 {
     return Wifi_FlashReadBytes(address, 2);
 }
