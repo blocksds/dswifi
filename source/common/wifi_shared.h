@@ -138,9 +138,9 @@ typedef struct WIFI_MAINSTRUCT
     // --------------------------
 
     // WiFi status
-    u16 curChannel, reqChannel;
-    u16 curMode, reqMode;
-    u16 authlevel, authctr;
+    u8 curChannel, reqChannel;
+    u8 curMode, reqMode;
+    u8 authlevel, authctr;
     vu32 flags9, flags7;
     u32 reqPacketFlags;
     u16 curReqFlags, reqReqFlags;
