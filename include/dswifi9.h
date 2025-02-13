@@ -470,6 +470,11 @@ typedef void (*WifiPacketHandler)(int, int);
 
 /// Send a raw 802.11 frame at a specified rate.
 ///
+/// @warning
+///     This function doesn't include the IEEE 802.11 frame header to your data,
+///     you need to make sure that your data is prefixed by a valid header
+///     before calling this function.
+///
 /// @param datalen
 ///     The length in bytes of the frame to send from beginning of 802.11 header
 ///     to end, but not including CRC.
