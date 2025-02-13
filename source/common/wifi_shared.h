@@ -141,10 +141,8 @@ typedef struct WIFI_MAINSTRUCT
     vu32 flags9, flags7;
     u32 reqPacketFlags;
     u16 curReqFlags, reqReqFlags;
-    u32 counter7, bootcounter7;
+    u32 counter7;
     u16 MacAddr[3];
-    u16 authtype;
-    u16 iptype, ipflags;
     u32 ip, snmask, gateway;
 
     // current AP data
