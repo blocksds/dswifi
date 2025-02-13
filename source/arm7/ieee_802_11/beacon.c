@@ -14,8 +14,7 @@
 #include "common/spinlock.h"
 #include "common/wifi_shared.h"
 
-static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
-                                  bool *wpamode, bool *wepmode)
+static bool Wifi_IsVendorMicrosoft(u8 *data, size_t len)
 {
     if (len >= 14)
     {
@@ -25,54 +24,74 @@ static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
             // Version number
             (data[4] == 0x01) && (data[5] == 0x00))
         {
-            // WPA IE type 1 version 1
-
-            int j = 4 + 2 + 4; // Skip magic, version and multicast cipher suite
-
-            u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
-            j += 2;
-
-            // Check group cipher suites
-            while (num_uni_ciphers && (j <= (len - 4)))
-            {
-                num_uni_ciphers--;
-
-                // Check magic numbers in first 3 bytes
-                if (data[j] == 0x00 && data[j + 1] == 0x50 && data[j + 2] == 0xF2)
-                {
-                    j += 3; // Skip magic numbers
-
-                    switch (data[j++])
-                    {
-                        case 2: // TKIP
-                        case 3: // AES WRAP
-                        case 4: // AES CCMP
-                            *wpamode = true;
-                            break;
-                        case 1: // WEP64
-                        case 5: // WEP128
-                            *wepmode = true;
-                        default:
-                            // Others: Reserved/Ignored
-                            break;
-                    }
-                }
-            }
-
-            return;
+            return true;
         }
     }
 
-    if (len >= 24)
+    return false;
+}
+
+static bool Wifi_IsVendorNintendo(u8 *data, size_t len)
+{
+    if (len >= sizeof(FieVendorNintendo))
     {
         // Nintendo OUI
         if ((data[0] == 0x00) && (data[1] == 0x09) && (data[2] == 0xBF) &&
             (data[3] == 0x00))
         {
-            *has_nintendo_info = true;
-            // TODO: Check max number of players and current number of players
-            return;
+            return true;
         }
+    }
+
+    return false;
+}
+
+static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
+                                  bool *wpamode, bool *wepmode)
+{
+    if (Wifi_IsVendorMicrosoft(data, len))
+    {
+        // WPA IE type 1 version 1
+
+        int j = 4 + 2 + 4; // Skip magic, version and multicast cipher suite
+
+        u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
+        j += 2;
+
+        // Check group cipher suites
+        while (num_uni_ciphers && (j <= (len - 4)))
+        {
+            num_uni_ciphers--;
+
+            // Check magic numbers in first 3 bytes
+            if (data[j] == 0x00 && data[j + 1] == 0x50 && data[j + 2] == 0xF2)
+            {
+                j += 3; // Skip magic numbers
+
+                switch (data[j++])
+                {
+                    case 2: // TKIP
+                    case 3: // AES WRAP
+                    case 4: // AES CCMP
+                        *wpamode = true;
+                        break;
+                    case 1: // WEP64
+                    case 5: // WEP128
+                        *wepmode = true;
+                    default:
+                        // Others: Reserved/Ignored
+                        break;
+                }
+            }
+        }
+
+        return;
+    }
+
+    if (Wifi_IsVendorNintendo(data, len))
+    {
+        *has_nintendo_info = true;
+        return;
     }
 }
 
