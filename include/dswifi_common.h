@@ -152,6 +152,20 @@ typedef struct WIFI_RXHEADER
     uint16_t rssi_;
 } Wifi_RxHeader;
 
+/// Information send by Nintendo DS hosts in beacon frames.
+///
+/// This is only used if WFLAG_APDATA_NINTENDO_TAG is set in "flags" in the
+/// Wifi_AccessPoint struct.
+typedef struct {
+    /// Maximum number of players allowed by the host (including the host)
+    uint8_t players_max;
+    /// Current number of players connected to the host (including the host)
+    uint8_t players_current;
+    /// Game ID of the host. It doesn't need to match your own ID (you could
+    /// have two different games that can talk to each other).
+    uint32_t game_id;
+} Wifi_NintendoVendorInfo;
+
 /// Structure that defines how to connect to an access point.
 ///
 /// If a field is not necessary for Wifi_ConnectAP it is marked as such.
@@ -192,6 +206,9 @@ typedef struct WIFI_ACCESSPOINT
     /// rssi_past indicates the RSSI values for the last 8 beacons received ([7]
     /// is the most recent) [not required to connect]
     uint8_t rssi_past[8];
+    /// Information send by Nintendo DS hosts in beacon frames, used if
+    /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".
+    Wifi_NintendoVendorInfo nintendo;
 } Wifi_AccessPoint;
 
 /// Possible states of a guest

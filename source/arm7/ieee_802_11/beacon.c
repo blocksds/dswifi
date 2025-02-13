@@ -47,7 +47,8 @@ static bool Wifi_IsVendorNintendo(u8 *data, size_t len)
 }
 
 static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
-                                  bool *wpamode, bool *wepmode)
+                                  bool *wpamode, bool *wepmode,
+                                  Wifi_NintendoVendorInfo *info)
 {
     if (Wifi_IsVendorMicrosoft(data, len))
     {
@@ -91,6 +92,15 @@ static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
     if (Wifi_IsVendorNintendo(data, len))
     {
         *has_nintendo_info = true;
+
+        FieVendorNintendo *fie = (void *)data;
+
+        info->game_id = (fie->game_id[0] << 24) | (fie->game_id[1] << 16) |
+                        (fie->game_id[2] << 8) | (fie->game_id[3] << 0);
+
+        info->players_max = fie->extra_data.players_max;
+        info->players_current = fie->extra_data.players_current;
+
         return;
     }
 }
@@ -114,6 +124,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     bool wepmode = false;
     bool wpamode = false;
 
+    Wifi_NintendoVendorInfo nintendo_info;
     bool has_nintendo_info = false;
 
     // Capability info, WEP bit. It goes after the 8 byte timestamp and the 2
@@ -229,7 +240,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
             case MGT_FIE_ID_VENDOR: // Vendor specific
             {
                 Wifi_ProcessVendorTag(data + curloc, seglen, &has_nintendo_info,
-                                      &wpamode, &wepmode);
+                                      &wpamode, &wepmode, &nintendo_info);
                 break;
             }
 
@@ -346,6 +357,9 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                   | (wepmode ? WFLAG_APDATA_WEP : 0)
                   | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
                   | (has_nintendo_info ? WFLAG_APDATA_NINTENDO_TAG : 0);
+
+        if (has_nintendo_info)
+            ap->nintendo = nintendo_info; // Copy struct
 
         if (compatible == 1)
             ap->flags |= WFLAG_APDATA_COMPATIBLE;
