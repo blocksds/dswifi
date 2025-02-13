@@ -120,6 +120,14 @@ typedef struct
     u8 body[0];
 } IEEE_DataFrameHeader;
 
+typedef struct {
+    // List of clients connected. The max number of clients is 15.
+    Wifi_ConnectedClient list[15];
+
+    // Number of clients currently connected
+    u8 num_connected;
+} Wifi_ClientsInfoIpc;
+
 // This struct is allocated in main RAM, but it is only accessed through an
 // uncached mirror. We use aligned_alloc() to ensure that the beginning of the
 // struct isn't in the same cache line as other variables, but we need to pad
@@ -200,9 +208,10 @@ typedef struct WIFI_MAINSTRUCT
     // Local multiplay information
     // ---------------------------
 
-    Wifi_ConnectedClient clientlist[15]; // Up to 15 connected clients (plus host)
-    u8 curMaxClients, reqMaxClients; // Max number of allowed clients by the host
-    u8 curClients;
+    Wifi_ClientsInfoIpc clients;
+
+    // Maximum number of clients allowed by this host (up to 15)
+    u8 curMaxClients, reqMaxClients;
 
     // Other information
     // -----------------

@@ -17,17 +17,17 @@
 
 void Wifi_MPHost_ResetClients(void)
 {
-    memset((void *)WifiData->clientlist, 0, sizeof(WifiData->clientlist));
+    memset((void *)WifiData->clients.list, 0, sizeof(WifiData->clients.list));
 
-    WifiData->curClients = 0;
-    Wifi_SetBeaconCurrentPlayers(WifiData->curClients + 1);
+    WifiData->clients.num_connected = 0;
+    Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
 }
 
 int Wifi_MPHost_ClientGetByMacAddr(void *macaddr)
 {
     for (int i = 0; i < WifiData->curMaxClients; i++)
     {
-        volatile Wifi_ConnectedClient *client = &(WifiData->clientlist[i]);
+        volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[i]);
 
         if (client->state == WIFI_CLIENT_DISCONNECTED)
             continue;
@@ -43,7 +43,7 @@ int Wifi_MPHost_ClientGetByAID(u16 association_id)
 {
     for (int i = 0; i < WifiData->curMaxClients; i++)
     {
-        volatile Wifi_ConnectedClient *client = &(WifiData->clientlist[i]);
+        volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[i]);
 
         if (client->state == WIFI_CLIENT_DISCONNECTED)
             continue;
@@ -61,7 +61,7 @@ int Wifi_MPHost_ClientAuthenticate(void *macaddr)
     if (index >= 0)
     {
         // Go back to authenticated state
-        WifiData->clientlist[index].state = WIFI_CLIENT_AUTHENTICATED;
+        WifiData->clients.list[index].state = WIFI_CLIENT_AUTHENTICATED;
         return index;
     }
 
@@ -70,14 +70,14 @@ int Wifi_MPHost_ClientAuthenticate(void *macaddr)
 
     for (int i = 0; i < WifiData->curMaxClients; i++)
     {
-        volatile Wifi_ConnectedClient *client = &(WifiData->clientlist[i]);
+        volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[i]);
 
         if (client->state == WIFI_CLIENT_DISCONNECTED)
         {
             client->state = WIFI_CLIENT_AUTHENTICATED;
             Wifi_CopyMacAddr(client->macaddr, macaddr);
-            WifiData->curClients++;
-            Wifi_SetBeaconCurrentPlayers(WifiData->curClients + 1);
+            WifiData->clients.num_connected++;
+            Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
             return i;
         }
     }
@@ -91,7 +91,7 @@ int Wifi_MPHost_ClientAssociate(void *macaddr)
     if (index < 0)
         return -1;
 
-    volatile Wifi_ConnectedClient *client = &(WifiData->clientlist[index]);
+    volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
 
     if (client->state == WIFI_CLIENT_ASSOCIATED)
     {
@@ -117,11 +117,11 @@ int Wifi_MPHost_ClientDisconnect(void *macaddr)
     if (index < 0)
         return -1;
 
-    volatile Wifi_ConnectedClient *client = &(WifiData->clientlist[index]);
+    volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
     client->state = WIFI_CLIENT_DISCONNECTED;
 
-    WifiData->curClients--;
-    Wifi_SetBeaconCurrentPlayers(WifiData->curClients + 1);
+    WifiData->clients.num_connected--;
+    Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
 
     return 0;
 }
