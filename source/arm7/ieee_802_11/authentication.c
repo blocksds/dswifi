@@ -23,6 +23,7 @@ typedef struct {
         u16 auth_algorithm;
         u16 seq_number;
         u16 status_code;
+        // Followed by challenge text
     } body;
 } TxIeeeAuthenticationFrame;
 
@@ -40,6 +41,16 @@ typedef struct {
         u16 reason_code;
     } body;
 } IeeeDeauthenticationFrame;
+
+typedef struct {
+    IEEE_MgtFrameHeader ieee;
+    struct {
+        u16 auth_algorithm;
+        u16 seq_number;
+        u16 status_code;
+        // Followed by challenge text
+    } body;
+} IeeeAuthenticationFrame;
 
 int Wifi_SendOpenSystemAuthPacket(void)
 {
@@ -87,7 +98,14 @@ int Wifi_SendSharedKeyAuthPacket(void)
 
 int Wifi_SendSharedKeyAuthPacket2(int challenge_length, u8 *challenge_Text)
 {
-    u8 data[320];
+    // Fixed frame size + FIE ID + Length + Max length + ICV
+    u8 data[sizeof(TxIeeeAuthenticationFrame) + 1 + 1 + 253 + 4];
+
+    if (challenge_length > 253)
+    {
+        WLOG_PUTS("W: [S] Auth (Shared Key, 2nd) (Malformed)\n");
+        return 0;
+    }
 
     WLOG_PUTS("W: [S] Auth (Shared Key, 2nd)\n");
 
@@ -342,30 +360,34 @@ static int Wifi_MPHost_SendOpenSystemAuthPacket(void *client_mac, u16 status_cod
 
 void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
 {
-    u8 data[128];
+    // Multiplayer authentication frames need to use open authentication, so we
+    // ignore any potential challenge text that has been sent as part of the
+    // packet. We just read the fixed size part.
 
-    int datalen = packetheader->byteLength;
-    if (datalen > 128)
-        datalen = 128;
+    IeeeAuthenticationFrame frame;
+
+    if (packetheader->byteLength < sizeof(frame))
+    {
+        WLOG_PUTS("W: [R] Authentication (Malformed)\n");
+        return;
+    }
 
     // Read IEEE frame, right after the hardware RX header
-    Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
+    Wifi_MACRead((u16 *)&frame, macbase, HDR_RX_SIZE, sizeof(frame));
 
     // Check if packet is indeed sent to us.
-    if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
+    if (!Wifi_CmpMacAddr(frame.ieee.da, WifiData->MacAddr))
         return;
 
-    void *client_mac = data + HDR_MGT_SA;
+    void *client_mac = &(frame.ieee.sa);
 
     WLOG_PUTS("W: [R] Authentication (MP)\n");
 
-    u16 *body = (u16 *)(data + HDR_MGT_MAC_SIZE);
-
-    if (body[0] == AUTH_ALGO_OPEN_SYSTEM)
+    if (frame.body.auth_algorithm == AUTH_ALGO_OPEN_SYSTEM)
     {
-        if (body[1] == 1) // Seq 1, other device wants to connect to us
+        if (frame.body.seq_number == 1) // Seq 1, other device wants to connect to us
         {
-            if (body[2] == STATUS_SUCCESS)
+            if (frame.body.status_code == STATUS_SUCCESS)
             {
                 // Add client to list
                 int index = Wifi_MPHost_ClientAuthenticate(client_mac);
@@ -383,19 +405,19 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             }
             else
             {
-                WLOG_PRINTF("W: Invalid status: %d\n", body[2]);
+                WLOG_PRINTF("W: Invalid status: %d\n", frame.body.status_code);
                 Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_UNSPECIFIED);
             }
         }
         else
         {
-            WLOG_PRINTF("W: Invalid seq number: %d\n", body[1]);
+            WLOG_PRINTF("W: Invalid seq number: %d\n", frame.body.seq_number);
             Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_AUTH_BAD_SEQ_NUMBER);
         }
     }
     else
     {
-        WLOG_PRINTF("W: Invalid algorithm: %d\n", body[0]);
+        WLOG_PRINTF("W: Invalid algorithm: %d\n", frame.body.auth_algorithm);
         Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_AUTH_BAD_ALGORITHM);
     }
 
