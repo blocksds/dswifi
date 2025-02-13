@@ -163,7 +163,6 @@
 #define W_TXBUF_LOC3        WIFI_REG(0x80A8)
 
 #define TXBUF_LOCN_ENABLE   BIT(15)
-#define TXBUF_LOCN_DISABLE  0
 
 #define W_TXREQ_RESET       WIFI_REG(0x80AC)
 #define W_TXREQ_SET         WIFI_REG(0x80AE)
