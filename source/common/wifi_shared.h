@@ -204,6 +204,7 @@ typedef struct WIFI_MAINSTRUCT
 typedef struct {
     u8 players_max;
     u8 players_current;
+    u8 allows_connections;
 } DSWifiExtraData;
 
 // Vendor beacon info (Nintendo Co., Ltd.)
@@ -222,6 +223,6 @@ typedef struct {
     DSWifiExtraData extra_data;
 } FieVendorNintendo;
 
-static_assert(sizeof(FieVendorNintendo) == 26);
+static_assert(sizeof(FieVendorNintendo) == 27);
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__

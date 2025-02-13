@@ -161,6 +161,8 @@ typedef struct {
     uint8_t players_max;
     /// Current number of players connected to the host (including the host)
     uint8_t players_current;
+    /// Set to 1 if the host accepts new connections, 0 if not.
+    uint8_t allows_connections;
     /// Game ID of the host. It doesn't need to match your own ID (you could
     /// have two different games that can talk to each other).
     uint32_t game_id;

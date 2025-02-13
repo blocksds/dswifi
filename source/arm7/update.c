@@ -390,9 +390,16 @@ void Wifi_Update(void)
             }
 
             if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWGUESTS)
+            {
                 WifiData->curReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+                Wifi_SetBeaconAllowsConnections(1);
+            }
             else
+            {
                 WifiData->curReqFlags &= ~WFLAG_REQ_ALLOWGUESTS;
+                Wifi_SetBeaconAllowsConnections(0);
+            }
+
             break;
     }
 

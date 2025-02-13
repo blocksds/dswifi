@@ -143,6 +143,26 @@ void Wifi_SetBeaconCurrentPlayers(int num)
     }
 }
 
+void Wifi_SetBeaconAllowsConnections(int allows)
+{
+    if (dswifi_information_addr == 0)
+        return;
+
+    if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
+    {
+        // We can only read/write this RAM in 16-bit units, so we need to check
+        // which of the two halves of the halfword needs to be edited.
+
+        u16 field_addr = dswifi_information_addr + 2;
+        u16 addr = field_addr & ~1;
+
+        if (field_addr & 1)
+            W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (allows << 8);
+        else
+            W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (allows << 0);
+    }
+}
+
 void Wifi_SetBeaconPeriod(int beacon_period)
 {
     if (beacon_period < 0x10 || beacon_period > 0x3E7)

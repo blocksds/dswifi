@@ -100,6 +100,7 @@ static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
 
         info->players_max = fie->extra_data.players_max;
         info->players_current = fie->extra_data.players_current;
+        info->allows_connections = fie->extra_data.allows_connections;
 
         return;
     }
