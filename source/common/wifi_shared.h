@@ -134,7 +134,10 @@ typedef struct
 // this can't happen.
 typedef struct WIFI_MAINSTRUCT
 {
-    // wifi status
+    // Global library information
+    // --------------------------
+
+    // WiFi status
     u16 curChannel, reqChannel;
     u16 curMode, reqMode;
     u16 authlevel, authctr;
@@ -145,7 +148,13 @@ typedef struct WIFI_MAINSTRUCT
     u16 MacAddr[3];
     u32 ip, snmask, gateway;
 
-    // current AP data
+    // Mode of operation of DSWifi. Check enum DSWifi_Mode
+    u8 curLibraryMode, reqLibraryMode;
+
+    // Access Point information
+    // ------------------------
+
+    // Data of the AP we are connecting/connected to
     char ssid7[34], ssid9[34]; // Index 0 is the size
     u16 bssid7[3], bssid9[3];
     u8 apmac7[6], apmac9[6];
@@ -158,7 +167,7 @@ typedef struct WIFI_MAINSTRUCT
     u16 ap_rssi;
     u16 pspoll_period;
 
-    // AP data
+    // Scanned AP data
     Wifi_AccessPoint aplist[WIFI_MAX_AP];
     u8 curApScanFlags, reqApScanFlags;
 
@@ -172,28 +181,38 @@ typedef struct WIFI_MAINSTRUCT
     u32 wfc_dns_secondary[3];
     u8 wfc_wepkey[3][13]; // Max size: 13 bytes (WEPMODE_128BIT)
 
-    // wifi data
-    u32 rxbufIn, rxbufOut;                 // bufIn/bufOut have 2-byte granularity.
-    u16 rxbufData[WIFI_RXBUFFER_SIZE / 2]; // send raw 802.11 data through! rxbuffer is for rx'd
-                                           // data, arm7->arm9 transfer
+    // ARM9 <-> ARM7 transfer circular buffers
+    // ---------------------------------------
 
+    // They have a 2-byte granularity.
+    // rxbufIn/rxbufOut/txbufIn/txbufOut count halfwords, not bytes.
+
+    // RX buffer. It sends received packets from other devices from the ARM7
+    // to the ARM9.
+    u32 rxbufIn, rxbufOut;
+    u16 rxbufData[WIFI_RXBUFFER_SIZE / 2];
+
+    // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
+    // transferred to other devices.
     u32 txbufIn, txbufOut;
-    u16 txbufData[WIFI_TXBUFFER_SIZE / 2]; // tx buffer is for data to tx, arm9->arm7 transfer
-
-    // stats data
-    u32 stats[NUM_WIFI_STATS];
-
-    u32 random; // semirandom number updated at the convenience of the arm7. use for initial seeds &
-                // such.
+    u16 txbufData[WIFI_TXBUFFER_SIZE / 2];
 
     // Local multiplay information
+    // ---------------------------
 
     Wifi_ConnectedClient clientlist[15]; // Up to 15 connected clients (plus host)
     u8 curMaxClients, reqMaxClients; // Max number of allowed clients by the host
     u8 curClients;
 
-    // Mode of operation of DSWifi. Check enum DSWifi_Mode
-    u8 curLibraryMode, reqLibraryMode;
+    // Other information
+    // -----------------
+
+    // Stats data
+    u32 stats[NUM_WIFI_STATS];
+
+    // Semirandom number updated at the convenience of the ARM7. Used for
+    // initial seeds and such.
+    u32 random;
 
     u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;
