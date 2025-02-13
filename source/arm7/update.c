@@ -14,7 +14,7 @@
 #include "arm7/ieee_802_11/other.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/mp_guests.h"
+#include "arm7/mp_clients.h"
 #include "arm7/registers.h"
 #include "arm7/rf.h"
 #include "arm7/rx_queue.h"
@@ -172,8 +172,8 @@ void Wifi_Update(void)
                 W_AID_FULL = 0;
                 for (int i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
-                Wifi_MPHost_ResetGuests();
-                WifiData->curMaxGuests = WifiData->reqMaxGuests;
+                Wifi_MPHost_ResetClients();
+                WifiData->curMaxClients = WifiData->reqMaxClients;
                 WifiData->curMode = WIFIMODE_ACCESSPOINT;
                 break;
             }
@@ -383,20 +383,20 @@ void Wifi_Update(void)
                 (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
                 WLOG_PUTS("W: AP mode end\n");
-                Wifi_MPHost_GuestKickAll();
+                Wifi_MPHost_ClientKickAll();
                 Wifi_BeaconStop();
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
 
-            if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWGUESTS)
+            if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS)
             {
-                WifiData->curReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+                WifiData->curReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
                 Wifi_SetBeaconAllowsConnections(1);
             }
             else
             {
-                WifiData->curReqFlags &= ~WFLAG_REQ_ALLOWGUESTS;
+                WifiData->curReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
                 Wifi_SetBeaconAllowsConnections(0);
             }
 

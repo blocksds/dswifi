@@ -359,25 +359,25 @@ int Wifi_DisconnectAP(void);
 ///
 /// Use Wifi_LibraryModeReady() to check when the mode change is finished.
 ///
-/// @param max_guests
-///     Maximum number of allowed guests connected to the console. The minimum
+/// @param max_clients
+///     Maximum number of allowed clients connected to the console. The minimum
 ///     is 1, the maximum is 15.
-void Wifi_MultiplayerHostMode(int max_guests);
+void Wifi_MultiplayerHostMode(int max_clients);
 
 /// Sets the WiFI hardware in mulitplayer client mode.
 ///
 /// Use Wifi_LibraryModeReady() to check when the mode change is finished.
 void Wifi_MultiplayerClientMode(void);
 
-/// Allows or disallows new guests to connect to this console acting as host.
+/// Allows or disallows new clients to connect to this console acting as host.
 ///
-/// By default, guests can connect to the host when in host mode. You should
+/// By default, clients can connect to the host when in host mode. You should
 /// disable new connections once you have enough players connected to you, and
 /// you aren't expecting new connections.
 ///
 /// @param allow
 ///     If true, allow new connections. If false, reject them.
-void Wifi_MultiplayerAllowNewGuests(bool allow);
+void Wifi_MultiplayerAllowNewClients(bool allow);
 
 /// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
 ///

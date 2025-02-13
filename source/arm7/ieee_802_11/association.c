@@ -8,7 +8,7 @@
 #include "arm7/ieee_802_11/header.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/mp_guests.h"
+#include "arm7/mp_clients.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
@@ -201,14 +201,14 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 }
 
 // Used when acting as a multiplayer host
-static int Wifi_MPHost_SendAssocResponsePacket(void *guest_mac, u16 status_code,
+static int Wifi_MPHost_SendAssocResponsePacket(void *client_mac, u16 status_code,
                                                u16 association_id)
 {
     u8 data[64]; // Max size is 46 = 12 + 24 + 6 + 4
 
     WLOG_PUTS("W: [S] Assoc Response (MP)\n");
 
-    Wifi_MPHost_GenMgtHeader(data, TYPE_ASSOC_RESPONSE, guest_mac);
+    Wifi_MPHost_GenMgtHeader(data, TYPE_ASSOC_RESPONSE, client_mac);
 
     size_t body_size = 0;
 
@@ -276,13 +276,13 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_PUTS("W: [R] Assoc Request (MP)\n");
 
-    void *guest_mac = data + HDR_MGT_SA;
+    void *client_mac = data + HDR_MGT_SA;
 
     // Check that the packet comes from an authenticated device
-    if (Wifi_MPHost_GuestGetByMacAddr(guest_mac) < 0)
+    if (Wifi_MPHost_ClientGetByMacAddr(client_mac) < 0)
     {
         WLOG_PUTS("W: Not authenticated\n");
-        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_ASSOC_DENIED, 0);
+        Wifi_MPHost_SendAssocResponsePacket(client_mac, STATUS_ASSOC_DENIED, 0);
     }
 
     // Check body information
@@ -295,7 +295,7 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
     if ((capability_information & 0x00FF) != required_capabilities)
     {
         WLOG_PRINTF("W: Unsupported caps: %x\n", capability_information);
-        Wifi_MPHost_SendAssocResponsePacket(guest_mac,
+        Wifi_MPHost_SendAssocResponsePacket(client_mac,
                                             STATUS_UNSUPPORTED_CAPABILITIES, 0);
         return;
     }
@@ -335,7 +335,7 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
                 if (!ok)
                 {
                     WLOG_PUTS("W: Unsupported rates\n");
-                    Wifi_MPHost_SendAssocResponsePacket(guest_mac,
+                    Wifi_MPHost_SendAssocResponsePacket(client_mac,
                                                         STATUS_ASSOC_BAD_RATES, 0);
                     return;
                 }
@@ -350,19 +350,19 @@ void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
 
     WLOG_PUTS("W: Valid request\n");
 
-    int aid = Wifi_MPHost_GuestAssociate(guest_mac);
+    int aid = Wifi_MPHost_ClientAssociate(client_mac);
     if (aid < 0)
     {
         // This shouldn't happen, the limit of devices should be enforced at
         // authentication time.
         WLOG_PUTS("W: Can't associate\n");
-        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_ASSOC_DENIED, 0);
+        Wifi_MPHost_SendAssocResponsePacket(client_mac, STATUS_ASSOC_DENIED, 0);
     }
     else
     {
         // Send response with a new AID
         WLOG_PRINTF("W: Authenticated. AID: %x\n", aid);
-        Wifi_MPHost_SendAssocResponsePacket(guest_mac, STATUS_SUCCESS, aid);
+        Wifi_MPHost_SendAssocResponsePacket(client_mac, STATUS_SUCCESS, aid);
     }
 
     WLOG_FLUSH();

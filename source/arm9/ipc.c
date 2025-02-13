@@ -255,26 +255,26 @@ void Wifi_MultiplayerClientMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
-void Wifi_MultiplayerHostMode(int max_guests)
+void Wifi_MultiplayerHostMode(int max_clients)
 {
-    if (max_guests > 15)
-        max_guests = 15;
-    if (max_guests < 1)
-        max_guests = 1;
+    if (max_clients > 15)
+        max_clients = 15;
+    if (max_clients < 1)
+        max_clients = 1;
 
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
-    WifiData->reqMaxGuests = max_guests;
+    WifiData->reqMaxClients = max_clients;
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
-    WifiData->reqReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+    WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
 }
 
-void Wifi_MultiplayerAllowNewGuests(bool allow)
+void Wifi_MultiplayerAllowNewClients(bool allow)
 {
     if (allow)
-        WifiData->reqReqFlags |= WFLAG_REQ_ALLOWGUESTS;
+        WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
     else
-        WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWGUESTS;
+        WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
 }
 
 void Wifi_SetChannel(int channel)

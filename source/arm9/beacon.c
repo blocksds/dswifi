@@ -131,7 +131,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     fie->game_id[3] = (game_id >> 0) & 0xFF;
     fie->extra_data_size = sizeof(DSWifiExtraData);
     fie->beacon_type = 1;
-    fie->extra_data.players_max = WifiData->curMaxGuests + 1; // Includes the host
+    fie->extra_data.players_max = WifiData->curMaxClients + 1; // Includes the host
     fie->extra_data.players_current = 1; // Includes host. Updated from the ARM7
     fie->extra_data.allows_connections = 0; // Updated from the ARM7
 

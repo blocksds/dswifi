@@ -38,7 +38,7 @@
 #define WFLAG_REQ_APADHOC      0x0008
 #define WFLAG_REQ_PROMISC      0x0010
 #define WFLAG_REQ_USEWEP       0x0020
-#define WFLAG_REQ_ALLOWGUESTS  0x0040
+#define WFLAG_REQ_ALLOWCLIENTS 0x0040
 
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000
@@ -190,9 +190,9 @@ typedef struct WIFI_MAINSTRUCT
 
     // Local multiplay information
 
-    Wifi_ConnectedGuest guestlist[15]; // Up to 15 connected guests (plus host)
-    u8 curMaxGuests, reqMaxGuests; // Max number of allowed guests by the host
-    u8 curGuests;
+    Wifi_ConnectedClient clientlist[15]; // Up to 15 connected clients (plus host)
+    u8 curMaxClients, reqMaxClients; // Max number of allowed clients by the host
+    u8 curClients;
 
     // Mode of operation of DSWifi. Check enum DSWifi_Mode
     u8 curLibraryMode, reqLibraryMode;

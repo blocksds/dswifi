@@ -213,27 +213,27 @@ typedef struct WIFI_ACCESSPOINT
     Wifi_NintendoVendorInfo nintendo;
 } Wifi_AccessPoint;
 
-/// Possible states of a guest
+/// Possible states of a client
 typedef enum {
-    /// This guest is disconnected.
-    WIFI_GUEST_DISCONNECTED = 0,
-    /// The guest is authenticated but not associated.
-    WIFI_GUEST_AUTHENTICATED,
-    // The guest is associated and ready to communicate data.
-    WIFI_GUEST_ASSOCIATED,
-} Wifi_ConnectedGuestState;
+    /// This client is disconnected.
+    WIFI_CLIENT_DISCONNECTED = 0,
+    /// The client is authenticated but not associated.
+    WIFI_CLIENT_AUTHENTICATED,
+    // The client is associated and ready to communicate data.
+    WIFI_CLIENT_ASSOCIATED,
+} Wifi_ConnectedClientState;
 
 /// Structure that represents a DS connected to a host DS
 typedef struct {
-    /// MAC address of the guest
+    /// MAC address of the client
     u16 macaddr[3];
     /// Association ID (1 to 15)
     u16 association_id;
-    /// Ticks since the last time we received a message from the guest
+    /// Ticks since the last time we received a message from the client
     u16 ticks_since_response;
-    /// One of the values of Wifi_ConnectedGuestState
+    /// One of the values of Wifi_ConnectedClientState
     u8 state;
-} Wifi_ConnectedGuest;
+} Wifi_ConnectedClient;
 
 #ifdef __cplusplus
 }

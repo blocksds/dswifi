@@ -9,7 +9,7 @@
 #include "arm7/ieee_802_11/header.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/mp_guests.h"
+#include "arm7/mp_clients.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
@@ -318,13 +318,13 @@ int Wifi_SendDeauthentication(u16 reason_code)
     return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
-static int Wifi_MPHost_SendOpenSystemAuthPacket(void *guest_mac, u16 status_code)
+static int Wifi_MPHost_SendOpenSystemAuthPacket(void *client_mac, u16 status_code)
 {
     TxIeeeAuthenticationFrame frame;
 
     WLOG_PUTS("W: [S] Auth (MP)\n");
 
-    Wifi_MPHost_GenMgtHeader((u8 *)&frame, TYPE_AUTHENTICATION, guest_mac);
+    Wifi_MPHost_GenMgtHeader((u8 *)&frame, TYPE_AUTHENTICATION, client_mac);
 
     frame.body.auth_algorithm = AUTH_ALGO_OPEN_SYSTEM;
     frame.body.seq_number = 2;
@@ -355,7 +355,7 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     if (!Wifi_CmpMacAddr(data + HDR_MGT_DA, WifiData->MacAddr))
         return;
 
-    void *guest_mac = data + HDR_MGT_SA;
+    void *client_mac = data + HDR_MGT_SA;
 
     WLOG_PUTS("W: [R] Authentication (MP)\n");
 
@@ -367,36 +367,36 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
         {
             if (body[2] == STATUS_SUCCESS)
             {
-                // Add guest to list
-                int index = Wifi_MPHost_GuestAuthenticate(guest_mac);
+                // Add client to list
+                int index = Wifi_MPHost_ClientAuthenticate(client_mac);
                 if (index >= 0)
                 {
-                    WLOG_PRINTF("W: New guest: %d\n", index);
-                    Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_SUCCESS);
+                    WLOG_PRINTF("W: New client: %d\n", index);
+                    Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_SUCCESS);
                 }
                 else
                 {
-                    WLOG_PUTS("W: Too many guests\n");
+                    WLOG_PUTS("W: Too many clients\n");
                     // This error code is for association, not authentication...
-                    Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_ASSOC_TOO_MANY_DEVICES);
+                    Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_ASSOC_TOO_MANY_DEVICES);
                 }
             }
             else
             {
                 WLOG_PRINTF("W: Invalid status: %d\n", body[2]);
-                Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_UNSPECIFIED);
+                Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_UNSPECIFIED);
             }
         }
         else
         {
             WLOG_PRINTF("W: Invalid seq number: %d\n", body[1]);
-            Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_AUTH_BAD_SEQ_NUMBER);
+            Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_AUTH_BAD_SEQ_NUMBER);
         }
     }
     else
     {
         WLOG_PRINTF("W: Invalid algorithm: %d\n", body[0]);
-        Wifi_MPHost_SendOpenSystemAuthPacket(guest_mac, STATUS_AUTH_BAD_ALGORITHM);
+        Wifi_MPHost_SendOpenSystemAuthPacket(client_mac, STATUS_AUTH_BAD_ALGORITHM);
     }
 
     WLOG_FLUSH();
@@ -445,7 +445,7 @@ void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
 
     WLOG_PRINTF("W: Reason: %d\n", frame.body.reason_code);
 
-    if (Wifi_MPHost_GuestDisconnect(frame.ieee.sa) < 0)
+    if (Wifi_MPHost_ClientDisconnect(frame.ieee.sa) < 0)
     {
         WLOG_PUTS("W: Can't dissociate\n");
     }
