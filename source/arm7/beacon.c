@@ -101,6 +101,19 @@ void Wifi_BeaconLoad(int from, int to)
     WLOG_FLUSH();
 }
 
+static void Wifi_WriteByteBeacon(int address, int value)
+{
+    // We can only read/write this RAM in 16-bit units, so we need to check
+    // which of the two halves of the halfword needs to be edited.
+
+    u16 addr = address & ~1;
+
+    if (address & 1)
+        W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (value << 8);
+    else
+        W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (value << 0);
+}
+
 void Wifi_SetBeaconChannel(int channel)
 {
     if (beacon_channel_addr == 0)
@@ -110,17 +123,7 @@ void Wifi_SetBeaconChannel(int channel)
     // MAC RAM (if we have saved one!).
 
     if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
-    {
-        // We can only read/write this RAM in 16-bit units, so we need to check
-        // which of the two halves of the halfword needs to be edited.
-
-        u16 addr = beacon_channel_addr & ~1;
-
-        if (beacon_channel_addr & 1)
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (channel << 8);
-        else
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (channel << 0);
-    }
+        Wifi_WriteByteBeacon(beacon_channel_addr, channel);
 }
 
 void Wifi_SetBeaconCurrentPlayers(int num)
@@ -129,18 +132,7 @@ void Wifi_SetBeaconCurrentPlayers(int num)
         return;
 
     if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
-    {
-        // We can only read/write this RAM in 16-bit units, so we need to check
-        // which of the two halves of the halfword needs to be edited.
-
-        u16 field_addr = dswifi_information_addr + 1;
-        u16 addr = field_addr & ~1;
-
-        if (field_addr & 1)
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (num << 8);
-        else
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (num << 0);
-    }
+        Wifi_WriteByteBeacon(dswifi_information_addr + 1, num);
 }
 
 void Wifi_SetBeaconAllowsConnections(int allows)
@@ -149,18 +141,7 @@ void Wifi_SetBeaconAllowsConnections(int allows)
         return;
 
     if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
-    {
-        // We can only read/write this RAM in 16-bit units, so we need to check
-        // which of the two halves of the halfword needs to be edited.
-
-        u16 field_addr = dswifi_information_addr + 2;
-        u16 addr = field_addr & ~1;
-
-        if (field_addr & 1)
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (allows << 8);
-        else
-            W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (allows << 0);
-    }
+        Wifi_WriteByteBeacon(dswifi_information_addr + 2, allows);
 }
 
 void Wifi_SetBeaconPeriod(int beacon_period)
