@@ -49,6 +49,7 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
     }
 }
 
+// Length specified in bytes.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 {
     int sizeneeded = datalen + HDR_TX_SIZE + 1;

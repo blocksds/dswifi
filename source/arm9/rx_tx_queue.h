@@ -23,9 +23,6 @@ u32 Wifi_TxBufferBytesAvailable(void);
 // the rest with 0?
 void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src);
 
-// Length specified in bytes.
-int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src);
-
 // Both the base address and size are in bytes. However, the base needs to be
 // aligned to 16 bit, and the output buffer needs to be a multiple of 16 bits
 // because the last read and write will always be a halfword.
