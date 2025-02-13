@@ -16,7 +16,7 @@
 static u16 beacon_channel_addr = 0;
 
 // Address to the DSWifi information inside the Nintendo vendor information tag
-static u16 current_players_addr = 0;
+static u16 dswifi_information_addr = 0;
 
 void Wifi_BeaconStop(void)
 {
@@ -73,13 +73,15 @@ void Wifi_BeaconLoad(int from, int to)
 
             case MGT_FIE_ID_VENDOR:
 
-                if ((seglen >= 24) &&
+                if ((seglen >= sizeof(FieVendorNintendo)) &&
                     // Nintendo OUI
                     (data[i + 0] == 0x00) && (data[i + 1] == 0x09) &&
                     (data[i + 2] == 0xBF) && (data[i + 3] == 0x00))
                 {
                     WLOG_PUTS("W: Nintendo info found\n");
-                    current_players_addr = to + i + seglen - 1;
+                    // Get pointer to the start of the extra data added by DSWifi
+                    dswifi_information_addr = to + i +
+                            (sizeof(FieVendorNintendo) - sizeof(DSWifiExtraData));
                 }
 
                 break;
@@ -101,6 +103,9 @@ void Wifi_BeaconLoad(int from, int to)
 
 void Wifi_SetBeaconChannel(int channel)
 {
+    if (beacon_channel_addr == 0)
+        return;
+
     // This function edits the channel of the beacon frame that we have saved in
     // MAC RAM (if we have saved one!).
 
@@ -120,14 +125,18 @@ void Wifi_SetBeaconChannel(int channel)
 
 void Wifi_SetBeaconCurrentPlayers(int num)
 {
+    if (dswifi_information_addr == 0)
+        return;
+
     if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
     {
         // We can only read/write this RAM in 16-bit units, so we need to check
         // which of the two halves of the halfword needs to be edited.
 
-        u16 addr = current_players_addr & ~1;
+        u16 field_addr = dswifi_information_addr + 1;
+        u16 addr = field_addr & ~1;
 
-        if (beacon_channel_addr & 1)
+        if (field_addr & 1)
             W_MACMEM(addr) = (W_MACMEM(addr) & 0x00FF) | (num << 8);
         else
             W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (num << 0);
