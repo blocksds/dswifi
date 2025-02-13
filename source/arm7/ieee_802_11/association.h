@@ -13,6 +13,6 @@ int Wifi_SendAssocPacket(void);
 void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase);
 
 // Used when acting as a host
-void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase);
+void Wifi_MPHost_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase);
 
 #endif // DSWIFI_ARM7_IEEE_802_11_ASSOCIATION_H__

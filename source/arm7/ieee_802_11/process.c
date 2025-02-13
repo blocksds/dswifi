@@ -52,7 +52,7 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
         case TYPE_ASSOC_REQUEST: // 0000 00 Assoc Request
         case TYPE_REASSOC_REQUEST: // 0010 00 Reassoc Request
             if (WifiData->curMode == WIFIMODE_ACCESSPOINT)
-                Wifi_ProcessAssocRequest(&packetheader, macbase);
+                Wifi_MPHost_ProcessAssocRequest(&packetheader, macbase);
             return WFLAG_PACKET_MGT;
 
         case TYPE_PROBE_REQUEST: // 0100 00 Probe Request

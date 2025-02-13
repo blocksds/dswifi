@@ -259,7 +259,7 @@ static int Wifi_MPHost_SendAssocResponsePacket(void *client_mac, u16 status_code
     return Wifi_TxArm7QueueAdd((u16 *)data, tx_size);
 }
 
-void Wifi_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
+void Wifi_MPHost_ProcessAssocRequest(Wifi_RxHeader *packetheader, int macbase)
 {
     u8 data[128];
 
