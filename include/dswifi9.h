@@ -402,6 +402,34 @@ void Wifi_MultiplayerAllowNewClients(bool allow);
 ///     0 on success, a negative value on error.
 int Wifi_BeaconStart(const char *ssid, u32 game_id);
 
+/// Get the number of clients connected to a multiplayer host.
+///
+/// This function must be used while in multiplayer host mode.
+///
+/// @return
+///     The number of clients connected to this console.
+int Wifi_MultiplayerGetNumClients(void);
+
+/// Get information of clients connected to a multiplayer host.
+///
+/// This function must be used while in multiplayer host mode.
+///
+/// This function expects you to pass an empty array of clients in client_data
+/// with a length of max_clients. It will check the current list of clients
+/// connected to this host and save them to the array, up to max_clients. It
+/// returns the actual number of clients saved to the struct.
+///
+/// @param max_clients
+///     Maximum number of clients that can be stored in client_data.
+/// @param client_data
+///     Pointer to an array type Wifi_ConnectedClient that has a length of at
+///     least max_clients.
+///
+/// @return
+///     It returns the actual number of clients connected (up to a maximum of
+///     max_clients). On error, it returns a negative number.
+int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_data);
+
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
 /// @{
