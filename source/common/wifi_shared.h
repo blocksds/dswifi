@@ -178,7 +178,6 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
-    u16 ap_rssi;
     u16 pspoll_period;
 
     // Scanned AP data
