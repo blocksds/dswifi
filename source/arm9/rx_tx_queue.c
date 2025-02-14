@@ -69,20 +69,21 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
     txh.tx_length    = datalen + 4;
 
     int base = WifiData->txbufOut;
+    {
+        Wifi_TxBufferWrite(base * 2, HDR_TX_SIZE, (u16 *)&txh);
 
-    Wifi_TxBufferWrite(base * 2, HDR_TX_SIZE, (u16 *)&txh);
+        base += sizeof(Wifi_TxBufferWrite) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
 
-    base += 6;
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
+        Wifi_TxBufferWrite(base * 2, datalen, src);
 
-    Wifi_TxBufferWrite(base * 2, datalen, src);
-
-    base += (datalen + 1) / 2;
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
-
+        base += (datalen + 1) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
+    }
     WifiData->txbufOut = base;
+
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
 
