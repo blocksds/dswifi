@@ -126,6 +126,12 @@ typedef struct {
 
     // Number of clients currently connected
     u8 num_connected;
+
+    // Internal lock to access this struct. This only needs to be aqcuired when
+    // the ARM7 is writing to the struct and when the ARM9 is reading from it.
+    // The ARM7 is free to read from it without using the lock as long as
+    // interrupts are disabled.
+    u32 spinlock;
 } Wifi_ClientsInfoIpc;
 
 // This struct is allocated in main RAM, but it is only accessed through an
@@ -208,6 +214,8 @@ typedef struct WIFI_MAINSTRUCT
     // Local multiplay information
     // ---------------------------
 
+    // This struct can only be modified by the ARM7, the ARM9 should only read
+    // from it.
     Wifi_ClientsInfoIpc clients;
 
     // Maximum number of clients allowed by this host (up to 15)
