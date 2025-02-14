@@ -174,10 +174,6 @@ int Wifi_TxArm9QueueFlush(void)
     if (Wifi_TxArm9QueueIsEmpty())
         return 0;
 
-    // TODO: Check this as well?
-    // (!(WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
-    // || WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
-
     // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where the
     // TX buffer is located.
     if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET) == 0)
