@@ -15,10 +15,10 @@
 #    include "arm9/sgIP/sgIP.h"
 #endif
 
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2)
+int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2)
 {
-    volatile u16 *m1 = mac1;
-    volatile u16 *m2 = mac2;
+    const volatile u16 *m1 = mac1;
+    const volatile u16 *m2 = mac2;
 
     return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
 }

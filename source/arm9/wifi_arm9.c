@@ -26,10 +26,10 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
     packethandler = wphfunc;
 }
 
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src)
+void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
 {
     volatile u16 *d = dest;
-    volatile u16 *s = src;
+    const volatile u16 *s = src;
 
     d[0] = s[0];
     d[1] = s[1];

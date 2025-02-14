@@ -6,6 +6,6 @@
 #ifndef DSWIFI_ARM9_ACCESS_POINT_H__
 #define DSWIFI_ARM9_ACCESS_POINT_H__
 
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
+int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2);
 
 #endif // DSWIFI_ARM9_ACCESS_POINT_H__

@@ -39,8 +39,8 @@
 #define MAC_RXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_RXBUF_START_OFFSET)
 #define MAC_RXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_RXBUF_END_OFFSET)
 
-int Wifi_CmpMacAddr(volatile void *mac1, volatile void *mac2);
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
+int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2);
+void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src);
 
 // This initializes registers related to the MAC RAM.
 void Wifi_MacInit(void);

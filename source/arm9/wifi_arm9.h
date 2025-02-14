@@ -14,7 +14,7 @@
 // that there aren't cache management issues.
 extern volatile Wifi_MainStruct *WifiData;
 
-void Wifi_CopyMacAddr(volatile void *dest, volatile void *src);
+void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src);
 
 #ifdef WIFI_USE_TCP_SGIP
 
