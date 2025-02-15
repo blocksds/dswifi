@@ -41,7 +41,9 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
 
         while (writelen)
         {
-            WifiData->txbufData[base++] = *(in++);
+            WifiData->txbufData[base] = *in;
+            in++;
+            base++;
             writelen--;
         }
 
@@ -59,14 +61,10 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
         return -1;
     }
 
-    Wifi_TxHeader txh;
+    Wifi_TxHeader txh = { 0 };
 
-    txh.enable_flags = 0;
-    txh.unknown      = 0;
-    txh.countup      = 0;
-    txh.beaconfreq   = 0;
-    txh.tx_rate      = rate;
-    txh.tx_length    = datalen + 4;
+    txh.tx_rate   = rate;
+    txh.tx_length = datalen + 4; // FCS
 
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
