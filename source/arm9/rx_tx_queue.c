@@ -68,6 +68,9 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
     txh.tx_rate      = rate;
     txh.tx_length    = datalen + 4;
 
+    // TODO: Replace this by a mutex?
+    int oldIME = enterCriticalSection();
+
     int base = WifiData->txbufOut;
     {
         Wifi_TxBufferWrite(base * 2, sizeof(txh), &txh);
@@ -83,6 +86,8 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
             base -= WIFI_TXBUFFER_SIZE / 2;
     }
     WifiData->txbufOut = base;
+
+    leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;

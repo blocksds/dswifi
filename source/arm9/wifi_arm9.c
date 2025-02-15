@@ -220,6 +220,9 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 
     tx->tx_length = hdrlen - HDR_TX_SIZE + body_size + 4; // Checksum
 
+    // TODO: Replace this by a mutex?
+    int oldIME = enterCriticalSection();
+
     int base = WifiData->txbufOut;
 
     Wifi_TxBufferWrite(base * 2, hdrlen, framehdr);
@@ -288,6 +291,8 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     // the ARM7 may see that the pointer has changed and send whatever is in the
     // buffer at that point.
     WifiData->txbufOut = base;
+
+    leaveCriticalSection(oldIME);
 
     // Note that the ICV is included in the circular ARM9->ARM7 TX buffer, but
     // the FCS isn't.
