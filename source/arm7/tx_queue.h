@@ -12,9 +12,6 @@
 // function will try to send data if there is no active transfer. If there is an
 // active transfer, it will store data in an internal buffer to be sent later.
 
-// Returns true if there is an active transfer.
-bool Wifi_TxIsBusy(void);
-
 // Copy data to the TX buffer in MAC RAM (right at the start of MAC RAM). This
 // bypasses the ARM7 transfer queue. The size is specified in bytes, and it
 // excludes the size of the FCS.

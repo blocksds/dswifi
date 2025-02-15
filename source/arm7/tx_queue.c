@@ -14,7 +14,8 @@
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
 
-bool Wifi_TxIsBusy(void)
+// Returns true if there is an active transfer.
+static bool Wifi_TxLoc3IsBusy(void)
 {
     if (W_TXBUSY & TXBUSY_LOC3_BUSY)
         return true;
@@ -71,7 +72,7 @@ static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, int datalen)
 
 int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
 {
-    if (!Wifi_TxIsBusy())
+    if (!Wifi_TxLoc3IsBusy())
     {
         // No active transfer. Check the queue to see if there is any data.
 
@@ -237,7 +238,7 @@ void Wifi_TxAllQueueFlush(void)
 
     // If TX is still busy it means that some packet has just been sent but
     // there are more waiting to be sent in the MAC RAM.
-    if (Wifi_TxIsBusy())
+    if (Wifi_TxLoc3IsBusy())
         return;
 
     // There is no active transfer, so all packets have been sent. First, check
