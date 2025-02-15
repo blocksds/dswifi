@@ -36,7 +36,7 @@ int Wifi_GetNumAP(void)
 
 int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
 {
-    if ((apnum <= 0) || (apdata == NULL))
+    if ((apnum < 0) || (apdata == NULL))
         return WIFI_RETURN_PARAMERROR;
 
     if (WifiData->aplist[apnum].flags & WFLAG_APDATA_ACTIVE)
