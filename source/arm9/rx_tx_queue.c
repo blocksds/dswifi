@@ -70,9 +70,9 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 
     int base = WifiData->txbufOut;
     {
-        Wifi_TxBufferWrite(base * 2, HDR_TX_SIZE, (u16 *)&txh);
+        Wifi_TxBufferWrite(base * 2, sizeof(txh), &txh);
 
-        base += sizeof(Wifi_TxBufferWrite) / 2;
+        base += sizeof(txh) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))
             base -= WIFI_TXBUFFER_SIZE / 2;
 
