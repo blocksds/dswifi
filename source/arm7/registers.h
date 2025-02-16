@@ -285,7 +285,18 @@
 #define W_RF_BUSY           WIFI_REG(0x8180)
 #define W_RF_CNT            WIFI_REG(0x8184)
 // WIFI_REG(0x8190)
+
 #define W_TX_HDR_CNT        WIFI_REG(0x8194)
+
+#define TX_HDR_CNT_POWER_DURATION_MANUAL    BIT(0)
+#define TX_HDR_CNT_POWER_DURATION_AUTO      0
+
+#define TX_HDR_CNT_FCS_MANUAL               BIT(1)
+#define TX_HDR_CNT_FCS_AUTO                 0
+
+#define TX_HDR_CNT_SEQ_CONTROL_MANUAL       BIT(2)
+#define TX_HDR_CNT_SEQ_CONTROL_AUTO         0
+
 // WIFI_REG(0x8198)
 #define W_RF_PINS           WIFI_REG(0x819C)
 #define W_X_1A0             WIFI_REG(0x81A0)
