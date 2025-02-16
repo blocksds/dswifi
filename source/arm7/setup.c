@@ -87,7 +87,7 @@ void Wifi_DisableTempPowerSave(void)
 
 static void Wifi_TxSetup(void)
 {
-    W_TXREQ_SET = 0x000D;
+    W_TXREQ_SET = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 }
 
 static void Wifi_RxSetup(void)
@@ -309,7 +309,7 @@ void Wifi_Start(void)
             W_MODE_RST       = 1;
             // ??
             W_US_COMPARECNT  = 1;
-            W_TXREQ_SET      = 2;
+            W_TXREQ_SET      = TXBIT_CMD;
             break;
 
         case 2: // DS comms mode?
@@ -346,9 +346,9 @@ void Wifi_Start(void)
 #endif
     W_POWER_048 = 0;
     Wifi_DisableTempPowerSave();
-    // W_TXREQ_SET = 0x0002;
+    // W_TXREQ_SET = TXBIT_CMD;
     W_POWERSTATE |= 2;
-    W_TXREQ_RESET = 0xFFFF;
+    W_TXREQ_RESET = TXBIT_ALL;
 
     int i = 0xFA0;
     while (i != 0 && !(W_RF_PINS & 0x80))
@@ -372,8 +372,8 @@ void Wifi_Stop(void)
     W_TXSTATCNT     = 0;
     W_X_00A         = 0;
     W_TXBUF_BEACON  = TXBUF_BEACON_DISABLE;
-    W_TXREQ_RESET   = 0xFFFF;
-    W_TXBUF_RESET   = 0xFFFF;
+    W_TXREQ_RESET   = TXBIT_ALL;
+    W_TXBUF_RESET   = TXBIT_ALL;
 
     // Wifi_Shutdown();
 

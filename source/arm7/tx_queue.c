@@ -17,7 +17,7 @@ static u16 wifi_tx_queue_len = 0; // Length in halfwords
 // Returns true if there is an active transfer.
 static bool Wifi_TxLoc3IsBusy(void)
 {
-    if (W_TXBUSY & TXBUSY_LOC3_BUSY)
+    if (W_TXBUSY & TXBIT_LOC3)
         return true;
 
     return false;
@@ -32,7 +32,7 @@ void Wifi_TxRaw(u16 *data, int datalen)
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
     W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
-    W_TXREQ_SET     = 0x000D;
+    W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
     WifiData->stats[WSTAT_TXBYTES] += datalen;
@@ -226,7 +226,7 @@ int Wifi_TxArm9QueueFlush(void)
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
     W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
-    W_TXREQ_SET     = 0x000D;
+    W_TXREQ_SET = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
     return 1;
 }
