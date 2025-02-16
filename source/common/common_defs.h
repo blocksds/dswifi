@@ -9,7 +9,7 @@
 // =============================
 
 #define HDR_TX_STATUS           0x0
-#define HDR_TX_SLAVE_BITS       0x2
+#define HDR_TX_CLIENT_BITS      0x2
 #define HDR_TX_UNKNOWN_04       0x4
 #define HDR_TX_UNKNOWN_05       0x5
 #define HDR_TX_UNKNOWN_06       0x6

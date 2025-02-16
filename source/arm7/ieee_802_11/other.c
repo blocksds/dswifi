@@ -40,7 +40,7 @@ int Wifi_SendNullFrame(void)
     // Hardware TX header
     // ------------------
 
-    frame.tx.slave_bits = 0;
+    frame.tx.client_bits = 0;
     frame.tx.countup = 0;
     frame.tx.beaconfreq = 0;
     frame.tx.tx_rate = WifiData->maxrate7;

@@ -143,7 +143,7 @@ enum WIFI_STATS
 typedef struct WIFI_TXHEADER
 {
     u16 enable_flags;
-    u16 slave_bits;
+    u16 client_bits;
     u16 countup;
     u16 beaconfreq;
     u16 tx_rate;
