@@ -170,6 +170,7 @@ void Wifi_Update(void)
                 WLOG_PUTS("W: AP mode start\n");
                 W_AID_LOW  = 0;
                 W_AID_FULL = 0;
+                Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
                 for (int i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetClients();
@@ -385,6 +386,7 @@ void Wifi_Update(void)
                 WLOG_PUTS("W: AP mode end\n");
                 Wifi_MPHost_ClientKickAll();
                 Wifi_BeaconStop();
+                Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }

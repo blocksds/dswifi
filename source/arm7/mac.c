@@ -4,8 +4,9 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/baseband.h"
-#include "arm7/registers.h"
 #include "arm7/flash.h"
+#include "arm7/registers.h"
+#include "arm7/setup.h"
 
 int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2)
 {
@@ -44,7 +45,10 @@ void Wifi_MacInit(void)
     W_X_1A2         = 1;
     W_X_1A0         = 0;
     W_PRE_BEACON    = 0x0800;
+
     W_PREAMBLE      = 1;
+    Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
+
     W_CONFIG_0D4    = 3;
     W_CONFIG_0D8    = 4;
 

@@ -11,6 +11,9 @@ void Wifi_Shutdown(void);
 void Wifi_Start(void);
 void Wifi_Stop(void);
 
+// The rate can be WIFI_TRANSFER_RATE_1MBPS or WIFI_TRANSFER_RATE_2MBPS.
+void Wifi_SetupTransferOptions(int rate, bool short_preamble);
+
 void Wifi_SetWepKey(void *wepkey, int wepmode);
 void Wifi_SetWepMode(int wepmode);
 void Wifi_SetSleepMode(int mode);

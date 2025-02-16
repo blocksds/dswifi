@@ -74,7 +74,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     // Capability info
 
-    *(u16 *)body = CAPS_ESS; // Official DS games also set CAPS_SHORT_PREAMBLE
+    *(u16 *)body = CAPS_ESS | CAPS_SHORT_PREAMBLE;
     body += 2;
     body_size += 2;
 

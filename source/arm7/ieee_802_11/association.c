@@ -11,6 +11,7 @@
 #include "arm7/mp_clients.h"
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
+#include "arm7/setup.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"
@@ -140,7 +141,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
         // Determine max rate
 
-        WifiData->maxrate7 = WIFI_TRANSFER_RATE_1MBPS;
+        int rate = WIFI_TRANSFER_RATE_1MBPS;
 
         if (((u8 *)body)[6] == MGT_FIE_ID_SUPPORTED_RATES)
         {
@@ -150,7 +151,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
             {
                 if ((rates[i] & RATE_SPEED_MASK) == RATE_2_MBPS)
                 {
-                    WifiData->maxrate7 = WIFI_TRANSFER_RATE_2MBPS;
+                    rate = WIFI_TRANSFER_RATE_2MBPS;
                     break;
                 }
             }
@@ -159,6 +160,8 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         {
             WLOG_PUTS("W: Rates not found\n");
         }
+
+        Wifi_SetupTransferOptions(rate, false);
 
         WLOG_PRINTF("W: Rate: %c Mb/s\n",
                     (WifiData->maxrate7 == WIFI_TRANSFER_RATE_2MBPS) ? '2' : '1');

@@ -113,6 +113,27 @@ static void Wifi_RxSetup(void)
     W_RXCNT = RXCNT_ENABLE_RX | RXCNT_EMPTY_RXBUF;
 }
 
+void Wifi_SetupTransferOptions(int rate, bool short_preamble)
+{
+    if (short_preamble)
+        W_PREAMBLE |= 6;
+    else
+        W_PREAMBLE &= ~6;
+
+    WifiData->maxrate7 = rate;
+
+    u16 value = Wifi_FlashReadHWord(F_WIFI_CFG_058) + 0x202;
+
+    if (rate == WIFI_TRANSFER_RATE_2MBPS)
+    {
+        value -= 0x6161;
+        if (short_preamble)
+            value -= 0x6060;
+    }
+
+    W_CONFIG_140 = value;
+}
+
 void Wifi_WakeUp(void)
 {
     W_POWER_US = 0;
