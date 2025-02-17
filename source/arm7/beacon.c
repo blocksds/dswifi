@@ -34,15 +34,21 @@ void Wifi_BeaconLoad(int from, int to)
     int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 12;
     if (len <= i)
     {
-        // Disable beacon transmission if we don't have a valid beacon
+        // Disable beacon transmission if the beacon packet is too small to be a
+        // valid beacon.
         Wifi_BeaconStop();
         return;
     }
 
-    if (len > 512)
+    if (len > (MAC_BEACON_END_OFFSET - MAC_BEACON_START_OFFSET))
+    {
+        // Disable beacon transmission if the beacon packet doesn't fit in the
+        // buffer.
+        Wifi_BeaconStop();
         return;
+    }
 
-    WLOG_PUTS("W: Beacon setup\n");
+    WLOG_PRINTF("W: Beacon setup (%d b)\n", len);
 
     // Save the frame in a specific location in MAC RAM
     Wifi_MACRead((u16 *)data, from, 0, len);

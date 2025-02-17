@@ -12,7 +12,7 @@
 // ==================
 //
 // Base address: 0x4000
-// Size:         0x2000 bytes
+// Size:         0x2000 bytes (8 KB)
 //
 //     Offsets     |    Addresses    | Size | Notes
 // ----------------+-----------------+------+-----------------------
@@ -25,12 +25,12 @@
 #define MAC_SIZE                    0x2000
 
 #define MAC_TXBUF_START_OFFSET      0x0000
-#define MAC_TXBUF_END_OFFSET        0x0960
+#define MAC_TXBUF_END_OFFSET        0x0B00
 
 #define MAC_TXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_TXBUF_START_OFFSET)
 #define MAC_TXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_TXBUF_END_OFFSET)
 
-#define MAC_BEACON_START_OFFSET     0x0960
+#define MAC_BEACON_START_OFFSET     0x0B00 // 256 bytes
 #define MAC_BEACON_END_OFFSET       0x0C00
 
 #define MAC_RXBUF_START_OFFSET      0x0C00
