@@ -183,6 +183,22 @@ int Wifi_TxArm9QueueFlush(void)
     // Reset the keepalive count to not send unneeded frames
     Wifi_KeepaliveCountReset();
 
+    // Base address of the IEEE header we've just copied
+    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+
+    // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
+    // so that it saves to a specific location in MAC RAM and we can use the TX
+    // beacon registers. The WiFi chip will then take care of sending it at
+    // regular intervals. This is required when the DS is acting as a host in
+    // local DS to DS multiplayer. Also, note that the ARM9 fills in the rate
+    // information for beacon packets (it's always 2 Mb/s).
+    if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
+    {
+        // Copy from TX buffer to beacon buffer
+        Wifi_BeaconLoad(MAC_TXBUF_START_OFFSET, MAC_BEACON_START_OFFSET);
+        return 1;
+    }
+
     // Packets received from the ARM9 don't have a fully filled TX header.
     // Ensure that the hardware TX header has all required information. This
     // header goes before everything else, so it's stored at address 0 of MAC
@@ -191,9 +207,6 @@ int Wifi_TxArm9QueueFlush(void)
     // If the transfer rate isn't set, fill it in now
     if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
         W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
-
-    // Base address of the IEEE header we've just copied
-    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
 
     // Ensure that the IEEE header has all required information. This header
     // goes after the TX header.
@@ -206,18 +219,6 @@ int Wifi_TxArm9QueueFlush(void)
         W_MACMEM(iv_base + 0) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
         W_MACMEM(iv_base + 2) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
                               | (WifiData->wepkeyid7 << 14);
-    }
-
-    // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
-    // so that it saves to a specific location in MAC RAM and we can use the TX
-    // beacon registers. The WiFi chip will then take care of sending it at
-    // regular intervals. This is required when the DS is acting as a host in
-    // local DS to DS multiplayer.
-    if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
-    {
-        // Copy from TX buffer to beacon buffer
-        Wifi_BeaconLoad(MAC_TXBUF_START_OFFSET, MAC_BEACON_START_OFFSET);
-        return 1;
     }
 
     // Send all other types of frames normally
