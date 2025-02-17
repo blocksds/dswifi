@@ -211,7 +211,8 @@ int Wifi_TxArm9QueueFlush(void)
     // Reset the keepalive count to not send unneeded frames
     Wifi_KeepaliveCountReset();
 
-    // Base address of the IEEE header we've just copied
+    // Base addresses of the headers we've just copied
+    u32 tx_base = MAC_TXBUF_START_OFFSET;
     u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
 
     // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
@@ -233,8 +234,8 @@ int Wifi_TxArm9QueueFlush(void)
     // RAM as well.
 
     // If the transfer rate isn't set, fill it in now
-    if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
-        W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
+    if (W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) == 0)
+        W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
 
     return Wifi_TxArm9QueueFlushByLoc3();
 }
