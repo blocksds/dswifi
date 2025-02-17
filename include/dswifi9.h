@@ -362,7 +362,12 @@ int Wifi_DisconnectAP(void);
 /// @param max_clients
 ///     Maximum number of allowed clients connected to the console. The minimum
 ///     is 1, the maximum is 15.
-void Wifi_MultiplayerHostMode(int max_clients);
+/// @param host_packet_size
+///     Size of the data packets sent from the host to the client.
+/// @param client_packet_size
+///     Size of the data packets sent from the client to the host.
+void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
+                              size_t client_packet_size);
 
 /// Sets the WiFI hardware in mulitplayer client mode.
 ///

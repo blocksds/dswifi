@@ -175,6 +175,8 @@ void Wifi_Update(void)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetClients();
                 WifiData->curMaxClients = WifiData->reqMaxClients;
+                WifiData->curCmdDataSize = WifiData->reqCmdDataSize;
+                WifiData->curReplyDataSize = WifiData->reqReplyDataSize;
                 WifiData->curMode = WIFIMODE_ACCESSPOINT;
                 break;
             }

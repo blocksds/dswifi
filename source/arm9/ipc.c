@@ -255,7 +255,8 @@ void Wifi_MultiplayerClientMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
-void Wifi_MultiplayerHostMode(int max_clients)
+void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
+                              size_t client_packet_size)
 {
     if (max_clients > WIFI_MAX_MULTIPLAYER_CLIENTS)
         max_clients = WIFI_MAX_MULTIPLAYER_CLIENTS;
@@ -264,6 +265,11 @@ void Wifi_MultiplayerHostMode(int max_clients)
 
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
     WifiData->reqMaxClients = max_clients;
+    // TODO: In host and client sizes include IEEE header and FCS. Also, for the
+    // host, include the client time and bits stored right at the start of the
+    // frame body.
+    WifiData->reqCmdDataSize = host_packet_size;
+    WifiData->reqReplyDataSize = client_packet_size;
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;

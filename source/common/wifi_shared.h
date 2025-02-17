@@ -223,6 +223,9 @@ typedef struct WIFI_MAINSTRUCT
     // Maximum number of clients allowed by this host (up to 15)
     u8 curMaxClients, reqMaxClients;
 
+    u16 curCmdDataSize, reqCmdDataSize;
+    u16 curReplyDataSize, reqReplyDataSize;
+
     // Other information
     // -----------------
 

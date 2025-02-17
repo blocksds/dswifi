@@ -130,7 +130,14 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     fie->game_id[2] = (game_id >> 8) & 0xFF;
     fie->game_id[3] = (game_id >> 0) & 0xFF;
     fie->extra_data_size = sizeof(DSWifiExtraData);
-    fie->beacon_type = 1;
+    fie->beacon_type = 1; // Multicart
+
+    // Sizes in halfwords, LSB first
+    fie->cmd_data_size[0] = WifiData->curCmdDataSize & 0xFF;
+    fie->cmd_data_size[1] = (WifiData->curCmdDataSize >> 8) & 0xFF;
+    fie->reply_data_size[0] = WifiData->curReplyDataSize & 0xFF;
+    fie->reply_data_size[1] = (WifiData->curReplyDataSize >> 8) & 0xFF;
+
     fie->extra_data.players_max = WifiData->curMaxClients + 1; // Clients + host
     fie->extra_data.players_current = 1; // No clients, only host. Updated from the ARM7
     fie->extra_data.allows_connections = 0; // Updated from the ARM7
