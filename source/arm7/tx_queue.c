@@ -169,6 +169,34 @@ static bool Wifi_TxArm9QueueIsEmpty(void)
     return false;
 }
 
+static int Wifi_TxArm9QueueFlushByLoc3(void)
+{
+    // Base address of the IEEE header we've just copied
+    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+
+    // Add WEP IV and key ID if required.
+    if (W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & FC_PROTECTED_FRAME)
+    {
+        int iv_base = ieee_base + HDR_MGT_MAC_SIZE;
+
+        // WEP is enabled, fill in the IV.
+        W_MACMEM(iv_base + 0) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
+        W_MACMEM(iv_base + 2) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
+                              | (WifiData->wepkeyid7 << 14);
+    }
+
+    // The hardware fills in the duration field for us.
+
+    // Start transfer. Set the number of retries before starting.
+    // W_TXSTAT       = 0x0001;
+    W_TX_RETRYLIMIT = 0x0707;
+    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
+    W_TXREQ_RESET   = TXBIT_CMD;
+    W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
+
+    return 1;
+}
+
 int Wifi_TxArm9QueueFlush(void)
 {
     // If there is no data in the ARM9 queue, exit
@@ -208,28 +236,7 @@ int Wifi_TxArm9QueueFlush(void)
     if (W_MACMEM(HDR_TX_TRANSFER_RATE) == 0)
         W_MACMEM(HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
 
-    // Ensure that the IEEE header has all required information. This header
-    // goes after the TX header.
-
-    if (W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & FC_PROTECTED_FRAME)
-    {
-        int iv_base = ieee_base + HDR_MGT_MAC_SIZE;
-
-        // WEP is enabled, fill in the IV.
-        W_MACMEM(iv_base + 0) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
-        W_MACMEM(iv_base + 2) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
-                              | (WifiData->wepkeyid7 << 14);
-    }
-
-    // Send all other types of frames normally
-
-    // Start transfer. Set the number of retries before starting.
-    // W_TXSTAT       = 0x0001;
-    W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
-    W_TXREQ_SET = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
-
-    return 1;
+    return Wifi_TxArm9QueueFlushByLoc3();
 }
 
 void Wifi_TxAllQueueFlush(void)
