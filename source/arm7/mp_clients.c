@@ -24,6 +24,7 @@ void Wifi_MPHost_ResetClients(void)
     memset((void *)WifiData->clients.list, 0, sizeof(WifiData->clients.list));
 
     WifiData->clients.num_connected = 0;
+    WifiData->clients.aid_mask = 0;
     Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
 
     Spinlock_Release(WifiData->clients);
@@ -94,6 +95,11 @@ int Wifi_MPHost_ClientAuthenticate(void *macaddr)
     if (index >= 0)
     {
         WifiData->clients.list[index].state = WIFI_CLIENT_AUTHENTICATED;
+
+        // Maybe it's going from associated to authenticated. Remove its AID
+        int aid = WifiData->clients.list[index].association_id;
+        WifiData->clients.aid_mask &= ~BIT(aid);
+
         ret = index;
         goto end;
     }
@@ -161,6 +167,8 @@ int Wifi_MPHost_ClientAssociate(void *macaddr)
         client->association_id = association_id;
         client->state = WIFI_CLIENT_ASSOCIATED;
 
+        WifiData->clients.aid_mask |= BIT(client->association_id);
+
         ret = association_id;
         goto end;
     }
@@ -189,6 +197,8 @@ int Wifi_MPHost_ClientDisconnect(void *macaddr)
     // If the client was found, disconnect it
     volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
     client->state = WIFI_CLIENT_DISCONNECTED;
+
+    WifiData->clients.aid_mask &= ~BIT(client->association_id);
 
     WifiData->clients.num_connected--;
     Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);

@@ -127,6 +127,9 @@ typedef struct {
     // Number of clients currently connected
     u8 num_connected;
 
+    // Mask of AIDs of clients currently associated (not authenticated!)
+    u8 aid_mask;
+
     // Internal lock to access this struct. This only needs to be aqcuired when
     // the ARM7 is writing to the struct and when the ARM9 is reading from it.
     // The ARM7 is free to read from it without using the lock as long as
