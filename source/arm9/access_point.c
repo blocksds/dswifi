@@ -182,7 +182,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     }
     else
     {
-        WifiData->reqMode  = WIFIMODE_SCAN;
+        Wifi_ScanMode();
         wifi_connect_point = *apdata;
     }
 
@@ -215,7 +215,7 @@ void Wifi_AutoConnect(void)
     else
     {
         wifi_connect_state = WIFI_CONNECT_SEARCHING_WFC;
-        WifiData->reqMode  = WIFIMODE_SCAN;
+        Wifi_ScanMode();
     }
 }
 
