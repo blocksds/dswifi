@@ -14,7 +14,7 @@
 #include "arm7/ieee_802_11/other.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
-#include "arm7/mp_clients.h"
+#include "arm7/multiplayer.h"
 #include "arm7/registers.h"
 #include "arm7/rf.h"
 #include "arm7/rx_queue.h"
