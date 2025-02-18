@@ -359,13 +359,17 @@ int Wifi_DisconnectAP(void);
 ///
 /// Use Wifi_LibraryModeReady() to check when the mode change is finished.
 ///
+/// The sizes used in this function are only the size of the custom data sent
+/// by the application. The size of the headers is added internally by the
+/// library.
+///
 /// @param max_clients
 ///     Maximum number of allowed clients connected to the console. The minimum
 ///     is 1, the maximum is 15.
 /// @param host_packet_size
-///     Size of the data packets sent from the host to the client.
+///     Size of the user data sent in packets from the host to the client.
 /// @param client_packet_size
-///     Size of the data packets sent from the client to the host.
+///     Size of the user data sent in packets from the client to the host.
 void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
                               size_t client_packet_size);
 
@@ -545,7 +549,8 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 /// @param data
 ///     Pointer to the data to be sent.
 /// @param datalen
-///     Size of the data in bytes.
+///     Size of the data in bytes. It can go up to the size defined when calling
+///     Wifi_MultiplayerHostMode().
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 
 /// @}

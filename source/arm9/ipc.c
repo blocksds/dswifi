@@ -12,6 +12,7 @@
 #include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/wifi_arm9.h"
+#include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
 #ifdef WIFI_USE_TCP_SGIP
@@ -265,11 +266,15 @@ void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
 
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
     WifiData->reqMaxClients = max_clients;
-    // TODO: In host and client sizes include IEEE header and FCS. Also, for the
-    // host, include the client time and bits stored right at the start of the
-    // frame body.
-    WifiData->reqCmdDataSize = host_packet_size;
-    WifiData->reqReplyDataSize = client_packet_size;
+
+    // IEEE header, client time, client bits, user data, FCS
+    size_t host_size = HDR_DATA_MAC_SIZE + 2 + 2 + host_packet_size + 4;
+    // IEEE header, user data, FCS
+    size_t client_size = HDR_DATA_MAC_SIZE + client_packet_size + 4;
+
+    WifiData->reqCmdDataSize = host_size;
+    WifiData->reqReplyDataSize = client_size;
+
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;

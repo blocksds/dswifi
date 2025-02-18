@@ -113,13 +113,19 @@ static const u16 wifi_cmd_mac[3]   = { 0x0903, 0x00BF, 0x0000 };
 
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 {
-    // Add FCS
-    int sizeneeded = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader) + datalen + 4;
-    // Round up to 2 bytes
-    sizeneeded = (sizeneeded + 1) & ~1;
+    // Calculate size of IEEE frame
+    size_t ieee_size = HDR_DATA_MAC_SIZE + 2 + 2 + datalen + 4;
+    if (ieee_size > WifiData->curCmdDataSize)
+    {
+        // This packet is bigger than what is advertised in beacon frames
+        return -1;
+    }
 
+    // Add FCS and round up to 2 bytes
+    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
+        // The packet won't fit in the ARM9->ARM7 circular buffer
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
         return -1;
     }
