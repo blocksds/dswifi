@@ -32,4 +32,53 @@
 
 #define HDR_RX_SIZE             0xC
 
+// MAC RAM memory map
+// ==================
+//
+// Base address: 0x4000
+// Size:         0x2000 bytes (8 KB)
+//
+//     Offsets     |    Addresses    | Size | Notes
+// ================+=================+======+=======================
+// 0x0000 - 0x09FF | 0x4000 - 0x49FF | 2560 | TX buffer: Not a circular buffer
+// ----------------+-----------------+------+-----------------------
+// 0x0A00 - 0x0AFF | 0x4A00 - 0x4AFF |  256 | Client frame (buffer 1) / Beacon frame
+// 0x0B00 - 0x0BFF | 0x4B00 - 0x4BFF |  256 | Client frame (buffer 2) / Beacon frame
+// ----------------+-----------------+------+-----------------------
+// 0x0C00 - 0x1F5F | 0x4C00 - 0x5F5F | 4960 | RX buffer: Circular buffer
+// ----------------+-----------------+------+-----------------------
+// 0x1F60 - 0x1FFF | 0x5F60 - 0x5FFF |  160 | Internal use (WEP keys, etc)
+
+#define MAC_BASE_ADDRESS            0x4000
+#define MAC_SIZE                    0x2000
+
+// Definitions used in all modes
+
+#define MAC_TXBUF_START_OFFSET      0x0000
+#define MAC_TXBUF_END_OFFSET        0x0A00
+
+#define MAC_TXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_TXBUF_START_OFFSET)
+#define MAC_TXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_TXBUF_END_OFFSET)
+
+// Definitions used in multiplayer client mode
+
+#define MAC_CLIENT_RX1_START_OFFSET 0x0A00 // 256 bytes
+#define MAC_CLIENT_RX1_END_OFFSET   0x0B00
+
+#define MAC_CLIENT_RX2_START_OFFSET 0x0B00 // 256 bytes
+#define MAC_CLIENT_RX2_END_OFFSET   0x0C00
+
+// Definitions used in multiplayer host mode
+
+#define MAC_BEACON_START_OFFSET     0x0A00 // 512 bytes
+#define MAC_BEACON_END_OFFSET       0x0C00
+
+// Definitions used in all modes
+
+#define MAC_RXBUF_START_OFFSET      0x0C00
+#define MAC_RXBUF_END_OFFSET        0x1F60
+
+#define MAC_RXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_RXBUF_START_OFFSET)
+#define MAC_RXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_RXBUF_END_OFFSET)
+
 #endif // DSWIFI_COMMON_DEFS_H__

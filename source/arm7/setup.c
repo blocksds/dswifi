@@ -11,6 +11,7 @@
 #include "arm7/registers.h"
 #include "arm7/rf.h"
 #include "arm7/setup.h"
+#include "common/common_defs.h"
 #include "common/spinlock.h"
 
 void Wifi_SetWepKey(void *wepkey, int wepmode)
