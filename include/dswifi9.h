@@ -376,7 +376,14 @@ void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
 /// Sets the WiFI hardware in mulitplayer client mode.
 ///
 /// Use Wifi_LibraryModeReady() to check when the mode change is finished.
-void Wifi_MultiplayerClientMode(void);
+///
+/// The size used in this function is only the size of the custom data sent
+/// by the application. The size of the headers is added internally by the
+/// library.
+///
+/// @param client_packet_size
+///     Size of the user data sent in packets from the client to the host.
+void Wifi_MultiplayerClientMode(size_t client_packet_size);
 
 /// Allows or disallows new clients to connect to this console acting as host.
 ///

@@ -249,10 +249,15 @@ void Wifi_InternetMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
-void Wifi_MultiplayerClientMode(void)
+void Wifi_MultiplayerClientMode(size_t client_packet_size)
 {
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
     WifiData->reqMode = WIFIMODE_NORMAL;
+
+    // IEEE header, user data, FCS
+    size_t client_size = HDR_DATA_MAC_SIZE + client_packet_size + 4;
+    WifiData->reqReplyDataSize = client_size;
+
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 

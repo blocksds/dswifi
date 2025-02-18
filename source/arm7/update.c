@@ -239,6 +239,9 @@ void Wifi_Update(void)
 
                 W_RXFILTER2 |= RXFILTER2_IGNORE_STA_DS;
 
+                if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
+                    WifiData->curReplyDataSize = WifiData->reqReplyDataSize;
+
                 WifiData->reqChannel = WifiData->apchannel7;
                 Wifi_SetChannel(WifiData->apchannel7);
                 if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
