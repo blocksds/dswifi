@@ -8,6 +8,7 @@
 #include "arm9/ipc.h"
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
+#include "common/ieee_defs.h"
 
 // TX functions
 // ============
@@ -78,6 +79,85 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
             base -= WIFI_TXBUFFER_SIZE / 2;
 
         Wifi_TxBufferWrite(base * 2, datalen, src);
+
+        base += (datalen + 1) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
+    }
+    WifiData->txbufOut = base;
+
+    leaveCriticalSection(oldIME);
+
+    WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+
+    Wifi_CallSyncHandler();
+
+    return 0;
+}
+
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_DataFrameHeader ieee;
+    u16 client_time;
+    u16 client_bits;
+    u8 body[0];
+} TxMultiplayerIeeeDataFrame;
+
+// Host CMD packets are sent to MAC address 03:09:BF:00:00:00
+static const u16 wifi_cmd_mac[3]   = { 0x0903, 0x00BF, 0x0000 };
+// Client REPLY packets are sent to MAC address 03:09:BF:00:00:10
+//static const u16 wifi_reply_mac[3] = { 0x0903, 0x00BF, 0x1000 };
+// Host and client ACK packets are sent to MAC address 03:09:BF:00:00:03
+//static const u16 wifi_ack_mac[3]   = { 0x0903, 0x00BF, 0x0300 };
+
+int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
+{
+    // Add FCS
+    int sizeneeded = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader) + datalen + 4;
+    // Round up to 2 bytes
+    sizeneeded = (sizeneeded + 1) & ~1;
+
+    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    {
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        return -1;
+    }
+
+    // Generate frame
+
+    TxMultiplayerIeeeDataFrame frame = { 0 };
+
+    //frame.tx.client_bits = 0; // Filled by ARM7
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS | WFLAG_SEND_AS_CMD; // Always 2 Mb/s
+    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+
+    frame.ieee.frame_control = TYPE_DATA | FC_FROM_DS;
+    //frame.ieee.duration = 0; // Filled by ARM7
+    Wifi_CopyMacAddr(frame.ieee.addr_1, wifi_cmd_mac);
+    Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->MacAddr);
+    frame.ieee.seq_ctl = 0;
+
+    // Multiplayer data
+
+    //frame.client_time = 0; // Filled by ARM7
+    //frame.client_bits = 0;
+
+    // Write packet to the circular buffer
+
+    // TODO: Replace this by a mutex?
+    int oldIME = enterCriticalSection();
+
+    int base = WifiData->txbufOut;
+    {
+        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+
+        base += sizeof(frame) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
+
+        Wifi_TxBufferWrite(base * 2, datalen, data);
 
         base += (datalen + 1) / 2;
         if (base >= (WIFI_TXBUFFER_SIZE / 2))

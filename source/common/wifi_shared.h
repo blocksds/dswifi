@@ -32,6 +32,8 @@
 
 #define WFLAG_IP_GOTDHCP 0x0001
 
+#define WFLAG_SEND_AS_CMD 0x8000
+
 // request - request flags
 #define WFLAG_REQ_APCONNECT    0x0001
 #define WFLAG_REQ_APCOPYVALUES 0x0002

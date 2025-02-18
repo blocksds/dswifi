@@ -537,6 +537,17 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 ///     Location for the data to be read into. It must be aligned to 16 bits.
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 
+/// Sends a multiplayer host frame.
+///
+/// This frame will be sent to all clients, and clients will reply automatically
+/// if they have prepared any reply frame.
+///
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes.
+int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
+
 /// @}
 
 #ifdef __cplusplus

@@ -153,7 +153,11 @@
 #define W_LISTENCOUNT       WIFI_REG(0x8088)
 #define W_BEACONINT         WIFI_REG(0x808C)
 #define W_LISTENINT         WIFI_REG(0x808E)
+
 #define W_TXBUF_CMD         WIFI_REG(0x8090)
+
+#define TXBUF_CMD_ENABLE    BIT(15)
+
 #define W_TXBUF_REPLY1      WIFI_REG(0x8094)
 #define W_TXBUF_REPLY2      WIFI_REG(0x8098)
 // WIFI_REG(0x809C)

@@ -23,6 +23,15 @@ static bool Wifi_TxLoc3IsBusy(void)
     return false;
 }
 
+// Returns true if there is an active transfer.
+static bool Wifi_TxCmdIsBusy(void)
+{
+    if (W_TXBUSY & TXBIT_CMD)
+        return true;
+
+    return false;
+}
+
 void Wifi_TxRaw(u16 *data, int datalen)
 {
     datalen = (datalen + 3) & (~3);
@@ -32,6 +41,7 @@ void Wifi_TxRaw(u16 *data, int datalen)
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
     W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
+    W_TXREQ_RESET   = TXBIT_CMD;
     W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
@@ -197,6 +207,50 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
     return 1;
 }
 
+static int Wifi_TxArm9QueueFlushByCmd(void)
+{
+    // Base addresses of the headers
+    u32 tx_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+
+    // Get some multiplayer information and calculate durations, the hardware
+    // doesn't calculate the durations for multiplayer packets.
+
+    u16 host_bytes = WifiData->curCmdDataSize;
+    u16 client_bytes = WifiData->curReplyDataSize;
+    u16 num_clients = WifiData->clients.num_connected;
+    u16 client_bits = WifiData->clients.aid_mask;
+
+    u16 host_time = host_bytes * 4 + 0x60; // 0x60 = Short preamble
+    u16 client_time = client_bytes * 4 + 0xD2; // 0xD0 to 0xD2
+    u16 all_client_time = 0xF0 + (client_time + 0xA) * num_clients;
+
+    // Fill in packet information
+
+    W_MACMEM(tx_base + HDR_TX_CLIENT_BITS) = client_bits;
+
+    W_MACMEM(ieee_base + HDR_DATA_DURATION) = all_client_time;
+
+    W_MACMEM(ieee_base + HDR_DATA_MAC_SIZE + 0) = client_time;
+    W_MACMEM(ieee_base + HDR_DATA_MAC_SIZE + 2) = client_bits;
+
+    // Setup timeout registers
+
+    W_CMD_TOTALTIME = all_client_time;
+    W_CMD_REPLYTIME = client_time;
+
+    W_CMD_COUNT = (0x388 + (num_clients * client_time) + host_time + 0x32) / 10;
+
+    // Start transfer. Set the number of retries before starting.
+    // W_TXSTAT       = 0x0001;
+    W_TX_RETRYLIMIT = 0x0707;
+    W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
+    W_TXREQ_RESET   = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
+    W_TXREQ_SET     = TXBIT_CMD;
+
+    return 1;
+}
+
 int Wifi_TxArm9QueueFlush(void)
 {
     // If there is no data in the ARM9 queue, exit
@@ -234,20 +288,29 @@ int Wifi_TxArm9QueueFlush(void)
     // RAM as well.
 
     // If the transfer rate isn't set, fill it in now
-    if (W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) == 0)
+    u16 rate = W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE);
+
+    bool send_as_cmd = rate & WFLAG_SEND_AS_CMD;
+    rate &= ~WFLAG_SEND_AS_CMD;
+
+    if (rate == 0)
         W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
 
-    return Wifi_TxArm9QueueFlushByLoc3();
+    if (send_as_cmd)
+        return Wifi_TxArm9QueueFlushByCmd();
+    else
+        return Wifi_TxArm9QueueFlushByLoc3();
 }
 
 void Wifi_TxAllQueueFlush(void)
 {
     WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & TXBUF_LOCN_ENABLE)
                                  | (W_TXBUSY & 0x7FFF);
+    // TODO: Add CMD to this
 
     // If TX is still busy it means that some packet has just been sent but
     // there are more waiting to be sent in the MAC RAM.
-    if (Wifi_TxLoc3IsBusy())
+    if (Wifi_TxLoc3IsBusy() || Wifi_TxCmdIsBusy())
         return;
 
     // There is no active transfer, so all packets have been sent. First, check
