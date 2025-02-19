@@ -32,8 +32,9 @@
 
 #define WFLAG_IP_GOTDHCP 0x0001
 
-#define WFLAG_SEND_AS_REPLY 0x4000
-#define WFLAG_SEND_AS_CMD   0x8000
+#define WFLAG_SEND_AS_BEACON 0x2000
+#define WFLAG_SEND_AS_REPLY  0x4000
+#define WFLAG_SEND_AS_CMD    0x8000
 
 // request - request flags
 #define WFLAG_REQ_APCONNECT    0x0001

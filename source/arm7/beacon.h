@@ -7,7 +7,7 @@
 #define DSWIFI_ARM7_BEACON_H__
 
 void Wifi_BeaconStop(void);
-void Wifi_BeaconLoad(int from, int to);
+void Wifi_BeaconSetup(void);
 void Wifi_SetBeaconChannel(int channel);
 void Wifi_SetBeaconCurrentPlayers(int num);
 void Wifi_SetBeaconAllowsConnections(int allows);

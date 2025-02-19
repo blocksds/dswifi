@@ -24,14 +24,15 @@ void Wifi_BeaconStop(void)
     W_BEACONINT = 0x64;
 }
 
-void Wifi_BeaconLoad(int from, int to)
+void Wifi_BeaconSetup(void)
 {
     u8 data[MAC_BEACON_END_OFFSET - MAC_BEACON_START_OFFSET];
 
-    int packetlen = Wifi_MACReadHWord(from, HDR_TX_IEEE_FRAME_SIZE);
-    int len = packetlen + HDR_TX_SIZE - 4;
+    int packetlen = Wifi_MACReadHWord(MAC_BEACON_START_OFFSET, HDR_TX_IEEE_FRAME_SIZE);
+    int len = HDR_TX_SIZE + packetlen - 4;
 
-    // Add sizes of timestamp, beacon interval and capability info
+    // Start reading after the headers, timestamp, beacon interval and
+    // capability info.
     int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8 + 2 + 2;
     if (len <= i)
     {
@@ -41,19 +42,10 @@ void Wifi_BeaconLoad(int from, int to)
         return;
     }
 
-    if (len > (MAC_BEACON_END_OFFSET - MAC_BEACON_START_OFFSET))
-    {
-        // Disable beacon transmission if the beacon packet doesn't fit in the
-        // buffer.
-        Wifi_BeaconStop();
-        return;
-    }
-
     WLOG_PRINTF("W: Beacon setup (%d b)\n", len);
 
-    // Save the frame in a specific location in MAC RAM
-    Wifi_MACRead((u16 *)data, from, 0, len);
-    Wifi_MACWrite((u16 *)data, to, len);
+    // Read the whole frame so that it's easier to parse
+    Wifi_MACRead((u16 *)data, MAC_BEACON_START_OFFSET, 0, len);
 
     while (i < len)
     {
@@ -64,7 +56,7 @@ void Wifi_BeaconLoad(int from, int to)
         {
             case MGT_FIE_ID_DS_PARAM_SET: // Channel
                 // Address in MAC RAM to the channel field in the beacon frame
-                beacon_channel_addr = to + i;
+                beacon_channel_addr = MAC_BEACON_START_OFFSET + i;
                 break;
 
             case MGT_FIE_ID_TIM: // TIM
@@ -87,7 +79,7 @@ void Wifi_BeaconLoad(int from, int to)
                 {
                     WLOG_PUTS("W: Nintendo info found\n");
                     // Get pointer to the start of the extra data added by DSWifi
-                    dswifi_information_addr = to + i +
+                    dswifi_information_addr = MAC_BEACON_START_OFFSET + i +
                             (sizeof(FieVendorNintendo) - sizeof(DSWifiExtraData));
                 }
 
@@ -97,7 +89,7 @@ void Wifi_BeaconLoad(int from, int to)
     }
 
     // Enable beacon transmission now that we have a valid beacon
-    W_TXBUF_BEACON = TXBUF_BEACON_ENABLE | (to >> 1);
+    W_TXBUF_BEACON = TXBUF_BEACON_ENABLE | (MAC_BEACON_START_OFFSET >> 1);
 
     // Beacon interval
     W_BEACONINT = ((u16 *)data)[(HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8) / 2];

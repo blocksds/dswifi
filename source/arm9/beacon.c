@@ -40,6 +40,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     // ------------------
 
     memset(tx, 0, sizeof(Wifi_TxHeader));
+    tx->enable_flags = WFLAG_SEND_AS_BEACON; // This will be cleared by the ARM7
     tx->tx_rate = WIFI_TRANSFER_RATE_2MBPS; // This is always 2 Mbit/s
 
     // IEEE 802.11 header

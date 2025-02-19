@@ -159,7 +159,7 @@ static void Wifi_TxArm9BufWrite(s32 offset, u16 data)
 // Copies data from the ARM9 TX buffer to MAC RAM and updates stats. It
 // doesn't start the transfer because the header still requires some fields to
 // be filled in.
-static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
+static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
 {
     int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE);
     // Length to be copied, rounded up to a halfword
@@ -174,7 +174,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
     // The FCS doesn't have to be copied, but it needs to fit in the buffer
     // because the WiFi hardware edits it.
     size_t required_buffer_size = length + 4;
-    if (macbase + required_buffer_size > MAC_TXBUF_END_OFFSET)
+    if (macbase + required_buffer_size > buffer_end)
         return 0;
 
     // TODO: Do we need to check that this code isn't interrupted?
@@ -306,7 +306,10 @@ static int Wifi_TxArm9QueueFlushByReply(void)
     u32 destination = (old_destination == MAC_CLIENT_RX1_START_OFFSET) ?
                       MAC_CLIENT_RX2_START_OFFSET : MAC_CLIENT_RX1_START_OFFSET;
 
-    if (Wifi_TxArm9QueueCopyFirstData(destination) == 0)
+    u32 end = (destination == MAC_CLIENT_RX1_START_OFFSET) ?
+              MAC_CLIENT_RX1_END_OFFSET : MAC_CLIENT_RX2_END_OFFSET;
+
+    if (Wifi_TxArm9QueueCopyFirstData(destination, end) == 0)
         return 0;
 
     // Reset the keepalive count to not send unneeded frames
@@ -332,45 +335,46 @@ int Wifi_TxArm9QueueFlush(void)
     u16 status = Wifi_TxArm9BufCheck(HDR_TX_STATUS);
     Wifi_TxArm9BufWrite(HDR_TX_STATUS, 0);
 
-    // This is a multiplayer reply frame
     if (status & WFLAG_SEND_AS_REPLY)
-        return Wifi_TxArm9QueueFlushByReply();
-
-    // This is either a CMD frame, a regular frame or a beacon frame.
-
-    // Try to copy data from the ARM9 buffer to the start of the TX buffer in
-    // MAC RAM.
-    if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET) == 0)
-        return 0;
-
-    // Reset the keepalive count to not send unneeded frames
-    Wifi_KeepaliveCountReset();
-
-    // Base addresses of the headers we've just copied
-    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
-
-    // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
-    // so that it saves to a specific location in MAC RAM and we can use the TX
-    // beacon registers. The WiFi chip will then take care of sending it at
-    // regular intervals. This is required when the DS is acting as a host in
-    // local DS to DS multiplayer. Also, note that the ARM9 fills in the rate
-    // information for beacon packets (it's always 2 Mb/s).
-    if ((W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & 0x00FF) == TYPE_BEACON)
     {
-        // Copy from TX buffer to beacon buffer
-        Wifi_BeaconLoad(MAC_TXBUF_START_OFFSET, MAC_BEACON_START_OFFSET);
+        // This is a multiplayer reply frame, save it in one of the buffers for
+        // reply frames and leave it there.
+        return Wifi_TxArm9QueueFlushByReply();
+    }
+    else if (status & WFLAG_SEND_AS_BEACON)
+    {
+        // If this is a beacon frame. Save it to the buffer for beacon frames.
+        // We will setup the hardware to send the frame regularly. This is
+        // required for consoles acting as an access point (like amultiplayer
+        // host).
+
+        if (Wifi_TxArm9QueueCopyFirstData(MAC_BEACON_START_OFFSET, MAC_BEACON_END_OFFSET) == 0)
+            return 0;
+
+        // Update internal variables of DSWifi and harware registers to update
+        // values in the beacon frame automatically.
+        Wifi_BeaconSetup();
+
         return 1;
     }
-
-    // Packets received from the ARM9 don't have a fully filled TX header.
-    // Ensure that the hardware TX header has all required information. This
-    // header goes before everything else, so it's stored at address 0 of MAC
-    // RAM as well.
-
-    if (status & WFLAG_SEND_AS_CMD)
-        return Wifi_TxArm9QueueFlushByCmd();
     else
-        return Wifi_TxArm9QueueFlushByLoc3();
+    {
+        // This is either a CMD frame or a regular frame. They can be placed in
+        // the regular TX buffer, but they are sent with different channels.
+
+        // Try to copy data from the ARM9 buffer to the start of the TX buffer
+        // in MAC RAM.
+        if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET, MAC_TXBUF_END_OFFSET) == 0)
+            return 0;
+
+        // Reset the keepalive count to not send unneeded frames
+        Wifi_KeepaliveCountReset();
+
+        if (status & WFLAG_SEND_AS_CMD)
+            return Wifi_TxArm9QueueFlushByCmd();
+        else
+            return Wifi_TxArm9QueueFlushByLoc3();
+    }
 }
 
 void Wifi_TxAllQueueFlush(void)
