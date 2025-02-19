@@ -134,8 +134,9 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 
     TxMultiplayerIeeeDataFrame frame = { 0 };
 
+    frame.tx.enable_flags = WFLAG_SEND_AS_CMD; // Cleared by the ARM7
     //frame.tx.client_bits = 0; // Filled by ARM7
-    frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS | WFLAG_SEND_AS_CMD; // Always 2 Mb/s
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
     frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
 
     frame.ieee.frame_control = TYPE_DATA | FC_FROM_DS;

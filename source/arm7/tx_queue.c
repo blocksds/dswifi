@@ -191,8 +191,13 @@ static bool Wifi_TxArm9QueueIsEmpty(void)
 
 static int Wifi_TxArm9QueueFlushByLoc3(void)
 {
-    // Base address of the IEEE header we've just copied
+    // Base addresses of the headers
+    u32 tx_base = MAC_TXBUF_START_OFFSET;
     u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+
+    // If the transfer rate isn't set, fill it in now
+    if (W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) == 0)
+        W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
 
     // Add WEP IV and key ID if required.
     if (W_MACMEM(ieee_base + HDR_DATA_FRAME_CONTROL) & FC_PROTECTED_FRAME)
@@ -292,21 +297,17 @@ int Wifi_TxArm9QueueFlush(void)
         return 1;
     }
 
+    // The status field is used by the ARM9 to tell the ARM7 if the packet needs
+    // to be handled in a special way. Set it to 0 before sending the packet.
+    u16 status = W_MACMEM(tx_base + HDR_TX_STATUS);
+    W_MACMEM(tx_base + HDR_TX_STATUS) = 0;
+
     // Packets received from the ARM9 don't have a fully filled TX header.
     // Ensure that the hardware TX header has all required information. This
     // header goes before everything else, so it's stored at address 0 of MAC
     // RAM as well.
 
-    // If the transfer rate isn't set, fill it in now
-    u16 rate = W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE);
-
-    bool send_as_cmd = rate & WFLAG_SEND_AS_CMD;
-    rate &= ~WFLAG_SEND_AS_CMD;
-
-    if (rate == 0)
-        W_MACMEM(tx_base + HDR_TX_TRANSFER_RATE) = WifiData->maxrate7;
-
-    if (send_as_cmd)
+    if (status & WFLAG_SEND_AS_CMD)
         return Wifi_TxArm9QueueFlushByCmd();
     else
         return Wifi_TxArm9QueueFlushByLoc3();
