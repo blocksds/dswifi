@@ -12,6 +12,7 @@
 #include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/wifi_arm9.h"
+#include "common/common_defs.h"
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
@@ -249,40 +250,51 @@ void Wifi_InternetMode(void)
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
-void Wifi_MultiplayerClientMode(size_t client_packet_size)
+int Wifi_MultiplayerClientMode(size_t client_packet_size)
 {
-    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
-    WifiData->reqMode = WIFIMODE_NORMAL;
-
     // IEEE header, user data, FCS
     size_t client_size = HDR_DATA_MAC_SIZE + client_packet_size + 4;
+
+    // Make sure client frames would fit in the space reserved for them
+    if (client_size > MAC_CLIENT_RX_SIZE)
+        return -1;
+
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
+    WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReplyDataSize = client_size;
 
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+
+    return 0;
 }
 
-void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
-                              size_t client_packet_size)
+int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
+                             size_t client_packet_size)
 {
     if (max_clients > WIFI_MAX_MULTIPLAYER_CLIENTS)
         max_clients = WIFI_MAX_MULTIPLAYER_CLIENTS;
     if (max_clients < 1)
         max_clients = 1;
 
-    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
-    WifiData->reqMaxClients = max_clients;
-
     // IEEE header, client time, client bits, user data, FCS
     size_t host_size = HDR_DATA_MAC_SIZE + 2 + 2 + host_packet_size + 4;
     // IEEE header, user data, FCS
     size_t client_size = HDR_DATA_MAC_SIZE + client_packet_size + 4;
 
+    // Make sure client frames would fit in the space reserved for them
+    if (client_size > MAC_CLIENT_RX_SIZE)
+        return -1;
+
+    WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
+    WifiData->reqMaxClients = max_clients;
     WifiData->reqCmdDataSize = host_size;
     WifiData->reqReplyDataSize = client_size;
 
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
+
+    return 0;
 }
 
 void Wifi_MultiplayerAllowNewClients(bool allow)

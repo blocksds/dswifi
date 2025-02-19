@@ -68,6 +68,8 @@
 #define MAC_CLIENT_RX2_START_OFFSET 0x0B00 // 256 bytes
 #define MAC_CLIENT_RX2_END_OFFSET   0x0C00
 
+#define MAC_CLIENT_RX_SIZE  (MAC_CLIENT_RX1_END_OFFSET - MAC_CLIENT_RX1_START_OFFSET)
+
 // Definitions used in multiplayer host mode
 
 #define MAC_BEACON_START_OFFSET     0x0A00 // 512 bytes

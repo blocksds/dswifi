@@ -370,8 +370,11 @@ int Wifi_DisconnectAP(void);
 ///     Size of the user data sent in packets from the host to the client.
 /// @param client_packet_size
 ///     Size of the user data sent in packets from the client to the host.
-void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
-                              size_t client_packet_size);
+///
+/// @return
+///     Returns 0 on success, -1 if the requested size is too big.
+int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
+                             size_t client_packet_size);
 
 /// Sets the WiFI hardware in mulitplayer client mode.
 ///
@@ -383,7 +386,10 @@ void Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
 ///
 /// @param client_packet_size
 ///     Size of the user data sent in packets from the client to the host.
-void Wifi_MultiplayerClientMode(size_t client_packet_size);
+///
+/// @return
+///     Returns 0 on success, -1 if the requested size is too big.
+int Wifi_MultiplayerClientMode(size_t client_packet_size);
 
 /// Allows or disallows new clients to connect to this console acting as host.
 ///
