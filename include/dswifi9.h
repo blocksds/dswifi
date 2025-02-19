@@ -566,6 +566,17 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
 ///     Wifi_MultiplayerHostMode().
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 
+/// Prepares a multiplayer client reply frame to be sent.
+///
+/// This frame will be sent to the host as soon as a CMD frame is received.
+///
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes. It can go up to the size defined when calling
+///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
+int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
+
 /// @}
 
 #ifdef __cplusplus

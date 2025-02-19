@@ -32,6 +32,17 @@ static bool Wifi_TxCmdIsBusy(void)
     return false;
 }
 
+#if 0
+// Returns true if there is an enqueued packet.
+static bool Wifi_TxReplyIsEnqueued(void)
+{
+    if (W_TXBUF_REPLY1 & TXBUF_REPLY_ENABLE)
+        return true;
+
+    return false;
+}
+#endif
+
 void Wifi_TxRaw(u16 *data, int datalen)
 {
     datalen = (datalen + 3) & (~3);
@@ -266,14 +277,51 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
     return 1;
 }
 
+static int wifi_lastreply = 0;
+
+static int Wifi_TxArm9QueueFlushByReply(void)
+{
+    // Base address of the header
+    u32 tx_base = MAC_TXBUF_START_OFFSET;
+
+    // Copy the packet to one of the two slots for REPLY packets
+    int packetlen = Wifi_MACReadHWord(tx_base, HDR_TX_IEEE_FRAME_SIZE);
+    int len = packetlen + HDR_TX_SIZE - 4;
+
+    u32 source = MAC_TXBUF_START_OFFSET;
+    u32 destination = 0;
+    if (wifi_lastreply == 0)
+        destination = MAC_CLIENT_RX2_START_OFFSET;
+    else
+        destination = MAC_CLIENT_RX1_START_OFFSET;
+
+    wifi_lastreply ^= 1;
+
+    for (int i = 0; i < len; i += 2)
+        W_MACMEM(destination + i) = W_MACMEM(source + i);
+
+    // TODO If there is a reply queued up, replace it by the new one? Or exit?
+
+    // Wait for the last reply to be sent?
+    //if (Wifi_TxReplyIsEnqueued())
+    //    return 0;
+
+    // Prepare transfer. Set the number of retries before starting.
+    // W_TXSTAT       = 0x0001;
+    W_TX_RETRYLIMIT = 0x0707;
+    W_TXBUF_REPLY1  = TXBUF_REPLY_ENABLE | (destination >> 1);
+
+    return 1;
+}
+
 int Wifi_TxArm9QueueFlush(void)
 {
     // If there is no data in the ARM9 queue, exit
     if (Wifi_TxArm9QueueIsEmpty())
         return 0;
 
-    // Try to copy data from the ARM9 buffer to address 0 of MAC RAM, where the
-    // TX buffer is located.
+    // Try to copy data from the ARM9 buffer to the start of the TX buffer in
+    // MAC RAM.
     if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET) == 0)
         return 0;
 
@@ -307,7 +355,9 @@ int Wifi_TxArm9QueueFlush(void)
     // header goes before everything else, so it's stored at address 0 of MAC
     // RAM as well.
 
-    if (status & WFLAG_SEND_AS_CMD)
+    if (status & WFLAG_SEND_AS_REPLY)
+        return Wifi_TxArm9QueueFlushByReply();
+    else if (status & WFLAG_SEND_AS_CMD)
         return Wifi_TxArm9QueueFlushByCmd();
     else
         return Wifi_TxArm9QueueFlushByLoc3();
@@ -317,7 +367,7 @@ void Wifi_TxAllQueueFlush(void)
 {
     WifiData->stats[WSTAT_DEBUG] = (W_TXBUF_LOC3 & TXBUF_LOCN_ENABLE)
                                  | (W_TXBUSY & 0x7FFF);
-    // TODO: Add CMD to this
+    // TODO: Add CMD and REPLY to this
 
     // If TX is still busy it means that some packet has just been sent but
     // there are more waiting to be sent in the MAC RAM.

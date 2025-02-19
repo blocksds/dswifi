@@ -107,7 +107,7 @@ typedef struct {
 // Host CMD packets are sent to MAC address 03:09:BF:00:00:00
 static const u16 wifi_cmd_mac[3]   = { 0x0903, 0x00BF, 0x0000 };
 // Client REPLY packets are sent to MAC address 03:09:BF:00:00:10
-//static const u16 wifi_reply_mac[3] = { 0x0903, 0x00BF, 0x1000 };
+static const u16 wifi_reply_mac[3] = { 0x0903, 0x00BF, 0x1000 };
 // Host and client ACK packets are sent to MAC address 03:09:BF:00:00:03
 //static const u16 wifi_ack_mac[3]   = { 0x0903, 0x00BF, 0x0300 };
 
@@ -150,6 +150,72 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 
     //frame.client_time = 0; // Filled by ARM7
     //frame.client_bits = 0;
+
+    // Write packet to the circular buffer
+
+    // TODO: Replace this by a mutex?
+    int oldIME = enterCriticalSection();
+
+    int base = WifiData->txbufOut;
+    {
+        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+
+        base += sizeof(frame) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
+
+        Wifi_TxBufferWrite(base * 2, datalen, data);
+
+        base += (datalen + 1) / 2;
+        if (base >= (WIFI_TXBUFFER_SIZE / 2))
+            base -= WIFI_TXBUFFER_SIZE / 2;
+    }
+    WifiData->txbufOut = base;
+
+    leaveCriticalSection(oldIME);
+
+    WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+
+    Wifi_CallSyncHandler();
+
+    return 0;
+}
+
+int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
+{
+    // Calculate size of IEEE frame
+    size_t ieee_size = HDR_DATA_MAC_SIZE + datalen + 4;
+    if (ieee_size > WifiData->curReplyDataSize)
+    {
+        // This packet is bigger than what is advertised in beacon frames
+        return -1;
+    }
+
+    // Add TX header and round up to 2 bytes
+    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
+    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    {
+        // The packet won't fit in the ARM9->ARM7 circular buffer
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        return -1;
+    }
+
+    // Generate frame
+
+    TxMultiplayerIeeeDataFrame frame = { 0 };
+
+    frame.tx.enable_flags = WFLAG_SEND_AS_REPLY; // Cleared by the ARM7
+    //frame.tx.client_bits = 0; // Filled by ARM7
+    frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
+    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+
+    frame.ieee.frame_control = TYPE_DATA | FC_TO_DS;
+    //frame.ieee.duration = 0; // Filled by ARM7
+    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->MacAddr);
+    Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(frame.ieee.addr_3, wifi_reply_mac);
+    frame.ieee.seq_ctl = 0;
 
     // Write packet to the circular buffer
 

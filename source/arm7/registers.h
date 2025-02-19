@@ -160,6 +160,9 @@
 
 #define W_TXBUF_REPLY1      WIFI_REG(0x8094)
 #define W_TXBUF_REPLY2      WIFI_REG(0x8098)
+
+#define TXBUF_REPLY_ENABLE  BIT(15)
+
 // WIFI_REG(0x809C)
 
 #define W_TXBUF_LOC1        WIFI_REG(0x80A0)
