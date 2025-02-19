@@ -134,13 +134,26 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
     }
 }
 
-static int Wifi_TxArm9BufCheck(s32 offset) // offset in bytes
+// It returns a halfword. The offset is in bytes from the start of the first
+// packet in the queue.
+static int Wifi_TxArm9BufCheck(s32 offset)
 {
     offset = WifiData->txbufIn + (offset / 2);
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
         offset -= WIFI_TXBUFFER_SIZE / 2;
 
     return WifiData->txbufData[offset];
+}
+
+// It writes a halfword. The offset is in bytes from the start of the first
+// packet in the queue.
+static void Wifi_TxArm9BufWrite(s32 offset, u16 data)
+{
+    offset = WifiData->txbufIn + (offset / 2);
+    if (offset >= WIFI_TXBUFFER_SIZE / 2)
+        offset -= WIFI_TXBUFFER_SIZE / 2;
+
+    WifiData->txbufData[offset] = data;
 }
 
 // Copies data from the ARM9 TX buffer to MAC RAM and updates stats. It
@@ -277,34 +290,27 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
     return 1;
 }
 
-static int wifi_lastreply = 0;
-
 static int Wifi_TxArm9QueueFlushByReply(void)
 {
-    // Base address of the header
-    u32 tx_base = MAC_TXBUF_START_OFFSET;
-
-    // Copy the packet to one of the two slots for REPLY packets
-    int packetlen = Wifi_MACReadHWord(tx_base, HDR_TX_IEEE_FRAME_SIZE);
-    int len = packetlen + HDR_TX_SIZE - 4;
-
-    u32 source = MAC_TXBUF_START_OFFSET;
-    u32 destination = 0;
-    if (wifi_lastreply == 0)
-        destination = MAC_CLIENT_RX2_START_OFFSET;
-    else
-        destination = MAC_CLIENT_RX1_START_OFFSET;
-
-    wifi_lastreply ^= 1;
-
-    for (int i = 0; i < len; i += 2)
-        W_MACMEM(destination + i) = W_MACMEM(source + i);
-
     // TODO If there is a reply queued up, replace it by the new one? Or exit?
 
     // Wait for the last reply to be sent?
     //if (Wifi_TxReplyIsEnqueued())
     //    return 0;
+
+    // Copy the frame directly to the backbuffer (the buffer not being used by
+    // W_TXBUF_REPLY2).
+
+    u32 old_destination = (W_TXBUF_REPLY2 & ~TXBUF_REPLY_ENABLE) << 1;
+
+    u32 destination = (old_destination == MAC_CLIENT_RX1_START_OFFSET) ?
+                      MAC_CLIENT_RX2_START_OFFSET : MAC_CLIENT_RX1_START_OFFSET;
+
+    if (Wifi_TxArm9QueueCopyFirstData(destination) == 0)
+        return 0;
+
+    // Reset the keepalive count to not send unneeded frames
+    Wifi_KeepaliveCountReset();
 
     // Prepare transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
@@ -320,6 +326,18 @@ int Wifi_TxArm9QueueFlush(void)
     if (Wifi_TxArm9QueueIsEmpty())
         return 0;
 
+    // The status field is used by the ARM9 to tell the ARM7 if the packet needs
+    // to be handled in a special way. Also, it is needed to Set it to 0 before
+    // handling the packet.
+    u16 status = Wifi_TxArm9BufCheck(HDR_TX_STATUS);
+    Wifi_TxArm9BufWrite(HDR_TX_STATUS, 0);
+
+    // This is a multiplayer reply frame
+    if (status & WFLAG_SEND_AS_REPLY)
+        return Wifi_TxArm9QueueFlushByReply();
+
+    // This is either a CMD frame, a regular frame or a beacon frame.
+
     // Try to copy data from the ARM9 buffer to the start of the TX buffer in
     // MAC RAM.
     if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET) == 0)
@@ -329,7 +347,6 @@ int Wifi_TxArm9QueueFlush(void)
     Wifi_KeepaliveCountReset();
 
     // Base addresses of the headers we've just copied
-    u32 tx_base = MAC_TXBUF_START_OFFSET;
     u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
 
     // If this is a beacon frame, don't send it. Instead, call Wifi_BeaconLoad()
@@ -345,19 +362,12 @@ int Wifi_TxArm9QueueFlush(void)
         return 1;
     }
 
-    // The status field is used by the ARM9 to tell the ARM7 if the packet needs
-    // to be handled in a special way. Set it to 0 before sending the packet.
-    u16 status = W_MACMEM(tx_base + HDR_TX_STATUS);
-    W_MACMEM(tx_base + HDR_TX_STATUS) = 0;
-
     // Packets received from the ARM9 don't have a fully filled TX header.
     // Ensure that the hardware TX header has all required information. This
     // header goes before everything else, so it's stored at address 0 of MAC
     // RAM as well.
 
-    if (status & WFLAG_SEND_AS_REPLY)
-        return Wifi_TxArm9QueueFlushByReply();
-    else if (status & WFLAG_SEND_AS_CMD)
+    if (status & WFLAG_SEND_AS_CMD)
         return Wifi_TxArm9QueueFlushByCmd();
     else
         return Wifi_TxArm9QueueFlushByLoc3();
