@@ -220,7 +220,7 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
 static int Wifi_TxArm9QueueFlushByCmd(void)
 {
     // Base addresses of the headers
-    u32 tx_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+    u32 tx_base = MAC_TXBUF_START_OFFSET;
     u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
 
     // Get some multiplayer information and calculate durations, the hardware
