@@ -31,7 +31,8 @@ void Wifi_BeaconLoad(int from, int to)
     int packetlen = Wifi_MACReadHWord(from, HDR_TX_IEEE_FRAME_SIZE);
     int len = packetlen + HDR_TX_SIZE - 4;
 
-    int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 12;
+    // Add sizes of timestamp, beacon interval and capability info
+    int i = HDR_TX_SIZE + HDR_MGT_MAC_SIZE + 8 + 2 + 2;
     if (len <= i)
     {
         // Disable beacon transmission if the beacon packet is too small to be a

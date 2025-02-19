@@ -121,7 +121,7 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
         return -1;
     }
 
-    // Add FCS and round up to 2 bytes
+    // Add TX header and round up to 2 bytes
     int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
