@@ -26,7 +26,7 @@ void Wifi_BeaconStop(void)
 
 void Wifi_BeaconLoad(int from, int to)
 {
-    u8 data[512];
+    u8 data[MAC_BEACON_END_OFFSET - MAC_BEACON_START_OFFSET];
 
     int packetlen = Wifi_MACReadHWord(from, HDR_TX_IEEE_FRAME_SIZE);
     int len = packetlen + HDR_TX_SIZE - 4;
