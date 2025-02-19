@@ -146,7 +146,11 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     // Send frame to the ARM7
 
-    tx->tx_length = sizeof(IEEE_MgtFrameHeader) + body_size + 4; // Checksum
+    tx->tx_length = sizeof(IEEE_MgtFrameHeader) + body_size + 4; // FCS
+
+    size_t required_buffer_size = sizeof(Wifi_TxHeader) + tx->tx_length;
+    if (required_buffer_size > MAC_BEACON_SIZE)
+        return -1;
 
     int base = WifiData->txbufOut;
 

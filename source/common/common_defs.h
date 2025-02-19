@@ -72,6 +72,7 @@
 
 #define MAC_BEACON_START_OFFSET     0x0A00 // 512 bytes
 #define MAC_BEACON_END_OFFSET       0x0C00
+#define MAC_BEACON_SIZE             (MAC_BEACON_END_OFFSET - MAC_BEACON_START_OFFSET)
 
 // Definitions used in all modes
 

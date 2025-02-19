@@ -73,6 +73,8 @@ static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, int datalen)
     if (hwords > 1024)
         return 0;
 
+    // TODO: Check this doesn't go over MAC_TXBUF_END_OFFSET
+
     for (int i = 0; i < hwords; i++)
         wifi_tx_queue[i] = data[i];
 
@@ -136,8 +138,8 @@ static int Wifi_TxArm9BufCheck(s32 offset) // offset in bytes
 static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
 {
     int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE);
-    int readbase  = WifiData->txbufIn;
-    int length    = (packetlen + HDR_TX_SIZE - 4 + 1) / 2; // Round to halfwords
+    // Length to be copied, rounded up to a halfword
+    int length = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
 
     int max = WifiData->txbufOut - WifiData->txbufIn;
     if (max < 0)
@@ -145,6 +147,14 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase)
     if (max < length)
         return 0;
 
+    // The FCS doesn't have to be copied, but it needs to fit in the buffer
+    // because the WiFi hardware edits it.
+    size_t required_buffer_size = length + 4;
+    if (macbase + required_buffer_size > MAC_TXBUF_END_OFFSET)
+        return 0;
+
+    // TODO: Do we need to check that this code isn't interrupted?
+    int readbase = WifiData->txbufIn;
     while (length > 0)
     {
         int seglen = length;
