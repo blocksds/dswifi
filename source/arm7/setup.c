@@ -218,7 +218,6 @@ void Wifi_Init(u32 wifidata)
     Wifi_WakeUp();
 
     Wifi_MacInit();
-    Wifi_RFInit();
     Wifi_BBInit();
 
     // Set Default Settings
