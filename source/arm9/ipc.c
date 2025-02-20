@@ -278,8 +278,8 @@ int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
 
     // IEEE header, client time, client bits, user data, FCS
     size_t host_size = HDR_DATA_MAC_SIZE + 2 + 2 + host_packet_size + 4;
-    // IEEE header, user data, FCS
-    size_t client_size = HDR_DATA_MAC_SIZE + client_packet_size + 4;
+    // IEEE header, client AID, user data, FCS
+    size_t client_size = HDR_DATA_MAC_SIZE + 2 + client_packet_size + 4;
 
     // Make sure client frames would fit in the space reserved for them
     if (client_size > MAC_CLIENT_RX_SIZE)

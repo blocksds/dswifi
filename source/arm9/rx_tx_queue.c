@@ -102,7 +102,14 @@ typedef struct {
     u16 client_time;
     u16 client_bits;
     u8 body[0];
-} TxMultiplayerIeeeDataFrame;
+} TxMultiplayerHostIeeeDataFrame;
+
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_DataFrameHeader ieee;
+    u16 client_aid;
+    u8 body[0];
+} TxMultiplayerClientIeeeDataFrame;
 
 // Host CMD packets are sent to MAC address 03:09:BF:00:00:00
 static const u16 wifi_cmd_mac[3]   = { 0x0903, 0x00BF, 0x0000 };
@@ -132,7 +139,7 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 
     // Generate frame
 
-    TxMultiplayerIeeeDataFrame frame = { 0 };
+    TxMultiplayerHostIeeeDataFrame frame = { 0 };
 
     frame.tx.enable_flags = WFLAG_SEND_AS_CMD; // Cleared by the ARM7
     //frame.tx.client_bits = 0; // Filled by ARM7
@@ -203,7 +210,7 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
 
     // Generate frame
 
-    TxMultiplayerIeeeDataFrame frame = { 0 };
+    TxMultiplayerClientIeeeDataFrame frame = { 0 };
 
     frame.tx.enable_flags = WFLAG_SEND_AS_REPLY; // Cleared by the ARM7
     //frame.tx.client_bits = 0; // Filled by ARM7
@@ -216,6 +223,10 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
     Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
     Wifi_CopyMacAddr(frame.ieee.addr_3, wifi_reply_mac);
     frame.ieee.seq_ctl = 0;
+
+    // Multiplayer data
+
+    //frame.client_aid = 0; // Filled by ARM7
 
     // Write packet to the circular buffer
 
