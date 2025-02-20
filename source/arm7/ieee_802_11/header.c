@@ -57,7 +57,7 @@ size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 
 // It doesn't fill the transfer rate or the size in the NDS TX header. That must
 // be done by the caller of the function
-void Wifi_MPHost_GenMgtHeader(u8 *data, u16 headerflags, void *dest_mac)
+void Wifi_MPHost_GenMgtHeader(u8 *data, u16 headerflags, const void *dest_mac)
 {
     Wifi_TxHeader *tx = (void *)data;
     IEEE_MgtFrameHeader *ieee = (void *)(data + sizeof(Wifi_TxHeader));

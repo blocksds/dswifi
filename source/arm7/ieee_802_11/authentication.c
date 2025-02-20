@@ -340,7 +340,8 @@ int Wifi_SendDeauthentication(u16 reason_code)
     return Wifi_TxArm7QueueAdd((u16 *)&frame, sizeof(frame));
 }
 
-static int Wifi_MPHost_SendOpenSystemAuthPacket(void *client_mac, u16 status_code)
+static int Wifi_MPHost_SendOpenSystemAuthPacket(const void *client_mac,
+                                                u16 status_code)
 {
     TxIeeeAuthenticationFrame frame;
 
@@ -428,7 +429,7 @@ void Wifi_MPHost_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
     WLOG_FLUSH();
 }
 
-int Wifi_MPHost_SendDeauthentication(void *dest_mac, u16 reason_code)
+int Wifi_MPHost_SendDeauthentication(const void *dest_mac, u16 reason_code)
 {
     TxIeeeDeauthenticationFrame frame;
 
