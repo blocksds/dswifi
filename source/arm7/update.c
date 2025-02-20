@@ -356,6 +356,9 @@ void Wifi_Update(void)
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
+                // Set AID to 0 to stop receiving packets from the host
+                W_AID_FULL = 0;
+                W_AID_LOW = 0;
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }

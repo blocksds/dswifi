@@ -311,6 +311,10 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
         WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
     }
 
+    // Set AID to 0 to stop receiving packets from the AP
+    W_AID_FULL = 0;
+    W_AID_LOW = 0;
+
     WLOG_FLUSH();
 }
 
@@ -471,6 +475,10 @@ void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     {
         WLOG_PUTS("W: Can't dissociate\n");
     }
+
+    // Set AID to 0 to stop receiving packets from the host
+    W_AID_FULL = 0;
+    W_AID_LOW = 0;
 
     WLOG_FLUSH();
 }
