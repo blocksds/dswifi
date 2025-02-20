@@ -9,6 +9,7 @@
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 
 // TX functions
 // ============
@@ -110,13 +111,6 @@ typedef struct {
     u16 client_aid;
     u8 body[0];
 } TxMultiplayerClientIeeeDataFrame;
-
-// Host CMD packets are sent to MAC address 03:09:BF:00:00:00
-static const u16 wifi_cmd_mac[3]   = { 0x0903, 0x00BF, 0x0000 };
-// Client REPLY packets are sent to MAC address 03:09:BF:00:00:10
-static const u16 wifi_reply_mac[3] = { 0x0903, 0x00BF, 0x1000 };
-// Host and client ACK packets are sent to MAC address 03:09:BF:00:00:03
-//static const u16 wifi_ack_mac[3]   = { 0x0903, 0x00BF, 0x0300 };
 
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 {

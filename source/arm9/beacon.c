@@ -9,6 +9,7 @@
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 
 // Access points created by official games acting as multiplayer hosts have no
 // encryption and no BSSID.
@@ -48,8 +49,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     ieee->frame_control = TYPE_BEACON;
     ieee->duration = 0;
-    u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
-    Wifi_CopyMacAddr(ieee->da, broadcast_address);
+    Wifi_CopyMacAddr(ieee->da, wifi_broadcast_addr);
     Wifi_CopyMacAddr(ieee->sa, WifiData->MacAddr); // SA and BSSID are the same
     Wifi_CopyMacAddr(ieee->bssid, WifiData->MacAddr);
     ieee->seq_ctl = 0;

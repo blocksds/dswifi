@@ -14,6 +14,7 @@
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
 void Wifi_MPHost_ResetClients(void)
@@ -215,6 +216,5 @@ void Wifi_MPHost_ClientKickAll(void)
 {
     Wifi_MPHost_ResetClients();
 
-    u16 broadcast_addr[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
-    Wifi_MPHost_SendDeauthentication(broadcast_addr, REASON_THIS_STATION_LEFT_DEAUTH);
+    Wifi_MPHost_SendDeauthentication(wifi_broadcast_addr, REASON_THIS_STATION_LEFT_DEAUTH);
 }

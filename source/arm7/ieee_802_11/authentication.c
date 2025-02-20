@@ -14,6 +14,7 @@
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 #include "common/wifi_shared.h"
 
 typedef struct {
@@ -261,11 +262,9 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     // Read IEEE frame, right after the hardware RX header
     Wifi_MACRead((u16 *)&frame, macbase, HDR_RX_SIZE, sizeof(frame));
 
-    const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
-
     // Check if packet is indeed sent to us (or everyone).
     if (!(Wifi_CmpMacAddr(frame.ieee.da, WifiData->MacAddr) ||
-          Wifi_CmpMacAddr(frame.ieee.da, (void *)&broadcast_address)))
+          Wifi_CmpMacAddr(frame.ieee.da, (void *)&wifi_broadcast_addr)))
         return;
 
     // Check if packet is indeed from the base station we're associated to (or

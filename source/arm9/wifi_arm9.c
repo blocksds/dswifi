@@ -17,6 +17,7 @@
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
 WifiPacketHandler wifi_rawpackethandler = NULL;
@@ -345,11 +346,9 @@ static void Wifi_sgIpHandlePacket(int base, int len)
     // the frame. Only accept messages addressed to our MAC address or to all
     // devices.
 
-    const u16 broadcast_address[3] = { 0xFFFF, 0xFFFF, 0xFFFF };
-
     // ethhdr_print('!', ieee->addr_1);
     if (!(Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr) ||
-          Wifi_CmpMacAddr(ieee->addr_1, (void *)&broadcast_address)))
+          Wifi_CmpMacAddr(ieee->addr_1, (void *)&wifi_broadcast_addr)))
         return;
 
     // Okay, the frame is addressed to us (or to everyone). Let's parse it.
