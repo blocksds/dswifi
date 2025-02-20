@@ -73,6 +73,8 @@ void Wifi_RFInit(void)
 
     int rf_chip_type = Wifi_FlashReadByte(F_RF_CHIP_TYPE);
 
+    WLOG_PRINTF("W: RF Type: %d\n", rf_chip_type);
+
     int j = 0xCE;
 
     if (rf_chip_type == 3)
