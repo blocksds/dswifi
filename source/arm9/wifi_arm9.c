@@ -19,11 +19,11 @@
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
-WifiPacketHandler packethandler = NULL;
+WifiPacketHandler wifi_rawpackethandler = NULL;
 
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
 {
-    packethandler = wphfunc;
+    wifi_rawpackethandler = wphfunc;
 }
 
 void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
@@ -522,9 +522,9 @@ void Wifi_Update(void)
             Wifi_sgIpHandlePacket(base2, len);
 #endif
 
-        // check if we have a handler
-        if (packethandler)
-            (*packethandler)(base2 * 2, len);
+        // Check if we have a handler of raw packets
+        if (wifi_rawpackethandler)
+            (*wifi_rawpackethandler)(base2 * 2, len);
 
         base += fulllen / 2;
         if (base >= (WIFI_RXBUFFER_SIZE / 2))
