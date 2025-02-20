@@ -51,8 +51,8 @@ void Wifi_TxRaw(u16 *data, int datalen)
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_RESET   = TXBIT_CMD;
+    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
@@ -239,8 +239,8 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_RESET   = TXBIT_CMD;
+    W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
     return 1;
@@ -283,8 +283,8 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_RESET   = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
+    W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_CMD;
 
     return 1;
