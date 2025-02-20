@@ -328,7 +328,7 @@ void Wifi_Start(void)
     W_RXFILTER       = RXFILTER_MGMT_BEACON_OTHER_BSSID
                      | RXFILTER_MP_ACK
                      | RXFILTER_MP_EMPTY_REPLY
-                     | RXFILTER_DATA_OTHER_BSSID; // or 0x0181
+                     | RXFILTER_CONTROL_DATA_OTHER_BSSID; // or 0x0181
     W_RXFILTER2      = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA; // or 0x000B
     W_TXSTATCNT      = 0;
     W_X_00A          = 0;

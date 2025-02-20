@@ -198,7 +198,7 @@ void Wifi_Update(void)
                 W_BSSID[2] = WifiData->MacAddr[2];
 
                 W_RXFILTER &= ~RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
-                W_RXFILTER |= RXFILTER_DATA_OTHER_BSSID; // allow toDS?
+                W_RXFILTER |= RXFILTER_CONTROL_DATA_OTHER_BSSID;
 
                 W_RXFILTER2 &= ~RXFILTER2_IGNORE_STA_DS;
 
@@ -235,7 +235,7 @@ void Wifi_Update(void)
                 W_BSSID[2] = WifiData->bssid7[2];
 
                 W_RXFILTER |= RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
-                W_RXFILTER &= ~RXFILTER_DATA_OTHER_BSSID; // disallow toDS?
+                W_RXFILTER &= ~RXFILTER_CONTROL_DATA_OTHER_BSSID;
 
                 W_RXFILTER2 |= RXFILTER2_IGNORE_STA_DS;
 
