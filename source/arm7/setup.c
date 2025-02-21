@@ -135,6 +135,49 @@ void Wifi_SetupTransferOptions(int rate, bool short_preamble)
     W_CONFIG_140 = value;
 }
 
+void Wifi_SetupFilterMode(Wifi_FilterMode mode)
+{
+    switch (mode)
+    {
+        case WIFI_FILTERMODE_IDLE:
+            // Ignore all frames
+            W_RXFILTER  = 0;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_DS_STA | RXFILTER2_IGNORE_DS_DS;
+            break;
+
+        case WIFI_FILTERMODE_SCAN:
+            // Receive beacon frames and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+
+        case WIFI_FILTERMODE_INTERNET:
+            // Receive retransmit frames, and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+
+        case WIFI_FILTERMODE_MULTIPLAYER_HOST:
+            // Receive retransmit and multiplayer frames, and STA to DS frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID
+                        | RXFILTER_MP_EMPTY_REPLY
+                        | RXFILTER_MP_ACK;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_DS_STA;
+            break;
+
+        case WIFI_FILTERMODE_MULTIPLAYER_CLIENT:
+            // Receive retransmit frames and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+    }
+}
+
 void Wifi_WakeUp(void)
 {
     W_POWER_US = 0;
@@ -282,8 +325,6 @@ void Wifi_Start(void)
 
             W_RXSTAT_OVF_IE  = 0x1FFF;
             // W_RXSTAT_INC_IE = 0x0400;
-            W_RXFILTER       = 0xFFFF;
-            W_RXFILTER2      = RXFILTER2_IGNORE_DS_DS;
             W_TXSTATCNT      = 0;
             W_X_00A          = 0;
             W_US_COUNTCNT    = 0;
@@ -297,11 +338,6 @@ void Wifi_Start(void)
 
             W_RXSTAT_OVF_IE  = 0x1FFF;
             W_RXSTAT_INC_IE  = 0; // 0x400
-            W_RXFILTER       = RXFILTER_MGMT_BEACON_OTHER_BSSID
-                             | RXFILTER_MP_EMPTY_REPLY
-                             | RXFILTER_MGMT_NONBEACON_OTHER_BSSID;
-            W_RXFILTER2      = RXFILTER2_IGNORE_STA_STA | RXFILTER2_IGNORE_DS_STA
-                             | RXFILTER2_IGNORE_DS_DS;
             W_TXSTATCNT      = TXSTATCNT_IRQ_MP_ACK
                              | TXSTATCNT_IRQ_MP_CMD
                              | TXSTATCNT_IRQ_BEACON;
@@ -323,13 +359,9 @@ void Wifi_Start(void)
     W_BSSID[0]      = WifiData->MacAddr[0];
     W_BSSID[1]      = WifiData->MacAddr[1];
     W_BSSID[2]      = WifiData->MacAddr[2];
-    // W_RXFILTER      = 0xEFFF;
-    // W_RXFILTER2     = RXFILTER2_IGNORE_DS_DS;
-    W_RXFILTER       = RXFILTER_MGMT_BEACON_OTHER_BSSID
-                     | RXFILTER_MP_ACK
-                     | RXFILTER_MP_EMPTY_REPLY
-                     | RXFILTER_CONTROL_DATA_OTHER_BSSID; // or 0x0181
-    W_RXFILTER2      = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA; // or 0x000B
+
+    Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
+
     W_TXSTATCNT      = 0;
     W_X_00A          = 0;
     W_MODE_RST       = 1;

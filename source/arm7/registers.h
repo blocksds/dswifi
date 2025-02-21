@@ -193,6 +193,7 @@
 
 #define W_RXFILTER          WIFI_REG(0x80D0)
 
+// Set bits to receive that type of frames
 #define RXFILTER_MGMT_BEACON_OTHER_BSSID       BIT(0) ///< Beacons with mismatched BSSID, data frame retransmits
 #define RXFILTER_DATA_SUBTYPE_1                BIT(1) ///< Data frames, subtype 1 (non-multiplay)
 #define RXFILTER_DATA_SUBTYPE_2                BIT(2) ///< Data frames, subtype 2 (non-multiplay)

@@ -177,6 +177,7 @@ void Wifi_Update(void)
                 WifiData->curMaxClients = WifiData->reqMaxClients;
                 WifiData->curCmdDataSize = WifiData->reqCmdDataSize;
                 WifiData->curReplyDataSize = WifiData->reqReplyDataSize;
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_MULTIPLAYER_HOST);
                 WifiData->curMode = WIFIMODE_ACCESSPOINT;
                 break;
             }
@@ -188,6 +189,7 @@ void Wifi_Update(void)
 
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_SCAN;
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_SCAN);
                 break;
             }
             if (WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
@@ -196,11 +198,6 @@ void Wifi_Update(void)
                 W_BSSID[0] = WifiData->MacAddr[0];
                 W_BSSID[1] = WifiData->MacAddr[1];
                 W_BSSID[2] = WifiData->MacAddr[2];
-
-                W_RXFILTER &= ~RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
-                W_RXFILTER |= RXFILTER_CONTROL_DATA_OTHER_BSSID;
-
-                W_RXFILTER2 &= ~RXFILTER2_IGNORE_STA_DS;
 
                 WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
             }
@@ -234,13 +231,15 @@ void Wifi_Update(void)
                 W_BSSID[1] = WifiData->bssid7[1];
                 W_BSSID[2] = WifiData->bssid7[2];
 
-                W_RXFILTER |= RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
-                W_RXFILTER &= ~RXFILTER_CONTROL_DATA_OTHER_BSSID;
-
-                W_RXFILTER2 |= RXFILTER2_IGNORE_STA_DS;
-
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
+                {
                     WifiData->curReplyDataSize = WifiData->reqReplyDataSize;
+                    Wifi_SetupFilterMode(WIFI_FILTERMODE_MULTIPLAYER_CLIENT);
+                }
+                else if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                {
+                    Wifi_SetupFilterMode(WIFI_FILTERMODE_INTERNET);
+                }
 
                 WifiData->reqChannel = WifiData->apchannel7;
                 Wifi_SetChannel(WifiData->apchannel7);
@@ -267,6 +266,7 @@ void Wifi_Update(void)
             if ((WifiData->reqMode != WIFIMODE_SCAN) ||
                 (WifiData->curLibraryMode != WifiData->reqLibraryMode))
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -313,6 +313,7 @@ void Wifi_Update(void)
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -328,6 +329,7 @@ void Wifi_Update(void)
             // If we have been asked to stop trying to connect, go back to idle
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -338,6 +340,7 @@ void Wifi_Update(void)
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -359,6 +362,7 @@ void Wifi_Update(void)
                 // Set AID to 0 to stop receiving packets from the host
                 W_AID_FULL = 0;
                 W_AID_LOW = 0;
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -374,12 +378,14 @@ void Wifi_Update(void)
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
 
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
@@ -395,6 +401,7 @@ void Wifi_Update(void)
                 Wifi_MPHost_ClientKickAll();
                 Wifi_BeaconStop();
                 Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
+                Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
