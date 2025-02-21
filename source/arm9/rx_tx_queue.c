@@ -213,7 +213,7 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
 
     frame.ieee.frame_control = TYPE_DATA | FC_TO_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
-    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->MacAddr);
+    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->bssid7);
     Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
     Wifi_CopyMacAddr(frame.ieee.addr_3, wifi_reply_mac);
     frame.ieee.seq_ctl = 0;
