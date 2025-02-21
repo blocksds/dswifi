@@ -59,27 +59,26 @@ int Wifi_MPHost_ClientGetByMacAddr(void *macaddr)
 
 int Wifi_MPHost_ClientGetByAID(u16 association_id)
 {
+    if (association_id == 0)
+        return -1;
+
+    int ret = -1;
+
     int oldIME = enterCriticalSection();
 
-    int index = -1;
+    int index = association_id - 1;
+    if (index >= WifiData->curMaxClients)
+        goto end;
 
-    for (int i = 0; i < WifiData->curMaxClients; i++)
-    {
-        volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[i]);
+    volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
 
-        if (client->state == WIFI_CLIENT_DISCONNECTED)
-            continue;
+    if (client->state != WIFI_CLIENT_DISCONNECTED)
+        ret = index;
 
-        if (association_id == client->association_id)
-        {
-            index = i;
-            break;
-        }
-    }
-
+end:
     leaveCriticalSection(oldIME);
 
-    return index;
+    return ret;
 }
 
 int Wifi_MPHost_ClientAuthenticate(void *macaddr)
