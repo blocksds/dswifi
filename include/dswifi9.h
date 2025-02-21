@@ -509,14 +509,42 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 /// @defgroup dswifi9_raw_tx_rx Raw transfer/reception of packets.
 /// @{
 
-/// Wifi Packet Handler function
+/// Handler of RAW packets received in this console.
 ///
 /// The first parameter is the packet address. It is only valid while the called
 /// function is executing. The second parameter is packet length.
 ///
-/// Call Wifi_RxRawReadPacket() while in the packet handler function, to
-/// retreive the data to a local buffer.
+/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// handler function to retreive the data to a local buffer.
+///
+/// From this handler The IEEE 802.11 header can be read, followed by the packet
+/// data.
 typedef void (*WifiPacketHandler)(int, int);
+
+/// Handler of WiFI packets received on a client from the host.
+///
+/// The first parameter is the packet address. It is only valid while the called
+/// function is executing. The second parameter is packet length.
+///
+/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// handler function to retreive the data to a local buffer.
+///
+/// Only user data of packets can be read from this handler, not the IEEE 802.11
+/// header.
+typedef void (*WifiFromHostPacketHandler)(int, int);
+
+/// Handler of WiFI packets received on the host from a client.
+///
+/// The first parameter is the association ID of the client that sent this
+/// packet. The second parameter is the packet address. It is only valid while
+/// the called function is executing. The third parameter is packet length.
+///
+/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// handler function to retreive the data to a local buffer.
+///
+/// Only user data of packets can be read from this handler, not the IEEE 802.11
+/// header.
+typedef void (*WifiFromClientPacketHandler)(int, int, int);
 
 /// Send a raw 802.11 frame at a specified rate.
 ///
@@ -576,6 +604,18 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 ///     Size of the data in bytes. It can go up to the size defined when calling
 ///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
 int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
+
+/// Set a handler on a client console for packets received from the host.
+///
+/// @param wphfunc
+///     Pointer to packet handler (see WifiFromHostPacketHandler for info).
+void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func);
+
+/// Set a handler on a host console for packets received from clients.
+///
+/// @param wphfunc
+///     Pointer to packet handler (see WifiFromClientPacketHandler for info).
+void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func);
 
 /// @}
 

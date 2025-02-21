@@ -6,6 +6,7 @@
 #include <nds.h>
 
 #include "arm9/ipc.h"
+#include "arm9/multiplayer.h"
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
@@ -96,21 +97,6 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 
     return 0;
 }
-
-typedef struct {
-    Wifi_TxHeader tx;
-    IEEE_DataFrameHeader ieee;
-    u16 client_time;
-    u16 client_bits;
-    u8 body[0];
-} TxMultiplayerHostIeeeDataFrame;
-
-typedef struct {
-    Wifi_TxHeader tx;
-    IEEE_DataFrameHeader ieee;
-    u16 client_aid;
-    u8 body[0];
-} TxMultiplayerClientIeeeDataFrame;
 
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 {
