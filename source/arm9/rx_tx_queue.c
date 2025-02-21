@@ -140,7 +140,7 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
     frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
 
-    frame.ieee.frame_control = TYPE_DATA | FC_FROM_DS;
+    frame.ieee.frame_control = TYPE_DATA_CF_POLL | FC_FROM_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
     Wifi_CopyMacAddr(frame.ieee.addr_1, wifi_cmd_mac);
     Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
@@ -211,7 +211,7 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
     frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
 
-    frame.ieee.frame_control = TYPE_DATA | FC_TO_DS;
+    frame.ieee.frame_control = TYPE_DATA_CF_ACK | FC_TO_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
     Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->bssid7);
     Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
