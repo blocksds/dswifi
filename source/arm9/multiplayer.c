@@ -11,6 +11,7 @@
 
 int Wifi_MultiplayerGetNumClients(void)
 {
+    int oldIME = enterCriticalSection();
     while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
 
     int c = 0;
@@ -21,6 +22,7 @@ int Wifi_MultiplayerGetNumClients(void)
     }
 
     Spinlock_Release(WifiData->clients);
+    leaveCriticalSection(oldIME);
 
     return c;
 }
@@ -30,6 +32,7 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
     if ((max_clients <= 0) || (client_data == NULL))
         return -1;
 
+    int oldIME = enterCriticalSection();
     while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
 
     int c = 0;
@@ -48,6 +51,7 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
     }
 
     Spinlock_Release(WifiData->clients);
+    leaveCriticalSection(oldIME);
 
     return c;
 }
