@@ -161,10 +161,13 @@ void Wifi_SetupFilterMode(Wifi_FilterMode mode)
             break;
 
         case WIFI_FILTERMODE_MULTIPLAYER_HOST:
-            // Receive retransmit and multiplayer frames, and STA to DS frames
-            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID
-                        | RXFILTER_MP_EMPTY_REPLY
-                        | RXFILTER_MP_ACK;
+            // Receive retransmit and multiplayer frames, and STA to DS frames.
+            // There is no need to save empty MP replies and MP ACK packets,
+            // they are handled automatically by the hardware. All we care about
+            // is replies from clients with actual data.
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+                        // | RXFILTER_MP_EMPTY_REPLY
+                        // | RXFILTER_MP_ACK;
             W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
                         | RXFILTER2_IGNORE_DS_STA;
             break;

@@ -201,8 +201,8 @@
 #define RXFILTER_DATA_SUBTYPE_5                BIT(4) ///< Data frames, subtype 5
 #define RXFILTER_DATA_SUBTYPE_6                BIT(5) ///< Data frames, subtype 6
 #define RXFILTER_DATA_SUBTYPE_7                BIT(6) ///< Data frames, subtype 7
-#define RXFILTER_MP_ACK                        BIT(7) ///< Multiplay ACKs
-#define RXFILTER_MP_EMPTY_REPLY                BIT(8) ///< Empty multiplay replies
+#define RXFILTER_MP_ACK                        BIT(7) ///< Multiplay ACKs after replies
+#define RXFILTER_MP_EMPTY_REPLY                BIT(8) ///< Multiplay empty replies
 #define RXFILTER_MGMT_NONBEACON_OTHER_BSSID    BIT(9) ///< Non-beacon management packets with mismatched BSSID
 #define RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX BIT(10) ///< Same as bit 9
 #define RXFILTER_CONTROL_DATA_OTHER_BSSID      BIT(11) ///< Control/data frames with mismatched BSSID
