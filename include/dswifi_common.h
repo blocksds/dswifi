@@ -237,8 +237,6 @@ typedef struct {
     u16 macaddr[3];
     /// Association ID from 1 to 15 (WIFI_MAX_MULTIPLAYER_CLIENTS)
     u16 association_id;
-    /// Ticks since the last time we received a message from the client
-    u16 ticks_since_response;
     /// One of the values of Wifi_ConnectedClientState
     u8 state;
 } Wifi_ConnectedClient;
