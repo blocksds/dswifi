@@ -40,4 +40,7 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length);
 // byte at the end of the loop.
 void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length);
 
+// Write one byte to MAC RAM.
+void Wifi_MacWriteByte(int address, int value);
+
 #endif // DSWIFI_ARM7_MAC_H__
