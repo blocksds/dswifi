@@ -341,7 +341,7 @@ static int Wifi_TxArm9QueueFlushByReply(void)
 
     u16 client_aid = W_AID_LOW & 0xF;
 
-    W_MACMEM(ieee_base + HDR_DATA_MAC_SIZE + 0) = client_aid;
+    Wifi_MacWriteByte(ieee_base + HDR_DATA_MAC_SIZE + 0, client_aid);
 
     // Reset the keepalive count to not send unneeded frames
     Wifi_KeepaliveCountReset();

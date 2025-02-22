@@ -27,13 +27,13 @@ typedef struct {
 typedef struct {
     Wifi_TxHeader tx;
     IEEE_DataFrameHeader ieee;
-    u16 client_aid; // TODO: This can be u8
+    u8 client_aid;
     u8 body[0];
 } TxMultiplayerClientIeeeDataFrame;
 
 typedef struct {
     IEEE_DataFrameHeader ieee;
-    u16 client_aid; // TODO: This can be u8
+    u8 client_aid;
     u8 body[0];
 } MultiplayerClientIeeeDataFrame;
 
