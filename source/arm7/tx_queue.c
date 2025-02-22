@@ -278,7 +278,15 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
     W_CMD_TOTALTIME = all_client_time;
     W_CMD_REPLYTIME = client_time;
 
-    W_CMD_COUNT = (0x388 + (num_clients * client_time) + host_time + 0x32) / 10;
+    // W_CMD_COUNT is a countdown timer. When it reaches 0, if the CMD/REPLY
+    // process hasn't finished, it will mark the transmission as a failure.
+    // The DS needs to find a window to start the contention free period (CFP),
+    // which may be hard in places where there are many WiFi networks. This can
+    // delay the start of the CFP by a lot, but the timer ticks even before the
+    // transmission starts, so we modify the formula of GBATEK. Instead of
+    // dividing by 10, we divide by 4 (so that the division is just a shift) and
+    // it's a bit easier to complete the transaction.
+    W_CMD_COUNT = (0x388 + (num_clients * client_time) + host_time + 0x32) >> 2;
 
     // Start transfer. The number of retries should have been set before.
     // W_TXSTAT       = 0x0001;
