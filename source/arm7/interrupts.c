@@ -70,6 +70,11 @@ void Wifi_Interrupt(void)
         if (wIF == 0)
             break;
 
+        if (wIF & IRQ_MULTIPLAY_CMD_DONE)
+        {
+            Wifi_Intr_MultiplayCmdDone();
+            W_IF = IRQ_MULTIPLAY_CMD_DONE;
+        }
         if (wIF & IRQ_RX_COMPLETE)
         {
             W_IF = IRQ_RX_COMPLETE;
@@ -123,10 +128,6 @@ void Wifi_Interrupt(void)
         if (wIF & IRQ_RF_WAKEUP)
         {
             W_IF = IRQ_RF_WAKEUP;
-        }
-        if (wIF & IRQ_MULTIPLAY_CMD_DONE)
-        {
-            W_IF = IRQ_MULTIPLAY_CMD_DONE;
         }
         if (wIF & IRQ_POST_BEACON_TIMESLOT) // ACT End
         {

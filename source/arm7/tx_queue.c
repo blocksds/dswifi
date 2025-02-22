@@ -280,14 +280,29 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
 
     W_CMD_COUNT = (0x388 + (num_clients * client_time) + host_time + 0x32) / 10;
 
-    // Start transfer. Set the number of retries before starting.
+    // Start transfer. The number of retries should have been set before.
     // W_TXSTAT       = 0x0001;
-    W_TX_RETRYLIMIT = 0x0707;
     W_TXREQ_RESET   = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
     W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_CMD;
 
     return 1;
+}
+
+void Wifi_Intr_MultiplayCmdDone(void)
+{
+    // Check if the packet failed to be sent and retry if so, up to the limit of
+    // retries in W_TX_RETRYLIMIT.
+    if (W_MACMEM(MAC_TXBUF_START_OFFSET + HDR_TX_STATUS) == 5)
+    {
+        u8 retries_left = W_TX_RETRYLIMIT & 0xFF;
+        if (retries_left > 0)
+        {
+            W_TX_RETRYLIMIT = W_TX_RETRYLIMIT - 1;
+            W_MACMEM(MAC_TXBUF_START_OFFSET + HDR_TX_STATUS) = 0;
+            Wifi_TxArm9QueueFlushByCmd();
+        }
+    }
 }
 
 static int Wifi_TxArm9QueueFlushByReply(void)
@@ -379,9 +394,15 @@ int Wifi_TxArm9QueueFlush(void)
         Wifi_KeepaliveCountReset();
 
         if (status & WFLAG_SEND_AS_CMD)
+        {
+            // Set the number of retries before starting.
+            W_TX_RETRYLIMIT = 0x0707;
             return Wifi_TxArm9QueueFlushByCmd();
+        }
         else
+        {
             return Wifi_TxArm9QueueFlushByLoc3();
+        }
     }
 }
 

@@ -55,4 +55,6 @@ int Wifi_TxArm9QueueFlush(void);
 // try with the ARM9 queue.
 void Wifi_TxAllQueueFlush(void);
 
+void Wifi_Intr_MultiplayCmdDone(void);
+
 #endif // DSWIFI_ARM7_TX_QUEUE_H__
