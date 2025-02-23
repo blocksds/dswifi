@@ -500,22 +500,36 @@ typedef void (*WifiFromClientPacketHandler)(Wifi_MPPacketType, int, int, int);
 /// This frame will be sent to all clients, and clients will reply automatically
 /// if they have prepared any reply frame.
 ///
+/// Clients can use Wifi_MultiplayerFromHostSetPacketHandler() to register a
+/// packet handler for packets sent with Wifi_MultiplayerHostCmdTxFrame(). They
+/// will be received with type WIFI_MPTYPE_CMD.
+///
 /// @param data
 ///     Pointer to the data to be sent.
 /// @param datalen
 ///     Size of the data in bytes. It can go up to the size defined when calling
 ///     Wifi_MultiplayerHostMode().
+///
+/// @return
+///     On success it returns 0, else it returns a negative value.
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 
 /// Prepares a multiplayer client reply frame to be sent.
 ///
 /// This frame will be sent to the host as soon as a CMD frame is received.
 ///
+/// Hosts can use Wifi_MultiplayerFromClientSetPacketHandler() to register a
+/// packet handler for packets sent with Wifi_MultiplayerClientReplyTxFrame().
+/// They will be received with type WIFI_MPTYPE_REPLY.
+///
 /// @param data
 ///     Pointer to the data to be sent.
 /// @param datalen
 ///     Size of the data in bytes. It can go up to the size defined when calling
 ///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
+///
+/// @return
+///     On success it returns 0, else it returns a negative value.
 int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
 
 /// Set a handler on a client console for packets received from the host.
