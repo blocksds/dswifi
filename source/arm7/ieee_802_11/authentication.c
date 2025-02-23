@@ -11,6 +11,7 @@
 #include "arm7/mac.h"
 #include "arm7/multiplayer.h"
 #include "arm7/registers.h"
+#include "arm7/setup.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
@@ -314,8 +315,7 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     }
 
     // Set AID to 0 to stop receiving packets from the AP
-    W_AID_FULL = 0;
-    W_AID_LOW = 0;
+    Wifi_SetAssociationID(0);
 
     WLOG_FLUSH();
 }
@@ -480,8 +480,7 @@ void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     }
 
     // Set AID to 0 to stop receiving packets from the host
-    W_AID_FULL = 0;
-    W_AID_LOW = 0;
+    Wifi_SetAssociationID(0);
 
     WLOG_FLUSH();
 }

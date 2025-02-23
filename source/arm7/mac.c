@@ -36,8 +36,9 @@ void Wifi_MacInit(void)
     W_CONFIG_254    = 0;
     W_TXBUF_RESET   = TXBIT_ALL;
     W_TXBUF_BEACON  = TXBUF_BEACON_DISABLE;
-    W_AID_FULL      = 0;
-    W_AID_LOW       = 0;
+
+    Wifi_SetAssociationID(0);
+
     W_US_COUNTCNT   = 0;
     W_US_COMPARECNT = 0;
     W_CMD_COUNTCNT  = 1;

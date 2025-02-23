@@ -168,8 +168,7 @@ void Wifi_Update(void)
             if (WifiData->reqMode == WIFIMODE_ACCESSPOINT)
             {
                 WLOG_PUTS("W: AP mode start\n");
-                W_AID_LOW  = 0;
-                W_AID_FULL = 0;
+                Wifi_SetAssociationID(0);
 
                 // Trigger interrupt when a CMD/REPLY process ends
                 W_TXSTATCNT |= TXSTATCNT_IRQ_MP_ACK;
@@ -365,8 +364,8 @@ void Wifi_Update(void)
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
                 // Set AID to 0 to stop receiving packets from the host
-                W_AID_FULL = 0;
-                W_AID_LOW = 0;
+                Wifi_SetAssociationID(0);
+
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;

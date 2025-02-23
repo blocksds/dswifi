@@ -80,6 +80,13 @@ void Wifi_SetSleepMode(int mode)
     W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_SLEEP_MASK) | mode;
 }
 
+void Wifi_SetAssociationID(u16 aid)
+{
+    W_AID_FULL = aid;
+    W_AID_LOW = aid & 0xF;
+    WifiData->clients.curClientAID = aid & 0xF;
+}
+
 void Wifi_DisableTempPowerSave(void)
 {
     W_POWER_TX &= ~2;
@@ -306,8 +313,9 @@ void Wifi_Start(void)
 
     W_WEP_CNT     = WEP_CNT_ENABLE;
     W_POST_BEACON = 0xFFFF;
-    W_AID_FULL    = 0;
-    W_AID_LOW     = 0;
+
+    Wifi_SetAssociationID(0);
+
     W_US_COUNTCNT = 1;
     W_POWER_TX    = 0x0000;
     W_BSSID[0]    = 0x0000;

@@ -27,6 +27,7 @@ void Wifi_SetupFilterMode(Wifi_FilterMode mode);
 void Wifi_SetWepKey(void *wepkey, int wepmode);
 void Wifi_SetWepMode(int wepmode);
 void Wifi_SetSleepMode(int mode);
+void Wifi_SetAssociationID(u16 aid);
 void Wifi_DisableTempPowerSave(void);
 
 #endif // DSWIFI_ARM7_SETUP_H__

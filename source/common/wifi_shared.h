@@ -134,8 +134,11 @@ typedef struct {
     // Mask of AIDs of clients currently associated (not authenticated!)
     u8 aid_mask;
 
-    /// Mask of AIDs that the ARM9 has requested to kick out
+    // Mask of AIDs that the ARM9 has requested to kick out
     u8 reqKickClientAIDMask;
+
+    // Current AID when the DS is connected to a host DS
+    u8 curClientAID;
 
     // Internal lock to access this struct. This only needs to be aqcuired when
     // the ARM7 is writing to the struct and when the ARM9 is reading from it.

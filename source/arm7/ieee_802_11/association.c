@@ -136,8 +136,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
         WLOG_PRINTF("W: AID: %x\n", association_id);
 
-        W_AID_LOW  = association_id & 0xF;
-        W_AID_FULL = association_id;
+        Wifi_SetAssociationID(association_id);
 
         // Determine max rate
 
