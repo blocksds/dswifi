@@ -452,6 +452,12 @@ int Wifi_MultiplayerGetNumClients(void);
 ///     max_clients). On error, it returns a negative number.
 int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_data);
 
+/// Kick the client with the provided AID from the host.
+///
+/// @param association_id
+///     The AID of the client to kick.
+void Wifi_MultiplayerKickClientByAID(int association_id);
+
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
 /// @{

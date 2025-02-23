@@ -397,6 +397,7 @@ void Wifi_Update(void)
             break;
 
         case WIFIMODE_ACCESSPOINT:
+        {
             Wifi_SetLedState(LED_BLINK_FAST);
 
             if ((WifiData->reqMode != WIFIMODE_ACCESSPOINT) ||
@@ -416,6 +417,18 @@ void Wifi_Update(void)
                 break;
             }
 
+            u16 mask = WifiData->clients.reqKickClientAIDMask;
+            if (mask != 0)
+            {
+                WifiData->clients.reqKickClientAIDMask = 0;
+                for (int aid = 1; aid < 16; aid++)
+                {
+                    if (mask & BIT(aid))
+                        Wifi_MPHost_KickByAID(aid);
+                }
+            }
+
+
             if (WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS)
             {
                 WifiData->curReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
@@ -428,6 +441,7 @@ void Wifi_Update(void)
             }
 
             break;
+        }
     }
 
     // Only allow manual changes of the channel if scan mode isn't active

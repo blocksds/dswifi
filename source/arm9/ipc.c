@@ -305,6 +305,14 @@ void Wifi_MultiplayerAllowNewClients(bool allow)
         WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
 }
 
+void Wifi_MultiplayerKickClientByAID(int association_id)
+{
+    if ((association_id < 1) || (association_id > WIFI_MAX_MULTIPLAYER_CLIENTS))
+        return;
+
+    WifiData->clients.reqKickClientAIDMask |= BIT(association_id);
+}
+
 void Wifi_SetChannel(int channel)
 {
     if (channel < 1 || channel > 13)

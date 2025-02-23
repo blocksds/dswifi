@@ -211,6 +211,35 @@ end:
     return ret;
 }
 
+void Wifi_MPHost_KickByAID(int association_id)
+{
+    if (association_id == 0)
+        return;
+
+    int oldIME = enterCriticalSection();
+
+    int index = association_id - 1;
+    if (index >= WifiData->curMaxClients)
+        goto end;
+
+    volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
+
+    if (client->state != WIFI_CLIENT_DISCONNECTED)
+    {
+        // We need to provide some reason that tells the client that it
+        // shouldn't try to connect again. "Disassociated because AP is unable
+        // to handle all currently associated STAs" looks like a good excuse.
+        Wifi_MPHost_SendDeauthentication((void *)client->macaddr,
+                                         REASON_CANT_HANDLE_ALL_STATIONS);
+        client->state = WIFI_CLIENT_DISCONNECTED;
+    }
+
+end:
+    leaveCriticalSection(oldIME);
+
+    return;
+}
+
 void Wifi_MPHost_ClientKickAll(void)
 {
     Wifi_MPHost_ResetClients();
