@@ -341,14 +341,6 @@ static int Wifi_TxArm9QueueFlushByReply(void)
     if (Wifi_TxArm9QueueCopyFirstData(destination, end) == 0)
         return 0;
 
-    // Get some multiplayer information
-
-    u32 ieee_base = destination + HDR_TX_SIZE;
-
-    u16 client_aid = W_AID_LOW & 0xF;
-
-    Wifi_MacWriteByte(ieee_base + HDR_DATA_MAC_SIZE + 0, client_aid);
-
     // Reset the keepalive count to not send unneeded frames
     Wifi_KeepaliveCountReset();
 

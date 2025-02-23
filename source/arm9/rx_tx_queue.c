@@ -206,7 +206,7 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
 
     // Multiplayer data
 
-    //frame.client_aid = 0; // Filled by ARM7
+    frame.client_aid = WifiData->clients.curClientAID;
 
     // Write packet to the circular buffer
 
