@@ -64,7 +64,7 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
     return c;
 }
 
-bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, void *macaddr)
+bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, const void *macaddr)
 {
     if (macaddr == NULL)
         return false;
