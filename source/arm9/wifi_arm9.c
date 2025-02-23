@@ -22,22 +22,10 @@
 #include "common/spinlock.h"
 
 WifiPacketHandler wifi_rawpackethandler = NULL;
-WifiFromHostPacketHandler wifi_from_host_packet_handler = NULL;
-WifiFromClientPacketHandler wifi_from_client_packet_handler = NULL;
 
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
 {
     wifi_rawpackethandler = wphfunc;
-}
-
-void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func)
-{
-    wifi_from_host_packet_handler = func;
-}
-
-void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func)
-{
-    wifi_from_client_packet_handler = func;
 }
 
 void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
@@ -476,63 +464,6 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2)
 
 #endif // WIFI_USE_TCP_SGIP
 
-// Multiplayer mode packet handlers
-// ================================
-
-static void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
-{
-    if (len < sizeof(MultiplayerClientIeeeDataFrame))
-        return;
-
-    const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
-    u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
-
-    if ((frame_control & mask) != (TYPE_DATA_CF_ACK | FC_TO_DS))
-        return;
-
-    MultiplayerClientIeeeDataFrame header;
-
-    Wifi_RxRawReadPacket(base * 2, sizeof(header), &header);
-
-    // Check if this is a packet sent to the magic multiplayer REPLY MAC address
-    if (Wifi_CmpMacAddr(header.ieee.addr_3, wifi_reply_mac) == 0)
-        return;
-
-    int aid = header.client_aid;
-
-    // Check that the MAC address is the one that we expect for this AID
-    if (!Wifi_MultiplayerClientMatchesMacAndAID(aid, header.ieee.addr_2))
-        return;
-
-    (*wifi_from_client_packet_handler)(aid, base * 2 + sizeof(header), len - sizeof(header));
-}
-
-static void Wifi_MultiplayerHandlePacketFromHost(int base, int len)
-{
-    if (len < sizeof(MultiplayerHostIeeeDataFrame))
-        return;
-
-    const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
-    u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
-
-    if ((frame_control & mask) != (TYPE_DATA_CF_POLL | FC_FROM_DS))
-        return;
-
-    MultiplayerHostIeeeDataFrame header;
-
-    Wifi_RxRawReadPacket(base * 2, sizeof(header), &header);
-
-    // Check if this is a packet sent to the magic multiplayer CMD MAC address
-    if (Wifi_CmpMacAddr(header.ieee.addr_1, wifi_cmd_mac) == 0)
-        return;
-
-    // Check that the source MAC is the BSSID we're connected to
-    if (Wifi_CmpMacAddr(header.ieee.addr_3, WifiData->bssid7) == 0)
-        return;
-
-    (*wifi_from_host_packet_handler)(base * 2 + sizeof(header), len - sizeof(header));
-}
-
 // Functions that behave differently with sgIP and without it
 // ==========================================================
 
@@ -593,15 +524,9 @@ void Wifi_Update(void)
 #endif
 
         if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_HOST)
-        {
-            if (wifi_from_client_packet_handler)
-                Wifi_MultiplayerHandlePacketFromClient(base2, len);
-        }
+            Wifi_MultiplayerHandlePacketFromClient(base2, len);
         else if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-        {
-            if (wifi_from_host_packet_handler)
-                Wifi_MultiplayerHandlePacketFromHost(base2, len);
-        }
+            Wifi_MultiplayerHandlePacketFromHost(base2, len);
 
         // Check if we have a handler of raw packets
         if (wifi_rawpackethandler)
