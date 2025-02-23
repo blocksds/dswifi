@@ -64,6 +64,38 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
     return c;
 }
 
+bool Wifi_MultiplayerClientGetMacFromAID(int aid, void *dest_macaddr)
+{
+    if (dest_macaddr == NULL)
+        return false;
+
+    if (aid < 1)
+        return false;
+
+    int oldIME = enterCriticalSection();
+    while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
+
+    if (aid > WifiData->curMaxClients)
+        return false;
+
+    int index = aid - 1;
+
+    volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[index]);
+
+    bool ret = false;
+
+    if (client->state == WIFI_CLIENT_ASSOCIATED)
+    {
+        Wifi_CopyMacAddr(dest_macaddr, client->macaddr);
+        ret = true;
+    }
+
+    Spinlock_Release(WifiData->clients);
+    leaveCriticalSection(oldIME);
+
+    return ret;
+}
+
 bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, const void *macaddr)
 {
     if (macaddr == NULL)
@@ -123,16 +155,32 @@ void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
     const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
     u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
 
-    if ((frame_control & mask) != (TYPE_DATA_CF_ACK | FC_TO_DS))
+    Wifi_MPPacketType type = WIFI_MPTYPE_INVALID;
+
+    // Only accept valid packet types
+    if ((frame_control & mask) == (TYPE_DATA_CF_ACK | FC_TO_DS))
+        type = WIFI_MPTYPE_REPLY;
+    else if ((frame_control & mask) == (TYPE_DATA | FC_TO_DS))
+        type = WIFI_MPTYPE_DATA;
+    else
         return;
 
     MultiplayerClientIeeeDataFrame header;
 
     Wifi_RxRawReadPacket(base * 2, sizeof(header), &header);
 
-    // Check if this is a packet sent to the magic multiplayer REPLY MAC address
-    if (Wifi_CmpMacAddr(header.ieee.addr_3, wifi_reply_mac) == 0)
-        return;
+    if (type == WIFI_MPTYPE_REPLY)
+    {
+        // Check if it was sent to the magic multiplayer REPLY MAC address
+        if (Wifi_CmpMacAddr(header.ieee.addr_3, wifi_reply_mac) == 0)
+            return;
+    }
+    else // if (type == WIFI_MPTYPE_DATA)
+    {
+        // Check if it was sent to us
+        if (Wifi_CmpMacAddr(header.ieee.addr_3, WifiData->MacAddr) == 0)
+            return;
+    }
 
     int aid = header.client_aid;
 
@@ -140,8 +188,7 @@ void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
     if (!Wifi_MultiplayerClientMatchesMacAndAID(aid, header.ieee.addr_2))
         return;
 
-    (*wifi_from_client_packet_handler)(WIFI_MPTYPE_REPLY, aid,
-                                       base * 2 + sizeof(header),
+    (*wifi_from_client_packet_handler)(type, aid, base * 2 + sizeof(header),
                                        len - sizeof(header));
 }
 
@@ -156,23 +203,43 @@ void Wifi_MultiplayerHandlePacketFromHost(int base, int len)
     const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
     u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
 
-    if ((frame_control & mask) != (TYPE_DATA_CF_POLL | FC_FROM_DS))
+    Wifi_MPPacketType type = WIFI_MPTYPE_INVALID;
+
+    // Only accept valid packet types
+    if ((frame_control & mask) == (TYPE_DATA_CF_POLL | FC_FROM_DS))
+        type = WIFI_MPTYPE_CMD;
+    else if ((frame_control & mask) == (TYPE_DATA | FC_FROM_DS))
+        type = WIFI_MPTYPE_DATA;
+    else
         return;
 
-    MultiplayerHostIeeeDataFrame header;
+    // Read basic information from the data header
+    IEEE_DataFrameHeader ieee;
+    Wifi_RxRawReadPacket(base * 2, sizeof(ieee), &ieee);
 
-    Wifi_RxRawReadPacket(base * 2, sizeof(header), &header);
+    size_t header_size;
 
-    // Check if this is a packet sent to the magic multiplayer CMD MAC address
-    if (Wifi_CmpMacAddr(header.ieee.addr_1, wifi_cmd_mac) == 0)
-        return;
+    if (type == WIFI_MPTYPE_CMD)
+    {
+        header_size = sizeof(MultiplayerHostIeeeDataFrame);
+
+        // Check if it was sent to the magic multiplayer CMD MAC address
+        if (Wifi_CmpMacAddr(ieee.addr_1, wifi_cmd_mac) == 0)
+            return;
+    }
+    else // if (type == WIFI_MPTYPE_DATA)
+    {
+        header_size = sizeof(IEEE_DataFrameHeader);
+
+        // Check if it was sent to us
+        if (Wifi_CmpMacAddr(ieee.addr_1, WifiData->MacAddr) == 0)
+            return;
+    }
 
     // Check that the source MAC is the BSSID we're connected to
-    if (Wifi_CmpMacAddr(header.ieee.addr_3, WifiData->bssid7) == 0)
+    if (Wifi_CmpMacAddr(ieee.addr_3, WifiData->bssid7) == 0)
         return;
 
-    (*wifi_from_host_packet_handler)(WIFI_MPTYPE_CMD,
-                                     base * 2 + sizeof(header),
-                                     len - sizeof(header));
+    (*wifi_from_host_packet_handler)(type, base * 2 + header_size,
+                                     len - header_size);
 }
-

@@ -9,6 +9,8 @@
 
 #include "common/wifi_shared.h"
 
+// Sent by the host with CMD packets
+
 typedef struct {
     Wifi_TxHeader tx;
     IEEE_DataFrameHeader ieee;
@@ -24,6 +26,16 @@ typedef struct {
     u8 body[0];
 } MultiplayerHostIeeeDataFrame;
 
+// Sent by the host with direct data packets
+
+typedef struct {
+    Wifi_TxHeader tx;
+    IEEE_DataFrameHeader ieee;
+    u8 body[0];
+} TxIeeeDataFrame;
+
+// Sent by clients with REPLY and direct data packets
+
 typedef struct {
     Wifi_TxHeader tx;
     IEEE_DataFrameHeader ieee;
@@ -37,6 +49,7 @@ typedef struct {
     u8 body[0];
 } MultiplayerClientIeeeDataFrame;
 
+bool Wifi_MultiplayerClientGetMacFromAID(int aid, void *dest_macaddr);
 bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, const void *macaddr);
 
 // Handlers that need to be called from the loop that processes packets.

@@ -544,6 +544,44 @@ void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func);
 ///     Pointer to packet handler (see WifiFromClientPacketHandler for info).
 void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func);
 
+/// Sends a data frame to the client with the specified association ID.
+///
+/// This function sends an arbitrary data packet that doesn't trigger any
+/// response.
+///
+/// Clients can use Wifi_MultiplayerFromHostSetPacketHandler() to register a
+/// packet handler for packets sent with Wifi_MultiplayerHostToClientDataTxFrame().
+/// They will be received with type WIFI_MPTYPE_DATA.
+///
+/// @param aid
+///     Association ID of the client that will receive the packet.
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes.
+///
+/// @return
+///     On success it returns 0, else it returns a negative value.
+int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datalen);
+
+/// Sends a data frame to the host.
+///
+/// This function sends an arbitrary data packet without waiting for any packet
+/// sent by the host.
+///
+/// Hosts can use Wifi_MultiplayerFromClientSetPacketHandler() to register a
+/// packet handler for packets sent with Wifi_MultiplayerClientToHostDataTxFrame().
+/// They will be received with type WIFI_MPTYPE_DATA.
+///
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes.
+///
+/// @return
+///     On success it returns 0, else it returns a negative value.
+int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen);
+
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
 /// @{
