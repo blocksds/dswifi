@@ -458,6 +458,66 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
 ///     The AID of the client to kick.
 void Wifi_MultiplayerKickClientByAID(int association_id);
 
+/// Handler of WiFI packets received on a client from the host.
+///
+/// The first parameter is the packet address. It is only valid while the called
+/// function is executing. The second parameter is packet length.
+///
+/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// handler function to retreive the data to a local buffer.
+///
+/// Only user data of packets can be read from this handler, not the IEEE 802.11
+/// header.
+typedef void (*WifiFromHostPacketHandler)(int, int);
+
+/// Handler of WiFI packets received on the host from a client.
+///
+/// The first parameter is the association ID of the client that sent this
+/// packet. The second parameter is the packet address. It is only valid while
+/// the called function is executing. The third parameter is packet length.
+///
+/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// handler function to retreive the data to a local buffer.
+///
+/// Only user data of packets can be read from this handler, not the IEEE 802.11
+/// header.
+typedef void (*WifiFromClientPacketHandler)(int, int, int);
+
+/// Sends a multiplayer host frame.
+///
+/// This frame will be sent to all clients, and clients will reply automatically
+/// if they have prepared any reply frame.
+///
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes. It can go up to the size defined when calling
+///     Wifi_MultiplayerHostMode().
+int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
+
+/// Prepares a multiplayer client reply frame to be sent.
+///
+/// This frame will be sent to the host as soon as a CMD frame is received.
+///
+/// @param data
+///     Pointer to the data to be sent.
+/// @param datalen
+///     Size of the data in bytes. It can go up to the size defined when calling
+///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
+int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
+
+/// Set a handler on a client console for packets received from the host.
+///
+/// @param wphfunc
+///     Pointer to packet handler (see WifiFromHostPacketHandler for info).
+void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func);
+
+/// Set a handler on a host console for packets received from clients.
+///
+/// @param wphfunc
+///     Pointer to packet handler (see WifiFromClientPacketHandler for info).
+void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func);
+
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
 /// @{
@@ -527,31 +587,6 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 /// data.
 typedef void (*WifiPacketHandler)(int, int);
 
-/// Handler of WiFI packets received on a client from the host.
-///
-/// The first parameter is the packet address. It is only valid while the called
-/// function is executing. The second parameter is packet length.
-///
-/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
-/// handler function to retreive the data to a local buffer.
-///
-/// Only user data of packets can be read from this handler, not the IEEE 802.11
-/// header.
-typedef void (*WifiFromHostPacketHandler)(int, int);
-
-/// Handler of WiFI packets received on the host from a client.
-///
-/// The first parameter is the association ID of the client that sent this
-/// packet. The second parameter is the packet address. It is only valid while
-/// the called function is executing. The third parameter is packet length.
-///
-/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
-/// handler function to retreive the data to a local buffer.
-///
-/// Only user data of packets can be read from this handler, not the IEEE 802.11
-/// header.
-typedef void (*WifiFromClientPacketHandler)(int, int, int);
-
 /// Send a raw 802.11 frame at a specified rate.
 ///
 /// @warning
@@ -587,41 +622,6 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 /// @param dst
 ///     Location for the data to be read into. It must be aligned to 16 bits.
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
-
-/// Sends a multiplayer host frame.
-///
-/// This frame will be sent to all clients, and clients will reply automatically
-/// if they have prepared any reply frame.
-///
-/// @param data
-///     Pointer to the data to be sent.
-/// @param datalen
-///     Size of the data in bytes. It can go up to the size defined when calling
-///     Wifi_MultiplayerHostMode().
-int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
-
-/// Prepares a multiplayer client reply frame to be sent.
-///
-/// This frame will be sent to the host as soon as a CMD frame is received.
-///
-/// @param data
-///     Pointer to the data to be sent.
-/// @param datalen
-///     Size of the data in bytes. It can go up to the size defined when calling
-///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
-int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
-
-/// Set a handler on a client console for packets received from the host.
-///
-/// @param wphfunc
-///     Pointer to packet handler (see WifiFromHostPacketHandler for info).
-void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func);
-
-/// Set a handler on a host console for packets received from clients.
-///
-/// @param wphfunc
-///     Pointer to packet handler (see WifiFromClientPacketHandler for info).
-void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func);
 
 /// @}
 
