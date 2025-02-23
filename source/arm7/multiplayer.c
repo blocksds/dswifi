@@ -234,6 +234,7 @@ void Wifi_MPHost_KickByAID(int association_id)
         client->state = WIFI_CLIENT_DISCONNECTED;
 
         WifiData->clients.num_connected--;
+        Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
     }
 
 end:
