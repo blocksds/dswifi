@@ -284,9 +284,15 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
     // which may be hard in places where there are many WiFi networks. This can
     // delay the start of the CFP by a lot, but the timer ticks even before the
     // transmission starts, so we modify the formula of GBATEK. Instead of
-    // dividing by 10, we divide by 4 (so that the division is just a shift) and
-    // it's a bit easier to complete the transaction.
-    W_CMD_COUNT = (0x388 + (num_clients * client_time) + host_time + 0x32) >> 2;
+    // dividing by 10, we divide by 8 (so that the division is just a shift) and
+    // add a bigger base time so that it's easier to complete the transaction.
+    //
+    // For me, a base time of 0x80 is enough to work most of the time (after one
+    // or two retries at most). 0x100 is already very reliable without retries.
+    // The value of 0x180 has been chosen for areas with even more WiFi networks
+    // that make the DS wait for longer.
+    u16 count = (0x388 + (num_clients * client_time) + host_time + 0x32) >> 3;
+    W_CMD_COUNT = 0x180 + count;
 
     // Start transfer. The number of retries should have been set before.
     // W_TXSTAT       = 0x0001;
