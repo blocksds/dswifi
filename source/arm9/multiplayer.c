@@ -140,7 +140,9 @@ void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
     if (!Wifi_MultiplayerClientMatchesMacAndAID(aid, header.ieee.addr_2))
         return;
 
-    (*wifi_from_client_packet_handler)(aid, base * 2 + sizeof(header), len - sizeof(header));
+    (*wifi_from_client_packet_handler)(WIFI_MPTYPE_REPLY, aid,
+                                       base * 2 + sizeof(header),
+                                       len - sizeof(header));
 }
 
 void Wifi_MultiplayerHandlePacketFromHost(int base, int len)
@@ -169,6 +171,8 @@ void Wifi_MultiplayerHandlePacketFromHost(int base, int len)
     if (Wifi_CmpMacAddr(header.ieee.addr_3, WifiData->bssid7) == 0)
         return;
 
-    (*wifi_from_host_packet_handler)(base * 2 + sizeof(header), len - sizeof(header));
+    (*wifi_from_host_packet_handler)(WIFI_MPTYPE_CMD,
+                                     base * 2 + sizeof(header),
+                                     len - sizeof(header));
 }
 

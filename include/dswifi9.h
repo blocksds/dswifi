@@ -458,30 +458,42 @@ int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_dat
 ///     The AID of the client to kick.
 void Wifi_MultiplayerKickClientByAID(int association_id);
 
+/// Possible types of packets received by multiplayer handlers
+typedef enum {
+    WIFI_MPTYPE_INVALID = -1, ///< Invalid packet type
+    WIFI_MPTYPE_CMD     = 0, ///< Multiplayer CMD packet
+    WIFI_MPTYPE_REPLY   = 1, ///< Multiplayer REPLY packet
+    WIFI_MPTYPE_DATA    = 2, ///< Regular data packet
+} Wifi_MPPacketType;
+
 /// Handler of WiFI packets received on a client from the host.
 ///
-/// The first parameter is the packet address. It is only valid while the called
-/// function is executing. The second parameter is packet length.
+/// The first argument is the packet type.
+///
+/// The second argument is the packet address. It is only valid while the called
+/// function is executing. The third argument is the packet length.
 ///
 /// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
 /// handler function to retreive the data to a local buffer.
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
 /// header.
-typedef void (*WifiFromHostPacketHandler)(int, int);
+typedef void (*WifiFromHostPacketHandler)(Wifi_MPPacketType, int, int);
 
 /// Handler of WiFI packets received on the host from a client.
 ///
-/// The first parameter is the association ID of the client that sent this
-/// packet. The second parameter is the packet address. It is only valid while
-/// the called function is executing. The third parameter is packet length.
+/// The first argument is the packet type.
+///
+/// The second argument is the association ID of the client that sent this
+/// packet. The third argument is the packet address. It is only valid while
+/// the called function is executing. The fourth argument is packet length.
 ///
 /// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
 /// handler function to retreive the data to a local buffer.
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
 /// header.
-typedef void (*WifiFromClientPacketHandler)(int, int, int);
+typedef void (*WifiFromClientPacketHandler)(Wifi_MPPacketType, int, int, int);
 
 /// Sends a multiplayer host frame.
 ///
