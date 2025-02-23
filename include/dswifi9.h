@@ -534,13 +534,13 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
 
 /// Set a handler on a client console for packets received from the host.
 ///
-/// @param wphfunc
+/// @param func
 ///     Pointer to packet handler (see WifiFromHostPacketHandler for info).
 void Wifi_MultiplayerFromHostSetPacketHandler(WifiFromHostPacketHandler func);
 
 /// Set a handler on a host console for packets received from clients.
 ///
-/// @param wphfunc
+/// @param func
 ///     Pointer to packet handler (see WifiFromClientPacketHandler for info).
 void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func);
 
