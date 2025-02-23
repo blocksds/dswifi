@@ -189,8 +189,18 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             {
                 WLOG_PRINTF("W: Rejected: %d\n", body[2]);
 
-                // status code: rejected, try something else
-                Wifi_SendSharedKeyAuthPacket();
+                if (body[2] == STATUS_ASSOC_TOO_MANY_DEVICES)
+                {
+                    // This error code is returned by DSWifi multiplayer hosts
+                    // when no new connections are allowed or when the maximum
+                    // number of clients has been reached.
+                    WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                }
+                else
+                {
+                    // status code: rejected, try something else
+                    Wifi_SendSharedKeyAuthPacket();
+                }
             }
         }
     }
