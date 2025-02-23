@@ -100,7 +100,7 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 
 int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 {
-    // Calculate size of IEEE frame
+    // Calculate size of IEEE frame (add client bits and client time)
     size_t ieee_size = HDR_DATA_MAC_SIZE + 2 + 2 + datalen + 4;
     if (ieee_size > WifiData->curCmdDataSize)
     {
@@ -171,8 +171,8 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
 
 int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
 {
-    // Calculate size of IEEE frame
-    size_t ieee_size = HDR_DATA_MAC_SIZE + datalen + 4;
+    // Calculate size of IEEE frame (add client AID)
+    size_t ieee_size = HDR_DATA_MAC_SIZE + 1 + datalen + 4;
     if (ieee_size > WifiData->curReplyDataSize)
     {
         // This packet is bigger than what is advertised in beacon frames
