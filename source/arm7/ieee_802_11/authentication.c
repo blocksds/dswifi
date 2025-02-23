@@ -308,6 +308,9 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     {
         // Stop trying to connect to this AP
         WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+        W_BSSID[0] = 0;
+        W_BSSID[1] = 0;
+        W_BSSID[2] = 0;
     }
 
     // Set AID to 0 to stop receiving packets from the AP
