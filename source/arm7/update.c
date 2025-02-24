@@ -355,11 +355,13 @@ void Wifi_Update(void)
                 Wifi_KeepaliveCountReset();
                 Wifi_SendNullFrame();
             }
+#if 0
             if ((W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
             {
                 WifiData->pspoll_period = W_US_COUNT1;
-                // Wifi_SendPSPollFrame();
+                Wifi_SendPSPollFrame();
             }
+#endif
             if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);

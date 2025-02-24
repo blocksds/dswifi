@@ -191,7 +191,9 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
-    u16 pspoll_period;
+#if 0
+    u16 pspoll_period; // TODO: This is currently set but unused
+#endif
 
     // Scanned AP data
     Wifi_AccessPoint aplist[WIFI_MAX_AP];
