@@ -349,7 +349,13 @@ const char *str = "Hey, this is some text";
 Wifi_MultiplayerClientToHostDataTxFrame(association_id, str, strlen(str));
 ```
 
-When you want to leave host mode, call this:
+If you want to leave this AP, but remain in client mode:
+
+```c
+Wifi_DisconnectAP();
+```
+
+When you want to leave client mode, call this:
 
 ```c
 Wifi_IdleMode();
