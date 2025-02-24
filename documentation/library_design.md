@@ -66,6 +66,9 @@ transfer is started. After the transmission is complete, an interrupt is
 generated, and the ARM7 checks the queues again. Only one packet is ever copied
 to MAC RAM at any point.
 
+When a transfer is requiested, the WiFi hardware modifies some fields in the
+packet header (like the duration) and it transfers it.
+
 ## 2.2 RX packets
 
 When receiving packets, they are saved by the hardware in MAC RAM in a circular
@@ -105,12 +108,72 @@ packets.
 
 ## 3. Debug messages of DSWifi
 
-Work in progress.
+DSWifi can send debug messages from the ARM7 to the ARM9 with different
+information about the status of the library and potential errors. The debug
+messages are disabled in release builds of the library, you need to link the
+debug version of DSWifi if you want to check them.
+
+In the ARM9 you need to setup a libnds console. Then, assign it to the ARM7:
+```
+consoleArm7Setup(&myConsole, 1024);
+```
+
+You don't need to modify anything in the ARM7 code. However, in your ARM7
+Makefile you need to link with `libdswifi7d.a` instead of `libdswifi7.a`. Look
+for `LIBS` and replace `-ldswifi7` by `-ldswifi7d`.
+
+If you have an ARM9-only project, you will need to convert it to a combined
+ARM7 + ARM9 project. Currently BlocksDS doesn't distribute any default ARM7
+binary with debug DSWifi messages.
 
 ## 4. Connecting to APs
 
-Work in progress.
+The WiFi hardware of the DS isn't fully compatible with the IEEE 802.11b
+standard. It only supports 1 and 2 Mbit/s transfer rates, and it doesn't support
+5.5 and 11. However, some routers really don't like this.
+
+When connecting to an AP the device needs to communicate the supported transfer
+rates. Initially, DSWifi tries to connect to them by being honest. However, it's
+fairly common that routers reject the connection with status code 18
+"Association denied due to requesting station not supporting all data rates in
+the BSSBasicRateSet parameter, where BSS refers to basic service set".
+
+It retries by lying and saying it supports 5.5 and 11 Mbit/s as well. This works
+because the AP retries with slower transfer rates if it doesn't get any response
+after sending a packet with the fast transfer rates.
+
+Note that in multiplayer mode all communications are done at 2 Mbit/s, and there
+is no possibility of being rejected by the host because DSWifi can accept any
+client that only supports 1 and 2 Mbit/s.
 
 ## 5. Multiplayer mode design
 
-Work in progress.
+The WiFI hardware of the DS supports an efficient way to transfer packets while
+in multiplayer mode. Normally, when sending packets between a device and an AP,
+it is needed to do a handshake. The transmitter sends a RTS (request to send)
+packet, the receiver sends a CTS (clear to send) packet, the transmitter sends
+the actual packet it wants to send, and the receiver sends an ACK
+(acknowledgement) packet. This handshake is okay when there are only two devices
+communicating, and DSWifi supports it, but it can really slow things down when
+multiple clients are connecting to the same underpowered device (like a DS).
+
+In order to solve this issue, the DS supports sending packets using what DSWifi
+calls CMD/REPLY messages. With this system, the DS acting as host (which is just
+an AP) starts a contention free period (CFP). It sends a CF-Poll packet (CMD
+packet), and all clients connected to it send a CF-ACK packets as a response.
+The clients send the CF-ACK packets in order based on their association IDs
+(AID), this is done automatically by the hardware. Finally, when the last client
+has sent its data, the host sends a CF-ACK with no data to finalize the process.
+This process is more efficient than the 4-way handshake explained before because
+there are no handshakes between the initial CF-Poll and the last CF-ACK packets.
+
+CMD packets can be sent like regular packets, but they require more setup.
+DSWifi needs to fill more fields in the header (and the body!) of the packet,
+and DSWifi needs to caclulate the duration of the transmission periods of host
+and clients. It also needs to setup a countdown timer that will cancel the
+process when it reaches 0.
+
+A REPLY packet needs to be saved to WiFi RAM. Then, its address is written to a
+WiFi register. When the client determines it needs to send a message, it checks
+this register. If it's disabled, it will send an empty CF-ACK packet with no
+body. If this register is enabled, it will send the packet it points to.
