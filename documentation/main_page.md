@@ -3,7 +3,31 @@ DSWifi documentation {#mainpage}
 
 ## Introduction
 
-A C library to use the WiFi hardware of the Nintendo DS.
+A library written in C to use the WiFi hardware of the Nintendo DS. At the
+moment it only supports DS mode WiFi (on a DSi it will run in compatibility
+mode).
+
+Features:
+
+- It supports accessing the Internet using IPv4.
+
+  - Open networks and WEP-encrypted networks are supported.
+  - TCP and UDP supported.
+
+- It supports local multiplayer mode:
+
+  - Up to 15 consoles can connect to the host (the limit can be adjusted).
+  - It supports direct host <-> client transfers or optimized group transfers.
+  - Client connections to the host are handled by the ARM7 automatically.
+
+## Usage guides
+
+- [Internet mode](internet_mode.md)
+- [Local multiplayer mode](local_multiplayer_mode.md)
+
+## Technical documentation
+
+- [Library internal documentation](internal_documentation.md)
 
 ## API documentation
 
