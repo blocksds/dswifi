@@ -174,13 +174,8 @@ extern "C" {
 
 #ifdef SGIP_DEBUG
 #    define SGIP_DEBUG_MESSAGE(param) sgIP_dbgprint param
-#    define SGIP_DEBUG_ERROR(param) \
-        sgIP_dbgprint param;        \
-        while (1)                   \
-            ;
 #else
 #    define SGIP_DEBUG_MESSAGE(param)
-#    define SGIP_DEBUG_ERROR(param)
 #endif
 
 //////////////////////////////////////////////////////////////////////////
