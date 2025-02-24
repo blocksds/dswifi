@@ -27,7 +27,7 @@ Features:
 
 ## Technical documentation
 
-- [Library internal documentation](internal_documentation.md)
+- [Library design](library_design.md)
 
 ## API documentation
 
