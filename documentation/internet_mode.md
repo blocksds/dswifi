@@ -80,7 +80,7 @@ After you have decided which AP to connect to:
 // set the settings manually if you want.
 Wifi_SetIP(0, 0, 0, 0, 0);
 
-// If the access point requires a password, ask the user to provide it
+// If the access point requires a WEP password, ask the user to provide it
 if (AccessPoint.flags & WFLAG_APDATA_WEP)
 {
     // For 5 character long passwords, use WEPMODE_40BIT. For 13 character long
@@ -94,6 +94,11 @@ else
     Wifi_ConnectAP(&AccessPoint, WEPMODE_NONE, 0, 0);
 }
 ```
+
+`Wifi_DisconnectAP()` expects WEP keys as a string (usually called "ASCII"
+key). If you have an hexadecimal key you have to save it as a string of
+hexadecimal values. For example, `6162636465` needs to be passed to the function
+as `{ 0x61, 0x62, 0x63, 0x64, 0x65 }`, not as `"6162636465"`.
 
 ### 1.3 Wait until you connect to the AP
 
