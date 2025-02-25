@@ -177,3 +177,14 @@ A REPLY packet needs to be saved to WiFi RAM. Then, its address is written to a
 WiFi register. When the client determines it needs to send a message, it checks
 this register. If it's disabled, it will send an empty CF-ACK packet with no
 body. If this register is enabled, it will send the packet it points to.
+
+## 6. IEEE 802.11 packet format
+
+The format of WiFi packets is defined by the IEEE 802.11 standard. There's no
+point in documenting this in DSWifi as there are much better references that can
+be used. The main reference used to develop DSWifi after the creation of BlockDS
+is "802.11 Wireless Networks: The Definitive Guide" by Matthew Gast. This book
+has enough low-level information to develop everything that DSWifi needs.
+Another book that was used as reference is "IEEE 802.11 Handbook: A Designer's
+Companion" by Bob O'Hara, Al Petrick, but this book doesn't have enough
+low-level information to be used on its own.
