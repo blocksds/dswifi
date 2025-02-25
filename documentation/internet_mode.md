@@ -68,7 +68,6 @@ while (1)
         printf("[%.24s]\n", ap.ssid)
         printf("%s | Channel %2d | RSSI %u\n", security, ap.channel, ap.rssi);
         printf("\n");
-        }
     }
 }
 ```
