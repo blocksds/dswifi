@@ -51,8 +51,10 @@ Wifi_InitDefault(INIT_ONLY);
 ```
 
 This is required even if your application needs to switch between Internet and
-local multiplayer mode. After using multiplayer mode you can call this to switch
-to Internet mode:
+local multiplayer mode, you can't use `USE_WFC`. Also, hardware timer 3 will be
+used by the WiFi library after this call.
+
+After using multiplayer mode you can call this to switch to Internet mode:
 
 ```c
 Wifi_InternetMode();

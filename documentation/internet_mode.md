@@ -26,6 +26,8 @@ starts by default in Internet mode, not multiplayer mode):
 Wifi_InitDefault(INIT_ONLY);
 ```
 
+Hardware timer 3 will be used by the WiFi library after this call.
+
 ### 1.1 Connect to WFC settings
 
 You can start autoconnect mode by calling:
