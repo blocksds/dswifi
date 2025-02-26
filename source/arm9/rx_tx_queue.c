@@ -377,6 +377,9 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
         return;
     }
 
+    while (base >= WIFI_RXBUFFER_SIZE)
+        base -= WIFI_RXBUFFER_SIZE;
+
     u16 *out = dst;
 
     // Convert to halfwords

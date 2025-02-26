@@ -395,8 +395,6 @@ static void Wifi_sgIpHandlePacket(int base, int len)
 
     // Index to the start of the data, after the LLC/SNAP header
     int data_base = base + ((HDR_DATA_MAC_SIZE + 8) / 2);
-    if (data_base >= WIFI_RXBUFFER_SIZE / 2)
-        data_base -= WIFI_RXBUFFER_SIZE / 2;
 
     // TODO: Improve this to read correctly in the case that the packet buffer
     // is fragmented
