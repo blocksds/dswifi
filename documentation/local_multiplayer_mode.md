@@ -126,10 +126,16 @@ care about their association IDs (a number that goes from 1 to 15). DSWifi uses
 this AID in several multiplayer-related functions.
 
 ```c
+// This is all you normally need, the players mask. Each bit represents a
+// connected player (bit 0 is the host, bits 1 to 15 represent clients with AIDs
+// 1 to 15).
 int num_clients = Wifi_MultiplayerGetNumClients();
-printf("Num clients: %d\n", num_clients);
+u16 players_mask = Wifi_MultiplayerGetClientMask();
+printf("Num clients: %d (mask 0x%02X)\n", num_clients, players_mask);
 printf("\n");
 
+// Normally you don't need to read the detailed client information, with the AID
+// mask is enough.
 Wifi_ConnectedClient client[15]; // Up to 15 clients
 num_clients = Wifi_MultiplayerGetClients(15, &(client[0]));
 
