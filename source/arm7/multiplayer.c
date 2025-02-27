@@ -83,6 +83,10 @@ end:
 
 int Wifi_MPHost_ClientAuthenticate(void *macaddr)
 {
+    // Check if we don't allow new authentications
+    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS))
+        return -1;
+
     int oldIME = enterCriticalSection();
     while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
 
@@ -103,11 +107,6 @@ int Wifi_MPHost_ClientAuthenticate(void *macaddr)
         ret = index;
         goto end;
     }
-
-    // If a client with a new MAC address wants to connect, check if we allow
-    // new clients to connect.
-    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS))
-        goto end;
 
     // If the client isn't in the list, and we allow new clients, look for an
     // empty entry in the list.
@@ -137,6 +136,10 @@ end:
 
 int Wifi_MPHost_ClientAssociate(void *macaddr)
 {
+    // Check if we don't allow new associations
+    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS))
+        return -1;
+
     int oldIME = enterCriticalSection();
     while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
 
