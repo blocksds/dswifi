@@ -128,11 +128,11 @@ typedef struct {
     // List of clients connected
     Wifi_ConnectedClient list[WIFI_MAX_MULTIPLAYER_CLIENTS];
 
+    // Mask of AIDs of clients currently associated (not authenticated!)
+    u16 aid_mask;
+
     // Number of clients currently connected
     u8 num_connected;
-
-    // Mask of AIDs of clients currently associated (not authenticated!)
-    u8 aid_mask;
 
     // Mask of AIDs that the ARM9 has requested to kick out
     u8 reqKickClientAIDMask;
