@@ -376,6 +376,12 @@ int Wifi_MultiplayerClientMode(size_t client_packet_size);
 /// disable new connections once you have enough players connected to you, and
 /// you aren't expecting new connections.
 ///
+/// Disabling new connections will kick all clients that are in the process of
+/// associating to this host but haven't finished the process.
+///
+/// @note
+///     Give the ARM7 a frame or two for the effect of this to have effect.
+///
 /// @param allow
 ///     If true, allow new connections. If false, reject them.
 void Wifi_MultiplayerAllowNewClients(bool allow);
