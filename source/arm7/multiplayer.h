@@ -19,6 +19,7 @@ int Wifi_MPHost_ClientAssociate(void *macaddr);
 int Wifi_MPHost_ClientDisconnect(void *macaddr);
 
 void Wifi_MPHost_KickByAID(int association_id);
+void Wifi_MPHost_KickNotAssociatedClients(void);
 void Wifi_MPHost_ClientKickAll(void);
 
 #endif // DSWIFI_ARM7_MULTIPLAYER_H__

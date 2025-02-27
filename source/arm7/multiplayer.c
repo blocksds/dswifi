@@ -246,6 +246,33 @@ end:
     return;
 }
 
+void Wifi_MPHost_KickNotAssociatedClients(void)
+{
+    int oldIME = enterCriticalSection();
+    while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
+
+    // If the client isn't in the list, and we allow new clients, look for an
+    // empty entry in the list.
+    for (int i = 0; i < WifiData->curMaxClients; i++)
+    {
+        volatile Wifi_ConnectedClient *client = &(WifiData->clients.list[i]);
+
+        // Authenticated but not associated clients need to be kicked out
+        if (client->state == WIFI_CLIENT_AUTHENTICATED)
+        {
+            Wifi_MPHost_SendDeauthentication((void *)client->macaddr,
+                                             REASON_CANT_HANDLE_ALL_STATIONS);
+            client->state = WIFI_CLIENT_DISCONNECTED;
+            WifiData->clients.num_connected--;
+        }
+    }
+
+    Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
+
+    Spinlock_Release(WifiData->clients);
+    leaveCriticalSection(oldIME);
+}
+
 void Wifi_MPHost_ClientKickAll(void)
 {
     Wifi_MPHost_ResetClients();
