@@ -102,7 +102,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     *body++ = MGT_FIE_ID_DS_PARAM_SET;
     *body++ = 1;
-    *body++ = WifiData->curChannel; // This will be modified by the ARM7
+    *body++ = WifiData->reqChannel; // This will be modified by the ARM7
     body_size += 3;
 
     // TIM
@@ -141,7 +141,8 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     fie->extra_data.players_max = WifiData->curMaxClients + 1; // Clients + host
     fie->extra_data.players_current = 1; // No clients, only host. Updated from the ARM7
-    fie->extra_data.allows_connections = 0; // Updated from the ARM7
+    int allow = WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS ? 1 : 0;
+    fie->extra_data.allows_connections = allow; // Updated from the ARM7
 
     body_size += sizeof(FieVendorNintendo);
 

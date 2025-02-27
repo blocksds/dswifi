@@ -391,6 +391,12 @@ void Wifi_MultiplayerAllowNewClients(bool allow);
 /// Beacon packets need to be sent regularly while in AP mode. When leaving AP
 /// mode, DSWifi will stop sending them automatically.
 ///
+/// @note
+///     You can call Wifi_SetChannel() and Wifi_MultiplayerAllowNewClients()
+///     before calling Wifi_BeaconStart(). The becaon will start with the
+///     pre-selected settings. You can also modify the settings after one or two
+///     frames of calling Wifi_BeaconStart().
+///
 /// @param ssid
 ///     SSID to use for the access point.
 /// @param game_id
