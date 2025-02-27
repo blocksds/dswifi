@@ -25,7 +25,7 @@ void Wifi_MPHost_ResetClients(void)
     memset((void *)WifiData->clients.list, 0, sizeof(WifiData->clients.list));
 
     WifiData->clients.num_connected = 0;
-    WifiData->clients.aid_mask = 0;
+    WifiData->clients.aid_mask = BIT(0);
     Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
 
     Spinlock_Release(WifiData->clients);
