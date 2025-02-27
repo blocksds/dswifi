@@ -400,8 +400,8 @@ void Wifi_MultiplayerAllowNewClients(bool allow);
 /// @note
 ///     You can call Wifi_SetChannel() and Wifi_MultiplayerAllowNewClients()
 ///     before calling Wifi_BeaconStart(). The becaon will start with the
-///     pre-selected settings. You can also modify the settings after one or two
-///     frames of calling Wifi_BeaconStart().
+///     pre-selected settings. You can also modify the settings if you wait for
+///     at least two or three frames of calling Wifi_BeaconStart().
 ///
 /// @param ssid
 ///     SSID to use for the access point.

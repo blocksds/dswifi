@@ -101,13 +101,19 @@ affect anything, and it can safely be left empty. The AP can still be identified
 by the game ID:
 
 ```c
+// Before setting up the beacon, you can also decide which channel to use, and
+// whether client connections will be allowed right away or not. For now, a
+// good idea is to allow new clients and to pick randomly a channel between 1, 6
+// and 11 (Nintendo uses 1, 7 and 13 in official games). Don't change the
+// channel after clients have started to connect to the console!
+Wifi_SetChannel(7);
+Wifi_MultiplayerAllowNewClients(true);
+
 Wifi_BeaconStart("NintendoDS", 0xCAFEF00D);
 
-// After setting up the beacon, you can also decide which channel to use. For
-// now, a good idea is to pick randomly a channel between 1, 6 and 11 (Nintendo
-// uses 1, 7 and 13 in official games). Don't change the channel after clients
-// have started to connect to the console!
-Wifi_SetChannel(7);
+// You can also call the setup functions after setting up the beacon, but you
+// need to wait for at least two or three frames so that the settings are
+// applied correctly.
 ```
 
 At this point client consoles can detect that the AP exists and they can attempt
