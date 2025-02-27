@@ -19,24 +19,34 @@
 
 int Wifi_MultiplayerGetNumClients(void)
 {
-    int oldIME = enterCriticalSection();
-    while (Spinlock_Acquire(WifiData->clients) != SPINLOCK_OK);
+    if (WifiData->curLibraryMode != DSWIFI_MULTIPLAYER_HOST)
+        return 0;
 
-    int c = 0;
-    for (int i = 0; i < WifiData->clients.num_connected; i++)
+    u16 mask = WifiData->clients.aid_mask;
+
+    int count = 0;
+    for (int i = 0; i < WIFI_MAX_MULTIPLAYER_CLIENTS; i++)
     {
-        if (WifiData->clients.list[i].state != WIFI_CLIENT_DISCONNECTED)
-            c++;
+        if (mask & BIT(i + 1))
+            count++;
     }
 
-    Spinlock_Release(WifiData->clients);
-    leaveCriticalSection(oldIME);
+    return count;
+}
 
-    return c;
+u16 Wifi_MultiplayerGetClientMask(void)
+{
+    if (WifiData->curLibraryMode != DSWIFI_MULTIPLAYER_HOST)
+        return 0;
+
+    return WifiData->clients.aid_mask;
 }
 
 int Wifi_MultiplayerGetClients(int max_clients, Wifi_ConnectedClient *client_data)
 {
+    if (WifiData->curLibraryMode != DSWIFI_MULTIPLAYER_HOST)
+        return 0;
+
     if ((max_clients <= 0) || (client_data == NULL))
         return -1;
 

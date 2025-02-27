@@ -415,13 +415,28 @@ void Wifi_MultiplayerAllowNewClients(bool allow);
 ///     0 on success, a negative value on error.
 int Wifi_BeaconStart(const char *ssid, u32 game_id);
 
-/// Get the number of clients connected to a multiplayer host.
+/// Get the number of clients connected to this DS acting as a multiplayer host.
+///
+/// Clients are considered connected when they are authenticated and associated.
 ///
 /// This function must be used while in multiplayer host mode.
 ///
 /// @return
-///     The number of clients connected to this console.
+///     The number of clients connected to this console acting as a host.
 int Wifi_MultiplayerGetNumClients(void);
+
+/// Returns a mask where each bit represents an connected client.
+///
+/// Bit 0 is always set to 1 as it represents the host. Bits 1 to 15 represent
+/// all possible clients.
+///
+/// The bits are set to 1 when the client is authenticated and associated.
+///
+/// This function must be used while in multiplayer host mode.
+///
+/// @return
+///     The mask of players connected to this console acting as a host.
+u16 Wifi_MultiplayerGetClientMask(void);
 
 /// Get information of clients connected to a multiplayer host.
 ///
