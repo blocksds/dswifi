@@ -236,6 +236,7 @@ void Wifi_MPHost_KickByAID(int association_id)
                                          REASON_CANT_HANDLE_ALL_STATIONS);
         client->state = WIFI_CLIENT_DISCONNECTED;
 
+        WifiData->clients.aid_mask &= ~BIT(association_id);
         WifiData->clients.num_connected--;
         Wifi_SetBeaconCurrentPlayers(WifiData->clients.num_connected + 1);
     }
@@ -263,6 +264,9 @@ void Wifi_MPHost_KickNotAssociatedClients(void)
             Wifi_MPHost_SendDeauthentication((void *)client->macaddr,
                                              REASON_CANT_HANDLE_ALL_STATIONS);
             client->state = WIFI_CLIENT_DISCONNECTED;
+
+            int aid = i + 1;
+            WifiData->clients.aid_mask &= ~BIT(aid);
             WifiData->clients.num_connected--;
         }
     }
