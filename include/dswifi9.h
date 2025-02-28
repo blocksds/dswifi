@@ -327,7 +327,7 @@ int Wifi_AssocStatus(void);
 int Wifi_DisconnectAP(void);
 
 /// @}
-/// @defgroup dswifi9_mp_host Local multiplayer host utilities.
+/// @defgroup dswifi9_mp Local multiplayer utilities.
 /// @{
 
 /// Sets the WiFI hardware in mulitplayer host mode.
