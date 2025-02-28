@@ -269,8 +269,8 @@ typedef struct {
     u8 stream_code[2];
     u8 extra_data_size;
     u8 beacon_type; // 1 = Multicart
-    u8 cmd_data_size[2]; // size in halfwords
-    u8 reply_data_size[2]; // size in halfwords
+    u8 cmd_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
+    u8 reply_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
     DSWifiExtraData extra_data;
 } FieVendorNintendo;
 
