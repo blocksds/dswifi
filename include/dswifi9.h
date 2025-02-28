@@ -528,6 +528,10 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 /// packet handler for packets sent with Wifi_MultiplayerClientReplyTxFrame().
 /// They will be received with type WIFI_MPTYPE_REPLY.
 ///
+/// @note
+///     If there is a pre-existing packet that hasn't been sent to the host yet,
+///     it will be replaced by the new one.
+///
 /// @param data
 ///     Pointer to the data to be sent.
 /// @param datalen
