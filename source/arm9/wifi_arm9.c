@@ -38,13 +38,6 @@ void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
     d[2] = s[2];
 }
 
-#ifdef WIFI_USE_TCP_SGIP
-
-#    include "arm9/heap.h"
-#    include "arm9/sgIP/sgIP.h"
-
-sgIP_Hub_HWInterface *wifi_hw;
-
 const char *ASSOCSTATUS_STRINGS[] = {
     [ASSOCSTATUS_DISCONNECTED] = "ASSOCSTATUS_DISCONNECTED",
     [ASSOCSTATUS_SEARCHING] = "ASSOCSTATUS_SEARCHING",
@@ -54,6 +47,14 @@ const char *ASSOCSTATUS_STRINGS[] = {
     [ASSOCSTATUS_ASSOCIATED] = "ASSOCSTATUS_ASSOCIATED",
     [ASSOCSTATUS_CANNOTCONNECT] = "ASSOCSTATUS_CANNOTCONNECT",
 };
+
+
+#ifdef WIFI_USE_TCP_SGIP
+
+#    include "arm9/heap.h"
+#    include "arm9/sgIP/sgIP.h"
+
+sgIP_Hub_HWInterface *wifi_hw;
 
 // This function is used in socket handling code when the user has selected
 // blocking mode. They are called after every retry to give interrupts a chance
