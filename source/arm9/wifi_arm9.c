@@ -127,7 +127,7 @@ static void ethhdr_print(char f, void *d)
 }
 #endif // SGIP_DEBUG
 
-int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
+static int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
 {
     (void)hw;
 
@@ -310,7 +310,7 @@ int Wifi_TransmitFunction(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb)
     return 0;
 }
 
-int Wifi_Interface_Init(sgIP_Hub_HWInterface *hw)
+static int Wifi_Interface_Init(sgIP_Hub_HWInterface *hw)
 {
     hw->MTU       = 2300;
     hw->ipaddr    = (192) | (168 << 8) | (1 << 16) | (151 << 24);
