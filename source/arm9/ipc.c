@@ -185,6 +185,8 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer)
                 if (!(WifiData->wfc_enable[i] & 0x80))
                     break;
             return i;
+        case WIFIGETDATA_RSSI:
+            return WifiData->rssi;
     }
     return -1;
 }

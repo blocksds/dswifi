@@ -191,6 +191,7 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
+    u8 rssi;
 #if 0
     u16 pspoll_period; // TODO: This is currently set but unused
 #endif

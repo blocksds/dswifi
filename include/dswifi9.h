@@ -33,6 +33,8 @@ enum WIFIGETDATA
     WIFIGETDATA_MACADDRESS,
     /// NUM WFC APS: returns number between 0 and 3, doesn't use buffer.
     WIFIGETDATA_NUMWFCAPS,
+    /// RSSI: returns number between 0 and 255, doesn't use buffer.
+    WIFIGETDATA_RSSI,
 
     MAX_WIFIGETDATA
 };

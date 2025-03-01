@@ -394,7 +394,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                 {
                     // min rssi is 2, heh.
                     int tmp = packetheader->rssi_ & 255;
-                    for (int j = 0; j < 7; j++)
+                    for (int j = 0; j < 8; j++)
                         ap->rssi_past[j] = tmp;
                 }
                 else
@@ -415,15 +415,27 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                 // only use RSSI when we're on the right channel
                 int tmp = packetheader->rssi_ & 255;
 
-                for (int j = 0; j < 7; j++)
+                for (int j = 0; j < 8; j++)
                     ap->rssi_past[j] = tmp;
             }
             else
             {
                 // Update RSSI later.
-                for (int j = 0; j < 7; j++)
+                for (int j = 0; j < 8; j++)
                     ap->rssi_past[j] = 0;
             }
+        }
+
+        // If the WifiData AP MAC is the same as this beacon MAC, then update
+        // RSSI in WifiData as well.
+        if (Wifi_CmpMacAddr(WifiData->apmac7, data + HDR_MGT_SA))
+        {
+            // Average all past RSSI measurements
+            int rssi = 0;
+            for (int j = 0; j < 8; j++)
+                rssi += ap->rssi_past[j];
+
+            WifiData->rssi = rssi >> 3;
         }
 
         Spinlock_Release(WifiData->aplist[chosen_slot]);
