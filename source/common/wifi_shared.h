@@ -19,6 +19,8 @@
 
 #define WIFI_AP_TIMEOUT 40
 
+#define WIFI_AP_RSSI_PAST_ENTRIES 8
+
 #define WFLAG_ARM7_ACTIVE  0x0001
 #define WFLAG_ARM7_RUNNING 0x0002
 
@@ -191,6 +193,7 @@ typedef struct WIFI_MAINSTRUCT
     u8 apchannel7, apchannel9;
     u8 maxrate7;
     bool realRates;
+    u8 rssi;
 #if 0
     u16 pspoll_period; // TODO: This is currently set but unused
 #endif

@@ -292,7 +292,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     for (int i = 0; i < WIFI_MAX_AP; i++)
     {
         // Check if the BSSID of the new AP matches the entry in the AP array.
-        if (!Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + 16))
+        if (!Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + HDR_MGT_BSSID))
         {
             // It doesn't match. If it's unused, we can at least save the slot
             // for later in case we need it.
@@ -394,16 +394,16 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                 {
                     // min rssi is 2, heh.
                     int tmp = packetheader->rssi_ & 255;
-                    for (int j = 0; j < 7; j++)
+                    for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
                         ap->rssi_past[j] = tmp;
                 }
                 else
                 {
                     // Shift past measurements by one slot and add new
                     // measurement at the end.
-                    for (int j = 0; j < 7; j++)
+                    for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES - 1; j++)
                         ap->rssi_past[j] = ap->rssi_past[j + 1];
-                    ap->rssi_past[7] = packetheader->rssi_ & 255;
+                    ap->rssi_past[WIFI_AP_RSSI_PAST_ENTRIES - 1] = packetheader->rssi_ & 255;
                 }
             }
         }
@@ -415,15 +415,27 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                 // only use RSSI when we're on the right channel
                 int tmp = packetheader->rssi_ & 255;
 
-                for (int j = 0; j < 7; j++)
+                for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
                     ap->rssi_past[j] = tmp;
             }
             else
             {
                 // Update RSSI later.
-                for (int j = 0; j < 7; j++)
+                for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
                     ap->rssi_past[j] = 0;
             }
+        }
+
+        // If the WifiData AP MAC is the same as this beacon MAC, then update
+        // RSSI in WifiData as well.
+        if (Wifi_CmpMacAddr(WifiData->apmac7, data + HDR_MGT_SA))
+        {
+            // Average all past RSSI measurements
+            int rssi = 0;
+            for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
+                rssi += ap->rssi_past[j];
+
+            WifiData->rssi = rssi >> 3;
         }
 
         Spinlock_Release(WifiData->aplist[chosen_slot]);
