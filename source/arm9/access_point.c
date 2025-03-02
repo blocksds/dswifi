@@ -46,7 +46,7 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
 
         // Additionally calculate average RSSI here
         WifiData->aplist[apnum].rssi = 0;
-        for (int j = 0; j < 8; j++)
+        for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
         {
             WifiData->aplist[apnum].rssi += WifiData->aplist[apnum].rssi_past[j];
         }
