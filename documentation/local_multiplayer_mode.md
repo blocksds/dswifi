@@ -267,10 +267,6 @@ for (int i = 0; i < count; i++)
     Wifi_AccessPoint ap;
     Wifi_GetAPData(i, &ap);
 
-    // The user name of the host is stored in ap.nintendo.name, and its length
-    // is stored in ap.nintendo.name_len. The name is stored in UTF-16LE format
-    // by default.
-
     printf("[%.24s] %s\n", ap.ssid);
     printf("Channel %2d | RSSI %u\n", ap.channel, ap.rssi);
     printf("Players %d/%d | %s\n",
@@ -286,7 +282,19 @@ It contains the maximum number of clients that the host allows, the number of
 clients connected currently, and whether this host allows new connections or
 not. This is just a hint that can be ignored by clients (which can try to
 connect to APs that are full and not allowing new connections, but the
-connection will fail). When you have found an AP you want to connect to, run:
+connection will fail).
+
+There are two more fields in the `Wifi_AccessPoint` structure that haven't been
+used in the example. The user name of the host is stored in `ap.nintendo.name`,
+and its length is stored in `ap.nintendo.name_len`. The name is stored in
+UTF-16LE format by default and the default value is the name defined by the user
+in the firmware of the DS. However, you can use `Wifi_MultiplayerHostName()` to
+set the values of both fields to anything that you prefer. DSWifi doesn't use
+the fields for anything, it just provides them to the user of the library, so
+you can use any format you want (you can use an ASCII string if you don't want
+to use UTF-16LE, for example).
+
+When you have found an AP you want to connect to, run:
 
 ```c
 Wifi_ConnectOpenAP(&ap);

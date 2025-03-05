@@ -389,6 +389,31 @@ int Wifi_MultiplayerClientMode(size_t client_packet_size);
 ///     If true, allow new connections. If false, reject them.
 void Wifi_MultiplayerAllowNewClients(bool allow);
 
+/// Set the name and name length fields in beacon packets.
+///
+/// This information can be obtained from clients from the "name" and "name_len"
+/// fields of the "nintendo" struct in a Wifi_AccessPoint. DSWifi doesn't use
+/// this information in any way, so you are free to store any information you
+/// want here. Normally, a client would use this field to display the name of
+/// each DS that is in multiplayer host mode.
+///
+/// If you use this function to overwrite the default values of DSWifi, you need
+/// to do it before calling Wifi_BeaconStart().
+///
+/// This function will copy exactly DSWIFI_BEACON_NAME_SIZE bytes from "buffer".
+/// By default, DSWifi uses the player name stored in the DS firmware, so the
+/// format is UTF-16LE.
+///
+/// The "len" argument is copied directly to the beacon information, it isn't
+/// used by this function to determine how much data to copy.
+///
+/// @param buffer
+///     Source buffer to be copied to the "name" field of the beacon packet. It
+///     must be DSWIFI_BEACON_NAME_SIZE bytes in size.
+/// @param len
+///     Value to be copied to the "name_len" field of the beacon packet.
+void Wifi_MultiplayerHostName(const void *buffer, u8 len);
+
 /// Sends a beacon frame to the ARM7 to be used in multiplayer host mode.
 ///
 /// This beacon frame announces that this console is acting as an access point

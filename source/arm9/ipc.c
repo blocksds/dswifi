@@ -312,6 +312,13 @@ void Wifi_MultiplayerAllowNewClients(bool allow)
         WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
 }
 
+void Wifi_MultiplayerHostName(const void *buffer, u8 len)
+{
+    // Copy data blindly: DSWifi doesn't use it for anything.
+    WifiData->hostPlayerNameLen = len;
+    memcpy((void *)WifiData->hostPlayerName, buffer, DSWIFI_BEACON_NAME_SIZE);
+}
+
 void Wifi_MultiplayerKickClientByAID(int association_id)
 {
     if ((association_id < 1) || (association_id > WIFI_MAX_MULTIPLAYER_CLIENTS))

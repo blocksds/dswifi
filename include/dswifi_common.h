@@ -177,9 +177,13 @@ typedef struct {
     /// Game ID of the host. It doesn't need to match your own ID (you could
     /// have two different games that can talk to each other).
     u32 game_id;
-    /// Length of the player name
+    /// Length of the player name. Hosts can define the contents by using
+    /// Wifi_MultiplayerHostName() so that clients can see it. By default,
+    /// this is the length of the player name stored in the DS firmware.
     u8 name_len;
-    /// Player name of the console that is hosting the game.
+    /// Player name of the console that is hosting the game. Hosts can define
+    /// the contents by using Wifi_MultiplayerHostName() so that clients can
+    /// see it. By default, this is the player name stored in the DS firmware.
     u16 name[DSWIFI_BEACON_NAME_SIZE / sizeof(u16)];
 } Wifi_NintendoVendorInfo;
 
