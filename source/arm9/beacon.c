@@ -145,7 +145,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     fie->extra_data.allows_connections = allow; // Updated from the ARM7
 
     fie->extra_data.name_len = WifiData->hostPlayerNameLen;
-    for (u8 i = 0; i < WifiData->hostPlayerNameLen; i++)
+    for (u8 i = 0; i < DSWIFI_BEACON_NAME_SIZE / sizeof(u16); i++)
     {
         fie->extra_data.name[i * 2] = WifiData->hostPlayerName[i] & 0xFF;
         fie->extra_data.name[(i * 2) + 1] = (WifiData->hostPlayerName[i] >> 8) & 0xFF;

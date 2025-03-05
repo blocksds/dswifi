@@ -22,6 +22,9 @@ extern "C" {
 /// reserved by the host).
 #define WIFI_MAX_MULTIPLAYER_CLIENTS 15
 
+/// Size in bytes reserved in beacon frames for the multiplayer host player name.
+#define DSWIFI_BEACON_NAME_SIZE 20
+
 // Well, some flags and stuff are just stuffed in here and not documented very
 // well yet... Most of the important stuff is documented though.
 // Next version should clean up some of this a lot more :)
@@ -177,7 +180,7 @@ typedef struct {
     /// Length of the player name
     u8 name_len;
     /// Player name of the console that is hosting the game.
-    u16 name[10];
+    u16 name[DSWIFI_BEACON_NAME_SIZE / sizeof(u16)];
 } Wifi_NintendoVendorInfo;
 
 /// Structure that defines how to connect to an access point.
