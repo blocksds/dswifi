@@ -116,6 +116,11 @@ u32 Wifi_Init(int initflags)
     // Don't set mode to WIFIMODE_NORMAL, leave it as WIFIMODE_DISABLED.
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
 
+    // Get user name from the firmware settings
+    WifiData->hostPlayerNameLen = PersonalData->nameLen;
+    for (u8 i = 0; i < PersonalData->nameLen; i++)
+        WifiData->hostPlayerName[i] = PersonalData->name[i];
+
     WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK);
     return (u32)Wifi_Data_Struct;
 }

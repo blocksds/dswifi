@@ -174,6 +174,10 @@ typedef struct {
     /// Game ID of the host. It doesn't need to match your own ID (you could
     /// have two different games that can talk to each other).
     u32 game_id;
+    /// Length of the player name
+    u8 name_len;
+    /// Player name of the console that is hosting the game.
+    u16 name[10];
 } Wifi_NintendoVendorInfo;
 
 /// Structure that defines how to connect to an access point.

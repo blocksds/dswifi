@@ -144,6 +144,17 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     int allow = WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS ? 1 : 0;
     fie->extra_data.allows_connections = allow; // Updated from the ARM7
 
+    fie->extra_data.name_len = WifiData->hostPlayerNameLen;
+    for (u8 i = 0; i < WifiData->hostPlayerNameLen; i++)
+    {
+        fie->extra_data.name[i * 2] = WifiData->hostPlayerName[i] & 0xFF;
+        fie->extra_data.name[(i * 2) + 1] = (WifiData->hostPlayerName[i] >> 8) & 0xFF;
+    }
+
+    for (u8 i = 0; i < PersonalData->nameLen; i++)
+        WifiData->hostPlayerName[i] = PersonalData->name[i];
+
+
     body_size += sizeof(FieVendorNintendo);
 
     // Send frame to the ARM7

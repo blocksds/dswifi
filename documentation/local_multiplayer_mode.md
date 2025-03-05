@@ -267,6 +267,10 @@ for (int i = 0; i < count; i++)
     Wifi_AccessPoint ap;
     Wifi_GetAPData(i, &ap);
 
+    // The user name of the host is stored in ap.nintendo.name, and its length
+    // is stored in ap.nintendo.name_len. The name is stored in UTF-16LE format
+    // by default.
+
     printf("[%.24s] %s\n", ap.ssid);
     printf("Channel %2d | RSSI %u\n", ap.channel, ap.rssi);
     printf("Players %d/%d | %s\n",

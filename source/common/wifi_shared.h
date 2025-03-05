@@ -241,6 +241,9 @@ typedef struct WIFI_MAINSTRUCT
     u16 curCmdDataSize, reqCmdDataSize;
     u16 curReplyDataSize, reqReplyDataSize;
 
+    u16 hostPlayerName[10]; // UTF-16LE
+    u8 hostPlayerNameLen;
+
     // Other information
     // -----------------
 
@@ -259,6 +262,8 @@ typedef struct {
     u8 players_max;
     u8 players_current;
     u8 allows_connections;
+    u8 name_len; // Length in UTF-16LE characters
+    u8 name[10 * 2]; // UTF16-LE
 } DSWifiExtraData;
 
 // Vendor beacon info (Nintendo Co., Ltd.)
@@ -277,6 +282,6 @@ typedef struct {
     DSWifiExtraData extra_data;
 } FieVendorNintendo;
 
-static_assert(sizeof(FieVendorNintendo) == 27);
+static_assert(sizeof(FieVendorNintendo) == 48);
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__
