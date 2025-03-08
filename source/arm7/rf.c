@@ -64,8 +64,9 @@ void Wifi_RFInit(void)
     {
         // TODO: According to GBATEK, this is usually 3. Wifi_FlashReadBytes()
         // can only read up to 4 bytes (and Wifi_RFWrite() can only take 4 bytes,
-        // so it is ok. In case this isn't true at some point, we need to add an
-        // error message here that gets transferred to the ARM9.
+        // so it is ok. This error message is here in case this assumption isn't
+        // true at some point.
+        libndsCrash("rf_entry_bytes > 4");
         return;
     }
 
