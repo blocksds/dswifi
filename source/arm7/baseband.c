@@ -33,7 +33,7 @@ int Wifi_BBWrite(int addr, int value)
     while (W_BB_BUSY & 1)
     {
         if (!i--)
-            return 0; // TODO: Should this be -1?
+            return -1;
     }
     return 0;
 }
