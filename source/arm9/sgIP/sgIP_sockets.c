@@ -4,6 +4,8 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <stddef.h>
+
 #include "arm9/sgIP/sgIP_DNS.h"
 #include "arm9/sgIP/sgIP_ICMP.h"
 #include "arm9/sgIP/sgIP_TCP.h"
@@ -593,14 +595,13 @@ int ioctl(int socket, long cmd, void *arg)
                          == SGIP_SOCKET_FLAG_TYPE_UDP)
                 {
                     sgIP_Record_UDP *rec = (sgIP_Record_UDP *)socketlist[socket].conn_ptr;
-                    if (rec->incoming_queue == 0)
+                    if (rec->incoming_queue == NULL)
                     {
                         *((int *)arg) = 0;
                     }
                     else
                     {
-                        i             = rec->incoming_queue->totallength - 12;
-                        *((int *)arg) = i;
+                        *((int *)arg) = rec->incoming_queue->totallength - 12;
                     }
                 }
                 else
@@ -608,8 +609,7 @@ int ioctl(int socket, long cmd, void *arg)
                     retval = SGIP_ERROR(EINVAL);
                 }
             }
-            // TODO: Check if this needs to fall through
-            // fallthrough
+            break;
         default:
             retval = SGIP_ERROR(EINVAL);
             break;
