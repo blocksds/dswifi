@@ -76,12 +76,18 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
                 Wifi_ProcessDeauthentication(&packetheader, macbase);
             return WFLAG_PACKET_MGT;
 
-        //case TYPE_ACTION: // TODO: Ignored, should we handle it?
+        // While some types of action frame could be interesting (like the ones
+        // that advertise channel changes in the AP), it's safe to ignore them.
+
+        //case TYPE_ACTION:
 
         // Control Frames
         // --------------
 
-        //case TYPE_BLOCKACKREQ: // TODO: Ignored, should we handle it?
+        // This is used for QoS frames, but we don't support it and we don't
+        // claim to support it:
+
+        //case TYPE_BLOCKACKREQ:
         //case TYPE_BLOCKACK:
 
         case TYPE_POWERSAVE_POLL: // 1010 01 PowerSave Poll
