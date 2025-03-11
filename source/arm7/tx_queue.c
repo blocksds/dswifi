@@ -4,6 +4,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/beacon.h"
+#include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/registers.h"
 #include "arm7/mac.h"
@@ -128,7 +129,15 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
         }
         else
         {
-            // TODO: Append data to queue instead of simply failing
+            // TODO: Append data to queue instead of simply failing. This ARM7
+            // queue is only used by authentication, association and NULL
+            // packets, so it's very unlikely. If it is full, the worst thing
+            // that can happen is that the authentication/association of a
+            // client fails (in multiplayer mode) or that the DS can't connect
+            // to an Internet AP (in internet mode). The library can recover
+            // from both errors.
+            WLOG_PUTS("W: ARM7 queue full\n");
+            WLOG_FLUSH();
             return 0;
         }
     }
