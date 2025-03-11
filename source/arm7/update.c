@@ -288,21 +288,10 @@ void Wifi_Update(void)
                     {
                         WifiData->aplist[i].timectr++;
 
-                        // If we haven't seen an AP for a long time, clear RSSI
-                        // information (it's not up-to-date, anyway).
+                        // If we haven't seen an AP for a long time, mark it as
+                        // inactive by clearing the WFLAG_APDATA_ACTIVE flag
                         if (WifiData->aplist[i].timectr > WIFI_AP_TIMEOUT)
-                        {
-                            // update rssi later.
-                            WifiData->aplist[i].rssi         = 0;
-                            WifiData->aplist[i].rssi_past[0] = 0;
-                            WifiData->aplist[i].rssi_past[1] = 0;
-                            WifiData->aplist[i].rssi_past[2] = 0;
-                            WifiData->aplist[i].rssi_past[3] = 0;
-                            WifiData->aplist[i].rssi_past[4] = 0;
-                            WifiData->aplist[i].rssi_past[5] = 0;
-                            WifiData->aplist[i].rssi_past[6] = 0;
-                            WifiData->aplist[i].rssi_past[7] = 0;
-                        }
+                            WifiData->aplist[i].flags = 0;
                     }
                 }
 
