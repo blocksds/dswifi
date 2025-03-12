@@ -17,7 +17,11 @@
 #define WIFI_MAX_ASSOC_RETRY 30
 #define WIFI_PS_POLL_CONST   2
 
-#define WIFI_AP_TIMEOUT 20
+// In scan mode, whenever there is a channel switch, the timeout counter in each
+// AP is incremented. When WIFI_AP_TIMEOUT is reached, the AP is removed from
+// the list. The timeout value lets us scan all 13 channels twice (plus a switch
+// to return to the original channel) before any AP is removed from the list.
+#define WIFI_AP_TIMEOUT (13 * 2 + 1)
 
 #define WIFI_AP_RSSI_PAST_ENTRIES 8
 

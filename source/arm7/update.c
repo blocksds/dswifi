@@ -33,9 +33,6 @@ static int wifi_keepalive_time = 0;
 // ledBlink() to re-set the current state.
 static int wifi_led_state = 0;
 
-// Index of the current WiFi channel to be scanned. Check Wifi_Update().
-static int wifi_scan_index = 0;
-
 // This resets the keepalive counter. Call this function whenever a packet is
 // transmitted so that the count starts from the last packet transmitted.
 void Wifi_KeepaliveCountReset(void)
@@ -128,10 +125,26 @@ void Wifi_ClearListOfAP(void)
 
 void Wifi_Update(void)
 {
-    static const u8 scanlist[] = {
-        1, 6, 11, 2, 3, 7, 8, 1, 6, 11, 4, 5, 9, 10, 1, 6, 11, 12, 13
+    // Index of the current WiFi channel to be scanned.
+    static size_t wifi_scan_index = 0;
+
+    // This array defines the order in which channels are scanned. It makes
+    // sense to start with the most common channels and try the others next.
+    // However, channels shouldn't be repeated here because we want to keep
+    // track of how long ago we have received the last beacon from each AP.
+    //
+    // When the list of APs is full and we add a new one, f we scan some
+    // channels more often than others we will unfairly prioritize them when
+    // deciding which AP to remove from the list.
+    const u8 scanlist[13] = {
+        // 1, 6 and 11 are the most commonly used channels
+        1, 6, 11,
+        // 1, 7, 13 are channels used by official games
+        7, 13,
+        // Scan the rest of the channels in numerical order
+        2, 3, 4, 5, 8, 9, 10, 12
     };
-    static int scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
+    const size_t scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
 
     if (!WifiData)
         return;
