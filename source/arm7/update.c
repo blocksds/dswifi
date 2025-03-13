@@ -207,6 +207,7 @@ void Wifi_Update(void)
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_SCAN;
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_SCAN);
+                wifi_scan_index = 0;
                 break;
             }
             if (WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
