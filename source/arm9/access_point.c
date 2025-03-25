@@ -39,18 +39,39 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
     if ((apnum < 0) || (apdata == NULL))
         return WIFI_RETURN_PARAMERROR;
 
-    if (WifiData->aplist[apnum].flags & WFLAG_APDATA_ACTIVE)
+    int found_index = -1;
+
+    int count = 0;
+    for (int i = 0; i < WIFI_MAX_AP; i++)
     {
-        while (Spinlock_Acquire(WifiData->aplist[apnum]) != SPINLOCK_OK)
-            ;
+        if ((WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE) == 0)
+            continue;
 
+        if (count == apnum)
+        {
+            found_index = i;
+            break;
+        }
 
-        *apdata = WifiData->aplist[apnum]; // yay for struct copy!
-
-        Spinlock_Release(WifiData->aplist[apnum]);
-
-        return WIFI_RETURN_OK;
+        count++;
     }
+
+    if (found_index != -1)
+    {
+        if (WifiData->aplist[found_index].flags & WFLAG_APDATA_ACTIVE)
+        {
+            while (Spinlock_Acquire(WifiData->aplist[found_index]) != SPINLOCK_OK)
+                ;
+
+            *apdata = WifiData->aplist[found_index]; // Struct copy
+
+            Spinlock_Release(WifiData->aplist[found_index]);
+
+            return WIFI_RETURN_OK;
+        }
+    }
+
+    memset(apdata, 0, sizeof(Wifi_AccessPoint));
 
     return WIFI_RETURN_ERROR;
 }
