@@ -23,8 +23,6 @@
 // to return to the original channel) before any AP is removed from the list.
 #define WIFI_AP_TIMEOUT (13 * 2 + 1)
 
-#define WIFI_AP_RSSI_PAST_ENTRIES 8
-
 #define WFLAG_ARM7_ACTIVE  0x0001
 #define WFLAG_ARM7_RUNNING 0x0002
 

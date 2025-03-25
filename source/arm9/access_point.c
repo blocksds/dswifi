@@ -44,13 +44,6 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
         while (Spinlock_Acquire(WifiData->aplist[apnum]) != SPINLOCK_OK)
             ;
 
-        // Additionally calculate average RSSI here
-        WifiData->aplist[apnum].rssi = 0;
-        for (int j = 0; j < WIFI_AP_RSSI_PAST_ENTRIES; j++)
-        {
-            WifiData->aplist[apnum].rssi += WifiData->aplist[apnum].rssi_past[j];
-        }
-        WifiData->aplist[apnum].rssi = WifiData->aplist[apnum].rssi >> 3;
 
         *apdata = WifiData->aplist[apnum]; // yay for struct copy!
 

@@ -224,9 +224,6 @@ typedef struct WIFI_ACCESSPOINT
     /// Valid channels are 1-13, setting the channel to 0 will indicate the
     /// system should search. [REQUIRED]
     u8 channel;
-    /// rssi_past indicates the RSSI values for the last 8 beacons received ([7]
-    /// is the most recent) [not required to connect]
-    u8 rssi_past[8];
     /// Information send by Nintendo DS hosts in beacon frames, used if
     /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".
     Wifi_NintendoVendorInfo nintendo;
