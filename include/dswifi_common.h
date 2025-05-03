@@ -235,7 +235,7 @@ typedef enum {
     WIFI_CLIENT_DISCONNECTED = 0,
     /// The client is authenticated but not associated.
     WIFI_CLIENT_AUTHENTICATED,
-    // The client is associated and ready to communicate data.
+    /// The client is associated and ready to communicate data.
     WIFI_CLIENT_ASSOCIATED,
 } Wifi_ConnectedClientState;
 
