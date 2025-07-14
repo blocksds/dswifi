@@ -118,13 +118,21 @@ In the ARM9 you need to setup a libnds console. Then, assign it to the ARM7:
 consoleArm7Setup(&myConsole, 1024);
 ```
 
-You don't need to modify anything in the ARM7 code. However, in your ARM7
-Makefile you need to link with `libdswifi7d.a` instead of `libdswifi7.a`. Look
-for `LIBS` and replace `-ldswifi7` by `-ldswifi7d`.
+- If you have an ARM9-only project, you will need to use one of the debug
+  prebuilt ARM7 cores. If you're using the default ARM7 core, you can add this
+  line to your Makefile:
 
-If you have an ARM9-only project, you will need to convert it to a combined
-ARM7 + ARM9 project. Currently BlocksDS doesn't distribute any default ARM7
-binary with debug DSWifi messages.
+  ```
+  ARM7ELF := $(BLOCKSDS)/sys/arm7/main_core/arm7_dswifi_maxmod_debug.elf
+  ```
+
+  This [example](https://github.com/blocksds/sdk/tree/master/examples/dswifi/full_ap_demo_debug)
+  shows you how to have a Makefile that can enable and disable DSWiFi debug
+  output.
+
+- If you have a combined ARM9+ARM7 project you need to modify the file
+  `Makefile.arm7`: Link with `libdswifi7d.a` instead of `libdswifi7.a`. Look for
+  `LIBS` and replace `-ldswifi7` by `-ldswifi7d`.
 
 ## 4. Connecting to APs
 
