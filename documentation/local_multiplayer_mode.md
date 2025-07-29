@@ -134,8 +134,8 @@ u16 players_mask = Wifi_MultiplayerGetClientMask();
 printf("Num clients: %d (mask 0x%02X)\n", num_clients, players_mask);
 printf("\n");
 
-// Normally you don't need to read the detailed client information, with the AID
-// mask is enough.
+// Normally you don't need to read the detailed client information, it's enough
+// with the AID mask.
 Wifi_ConnectedClient client[15]; // Up to 15 clients
 num_clients = Wifi_MultiplayerGetClients(15, &(client[0]));
 
