@@ -15,6 +15,8 @@ static WifiSyncHandler synchandler = NULL;
 
 static void wifiAddressHandler(void *address, void *userdata)
 {
+    // TODO: If the address is NULL, deinitialize DSWifi
+
     (void)userdata;
 
     Wifi_Init((u32)address);
@@ -30,12 +32,6 @@ static void wifiValue32Handler(u32 value, void *data)
 
     switch (value)
     {
-        case WIFI_DISABLE:
-            irqDisable(IRQ_WIFI);
-            break;
-        case WIFI_ENABLE:
-            irqEnable(IRQ_WIFI);
-            break;
         case WIFI_SYNC:
             Wifi_Update();
             break;
