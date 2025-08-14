@@ -51,6 +51,15 @@
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000
 
+// Enum values for the FIFO WiFi commands (FIFO_DSWIFI).
+typedef enum
+{
+    WIFI_ENABLE,
+    WIFI_DISABLE,
+    WIFI_SYNC,
+    WIFI_STARTUP
+} DSWifi_IpcCommands;
+
 // Modes of operation of DSWifi
 typedef enum {
     // Connect to an access point to access the Internet.
