@@ -4,6 +4,8 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <string.h>
+
 #include "arm9/sgIP/sgIP_ARP.h"
 
 sgIP_ARP_Record ArpRecords[SGIP_ARP_MAXENTRIES];
@@ -72,12 +74,7 @@ int sgIP_ARP_Check_isok(sgIP_Hub_HWInterface *hw, sgIP_memblock *mb, sgIP_Header
 
 void sgIP_ARP_Init(void)
 {
-    for (int i = 0; i < SGIP_ARP_MAXENTRIES; i++)
-    {
-        ArpRecords[i].flags         = 0;
-        ArpRecords[i].idletime      = 0;
-        ArpRecords[i].queued_packet = 0;
-    }
+    memset(ArpRecords, 0, sizeof(ArpRecords));
 }
 
 void sgIP_ARP_Timer100ms(void)
