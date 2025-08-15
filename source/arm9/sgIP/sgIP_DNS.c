@@ -53,7 +53,7 @@ void sgIP_DNS_Timer1000ms(void)
         {
             if (dnsrecords[i]->expiry_time_count == time_count)
             {
-                free(dnsrecords[i]);
+                sgIP_free(dnsrecords[i]);
                 dnsrecords[i] = NULL;
             }
         }
@@ -235,7 +235,7 @@ sgIP_DNS_Record *sgIP_DNS_AllocUnusedRecord(void)
     }
     if (unallocatedIdx >= 0)
     {
-        dnsrecords[unallocatedIdx] = malloc(sizeof(sgIP_DNS_Record));
+        dnsrecords[unallocatedIdx] = sgIP_malloc(sizeof(sgIP_DNS_Record));
         if (dnsrecords[unallocatedIdx] != NULL)
         {
             SGIP_INTR_UNPROTECT();
