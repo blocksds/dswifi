@@ -21,32 +21,12 @@
 #    include "arm9/sgIP/sgIP.h"
 #endif
 
-// Wifi Sync Handler function.
-//
-// Callback function that is called when the ARM7 needs to be told to
-// synchronize with new fifo data.  If this callback is used (see
-// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM7,
-// which will call Wifi_Sync() on ARM7.
-typedef void (*WifiSyncHandler)(void);
-
 static Wifi_MainStruct *Wifi_Data_Struct = NULL; // Cached mirror
 volatile Wifi_MainStruct *WifiData = NULL; // Uncached mirror
 
-static WifiSyncHandler synchandler = NULL;
-
-// Call this function to request notification of when the ARM7-side Wifi_Sync()
-// function should be called.
-//
-// The parameter is the function to be called for notification.
-static void Wifi_SetSyncHandler(WifiSyncHandler wshfunc)
-{
-    synchandler = wshfunc;
-}
-
 void Wifi_CallSyncHandler(void)
 {
-    if (synchandler)
-        synchandler();
+    fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
 }
 
 // Call this function when requested to sync by the ARM7 side of the WiFi lib.
@@ -62,12 +42,6 @@ static void Wifi_Sync(void)
 static void Wifi_Timer_50ms(void)
 {
     Wifi_Timer(50);
-}
-
-// notification function to send fifo message to arm7
-static void arm9_synctoarm7(void)
-{
-    fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
 }
 
 static void wifiValue32Handler(u32 value, void *data)
@@ -137,7 +111,6 @@ bool Wifi_InitDefault(unsigned int flags)
     if (wifi_shared_ipc_mem == NULL)
         return false;
 
-    Wifi_SetSyncHandler(arm9_synctoarm7); // tell wifi lib to use our handler to notify arm7
 
     // Setup timer 3. Call handler 20 times per second (every 50 ms).
     timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
