@@ -314,7 +314,8 @@ void Wifi_MultiplayerAllowNewClients(bool allow)
 
 void Wifi_MultiplayerHostName(const void *buffer, u8 len)
 {
-    // Copy data blindly: DSWifi doesn't use it for anything.
+    // Copy data blindly: DSWifi doesn't use it for anything, it just sends it
+    // as it is to the clients.
     WifiData->hostPlayerNameLen = len;
     memcpy((void *)WifiData->hostPlayerName, buffer, DSWIFI_BEACON_NAME_SIZE);
 }
