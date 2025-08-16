@@ -55,9 +55,6 @@ void Wifi_Init(u32 wifidata);
 /// After this WiFi will be unusable until Wifi_Init() is called again.
 void Wifi_Deinit(void);
 
-/// Call this function when requested to sync by the ARM9 side of the WiFi lib.
-void Wifi_Sync(void);
-
 /// Call this function to request notification of when the ARM9-side Wifi_Sync()
 /// function should be called.
 ///
