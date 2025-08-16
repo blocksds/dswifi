@@ -11,6 +11,14 @@
 #include <nds/arm9/cp15_asm.h>
 #include <dswifi_common.h>
 
+#define WIFIINIT_OPTION_USELED         0x0002
+#define WIFIINIT_OPTION_USEHEAP_128    0x0000 // Default option is to use 128k heap
+#define WIFIINIT_OPTION_USEHEAP_64     0x1000
+#define WIFIINIT_OPTION_USEHEAP_256    0x2000
+#define WIFIINIT_OPTION_USEHEAP_512    0x3000
+#define WIFIINIT_OPTION_USECUSTOMALLOC 0x4000
+#define WIFIINIT_OPTION_HEAPMASK       0xF000
+
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
 #define WIFI_MAX_AP          32

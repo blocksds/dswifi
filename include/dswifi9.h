@@ -40,14 +40,6 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
-/// Wifi Sync Handler function.
-///
-/// Callback function that is called when the ARM7 needs to be told to
-/// synchronize with new fifo data.  If this callback is used (see
-/// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM7,
-/// which will call Wifi_Sync() on ARM7.
-typedef void (*WifiSyncHandler)(void);
-
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
 #define WFC_CONNECT (1 << 0)
 /// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
@@ -84,21 +76,6 @@ typedef void (*WifiSyncHandler)(void);
 /// @return
 ///     It returns true on success, false on failure.
 bool Wifi_InitDefault(unsigned int flags);
-
-/// Initializes the WiFi library (ARM9 side) and the sgIP library.
-///
-/// @warning
-///     This function requires some manual handling of the returned value to
-///     fully initialize the library. Use Wifi_InitDefault(INIT_ONLY) instead.
-///
-/// @param initflags
-///     Set up some optional things, like controlling the LED blinking
-///     (WIFIINIT_OPTION_USELED) and the size of the sgIP heap
-///     (WIFIINIT_OPTION_USEHEAP_xxx).
-///
-/// @return
-///     A 32bit value that *must* be passed to the ARM7 side of the library.
-u32 Wifi_Init(int initflags);
 
 /// Verifies when the ARM7 has been successfully initialized.
 ///
@@ -187,19 +164,6 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer);
 /// @return
 ///     The requested stat, or 0 for failure.
 u32 Wifi_GetStats(int statnum);
-
-/// Checks for new data from the ARM7 and initiates routing if data is available.
-void Wifi_Update(void);
-
-/// Call this function when requested to sync by the ARM7 side of the WiFi lib.
-void Wifi_Sync(void);
-
-/// Call this function to request notification of when the ARM7-side Wifi_Sync()
-/// function should be called.
-///
-/// @param sh
-///     Pointer to the function to be called for notification.
-void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// @}
 /// @defgroup dswifi9_ap Scan and connect to access points.

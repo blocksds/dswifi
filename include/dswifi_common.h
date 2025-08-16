@@ -25,20 +25,6 @@ extern "C" {
 /// Size in bytes reserved in beacon frames for the multiplayer host player name.
 #define DSWIFI_BEACON_NAME_SIZE 20
 
-// Well, some flags and stuff are just stuffed in here and not documented very
-// well yet... Most of the important stuff is documented though.
-// Next version should clean up some of this a lot more :)
-
-#define WIFIINIT_OPTION_USELED 0x0002
-
-// Default option is to use 128k heap
-#define WIFIINIT_OPTION_USEHEAP_128    0x0000
-#define WIFIINIT_OPTION_USEHEAP_64     0x1000
-#define WIFIINIT_OPTION_USEHEAP_256    0x2000
-#define WIFIINIT_OPTION_USEHEAP_512    0x3000
-#define WIFIINIT_OPTION_USECUSTOMALLOC 0x4000
-#define WIFIINIT_OPTION_HEAPMASK       0xF000
-
 #define WFLAG_APDATA_ADHOC         0x0001
 #define WFLAG_APDATA_WEP           0x0002
 #define WFLAG_APDATA_WPA           0x0004
