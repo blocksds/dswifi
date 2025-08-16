@@ -8,7 +8,7 @@
 
 #include <nds/ndstypes.h>
 
-void Wifi_Init(u32 wifidata);
+void Wifi_Init(void *wifidata);
 void Wifi_Deinit(void);
 
 void Wifi_WakeUp(void);

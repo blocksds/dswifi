@@ -20,7 +20,7 @@ static void wifiAddressHandler(void *address, void *userdata)
 
     (void)userdata;
 
-    Wifi_Init((u32)address);
+    Wifi_Init(address);
 
     // Setup WiFi interrupt after we have setup the IPC struct pointer
     irqSet(IRQ_WIFI, Wifi_Interrupt);

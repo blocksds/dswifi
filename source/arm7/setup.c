@@ -226,7 +226,7 @@ void Wifi_Shutdown(void)
 //
 // This function also enables power to the WiFi system, which will shorten
 // battery life.
-void Wifi_Init(u32 wifidata)
+void Wifi_Init(void *wifidata)
 {
     WLOG_PUTS("W: Init\n");
 

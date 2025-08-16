@@ -21,12 +21,24 @@
 #    include "arm9/sgIP/sgIP.h"
 #endif
 
+// Wifi Sync Handler function.
+//
+// Callback function that is called when the ARM7 needs to be told to
+// synchronize with new fifo data.  If this callback is used (see
+// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM7,
+// which will call Wifi_Sync() on ARM7.
+typedef void (*WifiSyncHandler)(void);
+
 static Wifi_MainStruct *Wifi_Data_Struct = NULL; // Cached mirror
 volatile Wifi_MainStruct *WifiData = NULL; // Uncached mirror
 
 static WifiSyncHandler synchandler = NULL;
 
-void Wifi_SetSyncHandler(WifiSyncHandler wshfunc)
+// Call this function to request notification of when the ARM7-side Wifi_Sync()
+// function should be called.
+//
+// The parameter is the function to be called for notification.
+static void Wifi_SetSyncHandler(WifiSyncHandler wshfunc)
 {
     synchandler = wshfunc;
 }
@@ -37,7 +49,8 @@ void Wifi_CallSyncHandler(void)
         synchandler();
 }
 
-void Wifi_Sync(void)
+// Call this function when requested to sync by the ARM7 side of the WiFi lib.
+static void Wifi_Sync(void)
 {
     int oldIE = REG_IE;
     REG_IE &= ~IRQ_TIMER3;
@@ -71,14 +84,14 @@ static void wifiValue32Handler(u32 value, void *data)
     }
 }
 
-u32 Wifi_Init(void)
+static void *Wifi_Init(void)
 {
     if (Wifi_Data_Struct == NULL)
     {
         // See comment at the top of Wifi_MainStruct
         Wifi_Data_Struct = aligned_alloc(CACHE_LINE_SIZE, sizeof(Wifi_MainStruct));
         if (Wifi_Data_Struct == NULL)
-            return 0;
+            return NULL;
     }
 
     // Clear the struct whenever we initialize WiFi, not just the first time it
@@ -106,7 +119,7 @@ u32 Wifi_Init(void)
         WifiData->hostPlayerName[i] = PersonalData->name[i];
 
     WifiData->flags9 = WFLAG_ARM9_ACTIVE;
-    return (u32)Wifi_Data_Struct;
+    return Wifi_Data_Struct;
 }
 
 int Wifi_CheckInit(void)
@@ -120,9 +133,8 @@ bool Wifi_InitDefault(unsigned int flags)
 {
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
-    u32 wifi_pass = Wifi_Init();
-
-    if (!wifi_pass)
+    void *wifi_shared_ipc_mem = Wifi_Init();
+    if (wifi_shared_ipc_mem == NULL)
         return false;
 
     Wifi_SetSyncHandler(arm9_synctoarm7); // tell wifi lib to use our handler to notify arm7
@@ -130,7 +142,7 @@ bool Wifi_InitDefault(unsigned int flags)
     // Setup timer 3. Call handler 20 times per second (every 50 ms).
     timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
 
-    fifoSendAddress(FIFO_DSWIFI, (void *)wifi_pass);
+    fifoSendAddress(FIFO_DSWIFI, wifi_shared_ipc_mem);
 
     while (Wifi_CheckInit() == 0)
     {
