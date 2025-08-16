@@ -71,7 +71,7 @@ static void wifiValue32Handler(u32 value, void *data)
     }
 }
 
-u32 Wifi_Init(int initflags)
+u32 Wifi_Init(void)
 {
     if (Wifi_Data_Struct == NULL)
     {
@@ -92,26 +92,10 @@ u32 Wifi_Init(int initflags)
     WifiData = (Wifi_MainStruct *)memUncached(Wifi_Data_Struct);
 
 #ifdef WIFI_USE_TCP_SGIP
-    switch (initflags & WIFIINIT_OPTION_HEAPMASK)
-    {
-        case WIFIINIT_OPTION_USEHEAP_128:
-            wHeapAllocInit(128 * 1024);
-            break;
-        case WIFIINIT_OPTION_USEHEAP_64:
-            wHeapAllocInit(64 * 1024);
-            break;
-        case WIFIINIT_OPTION_USEHEAP_256:
-            wHeapAllocInit(256 * 1024);
-            break;
-        case WIFIINIT_OPTION_USEHEAP_512:
-            wHeapAllocInit(512 * 1024);
-            break;
-        case WIFIINIT_OPTION_USECUSTOMALLOC:
-            break;
-    }
+    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
     sgIP_Init();
-
 #endif
+
     // Start in Internet mode by default for compatibility with old code.
     // Don't set mode to WIFIMODE_NORMAL, leave it as WIFIMODE_DISABLED.
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
@@ -121,7 +105,7 @@ u32 Wifi_Init(int initflags)
     for (u8 i = 0; i < PersonalData->nameLen; i++)
         WifiData->hostPlayerName[i] = PersonalData->name[i];
 
-    WifiData->flags9 = WFLAG_ARM9_ACTIVE | (initflags & WFLAG_ARM9_INITFLAGMASK);
+    WifiData->flags9 = WFLAG_ARM9_ACTIVE;
     return (u32)Wifi_Data_Struct;
 }
 
@@ -136,7 +120,7 @@ bool Wifi_InitDefault(unsigned int flags)
 {
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
-    u32 wifi_pass = Wifi_Init(WIFIINIT_OPTION_USELED);
+    u32 wifi_pass = Wifi_Init();
 
     if (!wifi_pass)
         return false;

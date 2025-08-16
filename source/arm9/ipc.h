@@ -30,17 +30,11 @@ void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 // Initializes the WiFi library (ARM9 side) and the sgIP library.
 //
-// @warning
-//     This function requires some manual handling of the returned value to
-//     fully initialize the library. Use Wifi_InitDefault(INIT_ONLY) instead.
+// This function requires some manual handling of the returned value to fully
+// initialize the library. Use Wifi_InitDefault(INIT_ONLY) instead.
 //
-// @param initflags
-//     Set up some optional things, like controlling the LED blinking
-//     (WIFIINIT_OPTION_USELED) and the size of the sgIP heap
-//     (WIFIINIT_OPTION_USEHEAP_xxx).
-//
-// @return
-//     A 32bit value that *must* be passed to the ARM7 side of the library.
-u32 Wifi_Init(int initflags);
+// It returns a 32bit value that *must* be passed to the ARM7 side of the
+// library.
+u32 Wifi_Init(void);
 
 #endif // DSWIFI_ARM9_IPC_H__
