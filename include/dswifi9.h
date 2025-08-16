@@ -83,6 +83,15 @@ bool Wifi_InitDefault(unsigned int flags);
 ///     1 if the ARM7 is ready for WiFi, 0 otherwise
 int Wifi_CheckInit(void);
 
+/// Stops the WiFi library.
+///
+/// It must be called after calling Wifi_DisableWifi() and waiting for a frame
+/// or two.
+///
+/// @return
+///     True on success, false on error.
+bool Wifi_Deinit(void);
+
 /// Instructs the ARM7 to disengage wireless and stop receiving or transmitting.
 void Wifi_DisableWifi(void);
 

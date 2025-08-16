@@ -49,6 +49,7 @@
 typedef enum
 {
     WIFI_SYNC,
+    WIFI_DEINIT,
 }
 DSWifi_IpcCommands;
 

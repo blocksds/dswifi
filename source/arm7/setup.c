@@ -294,7 +294,6 @@ void Wifi_Init(void *wifidata)
     Wifi_BBWrite(REG_MM3218_CCA, 0x00);
     Wifi_BBWrite(REG_MM3218_ENERGY_DETECTION_THRESHOLD, 0x1F);
 
-    // Wifi_Shutdown();
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
 
     // Setup WiFi interrupt after we have setup everything else
@@ -309,12 +308,25 @@ void Wifi_Init(void *wifidata)
 
 // This function cuts power to the WiFi system. After this WiFi will be unusable
 // until Wifi_Init() is called again.
-// TODO: This is currently unused.
 void Wifi_Deinit(void)
 {
+    WLOG_PUTS("W: Stopping WiFi\n");
+    WLOG_FLUSH();
+
+    irqDisable(IRQ_WIFI);
+    irqSet(IRQ_WIFI, NULL);
+
     Wifi_Stop();
+    Wifi_Shutdown();
 
     powerOff(POWER_WIFI);
+
+    WLOG_PUTS("W: WiFi stopped\n");
+    WLOG_FLUSH();
+
+    // Tell the ARM9 that the ARM7 is now idle
+    WifiData->flags7 &= ~WFLAG_ARM7_ACTIVE;
+    WifiData = NULL;
 }
 
 void Wifi_Start(void)

@@ -161,6 +161,7 @@ void Wifi_Update(void)
         case WIFIMODE_DISABLED:
             Wifi_SetLedState(LED_ALWAYS_ON);
 
+            // If any other mode has been requested we need to initialize WiFi
             if (WifiData->reqMode != WIFIMODE_DISABLED)
             {
                 Wifi_Start();

@@ -27,6 +27,11 @@ static void wifiValue32Handler(u32 value, void *data)
         case WIFI_SYNC:
             Wifi_Update();
             break;
+
+        case WIFI_DEINIT:
+            Wifi_Deinit();
+            break;
+
         default:
             break;
     }

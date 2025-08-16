@@ -43,18 +43,18 @@ typedef struct WHEAP_RECORD
 #    define WHEAP_SIZE_CUTOFF ((WHEAP_RECORD_SIZE) + 64)
 
 int wHeapsize;
-wHeapRecord *wHeapStart; // start of heap
+wHeapRecord *wHeapStart = NULL; // start of heap
 wHeapRecord *wHeapFirst; // first free block
 
 void wHeapAllocInit(int size)
 {
-    wHeapStart = (wHeapRecord *)malloc(size);
-    if (!wHeapStart)
+    wHeapStart = malloc(size);
+    if (wHeapStart == NULL)
         return;
 
     wHeapFirst        = wHeapStart;
     wHeapStart->flags = WHEAP_RECORD_FLAG_UNUSED;
-    wHeapStart->next  = 0;
+    wHeapStart->next  = NULL;
     wHeapStart->size  = size - sizeof(wHeapRecord);
 }
 

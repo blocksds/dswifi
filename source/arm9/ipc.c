@@ -111,20 +111,37 @@ int Wifi_CheckInit(void)
     return 1;
 }
 
+static void Wifi_Init_sgIP(void)
+{
+    // TODO: sgIP can't be deinitialized for some reason. Make sure we only ever
+    // initialize it once.
+    static bool sgipready = false;
+    if (sgipready)
+        return;
+
+    // Initialize sgIP once the ARM7 is ready
+    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
+    sgIP_Init();
+    Wifi_SetupNetworkInterface();
+
+    sgipready = true;
+}
+
 bool Wifi_InitDefault(unsigned int flags)
 {
     if (!Wifi_InitIPC())
         return false;
 
 #ifdef WIFI_USE_TCP_SGIP
-    // Initialize sgIP once the ARM7 is ready
-    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
-    sgIP_Init();
-    Wifi_SetupNetworkInterface();
+    Wifi_Init_sgIP();
 #endif
 
     // Setup timer 3. Call handler 20 times per second (every 50 ms).
     timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
+
+    // Clear FIFO queue
+    while (fifoCheckValue32(FIFO_DSWIFI))
+        fifoGetValue32(FIFO_DSWIFI);
 
     // Only start handling update events when everything else is ready
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
@@ -145,6 +162,30 @@ bool Wifi_InitDefault(unsigned int flags)
             swiWaitForVBlank();
         }
     }
+
+    return true;
+}
+
+bool Wifi_Deinit(void)
+{
+    // Only allow deinitializing DSWifi if the current mode is "disabled" and a
+    // different mode hasn't been requested.
+    if ((WifiData->reqMode != WIFIMODE_DISABLED) ||
+        (WifiData->curMode != WIFIMODE_DISABLED))
+        return false;
+
+    fifoSetValue32Handler(FIFO_DSWIFI, NULL, 0);
+
+    timerStop(3);
+
+    fifoSendValue32(FIFO_DSWIFI, WIFI_DEINIT);
+
+    while (WifiData->flags7 & WFLAG_ARM7_ACTIVE)
+        swiWaitForVBlank();
+
+    // Free the pointer in main RAM, not the one in the uncached mirror
+    free(WifiDataCached);
+    WifiDataCached = NULL;
 
     return true;
 }
