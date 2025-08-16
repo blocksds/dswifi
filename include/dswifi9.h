@@ -77,10 +77,10 @@ enum WIFIGETDATA
 ///     It returns true on success, false on failure.
 bool Wifi_InitDefault(unsigned int flags);
 
-/// Verifies when the ARM7 has been successfully initialized.
+/// Used to determine if the library has been initialized.
 ///
 /// @return
-///     1 if the ARM7 is ready for WiFi, 0 otherwise
+///     1 if the library is ready, 0 otherwise.
 int Wifi_CheckInit(void);
 
 /// Stops the WiFi library.
@@ -93,6 +93,9 @@ int Wifi_CheckInit(void);
 bool Wifi_Deinit(void);
 
 /// Instructs the ARM7 to disengage wireless and stop receiving or transmitting.
+///
+/// It keeps the library active. If you want to free all resources used by the
+/// library, call Wifi_Deinit().
 void Wifi_DisableWifi(void);
 
 /// Instructs the ARM7 to go into a basic "active" mode.
