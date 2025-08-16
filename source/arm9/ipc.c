@@ -96,7 +96,8 @@ int Wifi_CheckInit(void)
 {
     if (!WifiData)
         return 0;
-    return ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) && (WifiData->flags9 & WFLAG_ARM9_ARM7READY));
+
+    return 1;
 }
 
 bool Wifi_InitDefault(unsigned int flags)
@@ -111,13 +112,14 @@ bool Wifi_InitDefault(unsigned int flags)
     timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
 
     // Wait for the ARM7 to be ready
-    while (Wifi_CheckInit() == 0)
+    while ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) == 0)
         swiWaitForVBlank();
 
 #ifdef WIFI_USE_TCP_SGIP
     // Initialize sgIP once the ARM7 is ready
     wHeapAllocInit(128 * 1024); // Use a 128 KB heap
     sgIP_Init();
+    Wifi_SetupNetworkInterface();
 #endif
 
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);

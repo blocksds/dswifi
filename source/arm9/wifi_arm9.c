@@ -474,23 +474,21 @@ void Wifi_Timer(int num_ms)
 #endif
 }
 
+#ifdef WIFI_USE_TCP_SGIP
+void Wifi_SetupNetworkInterface(void)
+{
+    // Add network interface.
+    wifi_hw = sgIP_Hub_AddHardwareInterface(&Wifi_TransmitFunction, &Wifi_Interface_Init);
+    sgIP_timems = WifiData->random; // hacky! but it should work just fine :)
+}
+#endif
+
 void Wifi_Update(void)
 {
     if (!WifiData)
         return;
 
 #ifdef WIFI_USE_TCP_SGIP
-
-    if (!(WifiData->flags9 & WFLAG_ARM9_ARM7READY))
-    {
-        if (WifiData->flags7 & WFLAG_ARM7_ACTIVE)
-        {
-            WifiData->flags9 |= WFLAG_ARM9_ARM7READY;
-            // add network interface.
-            wifi_hw = sgIP_Hub_AddHardwareInterface(&Wifi_TransmitFunction, &Wifi_Interface_Init);
-            sgIP_timems = WifiData->random; // hacky! but it should work just fine :)
-        }
-    }
     if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED && WifiData->flags9 & WFLAG_ARM9_NETUP)
     {
         WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
@@ -500,7 +498,6 @@ void Wifi_Update(void)
     {
         WifiData->flags9 |= WFLAG_ARM9_NETUP;
     }
-
 #endif
 
     // check for received packets, forward to whatever wants them.

@@ -22,6 +22,8 @@ void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src);
 
 extern sgIP_Hub_HWInterface *wifi_hw;
 
+void Wifi_SetupNetworkInterface(void);
+
 #endif
 
 // Checks for new data from the ARM7 and initiates routing if data is available.
