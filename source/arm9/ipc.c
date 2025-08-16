@@ -21,8 +21,11 @@
 #    include "arm9/sgIP/sgIP.h"
 #endif
 
-static Wifi_MainStruct *Wifi_Data_Struct = NULL; // Cached mirror
-volatile Wifi_MainStruct *WifiData = NULL; // Uncached mirror
+// Cached mirror. This should only be used when initializing the struct
+static Wifi_MainStruct *WifiDataCached = NULL;
+
+// Uncached mirror. This must be used by ARM9 code communicating with the ARM7.
+volatile Wifi_MainStruct *WifiData = NULL;
 
 void Wifi_CallSyncHandler(void)
 {
@@ -60,28 +63,21 @@ static void wifiValue32Handler(u32 value, void *data)
 
 static void *Wifi_Init(void)
 {
-    if (Wifi_Data_Struct == NULL)
-    {
-        // See comment at the top of Wifi_MainStruct
-        Wifi_Data_Struct = aligned_alloc(CACHE_LINE_SIZE, sizeof(Wifi_MainStruct));
-        if (Wifi_Data_Struct == NULL)
-            return NULL;
-    }
+    assert(WifiDataCached == NULL);
 
-    // Clear the struct whenever we initialize WiFi, not just the first time it
-    // is allocated.
-    memset(Wifi_Data_Struct, 0, sizeof(Wifi_MainStruct));
-    DC_FlushRange(Wifi_Data_Struct, sizeof(Wifi_MainStruct));
+    // See comment at the top of Wifi_MainStruct
+    WifiDataCached = aligned_alloc(CACHE_LINE_SIZE, sizeof(Wifi_MainStruct));
+    if (WifiDataCached == NULL)
+        return NULL;
+
+    // Clear the struct
+    memset(WifiDataCached, 0, sizeof(Wifi_MainStruct));
+    DC_FlushRange(WifiDataCached, sizeof(Wifi_MainStruct));
 
     // Normally we will access the struct through an uncached mirror so that the
     // ARM7 and ARM9 always see the same values without any need for cache
     // management.
-    WifiData = (Wifi_MainStruct *)memUncached(Wifi_Data_Struct);
-
-#ifdef WIFI_USE_TCP_SGIP
-    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
-    sgIP_Init();
-#endif
+    WifiData = (Wifi_MainStruct *)memUncached(WifiDataCached);
 
     // Start in Internet mode by default for compatibility with old code.
     // Don't set mode to WIFIMODE_NORMAL, leave it as WIFIMODE_DISABLED.
@@ -93,7 +89,7 @@ static void *Wifi_Init(void)
         WifiData->hostPlayerName[i] = PersonalData->name[i];
 
     WifiData->flags9 = WFLAG_ARM9_ACTIVE;
-    return Wifi_Data_Struct;
+    return WifiDataCached;
 }
 
 int Wifi_CheckInit(void)
@@ -105,22 +101,26 @@ int Wifi_CheckInit(void)
 
 bool Wifi_InitDefault(unsigned int flags)
 {
-    fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
-
     void *wifi_shared_ipc_mem = Wifi_Init();
     if (wifi_shared_ipc_mem == NULL)
         return false;
 
+    fifoSendAddress(FIFO_DSWIFI, wifi_shared_ipc_mem);
 
     // Setup timer 3. Call handler 20 times per second (every 50 ms).
     timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
 
-    fifoSendAddress(FIFO_DSWIFI, wifi_shared_ipc_mem);
-
+    // Wait for the ARM7 to be ready
     while (Wifi_CheckInit() == 0)
-    {
         swiWaitForVBlank();
-    }
+
+#ifdef WIFI_USE_TCP_SGIP
+    // Initialize sgIP once the ARM7 is ready
+    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
+    sgIP_Init();
+#endif
+
+    fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
     if (flags & WFC_CONNECT)
     {

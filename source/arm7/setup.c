@@ -6,6 +6,7 @@
 #include "arm7/baseband.h"
 #include "arm7/debug.h"
 #include "arm7/flash.h"
+#include "arm7/interrupts.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
 #include "arm7/registers.h"
@@ -298,6 +299,10 @@ void Wifi_Init(void *wifidata)
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
 
     WifiData->flags7 |= WFLAG_ARM7_ACTIVE;
+
+    // Setup WiFi interrupt after we have setup everything else
+    irqSet(IRQ_WIFI, Wifi_Interrupt);
+    irqEnable(IRQ_WIFI);
 
     WLOG_PUTS("W: ARM7 ready\n");
     WLOG_FLUSH();

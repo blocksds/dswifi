@@ -5,7 +5,6 @@
 
 #include <dswifi7.h>
 
-#include "arm7/interrupts.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/update.h"
@@ -17,10 +16,6 @@ static void wifiAddressHandler(void *address, void *userdata)
     (void)userdata;
 
     Wifi_Init(address);
-
-    // Setup WiFi interrupt after we have setup the IPC struct pointer
-    irqSet(IRQ_WIFI, Wifi_Interrupt);
-    irqEnable(IRQ_WIFI);
 }
 
 static void wifiValue32Handler(u32 value, void *data)
