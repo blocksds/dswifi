@@ -49,24 +49,41 @@ enum WIFIGETDATA
 typedef void (*WifiSyncHandler)(void);
 
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
-#define WFC_CONNECT true
+#define WFC_CONNECT (1 << 0)
 /// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
-#define INIT_ONLY false
+#define INIT_ONLY   (0 << 0)
 
 /// Initializes WiFi library.
 ///
 /// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
 /// the ARM7 side of the library, and it sets up timer 3 to be used by the
-/// DSWifi. It will start in Internet mode.
+/// DSWifi. The function starts the library in Internet mode, and it needs to be
+/// switched to local multiplayer mode manually if required.
 ///
-/// @param useFirmwareSettings
-///     If true, this function will initialize the hardware and try to connect
-///     to the Access Points stored in the firmware. If false, it will only
-///     initialize the library. You can use WFC_CONNECT and INIT_ONLY.
+/// If INIT_ONLY is passed, the library will be initialized but it won't try to
+/// connect to any AP. When using local multiplayer you should start with this
+/// flag.
+///
+/// If WFC_CONNECT is used, this function will initialize the hardware and try
+/// to connect to the Access Points stored in the firmware.
+///
+/// @warning
+///     WFC_CONNECT is generally discouraged outside of simple demos because
+///     Wifi_InitDefault() can't return for a few seconds until the connection
+///     has succeeded or failed. Also, it doesn't let the user select an AP, or
+///     change the password. It relies on official games setting up an AP in the
+///     firmware settings.
+///
+///     Check the examples of DSWiFi to see how to connect to an AP in a more
+///     manual way that allows your application to do other things while waiting
+///     for the function to return.
+///
+/// @param flags
+///     This is a combination of OR'ed flags.
 ///
 /// @return
 ///     It returns true on success, false on failure.
-bool Wifi_InitDefault(bool useFirmwareSettings);
+bool Wifi_InitDefault(unsigned int flags);
 
 /// Initializes the WiFi library (ARM9 side) and the sgIP library.
 ///

@@ -132,7 +132,7 @@ int Wifi_CheckInit(void)
     return ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) && (WifiData->flags9 & WFLAG_ARM9_ARM7READY));
 }
 
-bool Wifi_InitDefault(bool useFirmwareSettings)
+bool Wifi_InitDefault(unsigned int flags)
 {
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
@@ -153,7 +153,7 @@ bool Wifi_InitDefault(bool useFirmwareSettings)
         swiWaitForVBlank();
     }
 
-    if (useFirmwareSettings)
+    if (flags & WFC_CONNECT)
     {
         int wifiStatus = ASSOCSTATUS_DISCONNECTED;
 
