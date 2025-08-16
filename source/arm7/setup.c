@@ -219,6 +219,13 @@ void Wifi_Shutdown(void)
     W_POWER_US = 1;
 }
 
+// Requires the data returned by the ARM9 WiFi init call.
+//
+// The data returned by the ARM9 Wifi_Init() function must be passed to the ARM7
+// and then given to this function.
+//
+// This function also enables power to the WiFi system, which will shorten
+// battery life.
 void Wifi_Init(u32 wifidata)
 {
     WLOG_PUTS("W: Init\n");
@@ -296,6 +303,9 @@ void Wifi_Init(u32 wifidata)
     WLOG_FLUSH();
 }
 
+// This function cuts power to the WiFi system. After this WiFi will be unusable
+// until Wifi_Init() is called again.
+// TODO: This is currently unused.
 void Wifi_Deinit(void)
 {
     Wifi_Stop();

@@ -6,6 +6,11 @@
 #ifndef DSWIFI_ARM7_SETUP_H__
 #define DSWIFI_ARM7_SETUP_H__
 
+#include <nds/ndstypes.h>
+
+void Wifi_Init(u32 wifidata);
+void Wifi_Deinit(void);
+
 void Wifi_WakeUp(void);
 void Wifi_Shutdown(void);
 void Wifi_Start(void);
