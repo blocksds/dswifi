@@ -42,6 +42,10 @@ void Wifi_Intr_CntOverflow(void)
     }
 }
 
+// Handler for the ARM7 WiFi interrupt.
+//
+// It should be called by the interrupt handler on ARM7, and should *not* have
+// multiple interrupts enabled.
 void Wifi_Interrupt(void)
 {
     // If WiFi hasn't been initialized, don't handle any interrupt

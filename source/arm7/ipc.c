@@ -5,6 +5,7 @@
 
 #include <dswifi7.h>
 
+#include "arm7/interrupts.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/update.h"

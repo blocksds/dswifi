@@ -18,20 +18,6 @@ extern "C" {
 
 #include <dswifi_version.h>
 
-/// Wifi Sync Handler function.
-///
-/// Callback function that is called when the arm9 needs to be told to
-/// synchronize with new fifo data. If this callback is used (see
-/// Wifi_SetSyncHandler()), it should send a message via the fifo to the ARM9,
-/// which will call Wifi_Sync() on ARM9.
-typedef void (*WifiSyncHandler)(void);
-
-/// Handler for the ARM7 WiFi interrupt.
-///
-/// It should be called by the interrupt handler on ARM7, and should *not* have
-/// multiple interrupts enabled.
-void Wifi_Interrupt(void);
-
 /// Sync function to ensure data continues to flow between the two CPUs smoothly.
 ///
 /// It Should be called at a periodic interval, such as in VBlank.
@@ -54,13 +40,6 @@ void Wifi_Init(u32 wifidata);
 ///
 /// After this WiFi will be unusable until Wifi_Init() is called again.
 void Wifi_Deinit(void);
-
-/// Call this function to request notification of when the ARM9-side Wifi_Sync()
-/// function should be called.
-///
-/// @param sh
-///     Pointer to the function to be called for notification.
-void Wifi_SetSyncHandler(WifiSyncHandler sh);
 
 /// Setup system FIFO handler for WiFi library messages.
 void installWifiFIFO(void);
