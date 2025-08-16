@@ -255,7 +255,6 @@ void Wifi_Init(void *wifidata)
     WifiData->curChannel     = 1;
     WifiData->reqChannel     = 1;
     WifiData->curMode        = WIFIMODE_DISABLED;
-    WifiData->reqMode        = WIFIMODE_DISABLED;
     WifiData->reqPacketFlags = WFLAG_PACKET_ALL & (~WFLAG_PACKET_BEACON);
     WifiData->curReqFlags    = 0;
     WifiData->reqReqFlags    = 0;
@@ -298,14 +297,14 @@ void Wifi_Init(void *wifidata)
     // Wifi_Shutdown();
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
 
-    WifiData->flags7 |= WFLAG_ARM7_ACTIVE;
-
     // Setup WiFi interrupt after we have setup everything else
     irqSet(IRQ_WIFI, Wifi_Interrupt);
     irqEnable(IRQ_WIFI);
 
     WLOG_PUTS("W: ARM7 ready\n");
     WLOG_FLUSH();
+
+    WifiData->flags7 |= WFLAG_ARM7_ACTIVE;
 }
 
 // This function cuts power to the WiFi system. After this WiFi will be unusable

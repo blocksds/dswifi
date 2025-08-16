@@ -125,6 +125,12 @@ void Wifi_ClearListOfAP(void)
 
 void Wifi_Update(void)
 {
+    if (WifiData == NULL)
+        return;
+
+    if ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) == 0)
+        return;
+
     // Index of the current WiFi channel to be scanned.
     static size_t wifi_scan_index = 0;
 
@@ -145,9 +151,6 @@ void Wifi_Update(void)
         2, 3, 4, 5, 8, 9, 10, 12
     };
     const size_t scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
-
-    if (!WifiData)
-        return;
 
     WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
     WifiData->stats[WSTAT_ARM7_UPDATES]++;

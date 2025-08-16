@@ -61,14 +61,14 @@ static void wifiValue32Handler(u32 value, void *data)
     }
 }
 
-static void *Wifi_Init(void)
+static bool Wifi_InitIPC(void)
 {
     assert(WifiDataCached == NULL);
 
     // See comment at the top of Wifi_MainStruct
     WifiDataCached = aligned_alloc(CACHE_LINE_SIZE, sizeof(Wifi_MainStruct));
     if (WifiDataCached == NULL)
-        return NULL;
+        return false;
 
     // Clear the struct
     memset(WifiDataCached, 0, sizeof(Wifi_MainStruct));
@@ -80,16 +80,27 @@ static void *Wifi_Init(void)
     WifiData = (Wifi_MainStruct *)memUncached(WifiDataCached);
 
     // Start in Internet mode by default for compatibility with old code.
-    // Don't set mode to WIFIMODE_NORMAL, leave it as WIFIMODE_DISABLED.
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
+    WifiData->reqMode        = WIFIMODE_DISABLED;
 
-    // Get user name from the firmware settings
+    // Always use the LED
+    WifiData->flags9 = WFLAG_ARM9_USELED;
+
+    // Set the default host name from the firmware settings
     WifiData->hostPlayerNameLen = PersonalData->nameLen;
     for (u8 i = 0; i < PersonalData->nameLen; i++)
         WifiData->hostPlayerName[i] = PersonalData->name[i];
 
-    WifiData->flags9 = WFLAG_ARM9_ACTIVE;
-    return WifiDataCached;
+    // Send the cached mirror to the ARM7 (the ARM7 doesn't have cache, so the
+    // cached address in main RAM is enough).
+    fifoSendAddress(FIFO_DSWIFI, WifiDataCached);
+
+    // Wait for the ARM7 to be ready
+    // TODO: Add timeout?
+    while ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) == 0)
+        swiWaitForVBlank();
+
+    return true;
 }
 
 int Wifi_CheckInit(void)
@@ -102,18 +113,8 @@ int Wifi_CheckInit(void)
 
 bool Wifi_InitDefault(unsigned int flags)
 {
-    void *wifi_shared_ipc_mem = Wifi_Init();
-    if (wifi_shared_ipc_mem == NULL)
+    if (!Wifi_InitIPC())
         return false;
-
-    fifoSendAddress(FIFO_DSWIFI, wifi_shared_ipc_mem);
-
-    // Setup timer 3. Call handler 20 times per second (every 50 ms).
-    timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
-
-    // Wait for the ARM7 to be ready
-    while ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) == 0)
-        swiWaitForVBlank();
 
 #ifdef WIFI_USE_TCP_SGIP
     // Initialize sgIP once the ARM7 is ready
@@ -122,6 +123,10 @@ bool Wifi_InitDefault(unsigned int flags)
     Wifi_SetupNetworkInterface();
 #endif
 
+    // Setup timer 3. Call handler 20 times per second (every 50 ms).
+    timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
+
+    // Only start handling update events when everything else is ready
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
     if (flags & WFC_CONNECT)
@@ -157,6 +162,7 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer)
             memcpy(buffer, (void *)WifiData->MacAddr, 6);
             return 6;
         case WIFIGETDATA_NUMWFCAPS:
+            // TODO: This exits as soon as an AP isn't enabled. Fix it.
             for (i = 0; i < 3; i++)
                 if (!(WifiData->wfc_enable[i] & 0x80))
                     break;
