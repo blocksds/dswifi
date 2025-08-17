@@ -70,31 +70,29 @@ int sgIP_DHCP_IsDhcpIp(unsigned long ip)
 void sgIP_DHCP_SendDgram(void)
 {
     struct sockaddr_in sain;
-    int len_dhcp;
     sain.sin_port                     = htons(67);  // bootp server port
     sain.sin_addr.s_addr              = 0xFFFFFFFF; // broadcast
     dhcp_p->options[dhcp_optionptr++] = 0xFF;       // terminate options list.
     // sendto(dhcp_socket, dhcp_p, sizeof(sgIP_DHCP_Packet) - 312 + dhcp_optionptr, 0,
     //        (struct sockaddr *)&sain, sizeof(sain));
-    len_dhcp = sizeof(sgIP_DHCP_Packet) - 312 + dhcp_optionptr;
+
+    int len_dhcp = sizeof(sgIP_DHCP_Packet) - 312 + dhcp_optionptr;
     if (len_dhcp < 300)
         len_dhcp = 300;
 
     sendto(dhcp_socket, dhcp_p, len_dhcp, 0, (struct sockaddr *)&sain, sizeof(sain));
     sgIP_free(dhcp_p);
-    dhcp_p              = 0;
+    dhcp_p              = NULL;
     dhcp_timelastaction = sgIP_timems;
 }
 
 void sgIP_DHCP_BeginDgram(int dgramtype)
 {
-    int i;
-
-    if (dhcp_p)
+    if (dhcp_p != NULL)
         sgIP_free(dhcp_p);
 
-    dhcp_p = (sgIP_DHCP_Packet *)sgIP_malloc(sizeof(sgIP_DHCP_Packet));
-    if (!dhcp_p)
+    dhcp_p = sgIP_malloc(sizeof(sgIP_DHCP_Packet));
+    if (dhcp_p == NULL)
         return;
 
     // ensure packet is zero'd.. seems to pacify some routers.  malloc doesn't initialise the memory
@@ -129,12 +127,12 @@ void sgIP_DHCP_BeginDgram(int dgramtype)
     dhcp_p->options[dhcp_optionptr++] = 0x3D; // DHCP client identifier
     dhcp_p->options[dhcp_optionptr++] = 0x07; // length
     dhcp_p->options[dhcp_optionptr++] = 0x01; // hw type
-    for (i = 0; i < 6; i++)
+    for (int i = 0; i < 6; i++)
         dhcp_p->options[dhcp_optionptr++] = dhcp_int->hwaddr[i];
 
     dhcp_p->options[dhcp_optionptr++] = 0x0C; // DHCP host name
     dhcp_p->options[dhcp_optionptr++] = strlen(dhcp_hostname);
-    for (i = 0; i < strlen(dhcp_hostname); i++)
+    for (int i = 0; i < strlen(dhcp_hostname); i++)
         dhcp_p->options[dhcp_optionptr++] = dhcp_hostname[i];
 
     dhcp_p->options[dhcp_optionptr++] = 0x37; // DHCP Parameter request list
@@ -163,7 +161,7 @@ void sgIP_DHCP_BeginDgram(int dgramtype)
 
     dhcp_p->options[dhcp_optionptr++] = 0x3C; // DHCP Vendor Class ID
     dhcp_p->options[dhcp_optionptr++] = strlen(SGIP_DHCP_CLASSNAME);
-    for (i = 0; i < strlen(SGIP_DHCP_CLASSNAME); i++)
+    for (int i = 0; i < strlen(SGIP_DHCP_CLASSNAME); i++)
         dhcp_p->options[dhcp_optionptr++] = (SGIP_DHCP_CLASSNAME)[i];
 
     // reason we don't send it immediately is in case the calling code wants to modify some data or
@@ -173,8 +171,7 @@ void sgIP_DHCP_BeginDgram(int dgramtype)
 void sgIP_DHCP_Start(sgIP_Hub_HWInterface *interface, int getDNS)
 {
     // begin dhcp transaction to get IP and maybe DNS data.
-    struct sockaddr_in sain;
-    int i;
+
     SGIP_DEBUG_MESSAGE(("sgIP_DHCP_Start()"));
     sgIP_DHCP_Terminate();
     dhcp_requestDNS     = getDNS ? 1 : 0;
@@ -192,11 +189,14 @@ void sgIP_DHCP_Start(sgIP_Hub_HWInterface *interface, int getDNS)
     dhcp_rcvd_dns[1]  = 0;
     dhcp_rcvd_dns[2]  = 0;
 
-    dhcp_socket          = socket(AF_INET, SOCK_DGRAM, 0);
+    dhcp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    struct sockaddr_in sain;
     sain.sin_addr.s_addr = 0;
     sain.sin_port        = htons(68); // BOOTP client
     bind(dhcp_socket, (struct sockaddr *)&sain, sizeof(sain));
-    i = 1;
+
+    int i = 1;
     ioctl(dhcp_socket, FIONBIO, &i);
 
     sgIP_DHCP_BeginDgram(DHCP_TYPE_DISCOVER);
@@ -222,7 +222,6 @@ int sgIP_DHCP_Update(void)
 {
     // MUST be called periodicly; returns status - call until it returns SGIP_DHCP_STATUS_SUCCESS
     // or _FAILED.
-    sgIP_DHCP_Packet *p;
     struct sockaddr_in *sain;
     int i, j, n, l;
 
@@ -231,11 +230,13 @@ int sgIP_DHCP_Update(void)
 
     int send = 0;
 
-    p = (sgIP_DHCP_Packet *)sgIP_malloc(sizeof(sgIP_DHCP_Packet));
+    sgIP_DHCP_Packet *p = sgIP_malloc(sizeof(sgIP_DHCP_Packet));
     if (p)
     {
         while (1)
         {
+            // TODO: This cast looks suspicious, is this a bug? Should "sain" be
+            // a struct instead of a pointer to a struct?
             l = recvfrom(dhcp_socket, p, sizeof(sgIP_DHCP_Packet), 0, (struct sockaddr *)&sain, &n);
             if (l == -1)
                 break;
@@ -415,9 +416,9 @@ void sgIP_DHCP_Terminate(void)
     if (dhcp_socket)
         closesocket(dhcp_socket);
     dhcp_socket = 0;
-    if (dhcp_p)
+    if (dhcp_p != NULL)
         sgIP_free(dhcp_p);
-    dhcp_p      = 0;
+    dhcp_p      = NULL;
     dhcp_status = SGIP_DHCP_STATUS_IDLE;
 }
 
@@ -437,8 +438,6 @@ int gethostname(char *name, size_t len)
 
 int sethostname(const char *name, size_t len)
 {
-    sgIP_DNS_Record *rec;
-
     int size = sizeof(dhcp_hostname);
     if (name == NULL)
         return SGIP_ERROR(EFAULT);
@@ -446,7 +445,7 @@ int sethostname(const char *name, size_t len)
     if (len > size - 1)
         return SGIP_ERROR(EINVAL);
 
-    rec = sgIP_DNS_FindDNSRecord(dhcp_hostname);
+    sgIP_DNS_Record *rec = sgIP_DNS_FindDNSRecord(dhcp_hostname);
 
     strncpy(dhcp_hostname, name, len);
     dhcp_hostname[len] = 0;
