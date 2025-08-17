@@ -17,8 +17,11 @@
 #include "common/spinlock.h"
 
 #ifdef WIFI_USE_TCP_SGIP
-#    include "arm9/heap.h"
-#    include "arm9/sgIP/sgIP.h"
+#include "arm9/heap.h"
+#include "arm9/sgIP/sgIP.h"
+
+// This is set to true if sgIP is enabled
+bool wifi_sgip_enabled = false;
 #endif
 
 // Cached mirror. This should only be used when initializing the struct
@@ -80,7 +83,11 @@ static bool Wifi_InitIPC(unsigned int flags)
     WifiData = (Wifi_MainStruct *)memUncached(WifiDataCached);
 
     // Start in Internet mode by default for compatibility with old code.
-    WifiData->reqLibraryMode = DSWIFI_INTERNET;
+    if (flags & WIFI_LOCAL_ONLY)
+        WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
+    else
+        WifiData->reqLibraryMode = DSWIFI_INTERNET;
+
     WifiData->reqMode        = WIFIMODE_DISABLED;
 
     // Use the LED by default
@@ -112,12 +119,12 @@ int Wifi_CheckInit(void)
     return 1;
 }
 
+#ifdef WIFI_USE_TCP_SGIP
 static void Wifi_Init_sgIP(void)
 {
     // TODO: sgIP can't be deinitialized for some reason. Make sure we only ever
     // initialize it once.
-    static bool sgipready = false;
-    if (sgipready)
+    if (wifi_sgip_enabled)
         return;
 
     // Initialize sgIP once the ARM7 is ready
@@ -125,16 +132,22 @@ static void Wifi_Init_sgIP(void)
     sgIP_Init();
     Wifi_SetupNetworkInterface();
 
-    sgipready = true;
+    wifi_sgip_enabled = true;
 }
+#endif
 
 bool Wifi_InitDefault(unsigned int flags)
 {
+    // You can't connect to WFC APs if the IP stack isn't initialized
+    if ((flags & WIFI_LOCAL_ONLY) && (flags & WFC_CONNECT))
+        return false;
+
     if (!Wifi_InitIPC(flags))
         return false;
 
 #ifdef WIFI_USE_TCP_SGIP
-    Wifi_Init_sgIP();
+    if ((flags & WIFI_LOCAL_ONLY) == 0)
+        Wifi_Init_sgIP();
 #endif
 
     // Setup timer 3. Call handler 20 times per second (every 50 ms).

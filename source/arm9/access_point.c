@@ -308,20 +308,23 @@ int Wifi_AssocStatus(void)
                             return ASSOCSTATUS_ASSOCIATING;
                         case WIFI_AUTHLEVEL_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                            // We only need to use DHCP if we are connected to
-                            // an AP to access the Internet.
-                            if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                            if (wifi_sgip_enabled)
                             {
-                                if (wifi_hw)
+                                // We only need to use DHCP if we are connected to
+                                // an AP to access the Internet.
+                                if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                                 {
-                                    if (!(wifi_hw->ipaddr))
+                                    if (wifi_hw)
                                     {
-                                        sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
-                                        return ASSOCSTATUS_ACQUIRINGDHCP;
+                                        if (!(wifi_hw->ipaddr))
+                                        {
+                                            sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
+                                            wifi_connect_state = WIFI_CONNECT_DHCPING;
+                                            return ASSOCSTATUS_ACQUIRINGDHCP;
+                                        }
                                     }
+                                    sgIP_ARP_SendGratARP(wifi_hw);
                                 }
-                                sgIP_ARP_SendGratARP(wifi_hw);
                             }
 #endif
                             wifi_connect_state = WIFI_CONNECT_DONE;
@@ -331,20 +334,23 @@ int Wifi_AssocStatus(void)
                     break;
                 case WIFIMODE_ASSOCIATED:
 #ifdef WIFI_USE_TCP_SGIP
-                    // We only need to use DHCP if we are connected to an AP to
-                    // access the Internet.
-                    if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                    if (wifi_sgip_enabled)
                     {
-                        if (wifi_hw)
+                        // We only need to use DHCP if we are connected to an AP
+                        // to access the Internet.
+                        if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                         {
-                            if (!(wifi_hw->ipaddr))
+                            if (wifi_hw)
                             {
-                                sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
-                                wifi_connect_state = WIFI_CONNECT_DHCPING;
-                                return ASSOCSTATUS_ACQUIRINGDHCP;
+                                if (!(wifi_hw->ipaddr))
+                                {
+                                    sgIP_DHCP_Start(wifi_hw, wifi_hw->dns[0] == 0);
+                                    wifi_connect_state = WIFI_CONNECT_DHCPING;
+                                    return ASSOCSTATUS_ACQUIRINGDHCP;
+                                }
                             }
+                            sgIP_ARP_SendGratARP(wifi_hw);
                         }
-                        sgIP_ARP_SendGratARP(wifi_hw);
                     }
 #endif
                     wifi_connect_state = WIFI_CONNECT_DONE;
@@ -357,38 +363,38 @@ int Wifi_AssocStatus(void)
 
         case WIFI_CONNECT_DHCPING:
 #ifdef WIFI_USE_TCP_SGIP
-        {
-            // If we are in multiplayer client mode we are done.
-            if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-                return ASSOCSTATUS_ASSOCIATED;
-
-            int i = sgIP_DHCP_Update();
-            if (i != SGIP_DHCP_STATUS_WORKING)
+            if (wifi_sgip_enabled)
             {
-                switch (i)
+                // If we are in multiplayer client mode we are done.
+                if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
+                    return ASSOCSTATUS_ASSOCIATED;
+
+                int i = sgIP_DHCP_Update();
+                if (i != SGIP_DHCP_STATUS_WORKING)
                 {
-                    case SGIP_DHCP_STATUS_SUCCESS:
-                        wifi_connect_state = WIFI_CONNECT_DONE;
-                        WifiData->flags9 |= WFLAG_ARM9_NETREADY;
-                        sgIP_ARP_SendGratARP(wifi_hw);
-                        sgIP_DNS_Record_Localhost();
-                        return ASSOCSTATUS_ASSOCIATED;
-                    default:
-                    case SGIP_DHCP_STATUS_IDLE:
-                    case SGIP_DHCP_STATUS_FAILED:
-                        Wifi_DisconnectAP();
-                        wifi_connect_state = WIFI_CONNECT_ERROR;
-                        return ASSOCSTATUS_CANNOTCONNECT;
+                    switch (i)
+                    {
+                        case SGIP_DHCP_STATUS_SUCCESS:
+                            wifi_connect_state = WIFI_CONNECT_DONE;
+                            WifiData->flags9 |= WFLAG_ARM9_NETREADY;
+                            sgIP_ARP_SendGratARP(wifi_hw);
+                            sgIP_DNS_Record_Localhost();
+                            return ASSOCSTATUS_ASSOCIATED;
+                        default:
+                        case SGIP_DHCP_STATUS_IDLE:
+                        case SGIP_DHCP_STATUS_FAILED:
+                            Wifi_DisconnectAP();
+                            wifi_connect_state = WIFI_CONNECT_ERROR;
+                            return ASSOCSTATUS_CANNOTCONNECT;
+                    }
                 }
+                return ASSOCSTATUS_ACQUIRINGDHCP;
             }
-            return ASSOCSTATUS_ACQUIRINGDHCP;
-        }
-#else
-            // should never get here (dhcp state) without sgIP!
+#endif
+            // Should never get here (DHCP state) without sgIP!
             Wifi_DisconnectAP();
             wifi_connect_state = WIFI_CONNECT_ERROR;
             return ASSOCSTATUS_CANNOTCONNECT;
-#endif
 
         case WIFI_CONNECT_DONE: // connected!
             return ASSOCSTATUS_ASSOCIATED;
@@ -407,10 +413,13 @@ int Wifi_AssocStatus(void)
             if (n != -1)
             {
 #ifdef WIFI_USE_TCP_SGIP
-                Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
-                           WifiData->wfc_subnet_mask[n],
-                           WifiData->wfc_dns_primary[n],
-                           WifiData->wfc_dns_secondary[n]);
+                if (wifi_sgip_enabled)
+                {
+                    Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
+                               WifiData->wfc_subnet_mask[n],
+                               WifiData->wfc_dns_primary[n],
+                               WifiData->wfc_dns_secondary[n]);
+                }
 #endif
                 WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                 WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;

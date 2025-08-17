@@ -40,15 +40,31 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
+/// Only initialize local multiplayer mode.
+///
+/// DSWiFi is initialized, but Internet mode becomes unavailable. DSWiFi won't
+/// need to allocate any memory on the heap for the IP stack (sgIP).
+///
+/// If your game only uses local multiplayer mode, you can use this option to
+/// save RAM.
+#define WIFI_LOCAL_ONLY         (1 << 2)
+
+/// Initialize both internet and local multiplayer modes.
+///
+/// Both internet and local multiplayer modes become available.
+#define WIFI_INTERNET_AND_LOCAL (0 << 2)
+
 /// Don't let the library control the LED blinking.
-#define WIFI_DISABLE_LED    (1 << 1)
+#define WIFI_DISABLE_LED        (1 << 1)
+
 /// Allow the library to control how the LED blinks (DS and DS Lite only).
-#define WIFI_ENABLE_LED     (0 << 1)
+#define WIFI_ENABLE_LED         (0 << 1)
 
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
-#define WFC_CONNECT         (1 << 0)
+#define WFC_CONNECT             (1 << 0)
+
 /// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
-#define INIT_ONLY           (0 << 0)
+#define INIT_ONLY               (0 << 0)
 
 /// Initializes WiFi library.
 ///
@@ -70,7 +86,22 @@ enum WIFIGETDATA
 ///   LED or not. By default, DSWiFi makes the LED blink at different speeds
 ///   depending on the current state of the library.
 ///
+/// - By default, DSWiFi is initialized in a way that both Internet and local
+///   multiplayer mode are available. You can decide if Internet mode is
+///   available or not by using the defines WIFI_INTERNET_AND_LOCAL and
+///   WIFI_LOCAL_ONLY.
+///
+///   The function starts the library in Internet mode if it's available. If it
+///   is initialized with WIFI_LOCAL_ONLY it starts in multiplayer client mode.
+///   The developer needs to be switch to other modes if required. Remember that
+///   there are two local multiplayer modes: client and host.
+///
 /// @warning
+///     Currently, due to limitations of DSWiFi, if you initialize DSWiFi with
+///     internet enabled, the memory used by sgIP will stay allocated after
+///     deinitializing DSWiFi, even if you re-initialize it in local-only mode.
+///
+/// @note
 ///     WFC_CONNECT is generally discouraged outside of simple demos because
 ///     Wifi_InitDefault() can't return for a few seconds until the connection
 ///     has succeeded or failed. Also, it doesn't let the user select an AP, or

@@ -421,8 +421,12 @@ static void Wifi_sgIpHandlePacket(int base, int len)
 
 u32 Wifi_GetIP(void)
 {
+    if (!wifi_sgip_enabled)
+        return 0;
+
     if (wifi_hw)
         return wifi_hw->ipaddr;
+
     return 0;
 }
 
@@ -430,6 +434,10 @@ struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
                               struct in_addr *pDns1, struct in_addr *pDns2)
 {
     struct in_addr ip = { INADDR_NONE };
+
+    if (!wifi_sgip_enabled)
+        return ip;
+
     if (wifi_hw)
     {
         if (pGateway)
@@ -448,6 +456,9 @@ struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
 
 void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2)
 {
+    if (!wifi_sgip_enabled)
+        return;
+
     if (wifi_hw)
     {
         SGIP_DEBUG_MESSAGE(("SetIP%08X %08X %08X", IPaddr, gateway, subnetmask));
@@ -470,7 +481,8 @@ void Wifi_Timer(int num_ms)
 {
     Wifi_Update();
 #ifdef WIFI_USE_TCP_SGIP
-    sgIP_Timer(num_ms);
+    if (wifi_sgip_enabled)
+        sgIP_Timer(num_ms);
 #endif
 }
 
@@ -489,14 +501,17 @@ void Wifi_Update(void)
         return;
 
 #ifdef WIFI_USE_TCP_SGIP
-    if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED && WifiData->flags9 & WFLAG_ARM9_NETUP)
+    if (wifi_sgip_enabled)
     {
-        WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
-    }
-    else if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED
-             && !(WifiData->flags9 & WFLAG_ARM9_NETUP))
-    {
-        WifiData->flags9 |= WFLAG_ARM9_NETUP;
+        if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED && WifiData->flags9 & WFLAG_ARM9_NETUP)
+        {
+            WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
+        }
+        else if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED
+                && !(WifiData->flags9 & WFLAG_ARM9_NETUP))
+        {
+            WifiData->flags9 |= WFLAG_ARM9_NETUP;
+        }
     }
 #endif
 
@@ -514,9 +529,12 @@ void Wifi_Update(void)
             base2 -= WIFI_RXBUFFER_SIZE / 2;
 
 #ifdef WIFI_USE_TCP_SGIP
-        // Only send packets to sgIP if we are trying to access the Internet
-        if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-            Wifi_sgIpHandlePacket(base2, len);
+        if (wifi_sgip_enabled)
+        {
+            // Only send packets to sgIP if we are trying to access the Internet
+            if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                Wifi_sgIpHandlePacket(base2, len);
+        }
 #endif
 
         if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_HOST)
