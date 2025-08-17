@@ -53,16 +53,22 @@ enum WIFIGETDATA
 /// Initializes WiFi library.
 ///
 /// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
-/// the ARM7 side of the library, and it sets up timer 3 to be used by the
-/// DSWifi. The function starts the library in Internet mode, and it needs to be
-/// switched to local multiplayer mode manually if required.
+/// the ARM7 side of the library, and it sets up timer 3 to be used by DSWiFi.
 ///
-/// If INIT_ONLY is passed, the library will be initialized but it won't try to
-/// connect to any AP. When using local multiplayer you should start with this
-/// flag.
+/// You can pass a few options depending on your needs:
 ///
-/// If WFC_CONNECT is used, this function will initialize the hardware and try
-/// to connect to the Access Points stored in the firmware.
+/// - If INIT_ONLY is passed, the library will be initialized but it won't try
+///   to connect to any AP yet. When using local multiplayer you should start
+///   with this flag.
+///
+///   If WFC_CONNECT is used, this function will initialize the hardware and try
+///   to connect to the Access Points stored in the firmware. Wifi_InitDefault()
+///   will refuse to initiailize the library if you use this flag at the same
+///   time as WIFI_LOCAL_ONLY.
+///
+/// - WIFI_DISABLE_LED and WIFI_ENABLE_LED can be used to let DSWiFi control the
+///   LED or not. By default, DSWiFi makes the LED blink at different speeds
+///   depending on the current state of the library.
 ///
 /// @warning
 ///     WFC_CONNECT is generally discouraged outside of simple demos because
