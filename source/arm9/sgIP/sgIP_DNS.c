@@ -13,33 +13,35 @@
 #include "arm9/sgIP/sgIP_DNS.h"
 #include "arm9/sgIP/sgIP_Hub.h"
 
-int dns_sock;
-int time_count;
-int last_id;
-int query_time_start;
 extern volatile unsigned long sgIP_timems;
 
+static int dns_sock;
+static int time_count;
+static int last_id;
+static int query_time_start;
+
 // cache record data
-sgIP_DNS_Record *dnsrecords[SGIP_DNS_MAXRECORDSCACHE];
+static sgIP_DNS_Record *dnsrecords[SGIP_DNS_MAXRECORDSCACHE];
 
 // data to return via hostent
-volatile sgIP_DNS_Record dnsrecord_return;
-volatile char *alias_list[SGIP_DNS_MAXALIASES + 1];
-volatile char *addr_list[SGIP_DNS_MAXRECORDADDRS + 1];
-char ipaddr_alias[256];
-unsigned long ipaddr_ip;
-volatile sgIP_DNS_Hostent dnsrecord_hostent;
+static sgIP_DNS_Record dnsrecord_return;
+static char *alias_list[SGIP_DNS_MAXALIASES + 1];
+static char *addr_list[SGIP_DNS_MAXRECORDADDRS + 1];
+static char ipaddr_alias[256];
+static unsigned long ipaddr_ip;
+static sgIP_DNS_Hostent dnsrecord_hostent;
 
-unsigned char querydata[512];
-unsigned char responsedata[512];
+static unsigned char querydata[512];
+static unsigned char responsedata[512];
 
 void sgIP_DNS_Init(void)
 {
-    for (int i = 0; i < SGIP_DNS_MAXRECORDSCACHE; i++)
-        dnsrecords[i] = NULL;
-
     dns_sock   = -1;
     time_count = 0;
+    last_id = 0;
+    query_time_start = 0;
+
+    memset(dnsrecords, 0, sizeof(dnsrecords));
 }
 
 void sgIP_DNS_Timer1000ms(void)
@@ -299,18 +301,21 @@ static sgIP_DNS_Hostent *sgIP_DNS_GenerateHostentIP(unsigned long ipaddr)
 
 sgIP_DNS_Hostent *sgIP_DNS_GenerateHostent(sgIP_DNS_Record *dnsrec)
 {
-    volatile int i;
+    int i;
     dnsrecord_return = *dnsrec; // copy struct
+
     for (i = 0; i < dnsrecord_return.numalias; i++)
     {
         alias_list[i] = dnsrecord_return.aliases[i];
     }
     alias_list[i] = 0;
+
     for (i = 0; i < dnsrecord_return.numaddr; i++)
     {
         addr_list[i] = (char *)&(dnsrecord_return.addrdata[i * dnsrecord_return.addrlen]);
     }
-    addr_list[i]                  = 0;
+    addr_list[i] = 0;
+
     dnsrecord_hostent.h_addr_list = (char **)addr_list;
     dnsrecord_hostent.h_addrtype =
         AF_INET; // dnsrecord_return.addrclass; // record class is probably AF_IN, not IN_ADDR
@@ -370,13 +375,12 @@ static int sgIP_DNS_genquery(const char *name)
 
 void sgIP_DNS_CopyAliasAt(char *deststr, int offset)
 {
-    char *c;
-    int i, j;
-    i = 0;
-    c = (char *)responsedata + offset;
+    int i = 0;
+
+    char *c = (char *)responsedata + offset;
     do
     {
-        j = c[0];
+        int j = c[0];
         if (j > 63)
         {
             j = ((j & 63) << 8) | c[1];
@@ -391,7 +395,8 @@ void sgIP_DNS_CopyAliasAt(char *deststr, int offset)
             deststr[i++] = *(c++);
         }
         deststr[i++] = '.';
-    } while (1);
+    }
+    while (1);
 
     if (i > 0)
         i--;
@@ -401,13 +406,10 @@ void sgIP_DNS_CopyAliasAt(char *deststr, int offset)
 
 sgIP_DNS_Hostent *sgIP_DNS_gethostbyname(const char *name)
 {
-    sgIP_DNS_Record *rec;
     sgIP_DNS_Hostent *he;
-    sgIP_Hub_HWInterface *hw;
     int len, i, sainlen;
     int retries, dtime;
     unsigned long serverip;
-    struct sockaddr_in sain;
     unsigned long IP;
     SGIP_INTR_PROTECT();
 
@@ -419,7 +421,7 @@ sgIP_DNS_Hostent *sgIP_DNS_gethostbyname(const char *name)
     }
 
     // check cache, return if value required is in cache...
-    rec = sgIP_DNS_FindDNSRecord(name);
+    sgIP_DNS_Record *rec = sgIP_DNS_FindDNSRecord(name);
     if (rec)
     {
         he = sgIP_DNS_GenerateHostent(rec);
@@ -433,7 +435,7 @@ sgIP_DNS_Hostent *sgIP_DNS_gethostbyname(const char *name)
     // send off the query, handle retransmit and trying other dns servers.
     if (dns_sock == -1)
     {
-        hw       = sgIP_Hub_GetDefaultInterface();
+        sgIP_Hub_HWInterface *hw = sgIP_Hub_GetDefaultInterface();
         serverip = hw->dns[0];
 
         dns_sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -444,9 +446,12 @@ sgIP_DNS_Hostent *sgIP_DNS_gethostbyname(const char *name)
         retries = 0;
         do
         {
+            struct sockaddr_in sain;
+
             query_time_start     = sgIP_timems;
             sain.sin_addr.s_addr = serverip;
             sain.sin_port        = htons(53);
+
             i = sendto(dns_sock, querydata, len, 0, (struct sockaddr *)&sain, sizeof(sain));
 dns_listenonly:
 
