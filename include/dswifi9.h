@@ -96,11 +96,6 @@ enum WIFIGETDATA
 ///   The developer needs to be switch to other modes if required. Remember that
 ///   there are two local multiplayer modes: client and host.
 ///
-/// @warning
-///     Currently, due to limitations of DSWiFi, if you initialize DSWiFi with
-///     internet enabled, the memory used by sgIP will stay allocated after
-///     deinitializing DSWiFi, even if you re-initialize it in local-only mode.
-///
 /// @note
 ///     WFC_CONNECT is generally discouraged outside of simple demos because
 ///     Wifi_InitDefault() can't return for a few seconds until the connection
@@ -126,6 +121,8 @@ bool Wifi_InitDefault(unsigned int flags);
 int Wifi_CheckInit(void);
 
 /// Stops the WiFi library.
+///
+/// It will free all RAM and resources used by the library.
 ///
 /// It must be called after calling Wifi_DisableWifi() and waiting for a frame
 /// or two.

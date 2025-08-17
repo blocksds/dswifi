@@ -122,17 +122,26 @@ int Wifi_CheckInit(void)
 #ifdef WIFI_USE_TCP_SGIP
 static void Wifi_Init_sgIP(void)
 {
-    // TODO: sgIP can't be deinitialized for some reason. Make sure we only ever
-    // initialize it once.
-    if (wifi_sgip_enabled)
-        return;
+    // Allocate a 128 KB heap for sgIP
+    wHeapAllocInit(128 * 1024);
 
-    // Initialize sgIP once the ARM7 is ready
-    wHeapAllocInit(128 * 1024); // Use a 128 KB heap
+    // Resources created by sgIP are allocated in the heap we've just created.
     sgIP_Init();
+
     Wifi_SetupNetworkInterface();
 
     wifi_sgip_enabled = true;
+}
+
+static void Wifi_Deinit_sgIP(void)
+{
+    wifi_sgip_enabled = false;
+
+    // sgIP uses a custom allocator for all the resources it allocates. If we
+    // free that heap, we're freeing all resources allocated by sgIP. The next
+    // time we initialize sgIP it will allocate a new heap and start from
+    // scratch with all its resources.
+    wHeapAllocDeinit();
 }
 #endif
 
@@ -142,10 +151,12 @@ bool Wifi_InitDefault(unsigned int flags)
     if ((flags & WIFI_LOCAL_ONLY) && (flags & WFC_CONNECT))
         return false;
 
+    // Initialize the ARM7 side of the library and wait until it's ready
     if (!Wifi_InitIPC(flags))
         return false;
 
 #ifdef WIFI_USE_TCP_SGIP
+    // Initialize sgIP once the ARM7 is ready
     if ((flags & WIFI_LOCAL_ONLY) == 0)
         Wifi_Init_sgIP();
 #endif
@@ -196,6 +207,10 @@ bool Wifi_Deinit(void)
 
     while (WifiData->flags7 & WFLAG_ARM7_ACTIVE)
         swiWaitForVBlank();
+
+#ifdef WIFI_USE_TCP_SGIP
+    Wifi_Deinit_sgIP();
+#endif
 
     // Free the pointer in main RAM, not the one in the uncached mirror
     free(WifiDataCached);
