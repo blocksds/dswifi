@@ -43,9 +43,12 @@ sgIP_Hub_Protocol *sgIP_Hub_AddProtocolInterface(int protocolID,
     ProtocolInterfaces[n].flags         = SGIP_FLAG_PROTOCOL_IN_USE | SGIP_FLAG_PROTOCOL_ENABLED;
     ProtocolInterfaces[n].protocol      = protocolID;
     ProtocolInterfaces[n].ReceivePacket = ReceivePacket;
+
     if (InterfaceInit)
         InterfaceInit(ProtocolInterfaces + n);
+
     NumProtocolInterfaces++;
+
     return ProtocolInterfaces + n;
 }
 
@@ -112,10 +115,8 @@ int sgIP_Hub_ReceiveHardwarePacket(sgIP_Hub_HWInterface *hw, sgIP_memblock *pack
 
     if (hw->flags & SGIP_FLAG_HWINTERFACE_ENABLED)
     {
-        int n;
-        int protocol;
+        int protocol = ((unsigned short *)packet->datastart)[6];
 
-        protocol = ((unsigned short *)packet->datastart)[6];
         // SGIP_DEBUG_MESSAGE(("hub: rx packet %04X %X", protocol, packet->totallength));
         if (protocol == PROTOCOL_ETHER_ARP)
         {
@@ -130,7 +131,7 @@ int sgIP_Hub_ReceiveHardwarePacket(sgIP_Hub_HWInterface *hw, sgIP_memblock *pack
 
         // hide ethernet header for higher-level protocols
         sgIP_memblock_exposeheader(packet, -14);
-        for (n = 0; n < SGIP_HUB_MAXPROTOCOLINTERFACES; n++)
+        for (int n = 0; n < SGIP_HUB_MAXPROTOCOLINTERFACES; n++)
         {
             if (ProtocolInterfaces[n].flags & SGIP_FLAG_PROTOCOL_ENABLED
                 && ProtocolInterfaces[n].protocol == protocol)
@@ -176,8 +177,8 @@ int sgIP_Hub_SendProtocolPacket(int protocol, sgIP_memblock *packet, unsigned lo
     {
         return sgIP_ARP_SendProtocolFrame(hw, packet, protocol, dest_address);
     }
-    else
-    { // eek, on different network. Send to gateway
+    else // eek, on different network. Send to gateway
+    {
         return sgIP_ARP_SendProtocolFrame(hw, packet, protocol, hw->gateway);
     }
 }
