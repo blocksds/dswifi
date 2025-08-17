@@ -61,7 +61,7 @@ static void wifiValue32Handler(u32 value, void *data)
     }
 }
 
-static bool Wifi_InitIPC(void)
+static bool Wifi_InitIPC(unsigned int flags)
 {
     assert(WifiDataCached == NULL);
 
@@ -83,8 +83,9 @@ static bool Wifi_InitIPC(void)
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
     WifiData->reqMode        = WIFIMODE_DISABLED;
 
-    // Always use the LED
-    WifiData->flags9 = WFLAG_ARM9_USELED;
+    // Use the LED by default
+    if ((flags & WIFI_DISABLE_LED) == 0)
+        WifiData->flags9 = WFLAG_ARM9_USELED;
 
     // Set the default host name from the firmware settings
     WifiData->hostPlayerNameLen = PersonalData->nameLen;
@@ -129,7 +130,7 @@ static void Wifi_Init_sgIP(void)
 
 bool Wifi_InitDefault(unsigned int flags)
 {
-    if (!Wifi_InitIPC())
+    if (!Wifi_InitIPC(flags))
         return false;
 
 #ifdef WIFI_USE_TCP_SGIP

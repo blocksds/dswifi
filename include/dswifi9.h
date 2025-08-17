@@ -40,10 +40,15 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
+/// Don't let the library control the LED blinking.
+#define WIFI_DISABLE_LED    (1 << 1)
+/// Allow the library to control how the LED blinks (DS and DS Lite only).
+#define WIFI_ENABLE_LED     (0 << 1)
+
 /// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
-#define WFC_CONNECT (1 << 0)
+#define WFC_CONNECT         (1 << 0)
 /// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
-#define INIT_ONLY   (0 << 0)
+#define INIT_ONLY           (0 << 0)
 
 /// Initializes WiFi library.
 ///
