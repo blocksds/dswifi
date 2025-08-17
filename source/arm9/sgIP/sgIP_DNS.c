@@ -27,12 +27,12 @@ static sgIP_DNS_Record *dnsrecords[SGIP_DNS_MAXRECORDSCACHE];
 static sgIP_DNS_Record dnsrecord_return;
 static char *alias_list[SGIP_DNS_MAXALIASES + 1];
 static char *addr_list[SGIP_DNS_MAXRECORDADDRS + 1];
-static char ipaddr_alias[256];
+static char *ipaddr_alias;
 static unsigned long ipaddr_ip;
 static sgIP_DNS_Hostent dnsrecord_hostent;
 
-static unsigned char querydata[512];
-static unsigned char responsedata[512];
+static unsigned char *querydata;
+static unsigned char *responsedata;
 
 void sgIP_DNS_Init(void)
 {
@@ -42,6 +42,11 @@ void sgIP_DNS_Init(void)
     query_time_start = 0;
 
     memset(dnsrecords, 0, sizeof(dnsrecords));
+
+    // Allocate the arrays at runtime to save RAM when sgIP isn't active
+    ipaddr_alias = sgIP_malloc(256 * sizeof(char));
+    querydata    = sgIP_malloc(512 * sizeof(unsigned char));
+    responsedata = sgIP_malloc(512 * sizeof(unsigned char));
 }
 
 void sgIP_DNS_Timer1000ms(void)
