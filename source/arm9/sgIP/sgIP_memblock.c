@@ -11,15 +11,15 @@
 
 #ifndef SGIP_MEMBLOCK_DYNAMIC_MALLOC_ALL
 
-#    ifndef SGIP_USEDYNAMICMEMORY
-sgIP_memblock memblock_pool[SGIP_MEMBLOCK_BASENUM];
-#    else
-sgIP_memblock *memblock_pool;
-#    endif
+#ifndef SGIP_USEDYNAMICMEMORY
+static sgIP_memblock memblock_pool[SGIP_MEMBLOCK_BASENUM];
+#else
+static sgIP_memblock *memblock_pool;
+#endif
 
-sgIP_memblock *memblock_poolfree;
-int numused, numfree;
-void *pool_link;
+static sgIP_memblock *memblock_poolfree;
+static int numused, numfree;
+static void *pool_link;
 
 sgIP_memblock *sgIP_memblock_getunused(void)
 {
@@ -49,15 +49,14 @@ sgIP_memblock *sgIP_memblock_getunused(void)
 void sgIP_memblock_Init(void)
 {
 #ifndef SGIP_MEMBLOCK_DYNAMIC_MALLOC_ALL
-    int i;
-#    ifdef SGIP_USEDYNAMICMEMORY
+#ifdef SGIP_USEDYNAMICMEMORY
     pool_link              = sgIP_malloc(sizeof(sgIP_memblock) * SGIP_MEMBLOCK_BASENUM + 4);
     ((long *)pool_link)[0] = 0;
     memblock_pool          = (sgIP_memblock *)(((char *)pool_link) + 4);
-#    endif
+#endif // SGIP_USEDYNAMICMEMORY
     numused = numfree = 0;
     memblock_poolfree = 0;
-    for (i = 0; i < SGIP_MEMBLOCK_BASENUM; i++)
+    for (int i = 0; i < SGIP_MEMBLOCK_BASENUM; i++)
     {
         memblock_pool[i].totallength = 0;
         memblock_pool[i].next        = memblock_poolfree;

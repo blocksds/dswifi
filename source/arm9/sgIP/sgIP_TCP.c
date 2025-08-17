@@ -4,26 +4,32 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <stddef.h>
+#include <string.h>
+
 #include <sys/socket.h>
 
 #include "arm9/sgIP/sgIP_Hub.h"
 #include "arm9/sgIP/sgIP_IP.h"
 #include "arm9/sgIP/sgIP_TCP.h"
 
-sgIP_Record_TCP *tcprecords;
-int port_counter;
-unsigned long lasttime;
 extern volatile unsigned long sgIP_timems;
-sgIP_TCP_SYNCookie synlist[SGIP_TCP_MAXSYNS];
 
-int numsynlist; // number of active entries in synlist (earliest first)
+static sgIP_Record_TCP *tcprecords;
+static int port_counter;
+static unsigned long lasttime;
+static sgIP_TCP_SYNCookie synlist[SGIP_TCP_MAXSYNS];
+
+static int numsynlist; // number of active entries in synlist (earliest first)
 
 void sgIP_TCP_Init(void)
 {
-    tcprecords   = 0;
-    numsynlist   = 0;
+    tcprecords   = NULL;
     port_counter = SGIP_TCP_FIRSTOUTGOINGPORT;
     lasttime     = sgIP_timems;
+    numsynlist   = 0;
+
+    memset(synlist, 0, sizeof(synlist));
 }
 
 // scan through tcp records and resend anything necessary

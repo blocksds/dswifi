@@ -41,6 +41,7 @@ typedef struct SGIP_HEADER_IP
     unsigned char options[4];       // optional options come here.
 } sgIP_Header_IP;
 
+void sgIP_IP_Init(void);
 int sgIP_IP_ReceivePacket(sgIP_memblock *mb);
 int sgIP_IP_MaxContentsSize(unsigned long destip);
 int sgIP_IP_RequiredHeaderSize(void);

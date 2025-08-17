@@ -10,7 +10,12 @@
 #include "arm9/sgIP/sgIP_TCP.h"
 #include "arm9/sgIP/sgIP_UDP.h"
 
-int idnum_count;
+static int idnum_count;
+
+void sgIP_IP_Init(void)
+{
+    idnum_count = 0;
+}
 
 int sgIP_IP_ReceivePacket(sgIP_memblock *mb)
 {

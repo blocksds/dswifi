@@ -4,17 +4,20 @@
 
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
+#include <stddef.h>
+
 #include "arm9/sgIP/sgIP_Hub.h"
 #include "arm9/sgIP/sgIP_IP.h"
 #include "arm9/sgIP/sgIP_UDP.h"
 
-sgIP_Record_UDP *udprecords;
-int udpport_counter;
 extern volatile unsigned long sgIP_timems;
+
+static sgIP_Record_UDP *udprecords;
+static int udpport_counter;
 
 void sgIP_UDP_Init(void)
 {
-    udprecords      = 0;
+    udprecords      = NULL;
     udpport_counter = SGIP_UDP_FIRSTOUTGOINGPORT;
 }
 

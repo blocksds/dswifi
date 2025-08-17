@@ -22,6 +22,7 @@ void sgIP_Init(void)
     sgIP_Hub_Init();
     sgIP_sockets_Init();
     sgIP_ARP_Init();
+    sgIP_IP_Init();
     sgIP_TCP_Init();
     sgIP_UDP_Init();
     sgIP_DNS_Init();

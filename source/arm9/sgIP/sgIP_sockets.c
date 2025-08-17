@@ -5,6 +5,7 @@
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
 #include <stddef.h>
+#include <string.h>
 
 #include "arm9/sgIP/sgIP_DNS.h"
 #include "arm9/sgIP/sgIP_ICMP.h"
@@ -12,16 +13,13 @@
 #include "arm9/sgIP/sgIP_UDP.h"
 #include "arm9/sgIP/sgIP_sockets.h"
 
-sgIP_socket_data socketlist[SGIP_SOCKET_MAXSOCKETS];
 extern unsigned long sgIP_timems;
+
+static sgIP_socket_data socketlist[SGIP_SOCKET_MAXSOCKETS];
 
 void sgIP_sockets_Init(void)
 {
-    for (int i = 0; i < SGIP_SOCKET_MAXSOCKETS; i++)
-    {
-        socketlist[i].conn_ptr = 0;
-        socketlist[i].flags    = 0;
-    }
+    memset(socketlist, 0, sizeof(socketlist));
 }
 
 // Additional timer routine that cleans up after half-closed sockets.
@@ -63,8 +61,10 @@ int spawn_socket(int flags)
     int s;
     SGIP_INTR_PROTECT();
     for (s = 0; s < SGIP_SOCKET_MAXSOCKETS; s++)
+    {
         if (!(socketlist[s].flags & SGIP_SOCKET_FLAG_ALLOCATED))
             break;
+    }
     if (s == SGIP_SOCKET_MAXSOCKETS)
     {
         SGIP_INTR_UNPROTECT();

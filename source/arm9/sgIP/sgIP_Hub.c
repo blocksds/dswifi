@@ -10,19 +10,10 @@
 #include "arm9/sgIP/sgIP_ARP.h"
 #include "arm9/sgIP/sgIP_Hub.h"
 
-//////////////////////////////////////////////////////////////////////////
-// Global vars
-
-int NumHWInterfaces;
-int NumProtocolInterfaces;
-sgIP_Hub_Protocol ProtocolInterfaces[SGIP_HUB_MAXPROTOCOLINTERFACES];
-sgIP_Hub_HWInterface HWInterfaces[SGIP_HUB_MAXHWINTERFACES];
-
-//////////////////////////////////////////////////////////////////////////
-// Private functions
-
-//////////////////////////////////////////////////////////////////////////
-// Public functions
+static int NumHWInterfaces;
+static int NumProtocolInterfaces;
+static sgIP_Hub_Protocol ProtocolInterfaces[SGIP_HUB_MAXPROTOCOLINTERFACES];
+static sgIP_Hub_HWInterface HWInterfaces[SGIP_HUB_MAXHWINTERFACES];
 
 void sgIP_Hub_Init(void)
 {
