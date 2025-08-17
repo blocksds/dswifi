@@ -71,7 +71,7 @@ int spawn_socket(int flags)
         return SGIP_ERROR(ENOMEM);
     }
     socketlist[s].flags    = SGIP_SOCKET_FLAG_ALLOCATED | SGIP_SOCKET_FLAG_VALID | flags;
-    socketlist[s].conn_ptr = 0;
+    socketlist[s].conn_ptr = NULL;
     SGIP_INTR_UNPROTECT();
     return s + 1;
 }
@@ -83,7 +83,7 @@ int kill_socket(int s)
 
     SGIP_INTR_PROTECT();
     s--;
-    socketlist[s].conn_ptr = 0;
+    socketlist[s].conn_ptr = NULL;
     socketlist[s].flags    = 0;
     SGIP_INTR_UNPROTECT();
     return 0;
@@ -105,12 +105,12 @@ int socket(int domain, int type, int protocol)
         if (!(socketlist[s].flags & SGIP_SOCKET_FLAG_ALLOCATED))
             break;
     }
-
     if (s == SGIP_SOCKET_MAXSOCKETS)
     {
         SGIP_INTR_UNPROTECT();
         return SGIP_ERROR(ENOMEM);
     }
+
     if (type == SOCK_STREAM)
     {
         socketlist[s].flags =
@@ -128,7 +128,8 @@ int socket(int domain, int type, int protocol)
         SGIP_INTR_UNPROTECT();
         return SGIP_ERROR(EINVAL);
     }
-    if (socketlist[s].conn_ptr == 0)
+
+    if (socketlist[s].conn_ptr == NULL)
     {
         socketlist[s].flags = 0;
         SGIP_INTR_UNPROTECT();
@@ -161,7 +162,7 @@ int forceclosesocket(int socket)
     {
         sgIP_UDP_FreeRecord((sgIP_Record_UDP *)socketlist[socket].conn_ptr);
     }
-    socketlist[socket].conn_ptr = 0;
+    socketlist[socket].conn_ptr = NULL;
     socketlist[socket].flags    = 0;
     SGIP_INTR_UNPROTECT();
     return 0;
@@ -202,7 +203,7 @@ int closesocket(int socket)
     {
         sgIP_UDP_FreeRecord((sgIP_Record_UDP *)socketlist[socket].conn_ptr);
     }
-    socketlist[socket].conn_ptr = 0;
+    socketlist[socket].conn_ptr = NULL;
     socketlist[socket].flags    = 0;
     SGIP_INTR_UNPROTECT();
     return 0;
@@ -763,7 +764,9 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct
     sgIP_Record_UDP *urec;
     lasttime = sgIP_timems;
     if (!timeout)
+    {
         timeout_ms = 2678400000UL;
+    }
     else
     {
         if (timeout->tv_sec >= 2678400)
