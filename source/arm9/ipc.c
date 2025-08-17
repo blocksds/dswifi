@@ -284,6 +284,8 @@ bool Wifi_LibraryModeReady(void)
 
 void Wifi_InternetMode(void)
 {
+    assert(wifi_sgip_enabled);
+
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
     WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
