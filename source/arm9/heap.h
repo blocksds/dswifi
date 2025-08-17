@@ -5,11 +5,13 @@
 #ifndef WIFI_ARM9_IPC_H__
 #define WIFI_ARM9_IPC_H__
 
+#include <stdbool.h>
+
 #include "arm9/wifi_arm9.h"
 
 #ifdef WIFI_USE_TCP_SGIP
 
-void wHeapAllocInit(int size);
+bool wHeapAllocInit(int size);
 void wHeapAllocDeinit(void);
 
 void *wHeapAlloc(int size);

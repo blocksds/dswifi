@@ -54,16 +54,18 @@ void wHeapAllocDeinit(void)
     wHeapFirst = NULL;
 }
 
-void wHeapAllocInit(int size)
+bool wHeapAllocInit(int size)
 {
     wHeapStart = malloc(size);
     if (wHeapStart == NULL)
-        return;
+        return false;
 
     wHeapFirst        = wHeapStart;
     wHeapStart->flags = WHEAP_RECORD_FLAG_UNUSED;
     wHeapStart->next  = NULL;
     wHeapStart->size  = size - sizeof(wHeapRecord);
+
+    return true;
 }
 
 void *wHeapAlloc(int size)

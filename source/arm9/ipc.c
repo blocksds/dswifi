@@ -120,11 +120,22 @@ int Wifi_CheckInit(void)
 }
 
 #ifdef WIFI_USE_TCP_SGIP
-static void Wifi_Init_sgIP(void)
+static bool Wifi_Init_sgIP_Heap(void)
 {
     // Allocate a 128 KB heap for sgIP
-    wHeapAllocInit(128 * 1024);
+    if (!wHeapAllocInit(128 * 1024))
+        return false;
 
+    return true;
+}
+
+static void Wifi_Deinit_sgIP_Heap(void)
+{
+    wHeapAllocDeinit();
+}
+
+static void Wifi_Init_sgIP(void)
+{
     // Resources created by sgIP are allocated in the heap we've just created.
     sgIP_Init();
 
@@ -141,7 +152,7 @@ static void Wifi_Deinit_sgIP(void)
     // free that heap, we're freeing all resources allocated by sgIP. The next
     // time we initialize sgIP it will allocate a new heap and start from
     // scratch with all its resources.
-    wHeapAllocDeinit();
+    Wifi_Deinit_sgIP_Heap();
 }
 #endif
 
@@ -151,13 +162,33 @@ bool Wifi_InitDefault(unsigned int flags)
     if ((flags & WIFI_LOCAL_ONLY) && (flags & WFC_CONNECT))
         return false;
 
+#ifdef WIFI_USE_TCP_SGIP
+    bool initialize_sgip = (flags & WIFI_LOCAL_ONLY) ? false : true;
+
+    if (initialize_sgip)
+    {
+        // Try to allocate the sgIP heap before initializing the ARM7. It's
+        // easier to check if there is enough RAM on the ARM9 and return if not
+        // than to initialize the ARM7, find out that there isn't enough RAM on
+        // the ARM9, and to have to deinitialize the ARM7.
+        if (!Wifi_Init_sgIP_Heap())
+            return false;
+    }
+#endif
+
     // Initialize the ARM7 side of the library and wait until it's ready
     if (!Wifi_InitIPC(flags))
+    {
+#ifdef WIFI_USE_TCP_SGIP
+        if (initialize_sgip)
+            Wifi_Deinit_sgIP_Heap();
+#endif
         return false;
+    }
 
 #ifdef WIFI_USE_TCP_SGIP
     // Initialize sgIP once the ARM7 is ready
-    if ((flags & WIFI_LOCAL_ONLY) == 0)
+    if (initialize_sgip)
         Wifi_Init_sgIP();
 #endif
 
