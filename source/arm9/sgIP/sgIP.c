@@ -9,10 +9,15 @@
 volatile unsigned long sgIP_timems;
 int sgIP_errno;
 
+static unsigned long count_100ms;
+static unsigned long count_1000ms;
+
 // sgIP_Init(): Initializes sgIP hub and sets up a default surrounding interface (ARP and IP)
 void sgIP_Init(void)
 {
     sgIP_timems = 0;
+    sgIP_errno = 0;
+
     sgIP_memblock_Init();
     sgIP_Hub_Init();
     sgIP_sockets_Init();
@@ -22,10 +27,10 @@ void sgIP_Init(void)
     sgIP_DNS_Init();
     sgIP_DHCP_Init();
     sgIP_Hub_AddProtocolInterface(PROTOCOL_ETHER_IP, &sgIP_IP_ReceivePacket, 0);
-}
 
-unsigned long count_100ms;
-unsigned long count_1000ms;
+    count_100ms = 0;
+    count_1000ms = 0;
+}
 
 void sgIP_Timer(int num_ms)
 {

@@ -12,32 +12,55 @@
 #include "arm9/sgIP/sgIP_DNS.h"
 
 extern volatile unsigned long sgIP_timems;
-int dhcp_socket;
-char dhcp_hostname[64];
-int dhcp_tid;
-unsigned long dhcp_timestart, dhcp_timelastaction;
-sgIP_DHCP_Packet *dhcp_p;
-sgIP_Hub_HWInterface *dhcp_int;
-int dhcp_optionptr;
-int dhcp_requestDNS;
-int dhcp_status;
-int dhcp_state; // 0== send DHCPDISCOVER wait for DHCPOFFER, 1== send DHCPREQUEST wait for DHCPACK
-unsigned long dhcp_rcvd_ip, dhcp_rcvd_gateway, dhcp_rcvd_snmask, dhcp_rcvd_dns[3], dhcp_serverip;
+
+static int dhcp_socket;
+static char dhcp_hostname[64];
+static int dhcp_tid;
+static unsigned long dhcp_timestart, dhcp_timelastaction;
+static sgIP_DHCP_Packet *dhcp_p;
+static sgIP_Hub_HWInterface *dhcp_int;
+static int dhcp_optionptr;
+static int dhcp_requestDNS;
+static int dhcp_status;
+
+// 0== send DHCPDISCOVER wait for DHCPOFFER, 1== send DHCPREQUEST wait for DHCPACK
+static int dhcp_state;
+
+static unsigned long dhcp_rcvd_ip;
+static unsigned long dhcp_rcvd_gateway;
+static unsigned long dhcp_rcvd_snmask;
+static unsigned long dhcp_rcvd_dns[3];
+static unsigned long dhcp_serverip;
 
 void sgIP_DHCP_Init(void)
 {
     dhcp_socket  = 0;
-    dhcp_p       = 0;
-    dhcp_int     = 0;
-    dhcp_rcvd_ip = 0;
     strcpy(dhcp_hostname, SGIP_DHCP_DEFAULTHOSTNAME);
-    dhcp_status = SGIP_DHCP_STATUS_IDLE;
+    dhcp_tid            = 0;
+    dhcp_timestart      = 0;
+    dhcp_timelastaction = 0;
+
+    dhcp_p   = NULL;
+    dhcp_int = NULL;
+
+    dhcp_optionptr  = 0;
+    dhcp_requestDNS = 0;
+    dhcp_status     = SGIP_DHCP_STATUS_IDLE;
+    dhcp_state      = 0;
+
+    dhcp_rcvd_ip      = 0;
+    dhcp_rcvd_gateway = 0;
+    dhcp_rcvd_snmask  = 0;
+    memset(dhcp_rcvd_dns, 0, sizeof(dhcp_rcvd_dns));
+    dhcp_serverip     = 0;
 }
+
 void sgIP_DHCP_SetHostName(char *s)
 {
     strncpy(dhcp_hostname, s, 63);
     dhcp_hostname[63] = 0;
 }
+
 int sgIP_DHCP_IsDhcpIp(unsigned long ip)
 {
     // check if the IP address was assigned via dhcp.

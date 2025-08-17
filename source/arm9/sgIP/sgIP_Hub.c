@@ -5,6 +5,7 @@
 // DSWifi Project - sgIP Internet Protocol Stack Implementation
 
 #include <stddef.h>
+#include <string.h>
 
 #include "arm9/sgIP/sgIP_ARP.h"
 #include "arm9/sgIP/sgIP_Hub.h"
@@ -27,6 +28,9 @@ void sgIP_Hub_Init(void)
 {
     NumHWInterfaces       = 0;
     NumProtocolInterfaces = 0;
+
+    memset(HWInterfaces, 0, sizeof(HWInterfaces));
+    memset(ProtocolInterfaces, 0, sizeof(ProtocolInterfaces));
 }
 
 sgIP_Hub_Protocol *sgIP_Hub_AddProtocolInterface(int protocolID,
