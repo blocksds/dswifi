@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
 
 #include <stdlib.h>
 
@@ -45,6 +46,13 @@ typedef struct WHEAP_RECORD
 int wHeapsize;
 wHeapRecord *wHeapStart = NULL; // start of heap
 wHeapRecord *wHeapFirst; // first free block
+
+void wHeapAllocDeinit(void)
+{
+    free(wHeapStart);
+    wHeapStart = NULL;
+    wHeapFirst = NULL;
+}
 
 void wHeapAllocInit(int size)
 {

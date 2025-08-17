@@ -10,6 +10,8 @@
 #ifdef WIFI_USE_TCP_SGIP
 
 void wHeapAllocInit(int size);
+void wHeapAllocDeinit(void);
+
 void *wHeapAlloc(int size);
 void wHeapFree(void *data);
 
