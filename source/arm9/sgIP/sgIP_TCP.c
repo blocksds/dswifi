@@ -341,18 +341,21 @@ int sgIP_TCP_ReceivePacket(sgIP_memblock *mb, unsigned long srcip, unsigned long
                         synlist[i] = synlist[i + 1]; // assume struct copy
                     }
                     for (j = 0; j < rec->maxlisten; j++)
+                    {
                         if (!rec->listendata[j])
                             break; // find last entry in listen queue
+                    }
                     if (j == rec->maxlisten)
                     {
-                        rec = 0;
+                        // discard this connection! we have no space in the listen queue.
+                        rec = NULL;
                         break;
-                    } // discard this connection! we have no space in the listen queue.
+                    }
 
                     rec->listendata[j] = sgIP_TCP_AllocRecord();
                     j++;
                     if (j != rec->maxlisten)
-                        rec->listendata[j] = 0;
+                        rec->listendata[j] = NULL;
 
                     rec = rec->listendata[j - 1];
 
@@ -895,8 +898,7 @@ int sgIP_TCP_SendSynReply(int flags, unsigned long seq, unsigned long ack, unsig
 sgIP_Record_TCP *sgIP_TCP_AllocRecord(void)
 {
     SGIP_INTR_PROTECT();
-    sgIP_Record_TCP *rec;
-    rec = sgIP_malloc(sizeof(sgIP_Record_TCP));
+    sgIP_Record_TCP *rec = sgIP_malloc(sizeof(sgIP_Record_TCP));
     if (rec)
     {
         rec->buf_oob_in    = 0;
@@ -912,7 +914,7 @@ sgIP_Record_TCP *sgIP_TCP_AllocRecord(void)
         rec->srcip         = 0;
         rec->retrycount    = 0;
         rec->errorcode     = 0;
-        rec->listendata    = 0;
+        rec->listendata    = NULL;
         rec->want_shutdown = 0;
         rec->want_reack    = 0;
     }
@@ -1008,8 +1010,7 @@ int sgIP_TCP_Listen(sgIP_Record_TCP *rec, int maxlisten)
         if (maxlisten <= 0)
             maxlisten = 1;
         rec->maxlisten  = maxlisten;
-        rec->listendata = (sgIP_Record_TCP **)sgIP_malloc(
-            maxlisten * 4); // pointers to TCP records, 0-terminated list.
+        rec->listendata = sgIP_malloc(maxlisten * 4); // pointers to TCP records, 0-terminated list.
         if (!rec->listendata)
         {
             rec->maxlisten = 0;
@@ -1018,7 +1019,7 @@ int sgIP_TCP_Listen(sgIP_Record_TCP *rec, int maxlisten)
         else
         {
             rec->tcpstate      = SGIP_TCP_STATE_LISTEN;
-            rec->listendata[0] = 0;
+            rec->listendata[0] = NULL;
         }
     }
     SGIP_INTR_UNPROTECT();
@@ -1052,7 +1053,7 @@ sgIP_Record_TCP *sgIP_TCP_Accept(sgIP_Record_TCP *rec)
             {
                 rec->listendata[i - 1] = rec->listendata[i];
             }
-            rec->listendata[i - 1] = 0;
+            rec->listendata[i - 1] = NULL;
             SGIP_INTR_UNPROTECT();
             return t;
         }

@@ -172,8 +172,7 @@ int sgIP_UDP_SendPacket(sgIP_Record_UDP *rec, const char *data, int datalen, uns
 sgIP_Record_UDP *sgIP_UDP_AllocRecord(void)
 {
     SGIP_INTR_PROTECT();
-    sgIP_Record_UDP *rec;
-    rec = (sgIP_Record_UDP *)sgIP_malloc(sizeof(sgIP_Record_UDP));
+    sgIP_Record_UDP *rec = sgIP_malloc(sizeof(sgIP_Record_UDP));
     if (rec)
     {
         rec->destip             = 0;
