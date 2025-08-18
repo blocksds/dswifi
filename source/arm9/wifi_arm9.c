@@ -483,6 +483,8 @@ void Wifi_Timer(int num_ms)
 #ifdef WIFI_USE_TCP_SGIP
     if (wifi_sgip_enabled)
         sgIP_Timer(num_ms);
+#else
+    (void)num_ms;
 #endif
 }
 

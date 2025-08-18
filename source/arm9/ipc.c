@@ -330,11 +330,15 @@ bool Wifi_LibraryModeReady(void)
 
 void Wifi_InternetMode(void)
 {
+#ifdef WIFI_USE_TCP_SGIP
     assert(wifi_sgip_enabled);
 
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
     WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
+#else
+    assert(0);
+#endif
 }
 
 int Wifi_MultiplayerClientMode(size_t client_packet_size)
