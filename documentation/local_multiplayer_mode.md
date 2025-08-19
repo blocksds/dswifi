@@ -51,8 +51,8 @@ Wifi_InitDefault(INIT_ONLY);
 ```
 
 This is required even if your application needs to switch between Internet and
-local multiplayer mode, you can't use `USE_WFC`. Also, hardware timer 3 will be
-used by the WiFi library after this call.
+local multiplayer mode, you can't use `WFC_CONNECT`. Note that hardware timer 3
+will be used by the WiFi library after this call.
 
 After using multiplayer mode you can call this to switch to Internet mode:
 
@@ -60,11 +60,32 @@ After using multiplayer mode you can call this to switch to Internet mode:
 Wifi_InternetMode();
 ```
 
+If you aren't interested in ever using Internet mode you can initialize the
+library like this:
+
+```c
+Wifi_InitDefault(INIT_ONLY | WIFI_LOCAL_ONLY);
+```
+
+This will prevent the IP library from starting, and it will save over 100 KB of
+RAM. It will also prevent `Wifi_InternetMode()` from working until the library
+is re-initialized without `WIFI_LOCAL_ONLY`.
+
 If you are done using wireless mode you can disable it to save power by calling:
 
 ```c
 Wifi_DisableWifi();
 ```
+
+If you aren't going to use DSWiFi again and you want to free up even more
+resources, you can call:
+
+```c
+Wifi_Deinit();
+```
+
+It will free all RAM used by the library and hardware timer 3. You can call
+`Wifi_InitDefault()` at a later time to re-initialize it.
 
 ## 3. Host consoles
 

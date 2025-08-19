@@ -139,6 +139,16 @@ If you are done using wireless mode you can disable it to save power by calling:
 Wifi_DisableWifi();
 ```
 
+If you aren't going to use DSWiFi again and you want to free up even more
+resources, you can call:
+
+```c
+Wifi_Deinit();
+```
+
+It will free all RAM used by the library and hardware timer 3. You can call
+`Wifi_InitDefault()` at a later time to re-initialize it.
+
 ## 2. Get connection settings
 
 You can get information like the IP address like this:
