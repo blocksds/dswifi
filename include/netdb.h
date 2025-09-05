@@ -4,8 +4,8 @@
 
 // DSWifi Project - socket emulation layer defines/prototypes (netdb.h)
 
-#ifndef NETDB_H
-#define NETDB_H
+#ifndef NETDB_H__
+#define NETDB_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,4 +26,4 @@ struct hostent *gethostbyname(const char *name);
 }
 #endif
 
-#endif
+#endif // NETDB_H__

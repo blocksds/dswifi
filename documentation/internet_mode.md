@@ -2,7 +2,7 @@
 
 DSWifi supports Internet communications. However, DSi mode WiFi isn't supported
 yet, so it is restricted to open and WEP-encrypted networks. DSWifi includes the
-library sgIP to handle connections. It supports IPv4, as well as TCP and UDP.
+library lwIP to handle connections. It supports IPv4, as well as TCP and UDP.
 
 ## 1. Initialization
 
@@ -46,7 +46,7 @@ Wifi_ScanMode();
 
 while (1)
 {
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
 
     // Get find out how many APs there are in the area
     int count = Wifi_GetNumAP();
@@ -109,7 +109,7 @@ the connection to be completed (or to fail!):
 ```c
 while (1)
 {
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
 
     int status = Wifi_AssocStatus();
 
@@ -204,3 +204,6 @@ non-blocking mode with:
 int opt = 1;
 int rc = ioctl(my_socket, FIONBIO, (char *)&opt);
 ```
+
+If you use non-blocking sockets, remember to call `cothread_yield()` or
+`cothread_yield_irq()` in your loop to give the socket thread CPU time.

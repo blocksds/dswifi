@@ -3,7 +3,9 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <netinet/in.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <nds.h>
 #include <nds/arm9/cp15_asm.h>
@@ -11,18 +13,11 @@
 
 #include "arm9/access_point.h"
 #include "arm9/ipc.h"
+#include "arm9/lwip/lwip_nds.h"
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
-
-#ifdef WIFI_USE_TCP_SGIP
-#include "arm9/heap.h"
-#include "arm9/sgIP/sgIP.h"
-
-// This is set to true if sgIP is enabled
-bool wifi_sgip_enabled = false;
-#endif
 
 // Cached mirror. This should only be used when initializing the struct
 static Wifi_MainStruct *WifiDataCached = NULL;
@@ -35,21 +30,6 @@ void Wifi_CallSyncHandler(void)
     fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
 }
 
-// Call this function when requested to sync by the ARM7 side of the WiFi lib.
-static void Wifi_Sync(void)
-{
-    int oldIE = REG_IE;
-    REG_IE &= ~IRQ_TIMER3;
-    Wifi_Update();
-    REG_IE = oldIE;
-}
-
-// wifi timer function, to update internals of sgIP
-static void Wifi_Timer_50ms(void)
-{
-    Wifi_Timer(50);
-}
-
 static void wifiValue32Handler(u32 value, void *data)
 {
     (void)data;
@@ -57,7 +37,14 @@ static void wifiValue32Handler(u32 value, void *data)
     switch (value)
     {
         case WIFI_SYNC:
-            Wifi_Sync();
+#if DSWIFI_ENABLE_LWIP
+            // Don't do anything here. Receiving this message is enough to
+            // activate the thread wifi_update_thread(), where we need to handle
+            // all received messages.
+#else
+            // If lwIP is disabled there are no other threads.
+            Wifi_Update();
+#endif
             break;
         default:
             break;
@@ -88,7 +75,7 @@ static bool Wifi_InitIPC(unsigned int flags)
     else
         WifiData->reqLibraryMode = DSWIFI_INTERNET;
 
-    WifiData->reqMode        = WIFIMODE_DISABLED;
+    WifiData->reqMode = WIFIMODE_DISABLED;
 
     // Use the LED by default
     if ((flags & WIFI_DISABLE_LED) == 0)
@@ -106,7 +93,7 @@ static bool Wifi_InitIPC(unsigned int flags)
     // Wait for the ARM7 to be ready
     // TODO: Add timeout?
     while ((WifiData->flags7 & WFLAG_ARM7_ACTIVE) == 0)
-        swiWaitForVBlank();
+        cothread_yield_irq(IRQ_VBLANK);
 
     return true;
 }
@@ -119,81 +106,25 @@ int Wifi_CheckInit(void)
     return 1;
 }
 
-#ifdef WIFI_USE_TCP_SGIP
-static bool Wifi_Init_sgIP_Heap(void)
-{
-    // Allocate a 128 KB heap for sgIP
-    if (!wHeapAllocInit(128 * 1024))
-        return false;
-
-    return true;
-}
-
-static void Wifi_Deinit_sgIP_Heap(void)
-{
-    wHeapAllocDeinit();
-}
-
-static void Wifi_Init_sgIP(void)
-{
-    // Resources created by sgIP are allocated in the heap we've just created.
-    sgIP_Init();
-
-    Wifi_SetupNetworkInterface();
-
-    wifi_sgip_enabled = true;
-}
-
-static void Wifi_Deinit_sgIP(void)
-{
-    wifi_sgip_enabled = false;
-
-    // sgIP uses a custom allocator for all the resources it allocates. If we
-    // free that heap, we're freeing all resources allocated by sgIP. The next
-    // time we initialize sgIP it will allocate a new heap and start from
-    // scratch with all its resources.
-    Wifi_Deinit_sgIP_Heap();
-}
-#endif
-
 bool Wifi_InitDefault(unsigned int flags)
 {
     // You can't connect to WFC APs if the IP stack isn't initialized
     if ((flags & WIFI_LOCAL_ONLY) && (flags & WFC_CONNECT))
         return false;
 
-#ifdef WIFI_USE_TCP_SGIP
-    bool initialize_sgip = (flags & WIFI_LOCAL_ONLY) ? false : true;
+    // Initialize the ARM7 side of the library and wait until it's ready
+    if (!Wifi_InitIPC(flags))
+        return false;
 
-    if (initialize_sgip)
+#ifdef DSWIFI_ENABLE_LWIP
+    bool initialize_lwip = (flags & WIFI_LOCAL_ONLY) ? false : true;
+
+    if (initialize_lwip)
     {
-        // Try to allocate the sgIP heap before initializing the ARM7. It's
-        // easier to check if there is enough RAM on the ARM9 and return if not
-        // than to initialize the ARM7, find out that there isn't enough RAM on
-        // the ARM9, and to have to deinitialize the ARM7.
-        if (!Wifi_Init_sgIP_Heap())
+        if (wifi_lwip_init() != 0)
             return false;
     }
 #endif
-
-    // Initialize the ARM7 side of the library and wait until it's ready
-    if (!Wifi_InitIPC(flags))
-    {
-#ifdef WIFI_USE_TCP_SGIP
-        if (initialize_sgip)
-            Wifi_Deinit_sgIP_Heap();
-#endif
-        return false;
-    }
-
-#ifdef WIFI_USE_TCP_SGIP
-    // Initialize sgIP once the ARM7 is ready
-    if (initialize_sgip)
-        Wifi_Init_sgIP();
-#endif
-
-    // Setup timer 3. Call handler 20 times per second (every 50 ms).
-    timerStart(3, ClockDivider_256, TIMER_FREQ_256(20), Wifi_Timer_50ms);
 
     // Clear FIFO queue
     while (fifoCheckValue32(FIFO_DSWIFI))
@@ -204,6 +135,7 @@ bool Wifi_InitDefault(unsigned int flags)
 
     if (flags & WFC_CONNECT)
     {
+#ifdef DSWIFI_ENABLE_LWIP
         int wifiStatus = ASSOCSTATUS_DISCONNECTED;
 
         Wifi_AutoConnect(); // request connect
@@ -215,8 +147,11 @@ bool Wifi_InitDefault(unsigned int flags)
                 break;
             if (wifiStatus == ASSOCSTATUS_CANNOTCONNECT)
                 return false;
-            swiWaitForVBlank();
+            cothread_yield_irq(IRQ_VBLANK);
         }
+#else
+        libndsCrash("DSWiFi built without lwIP");
+#endif // DSWIFI_ENABLE_LWIP
     }
 
     return true;
@@ -237,10 +172,11 @@ bool Wifi_Deinit(void)
     fifoSendValue32(FIFO_DSWIFI, WIFI_DEINIT);
 
     while (WifiData->flags7 & WFLAG_ARM7_ACTIVE)
-        swiWaitForVBlank();
+        cothread_yield_irq(IRQ_VBLANK);
 
-#ifdef WIFI_USE_TCP_SGIP
-    Wifi_Deinit_sgIP();
+#ifdef DSWIFI_ENABLE_LWIP
+    if (wifi_lwip_enabled)
+        wifi_lwip_deinit();
 #endif
 
     // Free the pointer in main RAM, not the one in the uncached mirror
@@ -330,14 +266,15 @@ bool Wifi_LibraryModeReady(void)
 
 void Wifi_InternetMode(void)
 {
-#ifdef WIFI_USE_TCP_SGIP
-    assert(wifi_sgip_enabled);
+#ifdef DSWIFI_ENABLE_LWIP
+    if (!wifi_lwip_enabled)
+        return;
 
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
     WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 #else
-    assert(0);
+    libndsCrash("Internet mode not available without lwIP");
 #endif
 }
 

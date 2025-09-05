@@ -17,12 +17,17 @@ INCLUDEDIRS	:= include source
 # Defines passed to all files
 # ---------------------------
 
-# If, for whatever reason, you want to ditch SGIP and use your own stack,
-# comment out the following line (in both the ARM7 and ARM9 makefiles).
-DEFINES		:= -DWIFI_USE_TCP_SGIP
-
 ifeq ($(DEBUG),1)
-DEFINES		+= -DSGIP_DEBUG -DDSWIFI_LOGS
+DEFINES		+= -DDSWIFI_LOGS
+endif
+
+# lwIP requirements
+# -----------------
+
+ifeq ($(ENABLE_LWIP),1)
+DEFINES		+= -DDSWIFI_ENABLE_LWIP
+SOURCEDIRS	+= lwip/source
+INCLUDEDIRS	+= lwip/include source/arm9/lwip/include
 endif
 
 # Libraries
@@ -33,12 +38,22 @@ LIBDIRS		:= $(BLOCKSDS)/libs/libnds
 # Build artifacts
 # ---------------
 
-ifeq ($(DEBUG),1)
-NAME		:= libdswifi9d
-BUILDDIR	:= build/debug/arm9
+ifeq ($(ENABLE_LWIP),1)
+    ifeq ($(DEBUG),1)
+        NAME		:= libdswifi9d
+        BUILDDIR	:= build/debug/arm9
+    else
+        NAME		:= libdswifi9
+        BUILDDIR	:= build/release/arm9
+    endif
 else
-NAME		:= libdswifi9
-BUILDDIR	:= build/release/arm9
+    ifeq ($(DEBUG),1)
+        NAME		:= libdswifi9d_noip
+        BUILDDIR	:= build/debug_noip/arm9
+    else
+        NAME		:= libdswifi9_noip
+        BUILDDIR	:= build/release_noip/arm9
+    endif
 endif
 
 ARCHIVE		:= lib/$(NAME).a
@@ -86,12 +101,12 @@ ASFLAGS		+= -g -x assembler-with-cpp $(DEFINES) $(ARCH) \
 		   -ffunction-sections -fdata-sections
 
 CFLAGS		+= -g -std=gnu23 $(WARNFLAGS) $(DEFINES) $(ARCH) \
-		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -O2 \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -Os \
 		   -ffunction-sections -fdata-sections \
 		   -fomit-frame-pointer
 
 CXXFLAGS	+= -g -std=gnu++23 $(WARNFLAGS) $(DEFINES) $(ARCH) \
-		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -O2 \
+		   -mthumb -mthumb-interwork $(INCLUDEFLAGS) -Os \
 		   -ffunction-sections -fdata-sections \
 		   -fno-exceptions -fno-rtti \
 		   -fomit-frame-pointer

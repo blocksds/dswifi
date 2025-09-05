@@ -29,6 +29,8 @@ all: arm9 arm7
 arm9:
 	@+$(MAKE) -f Makefile.arm9 --no-print-directory
 	@+$(MAKE) -f Makefile.arm9 --no-print-directory DEBUG=1
+	@+$(MAKE) -f Makefile.arm9 --no-print-directory ENABLE_LWIP=1
+	@+$(MAKE) -f Makefile.arm9 --no-print-directory ENABLE_LWIP=1 DEBUG=1
 
 arm7:
 	@+$(MAKE) -f Makefile.arm7 --no-print-directory
@@ -50,4 +52,4 @@ install: all
 	@test $(INSTALLDIR_ABS)
 	$(V)$(RM) $(INSTALLDIR_ABS)
 	$(V)$(INSTALL) -d $(INSTALLDIR_ABS)
-	$(V)$(CP) -r include lib COPYING $(INSTALLDIR_ABS)
+	$(V)$(CP) -r include lib COPYING* $(INSTALLDIR_ABS)
