@@ -11,16 +11,23 @@ ARM_NONE_EABI_PATH	?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 # Source code paths
 # -----------------
 
-SOURCEDIRS	:= source/arm9 source/common lwip/source
-INCLUDEDIRS	:= include source lwip/include source/arm9/lwip/include
+SOURCEDIRS	:= source/arm9 source/common
+INCLUDEDIRS	:= include source
 
 # Defines passed to all files
 # ---------------------------
 
-DEFINES		:= -DDSWIFI_ENABLE_LWIP
-
 ifeq ($(DEBUG),1)
 DEFINES		+= -DDSWIFI_LOGS
+endif
+
+# lwIP requirements
+# -----------------
+
+ifeq ($(ENABLE_LWIP),1)
+DEFINES		+= -DDSWIFI_ENABLE_LWIP
+SOURCEDIRS	+= lwip/source
+INCLUDEDIRS	+= lwip/include source/arm9/lwip/include
 endif
 
 # Libraries
@@ -31,12 +38,22 @@ LIBDIRS		:= $(BLOCKSDS)/libs/libnds
 # Build artifacts
 # ---------------
 
-ifeq ($(DEBUG),1)
-NAME		:= libdswifi9d
-BUILDDIR	:= build/debug/arm9
+ifeq ($(ENABLE_LWIP),1)
+    ifeq ($(DEBUG),1)
+        NAME		:= libdswifi9d
+        BUILDDIR	:= build/debug/arm9
+    else
+        NAME		:= libdswifi9
+        BUILDDIR	:= build/release/arm9
+    endif
 else
-NAME		:= libdswifi9
-BUILDDIR	:= build/release/arm9
+    ifeq ($(DEBUG),1)
+        NAME		:= libdswifi9d_noip
+        BUILDDIR	:= build/debug_noip/arm9
+    else
+        NAME		:= libdswifi9_noip
+        BUILDDIR	:= build/release_noip/arm9
+    endif
 endif
 
 ARCHIVE		:= lib/$(NAME).a
