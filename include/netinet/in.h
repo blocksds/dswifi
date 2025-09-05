@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
 
-// DSWifi Project - socket emulation layer defines/prototypes (netinet/in.h)
-
-#ifndef NETINET_IN_H
-#define NETINET_IN_H
+#ifndef NETINET_IN_H__
+#define NETINET_IN_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,17 +16,22 @@ extern "C" {
 #define INADDR_BROADCAST 0xFFFFFFFF
 #define INADDR_NONE      0xFFFFFFFF
 
+typedef uint32_t in_addr_t;
+
 struct in_addr
 {
-    unsigned long s_addr;
+    in_addr_t s_addr;
 };
+
+typedef uint16_t in_port_t;
 
 struct sockaddr_in
 {
-    unsigned short sin_family;
-    unsigned short sin_port;
-    struct in_addr sin_addr;
-    unsigned char sin_zero[8];
+    uint8_t         sin_len;
+    sa_family_t     sin_family;
+    in_port_t       sin_port;
+    struct in_addr  sin_addr;
+    unsigned char   sin_zero[8];
 };
 
 // actually from arpa/inet.h - but is included through netinet/in.h
@@ -39,4 +43,4 @@ char *inet_ntoa(struct in_addr in);
 }
 #endif
 
-#endif
+#endif // NETINET_IN_H__

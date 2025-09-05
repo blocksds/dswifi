@@ -17,12 +17,10 @@ INCLUDEDIRS	:= include source
 # Defines passed to all files
 # ---------------------------
 
-# If, for whatever reason, you want to ditch SGIP and use your own stack,
-# comment out the following line (in both the ARM7 and ARM9 makefiles).
-DEFINES		:= -DWIFI_USE_TCP_SGIP
+DEFINES		:=
 
 ifeq ($(DEBUG),1)
-DEFINES		+= -DSGIP_DEBUG -DDSWIFI_LOGS
+DEFINES		+= -DDSWIFI_LOGS
 endif
 
 # Libraries

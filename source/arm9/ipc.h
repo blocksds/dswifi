@@ -8,10 +8,6 @@
 
 #include <nds/ndstypes.h>
 
-#ifdef WIFI_USE_TCP_SGIP
-extern bool wifi_sgip_enabled;
-#endif
-
 void Wifi_CallSyncHandler(void);
 
 #endif // DSWIFI_ARM9_IPC_H__

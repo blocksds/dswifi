@@ -43,7 +43,7 @@ enum WIFIGETDATA
 /// Only initialize local multiplayer mode.
 ///
 /// DSWiFi is initialized, but Internet mode becomes unavailable. DSWiFi won't
-/// need to allocate any memory on the heap for the IP stack (sgIP).
+/// need to allocate any memory on the heap for the IP stack (lwIP).
 ///
 /// If your game only uses local multiplayer mode, you can use this option to
 /// save RAM.
@@ -180,16 +180,6 @@ void Wifi_IdleMode(void);
 /// @param channel
 ///     The channel to change to, in the range of 1-13.
 void Wifi_SetChannel(int channel);
-
-/// This function should be called in a periodic interrupt.
-///
-/// It serves as the basis for all updating in the sgIP library, all
-/// retransmits, timeouts, and etc are based on this function being called.
-/// It's not timing critical but it is rather essential.
-///
-/// @param num_ms
-///     The number of milliseconds since the last time this function was called.
-void Wifi_Timer(int num_ms);
 
 /// Retrieve an arbitrary or misc. piece of data from the WiFi hardware.
 ///

@@ -81,7 +81,7 @@ a circular buffer in shared RAM between ARM7 and ARM9. Whenever a packet is
 saved to this buffer, the ARM7 sends a sync FIFO message to the ARM9 to notify
 it. Eventually, the ARM9 will check the buffer and handle it.
 
-When in Internet mode, data packets are sent to sgIP. When in multiplayer mode,
+When in Internet mode, data packets are sent to lwIP. When in multiplayer mode,
 data packets are sent to the packet handlers defined by the developer.
 
 ### 2.3 Beacon packets
