@@ -10,7 +10,9 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <sys/time.h>
+#include <sys/types.h>
 
 // Level number for (get/set)sockopt() to apply to socket itself.
 #define SOL_SOCKET 0xfff // options for socket level
@@ -99,6 +101,25 @@ struct pollfd
     short revents;
 };
 
+struct iovec
+{
+    void  *iov_base;
+    size_t iov_len;
+};
+
+typedef int msg_iovlen_t;
+
+struct msghdr
+{
+    void         *msg_name;
+    socklen_t     msg_namelen;
+    struct iovec *msg_iov;
+    msg_iovlen_t  msg_iovlen;
+    void         *msg_control;
+    socklen_t     msg_controllen;
+    int           msg_flags;
+};
+
 int socket(int domain, int type, int protocol);
 int bind(int socket, const struct sockaddr *addr, socklen_t addrlen);
 int connect(int socket, const struct sockaddr *addr, socklen_t addrlen);
@@ -108,6 +129,10 @@ int sendto(int socket, const void *data, size_t sendlength, int flags,
            const struct sockaddr *addr, socklen_t addrlen);
 int recvfrom(int socket, void *data, size_t recvlength, int flags,
              struct sockaddr *addr, socklen_t *addrlen);
+ssize_t readv(int s, const struct iovec *iov, int iovcnt);
+ssize_t writev(int s, const struct iovec *iov, int iovcnt);
+ssize_t recvmsg(int s, struct msghdr *message, int flags);
+ssize_t sendmsg(int s, const struct msghdr *message, int flags);
 int listen(int socket, int max_connections);
 int accept(int socket, struct sockaddr *addr, socklen_t *addrlen);
 int shutdown(int socket, int shutdown_type);

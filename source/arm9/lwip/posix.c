@@ -4,6 +4,9 @@
 
 #ifdef DSWIFI_ENABLE_LWIP
 
+#include <stddef.h>
+#include <sys/types.h>
+
 #include "lwip/ip4_addr.h"
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
@@ -45,10 +48,6 @@ int setsockopt(int s, int level, int optname, const void *optval, socklen_t optl
     return lwip_setsockopt(s, level, optname, optval, optlen);
 }
 
-#if 0
-int lwip_close(int s); // TODO: Integrate this with "close()" in libnds?
-#endif
-
 int closesocket(int s)
 {
     return lwip_close(s);
@@ -69,29 +68,16 @@ ssize_t recv(int s, void *mem, size_t len, int flags)
     return lwip_recv(s, mem, len, flags);
 }
 
-#if 0
-ssize_t lwip_read(int s, void *mem, size_t len);
-ssize_t lwip_readv(int s, const struct iovec *iov, int iovcnt);
-#endif
-
 ssize_t recvfrom(int s, void *mem, size_t len, int flags, struct sockaddr *from,
                  socklen_t *fromlen)
 {
     return lwip_recvfrom(s, mem, len, flags, from, fromlen);
 }
 
-#if 0
-ssize_t lwip_recvmsg(int s, struct msghdr *message, int flags);
-#endif
-
 ssize_t send(int s, const void *dataptr, size_t size, int flags)
 {
     return lwip_send(s, dataptr, size, flags);
 }
-
-#if 0
-ssize_t lwip_sendmsg(int s, const struct msghdr *message, int flags);
-#endif
 
 ssize_t sendto(int s, const void *dataptr, size_t size, int flags,
                const struct sockaddr *to, socklen_t tolen)
@@ -99,15 +85,30 @@ ssize_t sendto(int s, const void *dataptr, size_t size, int flags,
     return lwip_sendto(s, dataptr, size, flags, to, tolen);
 }
 
+ssize_t readv(int s, const struct iovec *iov, int iovcnt)
+{
+    return lwip_readv(s, iov, iovcnt);
+}
+
+ssize_t writev(int s, const struct iovec *iov, int iovcnt)
+{
+    return lwip_writev(s, iov, iovcnt);
+}
+
+ssize_t recvmsg(int s, struct msghdr *message, int flags)
+{
+    return lwip_recvmsg(s, message, flags);
+}
+
+ssize_t sendmsg(int s, const struct msghdr *message, int flags)
+{
+    return lwip_sendmsg(s, message, flags);
+}
+
 int socket(int domain, int type, int protocol)
 {
     return lwip_socket(domain, type, protocol);
 }
-
-#if 0
-ssize_t lwip_write(int s, const void *dataptr, size_t size);
-ssize_t lwip_writev(int s, const struct iovec *iov, int iovcnt);
-#endif
 
 int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout)
 {
@@ -143,6 +144,13 @@ struct hostent *gethostbyname(const char *name)
 {
     return lwip_gethostbyname(name);
 }
+
+#if 0
+// TODO: Integrate this with "read(), write() and close()" in libnds
+ssize_t lwip_read(int s, void *mem, size_t len);
+ssize_t lwip_write(int s, const void *dataptr, size_t size);
+int lwip_close(int s);
+#endif
 
 // ============================================================================
 
