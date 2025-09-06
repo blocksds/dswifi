@@ -117,6 +117,9 @@
 
 #define LWIP_NETCONN_FULLDUPLEX     0
 
+// Skip values 0, 1 and 2 because they are used for stdin, stdout and stderr.
+#define LWIP_SOCKET_OFFSET          3
+
 // lwIP system integration settings
 // ================================
 

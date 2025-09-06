@@ -138,6 +138,13 @@ int accept(int socket, struct sockaddr *addr, socklen_t *addrlen);
 int shutdown(int socket, int shutdown_type);
 int closesocket(int socket);
 
+// The following functions are also supported. They aren't declared here, but in
+// the <unistd.h> header:
+//
+//     ssize_t read(int fd, void *ptr, size_t len);
+//     ssize_t write(int fd, const void *ptr, size_t len);
+//     int close(int fd);
+
 int ioctl(int socket, long cmd, void *arg);
 
 int setsockopt(int socket, int level, int option_name, const void *data, socklen_t data_len);

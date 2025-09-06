@@ -33,6 +33,8 @@ u32 wifi_get_dns(int index);
 
 void dswifi_send_data_to_lwip(void *data, u32 len);
 
+void dswifi_lwip_setup_io_posix(void);
+
 #endif // DSWIFI_ENABLE_LWIP
 
 #endif // LWIP_NDS_H__

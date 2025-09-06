@@ -145,13 +145,6 @@ struct hostent *gethostbyname(const char *name)
     return lwip_gethostbyname(name);
 }
 
-#if 0
-// TODO: Integrate this with "read(), write() and close()" in libnds
-ssize_t lwip_read(int s, void *mem, size_t len);
-ssize_t lwip_write(int s, const void *dataptr, size_t size);
-int lwip_close(int s);
-#endif
-
 // ============================================================================
 
 // This is defined by lwIP headers and it will cause conflicts here
@@ -171,6 +164,20 @@ unsigned short htons(unsigned short num)
 unsigned long htonl(unsigned long num)
 {
     return lwip_htonl(num);
+}
+
+// ============================================================================
+
+void dswifi_lwip_setup_io_posix(void)
+{
+    // Defined in libnds
+    extern ssize_t (*socket_fn_write)(int, const void *, size_t);
+    extern ssize_t (*socket_fn_read)(int, void *, size_t);
+    extern int (*socket_fn_close)(int);
+
+    socket_fn_write = lwip_write;
+    socket_fn_read = lwip_read;
+    socket_fn_close = lwip_close;
 }
 
 #endif // DSWIFI_ENABLE_LWIP

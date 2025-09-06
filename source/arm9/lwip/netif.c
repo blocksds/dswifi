@@ -303,6 +303,8 @@ int wifi_lwip_init(void)
     netbiosns_set_name(dswifi_netif.hostname);
     netbiosns_init();
 
+    dswifi_lwip_setup_io_posix();
+
     wifi_lwip_enabled = true;
 
     return 0;
