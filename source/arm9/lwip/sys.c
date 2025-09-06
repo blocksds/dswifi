@@ -271,7 +271,7 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     while (1)
     {
         err_t err = sys_arch_mbox_tryfetch(mbox, msg);
-        if (err != SYS_MBOX_EMPTY)
+        if ((unsigned long)err != SYS_MBOX_EMPTY)
             break;
 
         // A timeout of 0 means that this function doesn't timeout

@@ -167,7 +167,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (wepmode != WEPMODE_NONE)
     {
-        int i;
+        size_t i;
         for (i = 0; i < Wifi_WepKeySize(wepmode); i++)
             WifiData->wepkey9[i] = wepkey[i];
         for ( ; i < sizeof(WifiData->wepkey9); i++)
@@ -395,7 +395,7 @@ int Wifi_AssocStatus(void)
 #endif
                 WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                 WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
-                for (int i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
+                for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
                     WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
 
                 Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);

@@ -154,7 +154,7 @@ void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func
     wifi_from_client_packet_handler = func;
 }
 
-void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
+void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int len)
 {
     if (wifi_from_client_packet_handler == NULL)
         return;
@@ -202,7 +202,7 @@ void Wifi_MultiplayerHandlePacketFromClient(int base, int len)
                                        len - sizeof(header));
 }
 
-void Wifi_MultiplayerHandlePacketFromHost(int base, int len)
+void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len)
 {
     if (wifi_from_host_packet_handler == NULL)
         return;

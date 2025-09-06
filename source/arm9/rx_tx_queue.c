@@ -32,11 +32,11 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
 
     // Convert to halfwords
     base = base / 2;
-    int write_halfwords = (size_bytes + 1) / 2; // Round up
+    size_t write_halfwords = (size_bytes + 1) / 2; // Round up
 
     while (write_halfwords > 0)
     {
-        int writelen = write_halfwords;
+        size_t writelen = write_halfwords;
         if (writelen > (WIFI_TXBUFFER_SIZE / 2) - base)
             writelen = (WIFI_TXBUFFER_SIZE / 2) - base;
 
@@ -57,7 +57,7 @@ void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
 // Length specified in bytes.
 int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
 {
-    int sizeneeded = datalen + HDR_TX_SIZE + 1;
+    size_t sizeneeded = datalen + HDR_TX_SIZE + 1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
@@ -109,7 +109,7 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
     }
 
     // Add TX header and round up to 2 bytes
-    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
+    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         // The packet won't fit in the ARM9->ARM7 circular buffer
@@ -180,7 +180,7 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
     }
 
     // Add TX header and round up to 2 bytes
-    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
+    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         // The packet won't fit in the ARM9->ARM7 circular buffer
@@ -245,7 +245,7 @@ int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datal
     size_t ieee_size = HDR_DATA_MAC_SIZE + datalen + 4;
 
     // Add TX header and round up to 2 bytes
-    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
+    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         // The packet won't fit in the ARM9->ARM7 circular buffer
@@ -309,7 +309,7 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
     size_t ieee_size = HDR_DATA_MAC_SIZE + 1 + datalen + 4;
 
     // Add TX header and round up to 2 bytes
-    int sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
+    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
     if (sizeneeded > Wifi_TxBufferBytesAvailable())
     {
         // The packet won't fit in the ARM9->ARM7 circular buffer
@@ -384,11 +384,11 @@ void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
 
     // Convert to halfwords
     base = base / 2;
-    int read_hwords = (size_bytes + 1) / 2; // Round up
+    size_t read_hwords = (size_bytes + 1) / 2; // Round up
 
     while (read_hwords > 0)
     {
-        int len = read_hwords;
+        size_t len = read_hwords;
         if (len > (WIFI_RXBUFFER_SIZE / 2) - base)
             len = (WIFI_RXBUFFER_SIZE / 2) - base;
 

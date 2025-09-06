@@ -90,7 +90,7 @@ enum WIFI_AUTHLEVEL
 };
 
 // Returns the size in bytes
-static inline int Wifi_WepKeySize(enum WEPMODES wepmode)
+static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
 {
     if (wepmode == WEPMODE_NONE)
         return 0;
