@@ -194,8 +194,8 @@ socket(AF_INET, SOCK_STREAM, 0); // TCP
 socket(AF_INET, SOCK_DGRAM, 0); // UDP
 ```
 
-Then, you can use `connect()`, `send()`, `recv()`, `shutdown()` and
-`closesocket()`.
+Then, you can use standard socket functions to use it, like `connect()`,
+`write()`, `read()`, `send()`, `recv()`, `shutdown()` and `close()`.
 
 Note that, by default, sockets start in blocking mode. You can switch to
 non-blocking mode with:
