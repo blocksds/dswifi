@@ -203,6 +203,10 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 
     leaveCriticalSection(oldIME);
 
+    // Wake up all threads using this mailbox, even if we fail to add a new
+    // entry to the mailbox.
+    cothread_send_signal((uintptr_t)mbox);
+
     return ret;
 }
 
@@ -223,7 +227,10 @@ void sys_mbox_post(sys_mbox_t *mbox, void *msg)
         if (err == ERR_VAL)
             break;
 
-        cothread_yield();
+        // sys_mbox_trypost() sends a signal to wake up all threads using this
+        // mailbox. Go to sleep until one of them wakes us up and we can try to
+        // post the message again.
+        cothread_yield_signal((uintptr_t)mbox);
     }
 }
 
@@ -261,6 +268,9 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 
     leaveCriticalSection(oldIME);
 
+    // Wake up all threads using this mailbox even if the mailbox was empty.
+    cothread_send_signal((uintptr_t)mbox);
+
     return ret;
 }
 
@@ -282,7 +292,10 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                 return SYS_ARCH_TIMEOUT;
         }
 
-        cothread_yield();
+        // sys_arch_mbox_tryfetch() sends a signal to wake up all threads using
+        // this mailbox. Go to sleep until one of them wakes us up and we can
+        // try to fetch a message again.
+        cothread_yield_signal((uintptr_t)mbox);
     }
 
     return 0;
@@ -400,7 +413,7 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             if (diff >= timeout)
                 return SYS_ARCH_TIMEOUT;
 
-            cothread_yield();
+            cothread_yield_signal(cosema_to_signal_id(sem));
         }
     }
 
