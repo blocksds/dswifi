@@ -39,6 +39,8 @@ static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
 {
     (void)netif;
 
+    assert(p->len == p->tot_len);
+
     uint8_t *src = p->payload;
     size_t len = p->len;
 

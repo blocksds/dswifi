@@ -151,7 +151,7 @@ struct hostent *gethostbyname(const char *name)
 #undef inet_ntoa
 char *inet_ntoa(struct in_addr in)
 {
-    return ip4addr_ntoa((const ip4_addr_t*)&(in));
+    return ipaddr_ntoa((const ip_addr_t*)&(in));
 }
 
 #undef htons

@@ -123,6 +123,9 @@
 // lwIP system integration settings
 // ================================
 
+// We will only have one netif
+#define LWIP_SINGLE_NETIF           1
+
 // Don't use the Netconn lwIP interface
 #define LWIP_NETCONN                0
 
