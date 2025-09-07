@@ -192,7 +192,7 @@ void Wifi_Update(void)
                 W_IE |= IRQ_MULTIPLAY_CMD_DONE;
 
                 Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
-                for (int i = 0; i < sizeof(WifiData->ssid7); i++)
+                for (size_t i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetClients();
                 WifiData->curMaxClients = WifiData->reqMaxClients;
@@ -236,7 +236,7 @@ void Wifi_Update(void)
 
                     // Copy the full array to clear the original trailing data
                     // if the new key is shorter than the old one.
-                    for (int i = 0; i < sizeof(WifiData->wepkey7); i++)
+                    for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
                         WifiData->wepkey7[i] = WifiData->wepkey9[i];
 
                     for (int i = 0; i < 34; i++)

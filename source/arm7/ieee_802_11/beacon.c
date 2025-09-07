@@ -54,7 +54,7 @@ static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
     {
         // WPA IE type 1 version 1
 
-        int j = 4 + 2 + 4; // Skip magic, version and multicast cipher suite
+        size_t j = 4 + 2 + 4; // Skip magic, version and multicast cipher suite
 
         u16 num_uni_ciphers = data[j] + (data[j + 1] << 8);
         j += 2;

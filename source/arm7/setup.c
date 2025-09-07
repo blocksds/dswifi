@@ -31,7 +31,7 @@ void Wifi_SetWepKey(void *wepkey, int wepmode)
     WLOG_FLUSH();
 #endif
 
-    for (int i = 0; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
+    for (size_t i = 0; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
     {
         W_WEPKEY_0[i] = 0;
         W_WEPKEY_1[i] = 0;

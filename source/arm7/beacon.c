@@ -49,8 +49,8 @@ void Wifi_BeaconSetup(void)
 
     while (i < len)
     {
-        int type   = data[i++];
-        int seglen = data[i++];
+        int type      = data[i++];
+        size_t seglen = data[i++];
 
         switch (type)
         {

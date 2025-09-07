@@ -16,7 +16,7 @@
 // and writes them to the circular RX buffer shared with the ARM9.
 //
 // It returns 0 if there isn't enough space in the ARM9 buffer, or 1 on success.
-static int Wifi_RxArm9QueueAdd(u32 base, u32 len)
+static int Wifi_RxArm9QueueAdd(u32 base, int len)
 {
     int buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
     if (buflen < 0)
