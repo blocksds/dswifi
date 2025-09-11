@@ -34,10 +34,18 @@ struct sockaddr_in
     unsigned char   sin_zero[8];
 };
 
+#define IP4ADDR_STRLEN_MAX  16
+#define IP6ADDR_STRLEN_MAX  46
+
+#define INET_ADDRSTRLEN     IP4ADDR_STRLEN_MAX
+#define INET6_ADDRSTRLEN    IP6ADDR_STRLEN_MAX
+
 // actually from arpa/inet.h - but is included through netinet/in.h
-unsigned long inet_addr(const char *cp);
+in_addr_t inet_addr(const char *cp);
 int inet_aton(const char *cp, struct in_addr *inp);
 char *inet_ntoa(struct in_addr in);
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+int inet_pton(int af, const char *src, void *dst);
 
 #ifdef __cplusplus
 }

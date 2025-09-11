@@ -154,6 +154,18 @@ char *inet_ntoa(struct in_addr in)
     return ipaddr_ntoa((const ip_addr_t*)&(in));
 }
 
+#undef inet_aton
+int inet_aton(const char *cp, struct in_addr *inp)
+{
+    return ip4addr_aton(cp, (ip4_addr_t *)inp);
+}
+
+#undef inet_addr
+in_addr_t inet_addr(const char *cp)
+{
+    return ipaddr_addr(cp);
+}
+
 #undef htons
 unsigned short htons(unsigned short num)
 {
