@@ -23,6 +23,14 @@ struct in_addr
     in_addr_t s_addr;
 };
 
+struct in6_addr {
+    union {
+        uint32_t u32_addr[4];
+        uint8_t  u8_addr[16];
+    } un;
+#define s6_addr  un.u8_addr
+};
+
 typedef uint16_t in_port_t;
 
 struct sockaddr_in
@@ -32,6 +40,15 @@ struct sockaddr_in
     in_port_t       sin_port;
     struct in_addr  sin_addr;
     unsigned char   sin_zero[8];
+};
+
+struct sockaddr_in6 {
+    uint8_t         sin6_len;      // length of this structure
+    sa_family_t     sin6_family;   // AF_INET6
+    in_port_t       sin6_port;     // Transport layer port number
+    uint32_t        sin6_flowinfo; // IPv6 flow information
+    struct in6_addr sin6_addr;     // IPv6 address
+    uint32_t        sin6_scope_id; // Set of interfaces for scope
 };
 
 #define IP4ADDR_STRLEN_MAX  16
