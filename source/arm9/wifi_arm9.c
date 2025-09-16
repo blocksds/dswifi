@@ -30,16 +30,6 @@ void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
     d[2] = s[2];
 }
 
-const char *ASSOCSTATUS_STRINGS[] = {
-    [ASSOCSTATUS_DISCONNECTED] = "ASSOCSTATUS_DISCONNECTED",
-    [ASSOCSTATUS_SEARCHING] = "ASSOCSTATUS_SEARCHING",
-    [ASSOCSTATUS_AUTHENTICATING] = "ASSOCSTATUS_AUTHENTICATING",
-    [ASSOCSTATUS_ASSOCIATING] = "ASSOCSTATUS_ASSOCIATING",
-    [ASSOCSTATUS_ACQUIRINGDHCP] = "ASSOCSTATUS_ACQUIRINGDHCP",
-    [ASSOCSTATUS_ASSOCIATED] = "ASSOCSTATUS_ASSOCIATED",
-    [ASSOCSTATUS_CANNOTCONNECT] = "ASSOCSTATUS_CANNOTCONNECT",
-};
-
 // Functions that behave differently with lwIP and without it
 // ==========================================================
 
