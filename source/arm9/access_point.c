@@ -14,6 +14,10 @@
 #include "arm9/wifi_arm9.h"
 #include "common/spinlock.h"
 
+WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
+
+static Wifi_AccessPoint wifi_connect_point;
+
 const char *ASSOCSTATUS_STRINGS[] = {
     [ASSOCSTATUS_DISCONNECTED] = "ASSOCSTATUS_DISCONNECTED",
     [ASSOCSTATUS_SEARCHING] = "ASSOCSTATUS_SEARCHING",
@@ -139,18 +143,6 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
     }
     return ap_match;
 }
-
-typedef enum {
-    WIFI_CONNECT_ERROR          = -1,
-    WIFI_CONNECT_SEARCHING      = 0,
-    WIFI_CONNECT_ASSOCIATING    = 1,
-    WIFI_CONNECT_DHCPING        = 2,
-    WIFI_CONNECT_DONE           = 3,
-    WIFI_CONNECT_SEARCHING_WFC  = 4,
-} WIFI_CONNECT_STATE;
-
-static WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
-static Wifi_AccessPoint wifi_connect_point;
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
@@ -298,10 +290,12 @@ int Wifi_AssocStatus(void)
                                 {
                                     if (Wifi_GetIP() == 0)
                                     {
+                                        // Switch to DHCPING mode before
+                                        // telling lwIP to start DHCP.
+                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
                                         // Only use DHCP if we don't have an IP
                                         // that has been set manually.
                                         wifi_dhcp_start();
-                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
                                         return ASSOCSTATUS_ACQUIRINGDHCP;
                                     }
                                     else
@@ -328,8 +322,10 @@ int Wifi_AssocStatus(void)
                         {
                             if (Wifi_GetIP() == 0)
                             {
-                                wifi_dhcp_start();
+                                // Switch to DHCPING mode before telling lwIP to
+                                // start DHCP.
                                 wifi_connect_state = WIFI_CONNECT_DHCPING;
+                                wifi_dhcp_start();
                                 return ASSOCSTATUS_ACQUIRINGDHCP;
                             }
                             else

@@ -9,6 +9,7 @@
 #include "lwip/sys.h"
 #include "lwip/tcpip.h"
 
+#include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/lwip/lwip_nds.h"
 #include "arm9/wifi_arm9.h"
@@ -61,7 +62,13 @@ static int wifi_update_thread(void *arg)
         {
             if (wifi_lwip_enabled)
             {
-                sys_check_timeouts();
+                // Only update lwIP when we're connected to the access point.
+                // This is during the DHCP process and when DHCP is done.
+                if ((wifi_connect_state == WIFI_CONNECT_DHCPING) ||
+                    (wifi_connect_state == WIFI_CONNECT_DONE))
+                {
+                    sys_check_timeouts();
+                }
             }
         }
 

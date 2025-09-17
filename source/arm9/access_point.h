@@ -6,6 +6,17 @@
 #ifndef DSWIFI_ARM9_ACCESS_POINT_H__
 #define DSWIFI_ARM9_ACCESS_POINT_H__
 
+typedef enum {
+    WIFI_CONNECT_ERROR          = -1,
+    WIFI_CONNECT_SEARCHING      = 0,
+    WIFI_CONNECT_ASSOCIATING    = 1,
+    WIFI_CONNECT_DHCPING        = 2,
+    WIFI_CONNECT_DONE           = 3,
+    WIFI_CONNECT_SEARCHING_WFC  = 4,
+} WIFI_CONNECT_STATE;
+
+extern WIFI_CONNECT_STATE wifi_connect_state;
+
 int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2);
 
 #endif // DSWIFI_ARM9_ACCESS_POINT_H__
