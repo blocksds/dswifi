@@ -41,6 +41,7 @@
 #define WFLAG_REQ_PROMISC      0x0010
 #define WFLAG_REQ_USEWEP       0x0020
 #define WFLAG_REQ_ALLOWCLIENTS 0x0040
+#define WFLAG_REQ_DSI_MODE     0x0080
 
 // request - informational flags
 #define WFLAG_REQ_APCONNECTED 0x8000

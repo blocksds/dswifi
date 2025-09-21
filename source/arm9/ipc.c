@@ -79,7 +79,11 @@ static bool Wifi_InitIPC(unsigned int flags)
 
     // Use the LED by default
     if ((flags & WIFI_DISABLE_LED) == 0)
-        WifiData->flags9 = WFLAG_ARM9_USELED;
+        WifiData->flags9 |= WFLAG_ARM9_USELED;
+
+    // Use DSi mode only if has been requested and we're running on a DSi
+    if ((flags & WIFI_ENABLE_DSI_MODE) && isDSiMode())
+        WifiData->flags9 |= WFLAG_REQ_DSI_MODE;
 
     // Set the default host name from the firmware settings
     WifiData->hostPlayerNameLen = PersonalData->nameLen;

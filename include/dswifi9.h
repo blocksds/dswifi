@@ -40,6 +40,19 @@ enum WIFIGETDATA
     MAX_WIFIGETDATA
 };
 
+/// Try to initialize DSWiFi in DSi mode.
+///
+/// If the program isn't running on a DSi it will fall back to DS mode. Note
+/// that local multiplayer mode isn't supported in DSi mode.
+///
+/// @warning
+///     This doesn't work yet, it's a work-in-progress feature.
+#define WIFI_ENABLE_DSI_MODE    (1 << 3)
+
+/// Initialize DSWiFi in DS mode, even in DSi consoles. Local multiplayer mode
+/// is supported.
+#define WIFI_DS_MODE_ONLY       (0 << 3)
+
 /// Only initialize local multiplayer mode.
 ///
 /// DSWiFi is initialized, but Internet mode becomes unavailable. DSWiFi won't
