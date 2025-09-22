@@ -16,12 +16,189 @@
 #include "arm7/twl/setup.h"
 #include "common/common_defs.h"
 
-static void Wifi_TxSetup(void)
+void Wifi_NTR_SetWepKey(void *wepkey, int wepmode)
+{
+    if (wepmode == WEPMODE_NONE)
+        return;
+
+    int len = Wifi_WepKeySize(wepmode);
+
+#if DSWIFI_LOGS
+    WLOG_PUTS("W: WEP: ");
+    char *c = wepkey;
+    for (int i = 0; i < len; i++)
+        WLOG_PRINTF("%x", c[i]);
+    WLOG_PUTS("\n");
+    WLOG_FLUSH();
+#endif
+
+    for (size_t i = 0; i < (WEP_KEY_MAX_SIZE / sizeof(u16)); i++)
+    {
+        W_WEPKEY_0[i] = 0;
+        W_WEPKEY_1[i] = 0;
+        W_WEPKEY_2[i] = 0;
+        W_WEPKEY_3[i] = 0;
+    }
+
+    // Copy the WEP key carefully. The source array may not be aligned to 16 bit
+    int src = 0;
+    int dest = 0;
+    while (src < len)
+    {
+        u16 value = ((u8 *)wepkey)[src++];
+        if (src < len)
+            value |= ((u8 *)wepkey)[src++] << 8;
+
+        W_WEPKEY_0[dest] = value;
+        W_WEPKEY_1[dest] = value;
+        W_WEPKEY_2[dest] = value;
+        W_WEPKEY_3[dest] = value;
+        dest++;
+    }
+}
+
+void Wifi_NTR_SetWepMode(int wepmode)
+{
+    if (wepmode < 0 || wepmode > 7)
+        return;
+
+    if (wepmode == WEPMODE_NONE)
+        W_WEP_CNT = WEP_CNT_DISABLE;
+    else
+        W_WEP_CNT = WEP_CNT_ENABLE;
+
+    if (wepmode == WEPMODE_NONE)
+        wepmode = WEPMODE_40BIT;
+
+    W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_KEYLEN_MASK)
+               | (wepmode << MODE_WEP_KEYLEN_SHIFT);
+}
+
+void Wifi_NTR_SetSleepMode(int mode)
+{
+    if (mode > 3 || mode < 0)
+        return;
+
+    W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_SLEEP_MASK) | mode;
+}
+
+void Wifi_NTR_SetAssociationID(u16 aid)
+{
+    W_AID_FULL = aid;
+    W_AID_LOW = aid & 0xF;
+    WifiData->clients.curClientAID = aid & 0xF;
+}
+
+void Wifi_NTR_DisableTempPowerSave(void)
+{
+    W_POWER_TX &= ~2;
+    W_POWER_048 = 0;
+}
+
+void Wifi_NTR_SetupTransferOptions(int rate, bool short_preamble)
+{
+    if (short_preamble)
+        W_PREAMBLE |= 6;
+    else
+        W_PREAMBLE &= ~6;
+
+    WifiData->maxrate7 = rate;
+
+    u16 value = Wifi_FlashReadHWord(F_WIFI_CFG_058) + 0x202;
+
+    if (rate == WIFI_TRANSFER_RATE_2MBPS)
+    {
+        value -= 0x6161;
+        if (short_preamble)
+            value -= 0x6060;
+    }
+
+    W_CONFIG_140 = value;
+}
+
+void Wifi_NTR_SetupFilterMode_NTR(Wifi_FilterMode mode)
+{
+    switch (mode)
+    {
+        case WIFI_FILTERMODE_IDLE:
+            // Ignore all frames
+            W_RXFILTER  = 0;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_DS_STA | RXFILTER2_IGNORE_DS_DS;
+            break;
+
+        case WIFI_FILTERMODE_SCAN:
+            // Receive beacon frames and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+
+        case WIFI_FILTERMODE_INTERNET:
+            // Receive retransmit frames, and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+
+        case WIFI_FILTERMODE_MULTIPLAYER_HOST:
+            // Receive retransmit and multiplayer frames, and STA to DS frames.
+            // There is no need to save empty MP replies and MP ACK packets,
+            // they are handled automatically by the hardware. All we care about
+            // is replies from clients with actual data.
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+                        // | RXFILTER_MP_EMPTY_REPLY
+                        // | RXFILTER_MP_ACK;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_DS_STA;
+            break;
+
+        case WIFI_FILTERMODE_MULTIPLAYER_CLIENT:
+            // Receive retransmit frames and DS to STA frames
+            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
+                        | RXFILTER2_IGNORE_STA_DS;
+            break;
+    }
+}
+
+void Wifi_NTR_WakeUp(void)
+{
+    W_POWER_US = 0;
+
+    swiDelay(67109); // 8ms delay
+
+    Wifi_BBPowerOn();
+
+    // Unset and set bit 7 of register 1 to reset the baseband
+    u32 i = Wifi_BBRead(1);
+    Wifi_BBWrite(1, i & 0x7f);
+    Wifi_BBWrite(1, i);
+
+    swiDelay(335544); // 40ms delay
+
+    Wifi_RFInit();
+}
+
+void Wifi_NTR_Shutdown(void)
+{
+    if (Wifi_FlashReadByte(F_RF_CHIP_TYPE) == 2)
+        Wifi_RFWrite(0xC008);
+
+    int a = Wifi_BBRead(REG_MM3218_EXT_GAIN);
+    Wifi_BBWrite(REG_MM3218_EXT_GAIN, a | 0x3F);
+
+    Wifi_BBPowerOff();
+
+    W_POWER_US = 1;
+}
+
+static void Wifi_NTR_TxSetup(void)
 {
     W_TXREQ_SET = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 }
 
-static void Wifi_RxSetup(void)
+static void Wifi_NTR_RxSetup(void)
 {
     W_RXCNT = RXCNT_ENABLE_RX;
 
@@ -44,7 +221,7 @@ static void Wifi_RxSetup(void)
     W_RXCNT = RXCNT_ENABLE_RX | RXCNT_EMPTY_RXBUF;
 }
 
-void Wifi_Start_NTR(void)
+void Wifi_NTR_Start(void)
 {
     int oldIME = enterCriticalSection();
 
@@ -55,7 +232,7 @@ void Wifi_Start_NTR(void)
     W_WEP_CNT     = WEP_CNT_ENABLE;
     W_POST_BEACON = 0xFFFF;
 
-    Wifi_SetAssociationID(0);
+    Wifi_NTR_SetAssociationID(0);
 
     W_US_COUNTCNT = 1;
     W_POWER_TX    = 0x0000;
@@ -63,8 +240,8 @@ void Wifi_Start_NTR(void)
     W_BSSID[1]    = 0x0000;
     W_BSSID[2]    = 0x0000;
 
-    Wifi_TxSetup();
-    Wifi_RxSetup();
+    Wifi_NTR_TxSetup();
+    Wifi_NTR_RxSetup();
 
     W_RXCNT = RXCNT_ENABLE_RX;
 
@@ -129,7 +306,7 @@ void Wifi_Start_NTR(void)
     }
 #endif
     W_POWER_048 = 0;
-    Wifi_DisableTempPowerSave();
+    Wifi_NTR_DisableTempPowerSave();
     // W_TXREQ_SET = TXBIT_CMD;
     W_POWERSTATE |= 2;
     W_TXREQ_RESET = TXBIT_ALL;
@@ -143,7 +320,7 @@ void Wifi_Start_NTR(void)
     leaveCriticalSection(oldIME);
 }
 
-void Wifi_Stop_NTR(void)
+void Wifi_NTR_Stop(void)
 {
     int oldIME = enterCriticalSection();
 
@@ -164,7 +341,7 @@ void Wifi_Stop_NTR(void)
     leaveCriticalSection(oldIME);
 }
 
-void Wifi_Init_NTR(void)
+void Wifi_NTR_Init(void)
 {
     WLOG_PUTS("W: Init (DS mode)\n");
 
@@ -184,8 +361,8 @@ void Wifi_Init_NTR(void)
 
     // reset/shutdown wifi:
     W_MODE_RST = 0xFFFF;
-    Wifi_Stop();
-    Wifi_Shutdown(); // power off wifi
+    Wifi_NTR_Stop();
+    Wifi_NTR_Shutdown(); // power off wifi
 
     WifiData->curChannel     = 1;
     WifiData->reqChannel     = 1;
@@ -210,7 +387,7 @@ void Wifi_Init_NTR(void)
         WifiData->MacAddr[2] & 0xFF, (WifiData->MacAddr[2] >> 8) & 0xFF);
 
     W_IE = 0;
-    Wifi_WakeUp();
+    Wifi_NTR_WakeUp();
 
     Wifi_MacInit();
     Wifi_BBInit();
@@ -221,8 +398,8 @@ void Wifi_Init_NTR(void)
     W_MACADDR[2] = WifiData->MacAddr[2];
 
     W_TX_RETRYLIMIT = 7;
-    Wifi_SetSleepMode(MODE_WEP_SLEEP_OFF);
-    Wifi_SetWepMode(WEPMODE_NONE);
+    Wifi_NTR_SetSleepMode(MODE_WEP_SLEEP_OFF);
+    Wifi_NTR_SetWepMode(WEPMODE_NONE);
 
     Wifi_SetChannel(1);
 
@@ -236,13 +413,13 @@ void Wifi_Init_NTR(void)
     irqEnable(IRQ_WIFI);
 }
 
-void Wifi_Deinit_NTR(void)
+void Wifi_NTR_Deinit(void)
 {
     irqDisable(IRQ_WIFI);
     irqSet(IRQ_WIFI, NULL);
 
-    Wifi_Stop();
-    Wifi_Shutdown();
+    Wifi_NTR_Stop();
+    Wifi_NTR_Shutdown();
 
     powerOff(POWER_WIFI);
 }

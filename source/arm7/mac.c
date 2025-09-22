@@ -7,6 +7,7 @@
 #include "arm7/flash.h"
 #include "arm7/registers.h"
 #include "arm7/setup.h"
+#include "arm7/ntr/setup.h"
 
 int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2)
 {
@@ -37,7 +38,7 @@ void Wifi_MacInit(void)
     W_TXBUF_RESET   = TXBIT_ALL;
     W_TXBUF_BEACON  = TXBUF_BEACON_DISABLE;
 
-    Wifi_SetAssociationID(0);
+    Wifi_NTR_SetAssociationID(0);
 
     W_US_COUNTCNT   = 0;
     W_US_COMPARECNT = 0;
@@ -48,7 +49,7 @@ void Wifi_MacInit(void)
     W_PRE_BEACON    = 0x0800;
 
     W_PREAMBLE      = 1;
-    Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
+    Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
 
     W_CONFIG_0D4    = 3;
     W_CONFIG_0D8    = 4;

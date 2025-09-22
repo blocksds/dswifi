@@ -6,15 +6,15 @@
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 
-void Wifi_Start_TWL(void)
+void Wifi_TWL_Start(void)
 {
 }
 
-void Wifi_Stop_TWL(void)
+void Wifi_TWL_Stop(void)
 {
 }
 
-void Wifi_Init_TWL(void)
+void Wifi_TWL_Init(void)
 {
     WLOG_PUTS("W: Init (DSi mode)\n");
 
@@ -23,6 +23,11 @@ void Wifi_Init_TWL(void)
         swiDelay(5 * 134056); // 5 milliseconds
 }
 
-void Wifi_Deinit_TWL(void)
+void Wifi_TWL_Deinit(void)
 {
+}
+
+void Wifi_TWL_SetupFilterMode(Wifi_FilterMode mode)
+{
+    (void)mode;
 }

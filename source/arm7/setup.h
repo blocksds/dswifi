@@ -11,13 +11,8 @@
 void Wifi_Init(void *wifidata);
 void Wifi_Deinit(void);
 
-void Wifi_WakeUp(void);
-void Wifi_Shutdown(void);
 void Wifi_Start(void);
 void Wifi_Stop(void);
-
-// The rate can be WIFI_TRANSFER_RATE_1MBPS or WIFI_TRANSFER_RATE_2MBPS.
-void Wifi_SetupTransferOptions(int rate, bool short_preamble);
 
 typedef enum {
     WIFI_FILTERMODE_IDLE,
@@ -28,11 +23,5 @@ typedef enum {
 } Wifi_FilterMode;
 
 void Wifi_SetupFilterMode(Wifi_FilterMode mode);
-
-void Wifi_SetWepKey(void *wepkey, int wepmode);
-void Wifi_SetWepMode(int wepmode);
-void Wifi_SetSleepMode(int mode);
-void Wifi_SetAssociationID(u16 aid);
-void Wifi_DisableTempPowerSave(void);
 
 #endif // DSWIFI_ARM7_SETUP_H__

@@ -20,6 +20,7 @@
 #include "arm7/rx_queue.h"
 #include "arm7/tx_queue.h"
 #include "arm7/setup.h"
+#include "arm7/ntr/setup.h"
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 
@@ -185,13 +186,13 @@ void Wifi_Update(void)
             if (WifiData->reqMode == WIFIMODE_ACCESSPOINT)
             {
                 WLOG_PUTS("W: AP mode start\n");
-                Wifi_SetAssociationID(0);
+                Wifi_NTR_SetAssociationID(0);
 
                 // Trigger interrupt when a CMD/REPLY process ends
                 W_TXSTATCNT |= TXSTATCNT_IRQ_MP_ACK;
                 W_IE |= IRQ_MULTIPLAY_CMD_DONE;
 
-                Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
+                Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
                 for (size_t i = 0; i < sizeof(WifiData->ssid7); i++)
                     WifiData->ssid7[i] = WifiData->ssid9[i];
                 Wifi_MPHost_ResetClients();
@@ -246,8 +247,8 @@ void Wifi_Update(void)
                     else
                         WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
                 }
-                Wifi_SetWepKey((void *)WifiData->wepkey7, WifiData->wepmode7);
-                Wifi_SetWepMode(WifiData->wepmode7);
+                Wifi_NTR_SetWepKey((void *)WifiData->wepkey7, WifiData->wepmode7);
+                Wifi_NTR_SetWepMode(WifiData->wepmode7);
                 // latch BSSID
                 W_BSSID[0] = WifiData->bssid7[0];
                 W_BSSID[1] = WifiData->bssid7[1];
@@ -373,7 +374,7 @@ void Wifi_Update(void)
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
                 // Set AID to 0 to stop receiving packets from the host
-                Wifi_SetAssociationID(0);
+                Wifi_NTR_SetAssociationID(0);
 
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -414,7 +415,7 @@ void Wifi_Update(void)
                 WLOG_PUTS("W: AP mode end\n");
                 Wifi_MPHost_ClientKickAll();
                 Wifi_BeaconStop();
-                Wifi_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
+                Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_1MBPS, false);
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
 
                 // Trigger interrupt when a CMD/REPLY process ends

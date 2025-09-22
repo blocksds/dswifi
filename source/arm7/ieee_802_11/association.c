@@ -12,6 +12,7 @@
 #include "arm7/registers.h"
 #include "arm7/tx_queue.h"
 #include "arm7/setup.h"
+#include "arm7/ntr/setup.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"
@@ -136,7 +137,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
 
         WLOG_PRINTF("W: AID: %x\n", association_id);
 
-        Wifi_SetAssociationID(association_id);
+        Wifi_NTR_SetAssociationID(association_id);
 
         // Determine max rate
 
@@ -160,7 +161,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
             WLOG_PUTS("W: Rates not found\n");
         }
 
-        Wifi_SetupTransferOptions(rate, false);
+        Wifi_NTR_SetupTransferOptions(rate, false);
 
         WLOG_PRINTF("W: Rate: %c Mb/s\n",
                     (WifiData->maxrate7 == WIFI_TRANSFER_RATE_2MBPS) ? '2' : '1');

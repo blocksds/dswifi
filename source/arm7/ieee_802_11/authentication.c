@@ -12,6 +12,7 @@
 #include "arm7/multiplayer.h"
 #include "arm7/registers.h"
 #include "arm7/setup.h"
+#include "arm7/ntr/setup.h"
 #include "arm7/tx_queue.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
@@ -325,7 +326,7 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     }
 
     // Set AID to 0 to stop receiving packets from the AP
-    Wifi_SetAssociationID(0);
+    Wifi_NTR_SetAssociationID(0);
 
     WLOG_FLUSH();
 }
@@ -490,7 +491,7 @@ void Wifi_MPHost_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbas
     }
 
     // Set AID to 0 to stop receiving packets from the host
-    Wifi_SetAssociationID(0);
+    Wifi_NTR_SetAssociationID(0);
 
     WLOG_FLUSH();
 }

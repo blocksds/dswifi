@@ -7,9 +7,13 @@
 
 #include <nds/ndstypes.h>
 
-void Wifi_Start_TWL(void);
-void Wifi_Stop_TWL(void);
-void Wifi_Init_TWL(void);
-void Wifi_Deinit_TWL(void);
+#include "arm7/setup.h"
+
+void Wifi_TWL_Start(void);
+void Wifi_TWL_Stop(void);
+void Wifi_TWL_Init(void);
+void Wifi_TWL_Deinit(void);
+
+void Wifi_TWL_SetupFilterMode(Wifi_FilterMode mode);
 
 #endif // DSWIFI_ARM7_TWL_SETUP_H__
