@@ -6,9 +6,9 @@
 #include "arm7/beacon.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/registers.h"
-#include "arm7/mac.h"
 #include "arm7/update.h"
+#include "arm7/ntr/registers.h"
+#include "arm7/ntr/mac.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 

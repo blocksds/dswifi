@@ -6,7 +6,7 @@
 #ifndef DSWIFI_ARM7_BASEBAND_H__
 #define DSWIFI_ARM7_BASEBAND_H__
 
-#include "arm7/registers.h"
+#include "arm7/ntr/registers.h"
 
 /// BB-Chip Mitsumi MM3155 (DS) or BB/RF-Chip Mitsumi MM3218 (DS-Lite)
 

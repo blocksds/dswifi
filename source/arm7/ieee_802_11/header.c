@@ -7,8 +7,8 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
-#include "arm7/registers.h"
+#include "arm7/ntr/mac.h"
+#include "arm7/ntr/registers.h"
 #include "common/ieee_defs.h"
 
 // This returns the size in bytes that have been added to the body due to WEP

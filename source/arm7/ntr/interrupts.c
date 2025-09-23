@@ -6,9 +6,9 @@
 #include <nds.h>
 
 #include "arm7/ipc.h"
-#include "arm7/registers.h"
-#include "arm7/rx_queue.h"
-#include "arm7/tx_queue.h"
+#include "arm7/ntr/registers.h"
+#include "arm7/ntr/rx_queue.h"
+#include "arm7/ntr/tx_queue.h"
 
 void Wifi_Intr_RxEnd(void)
 {
