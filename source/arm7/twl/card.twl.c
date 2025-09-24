@@ -23,9 +23,9 @@
 
 #include "arm7/twl/dsiwifi_cmds.h"
 
-TWL_BSS wifi_card_ctx wlan_ctx = {0};
+static wifi_card_ctx wlan_ctx = {0};
 
-int wifi_card_wlan_init(wifi_card_ctx* ctx);
+int wifi_card_wlan_init(void);
 
 TWL_BSS static int ip_data_out_buf_idx = 0;
 TWL_BSS static u8* ip_data_out_buf = NULL;
@@ -62,7 +62,6 @@ static u8 mbox_buffer[MBOX_TMPBUF_SIZE] ALIGN(16);
 #define IRQ_WIFI_SDIO_CARDIRQ BIT(11)
 
 // Collected device info during init
-static wifi_card_ctx* device_curctx;
 static u32 device_chip_id;
 static u32 device_manufacturer;
 static u32 device_host_interest_addr;
@@ -172,7 +171,7 @@ int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
 {
     // Read register 0x02 (function enable) hibyte until it's ready
     wifi_card_send_command(cmd52, BIT(31) /* write flag */ | (func << 28) | addr << 9 | val);
-    if(device_curctx->tmio.status & 4) {
+    if(wlan_ctx.tmio.status & 4) {
         return -1;
     }
     return 0;
@@ -180,27 +179,25 @@ int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
 
 int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 {
-    if(!device_curctx) return -2;
+    //wifi_sdio_stop(wlan_ctx.tmio.controller);
 
-    //wifi_sdio_stop(device_curctx->tmio.controller);
+    wlan_ctx.tmio.buffer = buf;
+    wlan_ctx.tmio.size = len;
+    wlan_ctx.tmio.break_early = true;
 
-    device_curctx->tmio.buffer = buf;
-    device_curctx->tmio.size = len;
-    device_curctx->tmio.break_early = true;
-
-    u32 old_blocksize = device_curctx->tmio.block_size;
-    device_curctx->tmio.block_size = sizeof(u32);
+    u32 old_blocksize = wlan_ctx.tmio.block_size;
+    wlan_ctx.tmio.block_size = sizeof(u32);
     u8 blkcnt = len;
     u8 funcnum = 1;
     wifi_card_send_command_alt(cmd53_read_single, (funcnum << 28) | (1 << 26) | (addr & 0x1FFFF) << 9 | (blkcnt));
 
-    //device_curctx->tmio.break_early = false;
+    //wlan_ctx.tmio.break_early = false;
 
-    //wifi_sdio_stop(device_curctx->tmio.controller);
+    //wifi_sdio_stop(wlan_ctx.tmio.controller);
 
-    device_curctx->tmio.block_size = old_blocksize;
+    wlan_ctx.tmio.block_size = old_blocksize;
 
-    if(device_curctx->tmio.status & 4)
+    if(wlan_ctx.tmio.status & 4)
     {
         return -1;
     }
@@ -210,24 +207,21 @@ int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 
 int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
 {
-    if (!device_curctx)
-        return -2;
-
     wifi_ndma_wait();
-    wifi_sdio_stop(device_curctx->tmio.controller);
+    wifi_sdio_stop(wlan_ctx.tmio.controller);
 
-    device_curctx->tmio.buffer = buf;
-    device_curctx->tmio.size = len;
+    wlan_ctx.tmio.buffer = buf;
+    wlan_ctx.tmio.size = len;
 
-    u8 blkcnt = len / device_curctx->tmio.block_size;
+    u8 blkcnt = len / wlan_ctx.tmio.block_size;
     u8 funcnum = 1;
     wifi_card_send_command_alt(cmd53_read,
             (funcnum << 28) | (1 << 27) | (1 << 26) | (addr & 0x1FFFF) << 9 | (blkcnt));
 
-    wifi_sdio_stop(device_curctx->tmio.controller);
+    wifi_sdio_stop(wlan_ctx.tmio.controller);
     wifi_ndma_wait();
 
-    if (device_curctx->tmio.status & 4)
+    if (wlan_ctx.tmio.status & 4)
         return -1;
 
     return 0;
@@ -235,26 +229,23 @@ int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
 
 int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
 {
-    if (!device_curctx)
-        return -2;
-
     wifi_ndma_wait();
 
-    wifi_sdio_stop(device_curctx->tmio.controller);
+    wifi_sdio_stop(wlan_ctx.tmio.controller);
 
-    device_curctx->tmio.buffer = buf;
-    device_curctx->tmio.size = len;
+    wlan_ctx.tmio.buffer = buf;
+    wlan_ctx.tmio.size = len;
 
-    u8 blkcnt = len / device_curctx->tmio.block_size;
+    u8 blkcnt = len / wlan_ctx.tmio.block_size;
     u8 funcnum = 1;
     wifi_card_send_command_alt(cmd53_write,
             BIT(31) /* write flag */ | (funcnum << 28) | (1 << 27) | (1 << 26) |
             ((addr & 0x1FFFF) << 9) | (blkcnt));
 
     wifi_ndma_wait();
-    wifi_sdio_stop(device_curctx->tmio.controller);
+    wifi_sdio_stop(wlan_ctx.tmio.controller);
 
-    if (device_curctx->tmio.status & 4)
+    if (wlan_ctx.tmio.status & 4)
         return -1;
 
     return 0;
@@ -1061,7 +1052,7 @@ static void wifi_card_handleMsg(int len, void *user_data)
     if (cmd == WIFI_IPCCMD_INIT_IOP)
     {
         //wifi_printf("iop val %x\n", cmd);
-        wifi_card_device_init(wifi_card_dev_wlan);
+        wifi_card_device_init();
     }
     else if (cmd == WIFI_IPCCMD_INITBUFS)
     {
@@ -1133,47 +1124,29 @@ void wifi_card_init(void)
     wifi_sdio_controller_init(REG_SDIO_BASE);
 
     fifoSetDatamsgHandler(FIFO_DSWIFI, wifi_card_handleMsg, 0);
-    wifi_card_device_init(wifi_card_dev_wlan);
+    wifi_card_device_init();
 }
 
 void wifi_card_send_command(wifi_sdio_command cmd, u32 args)
 {
-    if (!device_curctx)
-        return;
-
-    device_curctx->tmio.buffer = NULL;
-    wifi_sdio_send_command(&device_curctx->tmio, cmd, args);
+    wlan_ctx.tmio.buffer = NULL;
+    wifi_sdio_send_command(&wlan_ctx.tmio, cmd, args);
 }
 
 void wifi_card_send_command_alt(wifi_sdio_command cmd, u32 args)
 {
-    if (!device_curctx)
-        return;
-
-    wifi_sdio_send_command(&device_curctx->tmio, cmd, args);
+    wifi_sdio_send_command(&wlan_ctx.tmio, cmd, args);
 }
 
-int wifi_card_device_init(wifi_card_device device)
+int wifi_card_device_init(void)
 {
-    wifi_card_ctx* ctx = wifi_card_get_context(device);
-    if (!ctx)
-        return -1;
+    memset(&wlan_ctx, 0, sizeof(wlan_ctx));
 
-    memset(ctx, 0, sizeof(wifi_card_ctx));
+    wlan_ctx.tmio.controller = REG_SDIO_BASE;
+    wlan_ctx.tmio.clk_cnt = 0; // HCLK divider, 7=512 (largest possible) 0=2
+    wlan_ctx.tmio.bus_width = 1;
 
-    ctx->device = device;
-
-    ctx->tmio.controller = REG_SDIO_BASE;
-    ctx->tmio.clk_cnt = 0; // HCLK divider, 7=512 (largest possible) 0=2
-    ctx->tmio.bus_width = 1;
-
-    switch (device)
-    {
-        case wifi_card_dev_wlan:
-            return wifi_card_wlan_init(ctx);
-    }
-
-    return -3;
+    return wifi_card_wlan_init();
 }
 
 void wifi_card_process_pkts(void)
@@ -1220,15 +1193,9 @@ void wifi_card_tick(void)
     //wifi_printlnf("tick end");
 }
 
-int wifi_card_wlan_init(wifi_card_ctx* ctx)
+int wifi_card_wlan_init(void)
 {
-    if (!ctx)
-        return -1;
-
-    if (ctx->device != wifi_card_dev_wlan)
-        return -1;
-
-    device_curctx = ctx;
+    wifi_card_ctx *ctx = &wlan_ctx;
 
     ctx->tmio.port = 0;
     ctx->tmio.address = ctx->tmio.port;
@@ -1253,7 +1220,7 @@ int wifi_card_wlan_init(wifi_card_ctx* ctx)
     REG_SCFG_WL = SCFG_WL_OFFB; // SCFG_WL on?
 
     ctx->tmio.bus_width = 4;
-    wifi_card_switch_device(ctx);
+    wifi_card_switch_device();
     ioDelay(0xF000);
 
     // Read register 0x00 (Revision) as a test
@@ -1261,7 +1228,7 @@ int wifi_card_wlan_init(wifi_card_ctx* ctx)
     if (ctx->tmio.status & 4)
     {
         ctx->tmio.bus_width = 1;
-        wifi_card_switch_device(ctx);
+        wifi_card_switch_device();
         WLOG_PUTS("Failed to read revision, assuming 1bit\n");
         WLOG_FLUSH();
     }
@@ -1365,7 +1332,7 @@ skip_opcond:
         ctx->tmio.bus_width = 4;
 
         // Apply new bus width
-        wifi_card_switch_device(ctx);
+        wifi_card_switch_device();
 
         // Write to the Power Control.
         wifi_card_write_func0_u8(0x12, 0x02);
@@ -1630,26 +1597,9 @@ u32 wifi_card_host_interest_addr(void)
     return device_host_interest_addr;
 }
 
-wifi_card_ctx *wifi_card_get_context(wifi_card_device device)
+void wifi_card_switch_device(void)
 {
-    switch (device)
-    {
-        case wifi_card_dev_wlan:
-            return &wlan_ctx;
-
-        default:
-            return NULL;
-    }
-}
-
-void wifi_card_switch_device(wifi_card_ctx *ctx)
-{
-    if (!ctx)
-        return;
-
-    wifi_sdio_switch_device(&ctx->tmio);
-
-    device_curctx = ctx;
+    wifi_sdio_switch_device(&wlan_ctx.tmio);
 }
 
 void wifi_card_setclk(u32 data)

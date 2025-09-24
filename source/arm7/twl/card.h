@@ -12,15 +12,11 @@
 
 #define REG_SDIO_BASE   ((void *)TMIO2_REGS_BASE)
 
-typedef enum {
-    wifi_card_dev_wlan = 0
-} wifi_card_device;
-
-typedef struct {
-    wifi_card_device device;
-
+typedef struct
+{
     wifi_sdio_ctx tmio;
-} wifi_card_ctx;
+}
+wifi_card_ctx;
 
 enum wpa_type_t
 {
@@ -132,10 +128,9 @@ void wifi_card_init(void);
 void wifi_card_deinit(void);
 bool wifi_card_initted(void);
 
-int wifi_card_device_init(wifi_card_device device);
-wifi_card_ctx* wifi_card_get_context(wifi_card_device device);
+int wifi_card_device_init(void);
 
-void wifi_card_switch_device(wifi_card_ctx* ctx);
+void wifi_card_switch_device(void);
 void wifi_card_send_command(wifi_sdio_command cmd, u32 args);
 void wifi_card_send_command_alt(wifi_sdio_command cmd, u32 args);
 
