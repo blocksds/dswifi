@@ -5,6 +5,7 @@
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
+#include "arm7/twl/card.h"
 
 void Wifi_TWL_Start(void)
 {
@@ -18,9 +19,7 @@ void Wifi_TWL_Init(void)
 {
     WLOG_PUTS("W: Init (DSi mode)\n");
 
-    gpioSetWifiMode(GPIO_WIFI_MODE_TWL);
-    if (REG_GPIO_WIFI)
-        swiDelay(5 * 134056); // 5 milliseconds
+    wifi_card_init();
 }
 
 void Wifi_TWL_Deinit(void)
