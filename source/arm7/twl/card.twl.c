@@ -1249,7 +1249,8 @@ int wifi_card_wlan_init(wifi_card_ctx* ctx)
     command[1] = 0x00;
     rtcTransaction(command, 2, 0, 0);
     i2cWriteRegister(I2C_PM, 0x30, 0x13);
-    *(vu16*)0x4004020 = 0x1; // SCFG_WL on?
+
+    REG_SCFG_WL = SCFG_WL_OFFB; // SCFG_WL on?
 
     ctx->tmio.bus_width = 4;
     wifi_card_switch_device(ctx);
