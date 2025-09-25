@@ -13,6 +13,9 @@
 // Toggle for DATA32 support.
 #define WIFI_SDIO_DATA32
 
+// Base address of SDIO registers
+#define REG_SDIO_BASE                  ((uintptr_t)TMIO2_REGS_BASE)
+
 // TMIO register offsets.
 #define WIFI_SDIO_OFFS_CMD             (0x000)
 #define WIFI_SDIO_OFFS_PORT_SEL        (0x002)
@@ -106,7 +109,6 @@
 
 typedef struct
 {
-    void *controller;
     u16 address;
     u8 port;
     bool debug;
@@ -199,14 +201,15 @@ typedef enum
 }
 wifi_sdio_response_type;
 
-void wifi_sdio_controller_init(void *controller);
+void wifi_sdio_controller_init(void);
 void wifi_sdio_switch_device(wifi_sdio_ctx *ctx);
 void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args);
 void wifi_sdio_send_command_alt(wifi_sdio_ctx* ctx, wifi_sdio_command cmd, u32 args);
 
-void wifi_sdio_stop(void *controller);
-void wifi_sdio_setclk(void *controller, u32 data);
+void wifi_sdio_stop(void);
+void wifi_sdio_setclk(u32 data);
 
-void wifi_sdio_enable_cardirq(void *controller, bool en);
+void wifi_sdio_enable_cardirq(bool en);
+u16 wifi_sdio_get_cardirq_stat(void);
 
 #endif // DSWIFI_ARM7_TWL_SDIO_H__

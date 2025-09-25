@@ -184,7 +184,7 @@ int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
 
 int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 {
-    //wifi_sdio_stop(wlan_ctx.tmio.controller);
+    //wifi_sdio_stop();
 
     wlan_ctx.tmio.buffer = buf;
     wlan_ctx.tmio.size = len;
@@ -198,7 +198,7 @@ int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 
     //wlan_ctx.tmio.break_early = false;
 
-    //wifi_sdio_stop(wlan_ctx.tmio.controller);
+    //wifi_sdio_stop();
 
     wlan_ctx.tmio.block_size = old_blocksize;
 
@@ -211,7 +211,7 @@ int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
 {
     wifi_ndma_wait();
-    wifi_sdio_stop(wlan_ctx.tmio.controller);
+    wifi_sdio_stop();
 
     wlan_ctx.tmio.buffer = buf;
     wlan_ctx.tmio.size = len;
@@ -221,7 +221,7 @@ int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
     wifi_card_send_command_alt(cmd53_read,
             (funcnum << 28) | (1 << 27) | (1 << 26) | (addr & 0x1FFFF) << 9 | (blkcnt));
 
-    wifi_sdio_stop(wlan_ctx.tmio.controller);
+    wifi_sdio_stop();
     wifi_ndma_wait();
 
     if (wlan_ctx.tmio.status & 4)
@@ -234,7 +234,7 @@ int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
 {
     wifi_ndma_wait();
 
-    wifi_sdio_stop(wlan_ctx.tmio.controller);
+    wifi_sdio_stop();
 
     wlan_ctx.tmio.buffer = buf;
     wlan_ctx.tmio.size = len;
@@ -246,7 +246,7 @@ int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
             ((addr & 0x1FFFF) << 9) | (blkcnt));
 
     wifi_ndma_wait();
-    wifi_sdio_stop(wlan_ctx.tmio.controller);
+    wifi_sdio_stop();
 
     if (wlan_ctx.tmio.status & 4)
         return -1;
@@ -1138,7 +1138,7 @@ void wifi_card_init(void)
                  sizeof(wifi_card_nvram_configs));
 
     wifi_ndma_init();
-    wifi_sdio_controller_init(REG_SDIO_BASE);
+    wifi_sdio_controller_init();
 
     fifoSetDatamsgHandler(FIFO_DSWIFI, wifi_card_handleMsg, 0);
     wifi_card_device_init();
@@ -1159,7 +1159,6 @@ int wifi_card_device_init(void)
 {
     memset(&wlan_ctx, 0, sizeof(wlan_ctx));
 
-    wlan_ctx.tmio.controller = REG_SDIO_BASE;
     wlan_ctx.tmio.clk_cnt = 0; // HCLK divider, 7=512 (largest possible) 0=2
     wlan_ctx.tmio.bus_width = 1;
 
@@ -1255,7 +1254,7 @@ int wifi_card_wlan_init(void)
         WLOG_PUTS("Resetting SDIO...\n");
         WLOG_FLUSH();
 
-        wifi_sdio_stop(ctx->tmio.controller);
+        wifi_sdio_stop();
 
         // TODO maybe toggle REG_GPIO5_DAT for a hardware reset
 
@@ -1561,7 +1560,7 @@ skip_opcond:
     // Enable IRQs
     irqSetAUX(IRQ_WIFI_SDIO_CARDIRQ, wifi_card_irq);
     irqEnableAUX(IRQ_WIFI_SDIO_CARDIRQ);
-    wifi_sdio_enable_cardirq(REG_SDIO_BASE, true); // MelonDS seems to have trouble with IRQs? Comment out for MelonDS.
+    wifi_sdio_enable_cardirq(true); // MelonDS seems to have trouble with IRQs? Comment out for MelonDS.
 
     wifi_card_write_func1_u32(F1_INT_STATUS_ENABLE, 0x010300D1); // INT_STATUS_ENABLE (or 0x1?)
     wifi_card_write_func0_u8(0x4, 0x3); // CCCR irq_enable, master+func1
@@ -1587,7 +1586,7 @@ skip_opcond:
 
 void wifi_card_deinit(void)
 {
-    wifi_sdio_enable_cardirq(REG_SDIO_BASE, false);
+    wifi_sdio_enable_cardirq(false);
 
     irqDisableAUX(IRQ_WIFI_SDIO_CARDIRQ);
     irqDisable(IRQ_TIMER3);
@@ -1621,10 +1620,10 @@ void wifi_card_switch_device(void)
 
 void wifi_card_setclk(u32 data)
 {
-    wifi_sdio_setclk(REG_SDIO_BASE, data);
+    wifi_sdio_setclk(data);
 }
 
 void wifi_card_stop(void)
 {
-    wifi_sdio_stop(REG_SDIO_BASE);
+    wifi_sdio_stop();
 }

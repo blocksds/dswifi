@@ -10,8 +10,6 @@
 
 #include "arm7/twl/sdio.h"
 
-#define REG_SDIO_BASE   ((void *)TMIO2_REGS_BASE)
-
 typedef struct
 {
     wifi_sdio_ctx tmio;
