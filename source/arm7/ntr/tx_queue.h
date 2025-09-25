@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_TX_QUEUE_H__
-#define DSWIFI_ARM7_TX_QUEUE_H__
+#ifndef DSWIFI_ARM7_NTR_TX_QUEUE_H__
+#define DSWIFI_ARM7_NTR_TX_QUEUE_H__
 
 #include <nds/ndstypes.h>
 
@@ -57,4 +57,4 @@ void Wifi_TxAllQueueFlush(void);
 
 void Wifi_Intr_MultiplayCmdDone(void);
 
-#endif // DSWIFI_ARM7_TX_QUEUE_H__
+#endif // DSWIFI_ARM7_NTR_TX_QUEUE_H__

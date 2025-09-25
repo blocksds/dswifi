@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_RF_H__
-#define DSWIFI_ARM7_RF_H__
+#ifndef DSWIFI_ARM7_NTR_RF_H__
+#define DSWIFI_ARM7_NTR_RF_H__
 
 // Hardware definitions for the RF9008 transceiver chip.
 
@@ -37,4 +37,4 @@ void Wifi_RFInit(void);
 
 void Wifi_SetChannel(int channel);
 
-#endif // DSWIFI_ARM7_RF_H__
+#endif // DSWIFI_ARM7_NTR_RF_H__

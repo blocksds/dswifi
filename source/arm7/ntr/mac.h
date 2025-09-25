@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_MAC_H__
-#define DSWIFI_ARM7_MAC_H__
+#ifndef DSWIFI_ARM7_NTR_MAC_H__
+#define DSWIFI_ARM7_NTR_MAC_H__
 
 #include <nds/ndstypes.h>
 
@@ -43,4 +43,4 @@ void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length);
 // Write one byte to MAC RAM.
 void Wifi_MacWriteByte(int address, int value);
 
-#endif // DSWIFI_ARM7_MAC_H__
+#endif // DSWIFI_ARM7_NTR_MAC_H__

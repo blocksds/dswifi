@@ -8,10 +8,10 @@
 
 #include <dswifi_common.h>
 
-#include "arm7/beacon.h"
 #include "arm7/debug.h"
-#include "arm7/ieee_802_11/authentication.h"
 #include "arm7/ipc.h"
+#include "arm7/ntr/beacon.h"
+#include "arm7/ntr/ieee_802_11/authentication.h"
 #include "arm7/ntr/mac.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"

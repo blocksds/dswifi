@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_RX_QUEUE_H__
-#define DSWIFI_ARM7_RX_QUEUE_H__
+#ifndef DSWIFI_ARM7_NTR_RX_QUEUE_H__
+#define DSWIFI_ARM7_NTR_RX_QUEUE_H__
 
 #include <nds/ndstypes.h>
 
@@ -20,4 +20,4 @@
 // and send the rest to the RX ARM9 queue to be handled by the ARM9.
 void Wifi_RxQueueFlush(void);
 
-#endif // DSWIFI_ARM7_RX_QUEUE_H__
+#endif // DSWIFI_ARM7_NTR_RX_QUEUE_H__

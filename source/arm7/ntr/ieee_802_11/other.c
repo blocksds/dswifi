@@ -4,11 +4,11 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/debug.h"
-#include "arm7/ieee_802_11/header.h"
 #include "arm7/ipc.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/tx_queue.h"
+#include "arm7/ntr/ieee_802_11/header.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"

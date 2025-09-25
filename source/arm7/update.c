@@ -7,20 +7,20 @@
 #include <dswifi7.h>
 #include <dswifi_common.h>
 
-#include "arm7/beacon.h"
 #include "arm7/debug.h"
-#include "arm7/ieee_802_11/association.h"
-#include "arm7/ieee_802_11/authentication.h"
-#include "arm7/ieee_802_11/other.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
-#include "arm7/multiplayer.h"
+#include "arm7/ntr/beacon.h"
 #include "arm7/ntr/mac.h"
+#include "arm7/ntr/multiplayer.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/rf.h"
 #include "arm7/ntr/rx_queue.h"
-#include "arm7/ntr/tx_queue.h"
 #include "arm7/ntr/setup.h"
+#include "arm7/ntr/tx_queue.h"
+#include "arm7/ntr/ieee_802_11/association.h"
+#include "arm7/ntr/ieee_802_11/authentication.h"
+#include "arm7/ntr/ieee_802_11/other.h"
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 

@@ -3,12 +3,12 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#include "arm7/ieee_802_11/process.h"
 #include "arm7/ipc.h"
 #include "arm7/update.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/rx_queue.h"
+#include "arm7/ntr/ieee_802_11/process.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 

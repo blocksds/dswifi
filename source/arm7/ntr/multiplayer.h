@@ -2,8 +2,8 @@
 //
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_MULTIPLAYER_H__
-#define DSWIFI_ARM7_MULTIPLAYER_H__
+#ifndef DSWIFI_ARM7_NTR_MULTIPLAYER_H__
+#define DSWIFI_ARM7_NTR_MULTIPLAYER_H__
 
 #include <nds/ndstypes.h>
 
@@ -22,4 +22,4 @@ void Wifi_MPHost_KickByAID(int association_id);
 void Wifi_MPHost_KickNotAssociatedClients(void);
 void Wifi_MPHost_ClientKickAll(void);
 
-#endif // DSWIFI_ARM7_MULTIPLAYER_H__
+#endif // DSWIFI_ARM7_NTR_MULTIPLAYER_H__

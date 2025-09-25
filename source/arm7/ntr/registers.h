@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_REGISTERS_H__
-#define DSWIFI_ARM7_REGISTERS_H__
+#ifndef DSWIFI_ARM7_NTR_REGISTERS_H__
+#define DSWIFI_ARM7_NTR_REGISTERS_H__
 
 #include <nds.h>
 
@@ -427,4 +427,4 @@
 
 #define WEP_KEY_MAX_SIZE    32
 
-#endif // DSWIFI_ARM7_REGISTERS_H__
+#endif // DSWIFI_ARM7_NTR_REGISTERS_H__
