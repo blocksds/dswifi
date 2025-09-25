@@ -7,6 +7,42 @@
 
 #define WIFI_SDIO_NDMA
 
+static inline u16 wifi_sdio_read16(void *controller, u32 reg)
+{
+    return *(vu16*)(controller + reg);
+}
+
+static inline u32 wifi_sdio_read32(void *controller, u32 reg)
+{
+    return *(vu32*)(controller + reg);
+}
+
+static inline void wifi_sdio_write16(void *controller, u32 reg, u16 val)
+{
+    *(vu16*)(controller + reg) = val;
+}
+
+static inline void wifi_sdio_write32(void *controller, u32 reg, u32 val)
+{
+    *(vu32*)(controller + reg) = val;
+}
+
+static inline void wifi_sdio_mask16(void *controller, u32 reg, u16 clear, u16 set)
+{
+    u16 val = wifi_sdio_read16(controller, reg);
+    val &= ~clear;
+    val |= set;
+    wifi_sdio_write16(controller, reg, val);
+}
+
+static inline void wifi_sdio_mask32(void *controller, u32 reg, u32 clear, u32 set)
+{
+    u32 val = wifi_sdio_read32(controller, reg);
+    val &= ~clear;
+    val |= set;
+    wifi_sdio_write32(controller, reg, val);
+}
+
 void wifi_sdio_controller_init(void *controller)
 {
     void *c = controller;
@@ -310,42 +346,6 @@ void wifi_sdio_switch_device(wifi_sdio_ctx *ctx)
         wifi_sdio_mask16(ctx->controller, WIFI_SDIO_OFFS_CARD_OPT, BIT(15), 0);
     else
         wifi_sdio_mask16(ctx->controller, WIFI_SDIO_OFFS_CARD_OPT, 0, BIT(15));
-}
-
-u16 wifi_sdio_read16(void *controller, u32 reg)
-{
-    return *(vu16*)(controller + reg);
-}
-
-u32 wifi_sdio_read32(void *controller, u32 reg)
-{
-    return *(vu32*)(controller + reg);
-}
-
-void wifi_sdio_write16(void *controller, u32 reg, u16 val)
-{
-    *(vu16*)(controller + reg) = val;
-}
-
-void wifi_sdio_write32(void *controller, u32 reg, u32 val)
-{
-    *(vu32*)(controller + reg) = val;
-}
-
-void wifi_sdio_mask16(void *controller, u32 reg, u16 clear, u16 set)
-{
-    u16 val = wifi_sdio_read16(controller, reg);
-    val &= ~clear;
-    val |= set;
-    wifi_sdio_write16(controller, reg, val);
-}
-
-void wifi_sdio_mask32(void *controller, u32 reg, u32 clear, u32 set)
-{
-    u32 val = wifi_sdio_read32(controller, reg);
-    val &= ~clear;
-    val |= set;
-    wifi_sdio_write32(controller, reg, val);
 }
 
 void wifi_sdio_setclk(void *controller, u32 data)

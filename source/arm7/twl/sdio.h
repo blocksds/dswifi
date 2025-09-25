@@ -204,16 +204,6 @@ void wifi_sdio_switch_device(wifi_sdio_ctx *ctx);
 void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args);
 void wifi_sdio_send_command_alt(wifi_sdio_ctx* ctx, wifi_sdio_command cmd, u32 args);
 
-u16 wifi_sdio_read16(void *controller, u32 reg);
-u32 wifi_sdio_read32(void *controller, u32 reg);
-void wifi_sdio_write16(void *controller, u32 reg, u16 val);
-void wifi_sdio_write32(void *controller, u32 reg, u32 val);
-void wifi_sdio_mask16(void *controller, u32 reg, u16 clear, u16 set);
-
-u32 wifi_sdio_read32(void *controller, u32 reg);
-void wifi_sdio_write32(void *controller, u32 reg, u32 val);
-void wifi_sdio_mask32(void *controller, u32 reg, u32 clear, u32 set);
-
 void wifi_sdio_stop(void *controller);
 void wifi_sdio_setclk(void *controller, u32 data);
 
