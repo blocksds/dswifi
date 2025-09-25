@@ -108,8 +108,11 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
 
 #ifdef WIFI_SDIO_DEBUG
     if (ctx->debug)
-        wifi_printlnf("CMD#: 0x%04X (%u) (%X) -> %u:%u",
-                cmd.raw, cmd.cmd, stat0_completion_flags, ctx->port, ctx->address);
+    {
+        WLOG_PRINTF("CMD#: 0x%X (%u) (%X) -> %u:%u\n",
+                    cmd.raw, cmd.cmd, stat0_completion_flags, ctx->port, ctx->address);
+        WLOG_FLUSH();
+    }
 #endif
 
     bool buffer32 = false;
@@ -196,7 +199,8 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
                     {
                         *(u32*)buffer = wifi_sdio_read32(WIFI_SDIO_OFFS_DATA32_FIFO);
 
-                        //wifi_printlnf("asdf %x", *(u32*)buffer);
+                        // WLOG_PRINTF("asdf %x\n", *(u32*)buffer);
+                        // WLOG_FLUSH();
 
                         buffer += sizeof(u32);
                     }
@@ -241,7 +245,10 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
         {
 #ifdef WIFI_SDIO_DEBUG
             if (ctx->debug)
-                wifi_printlnf("ERR#: %04X 0000", stat1 & WIFI_SDIO_MASK_ERR);
+            {
+                WLOG_PRINTF("ERR#: %X 0000\n", stat1 & WIFI_SDIO_MASK_ERR);
+                WLOG_FLUSH();
+            }
 #endif
             // Error flag.
             ctx->status |= 4;
@@ -303,23 +310,23 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
 #ifdef WIFI_SDIO_DEBUG
     if (ctx->debug)
     {
-        wifi_printlnf("STAT: %04X %04X (%X) INFO: %04X %04X", ctx->stat1, ctx->stat0,
-                ctx->status, ctx->err1, ctx->err0);
+        WLOG_PRINTF("STAT: %X %X (%X) INFO: %X %X\n", ctx->stat1, ctx->stat0,
+                    ctx->status, ctx->err1, ctx->err0);
 
         if (cmd.response_type != wifi_sdio_resp_none)
         {
             if (cmd.response_type == wifi_sdio_resp_136bit)
             {
-                wifi_printlnf("RESP: %08lX %08lX %08lX %08lX",
-                              ctx->resp[0], ctx->resp[1], ctx->resp[2], ctx->resp[3]);
+                WLOG_PRINTF("RESP: %X %X %X %X\n",
+                            ctx->resp[0], ctx->resp[1], ctx->resp[2], ctx->resp[3]);
             }
             else
             {
-                wifi_printlnf("RESP: %08lX", ctx->resp[0]);
+                WLOG_PRINTF("RESP: %X\n", ctx->resp[0]);
             }
         }
 
-        wifi_printlnf("");
+        WLOG_FLUSH();
     }
 #endif
 }

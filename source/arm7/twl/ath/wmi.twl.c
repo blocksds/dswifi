@@ -210,7 +210,8 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     }
     *wmi_params = (void*)pkt_data;
 
-    wifi_printlnf("WMI_SCAN_COMPLETE_EVENT len %x %08x", len, wmi_params->status);
+    WLOG_PRINTF("WMI_SCAN_COMPLETE_EVENT len %x %x\n", len, wmi_params->status);
+    WLOG_FLUSH();
 #endif
     scan_done = true;
     scanning = false;
@@ -288,13 +289,15 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 
             if (version != 0x0001)
             {
-                //wifi_printf("AP had bad version 0x%04x\n", version);
+                // WLOG_PRINTF("AP had bad version 0x%x\n", version);
+                // WLOG_FLUSH();
                 goto skip_parse;
             }
 
             u32 group_cipher = getbe32(read_ptr + 2);
             u16 read_idx = 2 + 4;
-            //wifi_printf("g %x\n", group_cipher);
+            // WLOG_PRINTF("g %x\n", group_cipher);
+            // WLOG_FLUSH();
 
             group_crypto = wmi_ieee_to_crypt(group_cipher);
 
@@ -1545,12 +1548,12 @@ bool wmi_handshake_done(void)
     return has_sent_hs4;
 }
 
-u8* wmi_get_mac(void)
+u8 *wmi_get_mac(void)
 {
     return device_mac;
 }
 
-u8* wmi_get_ap_mac(void)
+u8 *wmi_get_ap_mac(void)
 {
     return ap_bssid;
 }

@@ -152,7 +152,8 @@ const char *wifi_card_get_chip_str(void)
     }
 }
 
-void wifi_card_print_mac(const char* prefix, const u8* mac)
+#if 0
+static void wifi_card_print_mac(const char* prefix, const u8* mac)
 {
     (void)prefix;
     (void)mac;
@@ -169,6 +170,7 @@ void wifi_card_print_mac(const char* prefix, const u8* mac)
         WLOG_FLUSH();
     }
 }
+#endif
 
 // SDIO basics
 
@@ -386,7 +388,8 @@ void wifi_card_mbox_clear(void)
     timeout = 100;
     if (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1))
     {
-        wifi_printlnf("b");
+        WLOG_PUTS("b");
+        WLOG_FLUSH();
     }
     while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1) && --timeout)
     {
@@ -600,7 +603,8 @@ void data_handle_pkt(u8* pkt_data, u32 len)
 
         //memcpy(ip_data_out_buf, pkt_data, len);
 
-        //wifi_printf("%x %x\n", ip_data_out_buf, pkt_data);
+        // WLOG_PRINTF("%x %x\n", ip_data_out_buf, pkt_data);
+        // WLOG_FLUSH();
 
         Wifi_FifoMsg msg;
         msg.cmd = WIFI_IPCINT_PKTDATA;
@@ -608,8 +612,9 @@ void data_handle_pkt(u8* pkt_data, u32 len)
         msg.pkt_len = len;
         fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
 
-        //while (*(vu32*)(pkt_data-6) != 0xF00FF00F);
-        //wifi_printf(""); // HACK force ARM7 to wait for ARM9 to copy packet
+        // while (*(vu32*)(pkt_data - 6) != 0xF00FF00F);
+        // WLOG_PUTS(""); // HACK force ARM7 to wait for ARM9 to copy packet
+        // WLOG_FLUSH();
 #if 0
         data_send_to_lwip(pkt_data, len);
 #endif
@@ -617,18 +622,21 @@ void data_handle_pkt(u8* pkt_data, u32 len)
         wifi_card_print_mac("Dst:", data_hdr->dst_bssid);
         wifi_card_print_mac("Src:", data_hdr->src_bssid);
 
-        wifi_printlnf("Data Pkt:");
+        WLOG_PUTS("Data Pkt:\n");
 
         u8* dump_data = data_hdr->body;
         for (int i = 0; i < data_len; i += 8)
         {
-            wifi_printlnf("%02x: %02x %02x %02x %02x %02x %02x %02x %02x", i, dump_data[i+0], dump_data[i+1], dump_data[i+2], dump_data[i+3], dump_data[i+4], dump_data[i+5], dump_data[i+6], dump_data[i+7]);
+            WLOG_PRINTF("%x: %x %x %x %x %x %x %x %x", i,
+                        dump_data[i + 0], dump_data[i + 1], dump_data[i + 2], dump_data[i + 3],
+                        dump_data[i + 4], dump_data[i + 5], dump_data[i + 6], dump_data[i + 7]);
         }
+        WLOG_FLUSH();
 #endif
     }
 }
 
-void data_send_pkt(u8* pkt_data, u32 len)
+void data_send_pkt(u8 *pkt_data, u32 len)
 {
     int lock = enterCriticalSection();
     // 0x2008 causes broadcast packets?
@@ -636,7 +644,7 @@ void data_send_pkt(u8* pkt_data, u32 len)
     leaveCriticalSection(lock);
 }
 
-void data_send_pkt_idk(u8* pkt_data, u32 len)
+void data_send_pkt_idk(u8 *pkt_data, u32 len)
 {
     int lock = enterCriticalSection();
     // 0x2008 causes broadcast packets? and might be faster?
@@ -693,11 +701,13 @@ void *data_next_buf(void)
             void* dst = memUncached(ip_data_out_buf + (DATA_BUF_LEN * i));
             if (*(vu32*)dst == 0xF00FF00F)
             {
-                //wifi_printf("ret %u\n", i);
+                // WLOG_PRINTF("ret %u\n", i);
+                // WLOG_FLUSH();
                 return dst;
             }
         }
-        //wifi_printf("arm9 loop...\n");
+        // WLOG_PUTS("ARM9 loop...\n");
+        // WLOG_FLUSH();
     }
     //return ip_data_out_buf;
     return NULL;
@@ -706,11 +716,12 @@ void *data_next_buf(void)
 #if 1
     void *ret = ip_data_out_buf + (DATA_BUF_LEN * ip_data_out_buf_idx);
 
-    //wifi_printf("ret %u\n", ip_data_out_buf_idx);
+    // WLOG_PRINTF("ret %u\n", ip_data_out_buf_idx);
+    // WLOG_FLUSH();
 
     ip_data_out_buf_idx = (ip_data_out_buf_idx + 1) % (ip_data_out_buf_totlen / DATA_BUF_LEN);
 
-    //memset(ret, 0, DATA_BUF_LEN);
+    // memset(ret, 0, DATA_BUF_LEN);
 
     return ret;
 #endif
@@ -1046,7 +1057,8 @@ void wifi_card_bmi_lz_upload(u32 addr, const u8* data, u32 len)
     for (size_t i = 0; i < len; i += chunk_size)
     {
         u32 frag_size = i+chunk_size > len ? len-i : chunk_size;
-        //wifi_printlnf("decomp lz: %08x %08x", i, frag_size);
+        // WLOG_PRINTF("decomp lz: %x %x\N", i, frag_size);
+        // WLOG_FLUSH();
         wifi_card_bmi_lz_data((u8*)&data[i], frag_size);
     }
 }
@@ -1059,7 +1071,8 @@ static void wifi_card_handleMsg(int len, void *user_data)
 
     if (len < 4)
     {
-        //wifi_printf("Bad msg len %x\n", len);
+        // WLOG_PRINTF("Bad msg len %x\n", len);
+        // WLOG_FLUSH();
         return;
     }
 
@@ -1068,7 +1081,8 @@ static void wifi_card_handleMsg(int len, void *user_data)
     u32 cmd = msg.cmd;
     if (cmd == WIFI_IPCCMD_INIT_IOP)
     {
-        //wifi_printf("iop val %x\n", cmd);
+        // WLOG_PRINTF("iop val %x\n", cmd);
+        // WLOG_FLUSH();
         wifi_card_device_init();
     }
     else if (cmd == WIFI_IPCCMD_INITBUFS)
@@ -1202,11 +1216,12 @@ void wifi_card_tick(void)
     if (!wifi_card_bInitted)
         return;
 
-    //wifi_card_process_pkts();
+    // wifi_card_process_pkts();
 
     wmi_tick();
 
-    //wifi_printlnf("tick end");
+    // WLOG_PUTS("tick end\n");
+    // WLOG_FLUSH();
 }
 
 int wifi_card_wlan_init(void)
@@ -1520,11 +1535,12 @@ skip_opcond:
     // seems to hang here, but no$'s wifiboot doesn't have any loops
     // to check if FIFOs are actually receiving...
 
-    //wifi_card_bmi_write_register(0x0040C4, wlan_system_sleep & ~1);
-    //wifi_printlnf("BMI finishing... aa");
-    //wifi_card_bmi_write_register(0x0180C0, scratch0);
+    // wifi_card_bmi_write_register(0x0040C4, wlan_system_sleep & ~1);
+    // WLOG_PUTS("BMI finishing... aa");
+    // WLOG_FLUSH();
+    // wifi_card_bmi_write_register(0x0180C0, scratch0);
 
-    //wifi_printlnf("BMI finishing... a");
+    // WLOG_PUTS("BMI finishing... a");
 
     mem_write32 = 0x80;
     wifi_card_bmi_cmd_write_memory(device_host_interest_addr + 0x6C, (u8*)&mem_write32, sizeof(u32));
