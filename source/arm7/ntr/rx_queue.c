@@ -4,10 +4,10 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/ipc.h"
-#include "arm7/update.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/rx_queue.h"
+#include "arm7/ntr/update.h"
 #include "arm7/ntr/ieee_802_11/process.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
@@ -84,7 +84,7 @@ void Wifi_RxQueueFlush(void)
         {
             // If the packet type is requested by the ARM9 (or promiscous mode
             // is enabled), forward it to the ARM9 RX queue.
-            Wifi_KeepaliveCountReset();
+            Wifi_NTR_KeepaliveCountReset();
             if (!Wifi_RxArm9QueueAdd(base, full_packetlen))
             {
                 // Failed, ignore for now.

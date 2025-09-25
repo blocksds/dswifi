@@ -5,10 +5,10 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/update.h"
 #include "arm7/ntr/beacon.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
+#include "arm7/ntr/update.h"
 #include "common/common_defs.h"
 #include "common/ieee_defs.h"
 
@@ -351,7 +351,7 @@ static int Wifi_TxArm9QueueFlushByReply(void)
         return 0;
 
     // Reset the keepalive count to not send unneeded frames
-    Wifi_KeepaliveCountReset();
+    Wifi_NTR_KeepaliveCountReset();
 
     // Prepare transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
@@ -406,7 +406,7 @@ int Wifi_TxArm9QueueFlush(void)
             return 0;
 
         // Reset the keepalive count to not send unneeded frames
-        Wifi_KeepaliveCountReset();
+        Wifi_NTR_KeepaliveCountReset();
 
         if (status & WFLAG_SEND_AS_CMD)
         {
@@ -438,7 +438,7 @@ void Wifi_TxAllQueueFlush(void)
     if (!Wifi_TxArm7QueueIsEmpty())
     {
         Wifi_TxArm7QueueFlush();
-        Wifi_KeepaliveCountReset();
+        Wifi_NTR_KeepaliveCountReset();
         return;
     }
 
