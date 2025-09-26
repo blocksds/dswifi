@@ -68,6 +68,8 @@ enum WIFI_MODE
 {
     // The WiFi hardware is off.
     WIFIMODE_DISABLED,
+    // The WiFi hardware is initializing (TWL).
+    WIFIMODE_INITIALIZING,
     // The WiFi hardware is on, but idle.
     WIFIMODE_NORMAL,
     // The ARM7 is iterating through all channels looking for access points.

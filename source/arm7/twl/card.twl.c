@@ -1570,9 +1570,6 @@ skip_opcond:
 
     wifi_card_bInitted = true;
 
-    // Scan for APs
-    //wmi_scan();
-
     // Enable IRQs
     irqSetAUX(IRQ_WIFI_SDIO_CARDIRQ, wifi_card_irq);
     irqEnableAUX(IRQ_WIFI_SDIO_CARDIRQ);
@@ -1582,20 +1579,14 @@ skip_opcond:
     wifi_card_write_func0_u8(0x4, 0x3); // CCCR irq_enable, master+func1
 
     // 100ms timer
-    timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), wifi_card_tick); //((u64)TIMER_CLOCK * SDIO_TICK_INTERVAL_MS) / 1000
+    timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), wifi_card_tick);
+    //                               ((u64)TIMER_CLOCK * SDIO_TICK_INTERVAL_MS) / 1000
 
-    WLOG_PUTS("wait ready\n");
+    WLOG_PUTS("W: Waiting for WMI...\n");
     WLOG_FLUSH();
 
-    while (!wmi_is_ready())
-    {
-        //wifi_card_mbox0_readpkt(); // MelonDS seems to have trouble with IRQs? Uncomment for MelonDS.
-    }
-
-    WLOG_PRINTF("%s fully initialized!\n", wifi_card_get_chip_str());
-    WLOG_FLUSH();
-
-    wmi_scan();
+    // The chip is now starting. When it's ready, wifi_card_initted() will
+    // return true.
 
     return 0;
 }

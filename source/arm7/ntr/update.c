@@ -460,6 +460,11 @@ void Wifi_NTR_Update(void)
             }
 
             break;
+
+        default:
+        case WIFIMODE_INITIALIZING:
+            libndsCrash("Invalid WiFi mode");
+            break;
         }
     }
 

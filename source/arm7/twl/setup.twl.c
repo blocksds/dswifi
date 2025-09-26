@@ -9,21 +9,30 @@
 
 void Wifi_TWL_Start(void)
 {
+    WLOG_PUTS("W: Start\n");
+    WLOG_FLUSH();
+
+    wifi_card_init();
 }
 
 void Wifi_TWL_Stop(void)
 {
+    WLOG_PUTS("W: Stop\n");
+    WLOG_FLUSH();
+
+    wifi_card_deinit();
 }
 
 void Wifi_TWL_Init(void)
 {
     WLOG_PUTS("W: Init (DSi mode)\n");
-
-    wifi_card_init();
+    WLOG_FLUSH();
 }
 
 void Wifi_TWL_Deinit(void)
 {
+    WLOG_PUTS("W: Deinit\n");
+    WLOG_FLUSH();
 }
 
 void Wifi_TWL_SetupFilterMode(Wifi_FilterMode mode)
