@@ -92,7 +92,6 @@ static u8 device_ap_mic[16];
 static gtk_keyinfo device_gtk_keyinfo;
 static ptk_keyinfo device_ptk;
 
-void wmi_scantick();
 void wmi_delete_bad_ap_cmd();
 
 void wmi_set_bss_filter(u8 filter, u32 ieMask);
@@ -1135,28 +1134,31 @@ void wmi_scan(void)
     leaveCriticalSection(lock);
 }
 
-void wmi_tick(void)
-{
-    if (wmi_bScanning)
-        wmi_scantick();
-}
-
 //static int test_tick = 0;
 
-void wmi_scantick(void)
+static void wmi_scantick(void)
 {
     // WLOG_PRINTF("asdf2 %x %x\r", test_tick++, device_num_channels);
     if (!device_num_channels)
         return;
 
-    if (ap_found && !sent_connect && (num_rounds_scanned >= (5 - 1)))
+    // If enough scan rounds have happened (so that we don't connect to the
+    // first AP we find).
+    if (num_rounds_scanned >= (5 - 1))
     {
-        wmi_connect();
-        sent_connect = true;
-    }
+        // If we have found an AP
+        if (ap_found)
+        {
+            // Try to connect to it and stop scanning
+            if (!sent_connect)
+            {
+                wmi_connect();
+                sent_connect = true;
+            }
 
-    if (ap_found && (num_rounds_scanned >= (5 - 1)))
-        return;
+            return;
+        }
+    }
 
     if (!scanning)
     {
@@ -1187,6 +1189,12 @@ void wmi_scantick(void)
         wmi_start_scan();
         scanning = true;
     }
+}
+
+void wmi_tick(void)
+{
+    if (wmi_bScanning)
+        wmi_scantick();
 }
 
 void wmi_connect(void)
