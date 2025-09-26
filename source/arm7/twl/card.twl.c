@@ -25,6 +25,7 @@ static wifi_card_ctx wlan_ctx = {0};
 
 int wifi_card_wlan_init(void);
 
+// TODO: FIFO: Replace by old RX/TX queues
 static int ip_data_out_buf_idx = 0;
 static u8* ip_data_out_buf = NULL;
 static u32 ip_data_out_buf_totlen = 0;
@@ -824,10 +825,12 @@ u16 wifi_card_mbox0_readpkt(void)
     wifi_card_read_func1_block(send_addr, read_buffer, full_len);
 #endif
 
-    if (!actual_len) { return 0; }
+    if (!actual_len)
+        return 0;
 
     // Short packet? Shouldn't happen.
-    if (actual_len < 6) {
+    if (actual_len < 6)
+    {
         WLOG_PRINTF("Packet too short?? %x", actual_len);
         WLOG_FLUSH();
         return actual_len;

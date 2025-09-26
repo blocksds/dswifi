@@ -247,8 +247,9 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     }
     *wmi_frame_hdr = (void*)wmi_params->body;
 
+    // If the signal-to-noise ratio is too low ignore the message
     if (wmi_params->snr < 0x20)
-        goto done;
+        return;
 
     s32 data_left = len_ - 0x10 - 0xC;
     u8 *read_ptr = wmi_frame_hdr->elements;
@@ -342,6 +343,7 @@ skip_parse:
     if (!(wmi_frame_hdr->capability & 0x10))
         sec_type_enum = AP_OPEN;
 
+    // First check the new DSi configs
     for (int i = 0; i < 3; i++)
     {
         if (!wifi_card_nvram_configs[i].ssid[0])
@@ -464,8 +466,9 @@ skip_parse:
         }
     }
 
+    // If we have found an access point in the DSi configs ignore the DS configs
     if (ap_found)
-        goto done;
+        return;
 
     // WEP/NDS legacy configs
     for (int i = 0; i < 3; i++)
@@ -552,8 +555,6 @@ skip_parse:
     }
     WLOG_FLUSH();
 #endif
-
-done:
 }
 
 void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
