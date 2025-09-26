@@ -77,8 +77,9 @@ static u8 ap_auth_type = AUTH_PSK;
 u16 wmi_idk = 0;
 static bool wmi_bIsReady = false;
 
-static bool scan_done = false;
-static bool scanning = false;
+// Set to true between WMI_START_SCAN_CMD and WMI_SCAN_COMPLETE_EVENT
+static bool wmi_is_scanning = false;
+
 static bool sent_connect = false;
 static bool wmi_bScanning = false;
 static bool ap_connected = false;
@@ -211,8 +212,7 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     WLOG_PRINTF("WMI_SCAN_COMPLETE_EVENT len %x %x\n", len, wmi_params->status);
     WLOG_FLUSH();
 #endif
-    scan_done = true;
-    scanning = false;
+    wmi_is_scanning = false;
 }
 
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
@@ -554,7 +554,6 @@ skip_parse:
 #endif
 
 done:
-    scan_done = true;
 }
 
 void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
@@ -822,7 +821,7 @@ void wmi_start_scan(void)
         0, 0, 20, 0, 0, 0, 0
     };
 
-    scan_done = false;
+    wmi_is_scanning = true;
 
     wmi_send_pkt(WMI_START_SCAN_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
@@ -1160,7 +1159,7 @@ static void wmi_scantick(void)
         }
     }
 
-    if (!scanning)
+    if (!wmi_is_scanning)
     {
         u16 mhz = channel_freqs[device_cur_channel_idx];
 
@@ -1187,7 +1186,6 @@ static void wmi_scantick(void)
         wmi_set_bss_filter(1,0);
 
         wmi_start_scan();
-        scanning = true;
     }
 }
 
