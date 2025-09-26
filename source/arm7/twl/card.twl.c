@@ -21,8 +21,6 @@
 #include "arm7/twl/ath/mbox.h"
 #include "arm7/twl/ieee/wpa.h"
 
-#include "arm7/twl/dsiwifi_cmds.h"
-
 static wifi_card_ctx wlan_ctx = {0};
 
 int wifi_card_wlan_init(void);
@@ -1084,13 +1082,7 @@ static void wifi_card_handleMsg(int len, void *user_data)
     fifoGetDatamsg(FIFO_DSWIFI, len, (u8*)&msg);
 
     u32 cmd = msg.cmd;
-    if (cmd == WIFI_IPCCMD_INIT_IOP)
-    {
-        // WLOG_PRINTF("iop val %x\n", cmd);
-        // WLOG_FLUSH();
-        wifi_card_device_init();
-    }
-    else if (cmd == WIFI_IPCCMD_INITBUFS)
+    if (cmd == WIFI_IPCCMD_INITBUFS)
     {
         void *data = msg.pkt_data;
         u32 pkt_len = msg.pkt_len;
@@ -1111,37 +1103,6 @@ static void wifi_card_handleMsg(int len, void *user_data)
         //msg.cmd = WIFI_IPCINT_PKTSENT;
         //fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
     }
-    else if (cmd == WIFI_IPCCMD_GET_DEVICE_MAC)
-    {
-        Wifi_FifoMsg reply;
-
-        // Get MAC
-        u8* mac = wmi_get_mac();
-
-        // Craft and send reply
-        reply.cmd = WIFI_IPCINT_DEVICE_MAC;
-        memcpy(reply.mac_addr, mac, 6);
-        // TODO: FIFO: Replace by new code
-        //fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
-    }
-    else if (cmd == WIFI_IPCCMD_GET_AP_MAC)
-    {
-        Wifi_FifoMsg reply;
-
-        // Get MAC
-        u8 *mac = wmi_get_ap_mac();
-
-        // Craft and send reply
-        reply.cmd = WIFI_IPCINT_AP_MAC;
-        memcpy(reply.mac_addr, mac, 6);
-        // TODO: FIFO: Replace by new code
-        //fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
-    }
-    else
-    {
-        WLOG_PRINTF("iop val %x\n", (unsigned int)cmd);
-        WLOG_FLUSH();
-    }
 }
 #endif
 
@@ -1161,9 +1122,6 @@ void wifi_card_init(void)
 
     wifi_ndma_init();
     wifi_sdio_controller_init();
-
-    // TODO: FIFO: Replace by new code
-    //fifoSetDatamsgHandler(FIFO_DSWIFI, wifi_card_handleMsg, 0);
 
     wifi_card_device_init();
 }

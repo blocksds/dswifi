@@ -38,6 +38,8 @@ void Wifi_TWL_Update(void)
             // Wait until the card is fully initialized to enter normal mode
             if (wifi_card_initted())
             {
+                // TODO: Call wmi_get_mac() and save it in WifiData->MacAddr[]
+
                 WifiData->curMode = WIFIMODE_NORMAL;
                 WLOG_PUTS("W: Initialized\n");
                 WLOG_FLUSH();
@@ -75,6 +77,8 @@ void Wifi_TWL_Update(void)
             break;
         }
         case WIFIMODE_ASSOCIATE:
+        // TODO: When we connect to an AP call wmi_get_ap_mac() and save the
+        // result to the right WifiData->bssid[]
         case WIFIMODE_ASSOCIATED:
         case WIFIMODE_CANNOTASSOCIATE:
         case WIFIMODE_ACCESSPOINT:

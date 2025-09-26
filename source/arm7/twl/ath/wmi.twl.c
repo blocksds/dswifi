@@ -12,7 +12,6 @@
 #include "arm7/twl/ath/mbox.h"
 #include "arm7/twl/ieee/wpa.h"
 #include "arm7/twl/card.h"
-#include "arm7/twl/dsiwifi_cmds.h"
 #include "arm7/twl/utils.h"
 
 #pragma pack(push, 1)
