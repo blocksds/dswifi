@@ -2,6 +2,8 @@
 //
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <string.h>
+
 #include <nds.h>
 #include <dswifi7.h>
 #include <dswifi_common.h>
@@ -38,7 +40,7 @@ void Wifi_TWL_Update(void)
             // Wait until the card is fully initialized to enter normal mode
             if (wifi_card_initted())
             {
-                // TODO: Call wmi_get_mac() and save it in WifiData->MacAddr[]
+                memcpy((void *)WifiData->MacAddr, wmi_get_mac(), sizeof(WifiData->MacAddr));
 
                 WifiData->curMode = WIFIMODE_NORMAL;
                 WLOG_PUTS("W: Initialized\n");
