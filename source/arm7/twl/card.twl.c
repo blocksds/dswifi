@@ -606,11 +606,14 @@ void data_handle_pkt(u8* pkt_data, u32 len)
         // WLOG_PRINTF("%x %x\n", ip_data_out_buf, pkt_data);
         // WLOG_FLUSH();
 
+        // TODO: FIFO: Replace by new code
+#if 0
         Wifi_FifoMsg msg;
         msg.cmd = WIFI_IPCINT_PKTDATA;
         msg.pkt_data = pkt_data;//ip_data_out_buf;
         msg.pkt_len = len;
         fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
+#endif
 
         // while (*(vu32*)(pkt_data - 6) != 0xF00FF00F);
         // WLOG_PUTS(""); // HACK force ARM7 to wait for ARM9 to copy packet
@@ -1063,6 +1066,8 @@ void wifi_card_bmi_lz_upload(u32 addr, const u8* data, u32 len)
     }
 }
 
+// TODO: FIFO: Replace by new code
+#if 0
 static void wifi_card_handleMsg(int len, void *user_data)
 {
     (void)user_data;
@@ -1116,7 +1121,8 @@ static void wifi_card_handleMsg(int len, void *user_data)
         // Craft and send reply
         reply.cmd = WIFI_IPCINT_DEVICE_MAC;
         memcpy(reply.mac_addr, mac, 6);
-        fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
+        // TODO: FIFO: Replace by new code
+        //fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
     }
     else if (cmd == WIFI_IPCCMD_GET_AP_MAC)
     {
@@ -1128,7 +1134,8 @@ static void wifi_card_handleMsg(int len, void *user_data)
         // Craft and send reply
         reply.cmd = WIFI_IPCINT_AP_MAC;
         memcpy(reply.mac_addr, mac, 6);
-        fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
+        // TODO: FIFO: Replace by new code
+        //fifoSendDatamsg(FIFO_DSWIFI, sizeof(reply), (u8*)&reply);
     }
     else
     {
@@ -1136,6 +1143,7 @@ static void wifi_card_handleMsg(int len, void *user_data)
         WLOG_FLUSH();
     }
 }
+#endif
 
 // SDIO main functions
 void wifi_card_init(void)
@@ -1154,7 +1162,9 @@ void wifi_card_init(void)
     wifi_ndma_init();
     wifi_sdio_controller_init();
 
-    fifoSetDatamsgHandler(FIFO_DSWIFI, wifi_card_handleMsg, 0);
+    // TODO: FIFO: Replace by new code
+    //fifoSetDatamsgHandler(FIFO_DSWIFI, wifi_card_handleMsg, 0);
+
     wifi_card_device_init();
 }
 
@@ -1197,18 +1207,24 @@ void wifi_card_irq(void)
 
 void wifi_card_send_ready(void)
 {
+    // TODO: FIFO: Replace by new code
+#if 0
     Wifi_FifoMsg msg;
     msg.cmd = WIFI_IPCINT_READY;
 
     fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
+#endif
 }
 
 void wifi_card_send_connect(void)
 {
+    // TODO: FIFO: Replace by new code
+#if 0
     Wifi_FifoMsg msg;
     msg.cmd = WIFI_IPCINT_CONNECT;
 
     fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
+#endif
 }
 
 void wifi_card_tick(void)
