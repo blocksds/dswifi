@@ -63,7 +63,7 @@ static int wifi_crc16_slow(u8 *data, int length)
     return crc;
 }
 
-void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
+void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 {
     WLOG_PUTS("W: Loading WFC AP settings:\n");
 
@@ -153,4 +153,23 @@ void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
     WLOG_PRINTF("W: %d valid AP found\n", c);
     WLOG_FLUSH();
+}
+
+nvram_cfg_wep wifi_card_nvram_wep_configs[3];
+nvram_cfg wifi_card_nvram_configs[3];
+
+void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
+{
+    (void)WifiData;
+
+    // Read NVRAM settings
+    u32 end_addr = 0x1FE00;
+
+    readFirmware(F_USER_SETTINGS_OFFSET, &end_addr, sizeof(u32));
+    end_addr *= 0x8;
+
+    readFirmware(end_addr - 0x400, (void*)wifi_card_nvram_wep_configs,
+                 sizeof(wifi_card_nvram_wep_configs));
+    readFirmware(NVRAM_ADDR_WIFICFG, (void*)wifi_card_nvram_configs,
+                 sizeof(wifi_card_nvram_configs));
 }

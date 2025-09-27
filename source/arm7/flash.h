@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2021 Max Thomas
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #ifndef DSWIFI_ARM7_FLASH_H__
@@ -108,11 +109,90 @@
 #define AP_UNKNOWN_0F6          0x0F6
 #define AP_CRC16                0x0FE // CRC16 of the previous 0xFD bytes (start=0x0000)
 
+typedef struct
+{
+    u8 unk_00[0x40];
+    char ssid[0x20];
+    char ssid_wep64[0x20];
+    u8 wep_key1[0x10];
+    u8 wep_key2[0x10];
+    u8 wep_key3[0x10];
+    u8 wep_key4[0x10];
+    u8 ip[4];
+    u8 gateway[4];
+    u8 primary_dns[4];
+    u8 secondary_dns[4];
+    u8 subnet_mask;
+    u8 unk_D1[0x15];
+    u8 wep_mode;
+    u8 status; // 00 = Normal, 01 = AOSS, FF = not configured/deleted
+    u8 unk_E8;
+    u8 unk_E9;
+    u16 mtu;
+    u8 unk_EC[3];
+    u8 slot_idx;
+    u8 wfc_uid[6];
+    u8 unk_F6[0x8];
+    u16 crc16_0_to_FD;
+}
+nvram_cfg_wep;
+
+// DSi Firmware Wifi Internet Access Points
+// ========================================
+
+#define NVRAM_ADDR_WIFICFG      0x1F400
+
+typedef struct
+{
+    char proxy_username[0x20];
+    char proxy_password[0x20];
+    char ssid[0x20];
+    char ssid_wep64[0x20];
+    u8 wep_key1[0x10];
+    u8 wep_key2[0x10];
+    u8 wep_key3[0x10];
+    u8 wep_key4[0x10];
+    u8 ip[4];
+    u8 gateway[4];
+    u8 primary_dns[4];
+    u8 secondary_dns[4];
+    u8 subnet_mask;
+    u8 unk_D1[0x15];
+    u8 wep_mode;
+    u8 wpa_mode;
+    u8 ssid_len;
+    u8 unk_E9;
+    u16 mtu;
+    u8 unk_EC[3];
+    u8 slot_idx;
+    u8 unk_F0[0xE];
+    u16 crc16_0_to_FD;
+    u8 pmk[0x20];
+    char pass[0x40];
+    u8 unk_160[0x21];
+    u8 wpa_type;
+    u8 proxy_en;
+    u8 proxy_auth_en;
+    char proxy_name[0x30];
+    u8 unk_1B4[0x34];
+    u16 proxy_port;
+    u8 unk_1EA[0x14];
+    u16 crc16_100_to_1FE;
+}
+nvram_cfg;
+
+// Functions
+// =========
+
+extern nvram_cfg_wep wifi_card_nvram_wep_configs[3];
+extern nvram_cfg wifi_card_nvram_configs[3];
+
 void Wifi_FlashInitData(void);
 u8 Wifi_FlashReadByte(u32 address);
 u32 Wifi_FlashReadBytes(u32 address, size_t numbytes);
 u16 Wifi_FlashReadHWord(u32 address);
 
-void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
+void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
+void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
 
 #endif // DSWIFI_ARM7_FLASH_H__

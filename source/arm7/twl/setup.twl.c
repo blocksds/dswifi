@@ -3,6 +3,7 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/debug.h"
+#include "arm7/flash.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/twl/card.h"
@@ -27,6 +28,10 @@ void Wifi_TWL_Init(void)
 {
     WLOG_PUTS("W: Init (DSi mode)\n");
     WLOG_FLUSH();
+
+    // Load WFC data from flash
+    Wifi_NTR_GetWfcSettings(WifiData);
+    Wifi_TWL_GetWfcSettings(WifiData);
 }
 
 void Wifi_TWL_Deinit(void)

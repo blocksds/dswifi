@@ -374,8 +374,9 @@ void Wifi_NTR_Init(void)
     for (int i = 0; i < W_MACMEM_SIZE; i += 2)
         W_MACMEM(i) = 0;
 
-    // load in the WFC data.
-    Wifi_GetWfcSettings(WifiData);
+    // Load WFC data from flash
+    Wifi_NTR_GetWfcSettings(WifiData);
+    // TODO: Load the TWL APs and try to use them in NTR mode as well
 
     for (int i = 0; i < 3; i++)
         WifiData->MacAddr[i] = Wifi_FlashReadHWord(F_MAC_ADDRESS + i * 2);

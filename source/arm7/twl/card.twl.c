@@ -12,6 +12,7 @@
 #include <nds/arm7/serial.h>
 
 #include "arm7/debug.h"
+#include "arm7/flash.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/ndma.h"
 #include "arm7/twl/utils.h"
@@ -57,8 +58,6 @@ static u8 mbox_buffer[MBOX_TMPBUF_SIZE] ALIGN(16);
 #define WRITE_FOUT_2  0x74
 #define READ_FOUT_2   0x75
 
-#define NVRAM_ADDR_WIFICFG      (0x1F400)
-
 #define IRQ_WIFI_SDIO_CARDIRQ BIT(11)
 
 // Collected device info during init
@@ -71,9 +70,6 @@ static u32 device_eeprom_version;
 static bool wifi_card_bInitted = false;
 
 static u32 __attribute((aligned(16))) wifi_card_alignedbuf_small[4];
-
-nvram_cfg_wep wifi_card_nvram_wep_configs[3];
-nvram_cfg wifi_card_nvram_configs[3];
 
 // CMD52 - IO_RW_DIRECT (read/write single register).
 static const wifi_sdio_command cmd52 =
@@ -1113,17 +1109,6 @@ static void wifi_card_handleMsg(int len, void *user_data)
 // SDIO main functions
 void wifi_card_init(void)
 {
-    // Read NVRAM settings
-    u32 end_addr = 0x1FE00;
-
-    readFirmware(0x20, &end_addr, sizeof(u32));
-    end_addr *= 0x8;
-
-    readFirmware(end_addr - 0x400, (void*)wifi_card_nvram_wep_configs,
-                 sizeof(wifi_card_nvram_wep_configs));
-    readFirmware(NVRAM_ADDR_WIFICFG, (void*)wifi_card_nvram_configs,
-                 sizeof(wifi_card_nvram_configs));
-
     wifi_ndma_init();
     wifi_sdio_controller_init();
 
