@@ -3,8 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_ARM7_NTR_FLASH_H__
-#define DSWIFI_ARM7_NTR_FLASH_H__
+#ifndef DSWIFI_ARM7_FLASH_H__
+#define DSWIFI_ARM7_FLASH_H__
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -115,4 +115,4 @@ u16 Wifi_FlashReadHWord(u32 address);
 
 void Wifi_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
 
-#endif // DSWIFI_ARM7_NTR_FLASH_H__
+#endif // DSWIFI_ARM7_FLASH_H__

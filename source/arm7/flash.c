@@ -6,7 +6,7 @@
 #include <nds.h>
 
 #include "arm7/debug.h"
-#include "arm7/ntr/flash.h"
+#include "arm7/flash.h"
 #include "common/wifi_shared.h"
 
 // Flash support functions

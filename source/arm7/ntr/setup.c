@@ -4,10 +4,10 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/debug.h"
+#include "arm7/flash.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/baseband.h"
-#include "arm7/ntr/flash.h"
 #include "arm7/ntr/interrupts.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"

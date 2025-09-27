@@ -3,9 +3,9 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/flash.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/baseband.h"
-#include "arm7/ntr/flash.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/setup.h"
 
