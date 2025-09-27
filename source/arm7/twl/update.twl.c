@@ -8,6 +8,7 @@
 #include <dswifi7.h>
 #include <dswifi_common.h>
 
+#include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/twl/card.h"
@@ -60,8 +61,9 @@ void Wifi_TWL_Update(void)
             if (WifiData->reqMode == WIFIMODE_SCAN)
             {
                 // Refresh filter flags and clear list of APs based on them
-                WifiData->curApScanFlags = WifiData->reqApScanFlags;
-                //Wifi_ClearListOfAP();
+                // TODO: Support filter flags in TWL mode
+                //WifiData->curApScanFlags = WifiData->reqApScanFlags;
+                Wifi_AccessPointClearAll();
 
                 wmi_scan_mode_start();
                 WifiData->curMode = WIFIMODE_SCAN;

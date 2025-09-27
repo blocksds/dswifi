@@ -3,6 +3,7 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -292,137 +293,19 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
             return;
     }
 
-    // Now, check the list of APs that we have found so far. If the AP of this
-    // frame is already in the list, store it there. If not, this loop will
-    // finish without doing any work, and we will add it to the list later.
-    bool in_aplist = false;
-    int chosen_slot = -1;
-    for (int i = 0; i < WIFI_MAX_AP; i++)
+    const u8 *ssid_ptr = NULL;
+    size_t ssid_len = 0;
+
+    if (ptr_ssid)
     {
-        // Check if the BSSID of the new AP matches the entry in the AP array.
-        if (!Wifi_CmpMacAddr(WifiData->aplist[i].bssid, data + HDR_MGT_BSSID))
-        {
-            // It doesn't match. If it's unused, we can at least save the slot
-            // for later in case we need it.
-            if (!(WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE))
-            {
-                if (chosen_slot == -1)
-                    chosen_slot = i;
-            }
-
-            // Check next AP in the array
-            continue;
-        }
-
-        // If this point is reached, the BSSID of the new AP matches this entry
-        // in the AP array. We need to update it. There can't be another entry
-        // with this BSSID, so we can exit the loop.
-        in_aplist = true;
-        chosen_slot = i;
-        break;
+        ssid_len = data[ptr_ssid + 1];
+        ssid_ptr = &data[ptr_ssid + 2];
     }
 
-    // If the AP isn't in the list of found APs, and there aren't free slots,
-    // look for the AP with the longest time without any updates and replace it.
-    if ((!in_aplist) && (chosen_slot == -1))
-    {
-        unsigned int max_timectr = 0;
-        chosen_slot = 0;
-
-        for (int i = 0; i < WIFI_MAX_AP; i++)
-        {
-            if (WifiData->aplist[i].timectr > max_timectr)
-            {
-                max_timectr = WifiData->aplist[i].timectr;
-                chosen_slot = i;
-            }
-        }
-    }
-
-    // Replace the chosen slot by the new AP (or update it)
-
-    if (Spinlock_Acquire(WifiData->aplist[chosen_slot]) != SPINLOCK_OK)
-    {
-        // Don't wait to update the AP data. There'll be other beacons in the
-        // future, we can update it then.
-    }
-    else
-    {
-        volatile Wifi_AccessPoint *ap = &(WifiData->aplist[chosen_slot]);
-
-        // Save the BSSID only if this is a new AP (the BSSID is used to
-        // identify APs that are already in the list).
-        if (!in_aplist)
-            Wifi_CopyMacAddr(ap->bssid, data + HDR_MGT_BSSID);
-
-        // Save MAC address
-        Wifi_CopyMacAddr(ap->macaddr, data + HDR_MGT_SA);
-
-        // Set the counter to 0 to mark the AP as just updated
-        ap->timectr = 0;
-
-        bool fromsta = Wifi_CmpMacAddr(data + HDR_MGT_SA, data + HDR_MGT_BSSID);
-        ap->flags = WFLAG_APDATA_ACTIVE
-                  | (wepmode ? WFLAG_APDATA_WEP : 0)
-                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
-                  | (has_nintendo_info ? WFLAG_APDATA_NINTENDO_TAG : 0);
-
-        if (has_nintendo_info)
-            ap->nintendo = nintendo_info; // Copy struct
-
-        if (compatible == 1)
-            ap->flags |= WFLAG_APDATA_COMPATIBLE;
-        if (compatible == 2)
-            ap->flags |= WFLAG_APDATA_EXTCOMPATIBLE;
-
-        if (wpamode)
-            ap->flags |= WFLAG_APDATA_WPA;
-
-        if (ptr_ssid)
-        {
-            ap->ssid_len = data[ptr_ssid + 1];
-            if (ap->ssid_len > 32)
-                ap->ssid_len = 32;
-
-            for (int j = 0; j < ap->ssid_len; j++)
-                ap->ssid[j] = data[ptr_ssid + 2 + j];
-            ap->ssid[ap->ssid_len] = '\0';
-        }
-
-        ap->channel = channel;
-
-        if (in_aplist)
-        {
-            // Only use RSSI when we're on the right channel
-            if (WifiData->curChannel == channel)
-                ap->rssi = packetheader->rssi_ & 255;
-        }
-        else
-        {
-            // This is a new AP added to the list, so we always have to set an
-            // initial value, even if it's zero because we don't have a valid
-            // RSSI from this packet.
-            if (WifiData->curChannel == channel)
-            {
-                // Only use the RSSI value when we're on the same channel
-                ap->rssi = packetheader->rssi_ & 255;
-            }
-            else
-            {
-                // Update RSSI later.
-                ap->rssi = 0;
-            }
-        }
-
-        // If the WifiData AP MAC is the same as this beacon MAC, then update
-        // RSSI in WifiData as well.
-        if (Wifi_CmpMacAddr(WifiData->apmac7, data + HDR_MGT_SA))
-        {
-            WifiData->rssi = ap->rssi;
-        }
-
-        Spinlock_Release(WifiData->aplist[chosen_slot]);
-    }
+    Wifi_AccessPointAdd(data + HDR_MGT_BSSID, data + HDR_MGT_SA,
+                        ssid_ptr, ssid_len, channel, packetheader->rssi_,
+                        wepmode, wpamode, compatible,
+                        has_nintendo_info ? &nintendo_info : NULL);
 
     //WLOG_FLUSH();
 }

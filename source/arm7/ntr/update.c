@@ -7,6 +7,7 @@
 #include <dswifi7.h>
 #include <dswifi_common.h>
 
+#include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -105,26 +106,6 @@ static void Wifi_UpdateAssociate(void)
     }
 }
 
-void Wifi_ClearListOfAP(void)
-{
-    // Remove all APs
-
-    for (int i = 0; i < WIFI_MAX_AP; i++)
-    {
-        while (Spinlock_Acquire(WifiData->aplist[i]) != SPINLOCK_OK)
-            ;
-
-        volatile Wifi_AccessPoint *ap = &(WifiData->aplist[i]);
-
-        ap->flags = 0;
-        ap->bssid[0] = 0;
-        ap->bssid[1] = 0;
-        ap->bssid[2] = 0;
-
-        Spinlock_Release(WifiData->aplist[i]);
-    }
-}
-
 void Wifi_NTR_Update(void)
 {
     if (WifiData == NULL)
@@ -208,7 +189,7 @@ void Wifi_NTR_Update(void)
             {
                 // Refresh filter flags and clear list of APs based on them
                 WifiData->curApScanFlags = WifiData->reqApScanFlags;
-                Wifi_ClearListOfAP();
+                Wifi_AccessPointClearAll();
 
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_SCAN;
