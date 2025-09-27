@@ -7,6 +7,7 @@
 
 #include <nds.h>
 
+#include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/twl/ath/wmi.h"
 #include "arm7/twl/ath/mbox.h"
@@ -215,6 +216,14 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     wmi_is_scanning = false;
 }
 
+static int wifi_mhz_to_channel(unsigned int mhz)
+{
+    if (mhz == 2484)
+        return 14;
+
+    return 1 + ((mhz - 2412) / 5);
+}
+
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 {
     // WLOG_PUTS("WMI_BSSINFO\n");
@@ -341,6 +350,14 @@ skip_parse:
         data_left -= len;
         read_ptr += len;
     }
+
+    Wifi_AccessPointAdd(wmi_params->bssid, wmi_params->bssid,
+                        (const void *)ap_ssid, ap_ssid_len,
+                        wifi_mhz_to_channel(wmi_params->channel), wmi_params->rssi,
+                        (sec_type_enum == AP_WEP),
+                        (sec_type_enum == AP_WPA) || (sec_type_enum == AP_WPA2),
+                        1,
+                        NULL); // TODO: Check vendor tags for Wifi_NintendoVendorInfo
 
 #if 0
     // First check the new DSi configs
