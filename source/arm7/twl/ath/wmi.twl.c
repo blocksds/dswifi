@@ -258,6 +258,9 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     int pair_crypto = CRYPT_NONE;
     u8 auth_type = AUTH_NONE;
 
+    if (wmi_frame_hdr->capability & CAPS_PRIVACY)
+        sec_type_enum = AP_WEP;
+
     while (data_left > 0)
     {
         u8 id = read_ptr[0];
@@ -276,6 +279,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
         }
         else if (id == MGT_FIE_ID_VENDOR) // RSN - Microsoft/Vendor
         {
+            // TODO: Handle RSN here as well
             //sec_type_enum = AP_WPA2;
         }
         else if (id == MGT_FIE_ID_RSN) // RSN
@@ -337,9 +341,6 @@ skip_parse:
         data_left -= len;
         read_ptr += len;
     }
-
-    if (!(wmi_frame_hdr->capability & 0x10))
-        sec_type_enum = AP_OPEN;
 
     // First check the new DSi configs
     for (int i = 0; i < 3; i++)
