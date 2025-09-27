@@ -244,7 +244,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     wmi_bss_info_frame_hdr *wmi_frame_hdr = (void *)wmi_params->body;
 
     // If the signal-to-noise ratio is too low ignore the message
-    if (wmi_params->snr < 0x20)
+    if (wmi_params->snr < 0x10) // Maybe this is too low, should it be 0x18 or 0x20?
         return;
 
     s32 data_left = len_ - sizeof(wmi_bss_info_hdr) - sizeof(wmi_bss_info_frame_hdr);
