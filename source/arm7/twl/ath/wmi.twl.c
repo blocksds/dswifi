@@ -13,6 +13,7 @@
 #include "arm7/twl/ieee/wpa.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/utils.h"
+#include "common/ieee_defs.h"
 
 #pragma pack(push, 1)
 
@@ -265,7 +266,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
         read_ptr += 2;
         data_left -= 2;
 
-        if (id == 0) // SSID
+        if (id == MGT_FIE_ID_SSID) // SSID
         {
             if (read_ptr[0] > 0)
             {
@@ -273,11 +274,11 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
                 memcpy(ap_ssid, &read_ptr[0], ap_ssid_len);
             }
         }
-        else if (id == 0xDD) // RSN - Microsoft/Vendor
+        else if (id == MGT_FIE_ID_VENDOR) // RSN - Microsoft/Vendor
         {
             //sec_type_enum = AP_WPA2;
         }
-        else if (id == 0x30) // RSN
+        else if (id == MGT_FIE_ID_RSN) // RSN
         {
             sec_type_enum = AP_WPA2;
 
