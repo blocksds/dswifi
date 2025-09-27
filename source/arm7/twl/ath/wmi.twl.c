@@ -216,47 +216,41 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
 
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 {
-    if (len_ <= 0x1C)
-        return;
-
-    // if (ap_found)
-    //     return;
-
     // WLOG_PUTS("WMI_BSSINFO\n");
     // WLOG_FLUSH();
 
-    struct __attribute__((packed))
-    {
-        u16 channel;
+    typedef struct __attribute__((packed)) {
+        u16 channel; // MHz
         u8 frametype;
         u8 snr;
         s16 rssi;
         u8 bssid[6];
         u32 ieMask;
         u8 body[];
-    }
-    *wmi_params = (void*)pkt_data;
+    } wmi_bss_info_hdr;
 
-    struct __attribute__((packed))
-    {
+    typedef struct __attribute__((packed)) {
         u64 timestamp;
         u16 beaconinterval;
         u16 capability;
         u8 elements[];
-    }
-    *wmi_frame_hdr = (void*)wmi_params->body;
+    } wmi_bss_info_frame_hdr;
+
+    if (len_ <= (sizeof(wmi_bss_info_hdr) + sizeof(wmi_bss_info_frame_hdr)))
+        return;
+
+    wmi_bss_info_hdr *wmi_params = (void *)pkt_data;
+    wmi_bss_info_frame_hdr *wmi_frame_hdr = (void *)wmi_params->body;
 
     // If the signal-to-noise ratio is too low ignore the message
     if (wmi_params->snr < 0x20)
         return;
 
-    s32 data_left = len_ - 0x10 - 0xC;
+    s32 data_left = len_ - sizeof(wmi_bss_info_hdr) - sizeof(wmi_bss_info_frame_hdr);
     u8 *read_ptr = wmi_frame_hdr->elements;
 
-    char tmp[32 + 1];
-    char tmp_2[32 + 1];
-    memset(tmp, 0, sizeof(tmp));
-    memset(tmp_2, 0, sizeof(tmp_2));
+    char ap_ssid[32 + 1] = { 0 };
+    size_t ap_ssid_len = 0;
 
     int sec_type_enum = AP_OPEN;
     int group_crypto = CRYPT_NONE;
@@ -271,9 +265,13 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
         read_ptr += 2;
         data_left -= 2;
 
-        if (id == 0 && len <= 0x20 && read_ptr[0])
+        if (id == 0) // SSID
         {
-            strncpy(tmp, (char*)&read_ptr[0], len > 32 ? 32 : len);
+            if (read_ptr[0] > 0)
+            {
+                ap_ssid_len = len > 32 ? 32 : len;
+                memcpy(ap_ssid, &read_ptr[0], ap_ssid_len);
+            }
         }
         else if (id == 0xDD) // RSN - Microsoft/Vendor
         {
@@ -352,17 +350,17 @@ skip_parse:
         if (!wifi_card_nvram_configs[i].slot_idx)
             continue;
 
-        u8 ssid_len = wifi_card_nvram_configs[i].ssid_len;
-        if (ssid_len > 0x20)
-            ssid_len = 0x20;
-        memset(tmp_2, 0, sizeof(tmp_2));
-        strncpy(tmp_2, wifi_card_nvram_configs[i].ssid, ssid_len);
+        char nvram_ssid[32 + 1] = { 0 };
+        u8 nvram_ssid_len = wifi_card_nvram_configs[i].ssid_len;
+        if (nvram_ssid_len > 32)
+            nvram_ssid_len = 32;
+        memcpy(nvram_ssid, wifi_card_nvram_configs[i].ssid, nvram_ssid_len);
 
         // TODO if an AP fails too many times, ignore it.
-        if (!strcmp(tmp, tmp_2) && wmi_params->snr > ap_snr)
+        if (!strcmp(ap_ssid, nvram_ssid) && wmi_params->snr > ap_snr)
         {
             ap_nvram_idx = i + 3;
-            strcpy(ap_name, tmp_2);
+            strcpy(ap_name, nvram_ssid);
             ap_pass = wifi_card_nvram_configs[ap_nvram_idx - 3].pass;
             memcpy(ap_pmk, wifi_card_nvram_configs[ap_nvram_idx - 3].pmk, 0x20);
 
@@ -451,7 +449,7 @@ skip_parse:
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
             ap_found = true;
 
-            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", tmp, wmi_ap_sec_type_str(ap_security_type));
+            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
                         ap_bssid[3], ap_bssid[4], ap_bssid[5]);
             WLOG_PRINTF("  G %s P %s A %s\n", wmi_ap_crypt_str(ap_group_crypt_type),
@@ -479,23 +477,23 @@ skip_parse:
         if (!wifi_card_nvram_wep_configs[i].slot_idx)
             continue;
 
-        memset(tmp_2, 0, sizeof(tmp_2));
-        strncpy(tmp_2, wifi_card_nvram_wep_configs[i].ssid, 0x20);
+        char nvram_ssid[32 + 1] = { 0 };
+        strncpy(nvram_ssid, wifi_card_nvram_wep_configs[i].ssid, 32);
 
         // TODO if an AP fails too many times, ignore it.
-        if (!strcmp(tmp, tmp_2) && wmi_params->snr > ap_snr)
+        if (!strcmp(ap_ssid, nvram_ssid) && wmi_params->snr > ap_snr)
         {
             ap_nvram_idx = i;
             ap_channel = wmi_params->channel;
             ap_caps = wmi_frame_hdr->capability;
-            strcpy(ap_name, tmp_2);
+            strcpy(ap_name, nvram_ssid);
             ap_wep1 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key1;
             ap_wep2 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key2;
             ap_wep3 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key3;
             ap_wep4 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key4;
             ap_wepmode = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_mode;
             ap_pass = (char *)ap_wep1;
-            memset(ap_pmk, 0, 0x20);
+            memset(ap_pmk, 0, 32);
             ap_snr = wmi_params->snr;
 
             // If the password is empty, assume open.
@@ -527,7 +525,7 @@ skip_parse:
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
             ap_found = true;
 
-            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", tmp, wmi_ap_sec_type_str(ap_security_type));
+            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
                         ap_bssid[3], ap_bssid[4], ap_bssid[5]);
             WLOG_PRINTF("  %x %x %x -- %x %x\n", ap_group_crypt_type, ap_pair_crypt_type,
@@ -540,8 +538,8 @@ skip_parse:
     }
 
 #if 0
-    // if (tmp[0])
-    //     WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", tmp, sec_type);
+    // if (ap_ssid[0])
+    //     WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, sec_type);
 
     // WLOG_PRINTF("WMI_BSSINFO len %x\n", len_);
 
