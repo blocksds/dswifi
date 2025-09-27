@@ -199,8 +199,10 @@ typedef struct WIFI_ACCESSPOINT
     // required to connect].
     u32 timectr;
     /// Running average of the recent RSSI values for this AP, will be set to 0
-    /// after not receiving beacons for a while. [not required to connect]
-    u16 rssi;
+    /// after not receiving beacons for a while. On DS this is a positive value
+    /// between 0 and 255. On DSi it's a value in dBm. Usual values are -40 dBm
+    /// (strong signal) to -90 dBm (weak signal). [not required to connect]
+    s16 rssi;
     /// Flags indicating various parameters for the AP. [not required, but the
     /// WFLAG_APDATA_ADHOC flag will be used]
     u16 flags;

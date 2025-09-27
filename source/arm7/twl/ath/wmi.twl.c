@@ -342,6 +342,7 @@ skip_parse:
         read_ptr += len;
     }
 
+#if 0
     // First check the new DSi configs
     for (int i = 0; i < 3; i++)
     {
@@ -538,6 +539,7 @@ skip_parse:
             break;
         }
     }
+#endif
 
 #if 0
     // if (ap_ssid[0])
@@ -1139,6 +1141,7 @@ void wmi_scan_mode_tick(void)
     if (!device_num_channels)
         return;
 
+#if 0
     // If enough scan rounds have happened (so that we don't connect to the
     // first AP we find).
     if (num_rounds_scanned >= (5 - 1))
@@ -1156,7 +1159,7 @@ void wmi_scan_mode_tick(void)
             return;
         }
     }
-
+#endif
     if (!wmi_is_scanning)
     {
         u16 mhz = channel_freqs[device_cur_channel_idx];
