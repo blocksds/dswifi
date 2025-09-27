@@ -3,6 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <limits.h>
+
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/mac.h"
@@ -33,7 +35,7 @@ void Wifi_AccessPointClearAll(void)
 
 void Wifi_AccessPointAdd(const void *bssid, const void *sa,
                          const uint8_t *ssid_ptr, size_t ssid_len, u32 channel,
-                         u32 rssi, bool wepmode, bool wpamode, int compatible,
+                         int rssi, bool wepmode, bool wpamode, int compatible,
                          Wifi_NintendoVendorInfo *nintendo_info)
 {
     // Now, check the list of APs that we have found so far. If the AP of this
@@ -137,19 +139,19 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
 
         if (in_aplist)
         {
-            // Only use RSSI when we're on the right channel
-            if (WifiData->curChannel == channel)
-                ap->rssi = rssi & 255;
+            // Only use RSSI when we get a valid value
+            if (rssi != INT_MIN)
+                ap->rssi = rssi;
         }
         else
         {
             // This is a new AP added to the list, so we always have to set an
             // initial value, even if it's zero because we don't have a valid
             // RSSI from this packet.
-            if (WifiData->curChannel == channel)
+            if (rssi != INT_MIN)
             {
                 // Only use the RSSI value when we're on the same channel
-                ap->rssi = rssi & 255;
+                ap->rssi = rssi;
             }
             else
             {

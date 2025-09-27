@@ -3,6 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <limits.h>
+
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
@@ -302,8 +304,13 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         ssid_ptr = &data[ptr_ssid + 2];
     }
 
+    int rssi = INT_MIN;
+    // Only use the RSSI value when we're on the same channel
+    if (WifiData->curChannel == channel)
+        rssi = packetheader->rssi_ & 255;
+
     Wifi_AccessPointAdd(data + HDR_MGT_BSSID, data + HDR_MGT_SA,
-                        ssid_ptr, ssid_len, channel, packetheader->rssi_,
+                        ssid_ptr, ssid_len, channel, rssi,
                         wepmode, wpamode, compatible,
                         has_nintendo_info ? &nintendo_info : NULL);
 
