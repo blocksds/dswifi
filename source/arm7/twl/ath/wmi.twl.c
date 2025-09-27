@@ -81,7 +81,6 @@ static bool wmi_bIsReady = false;
 static bool wmi_is_scanning = false;
 
 static bool sent_connect = false;
-static bool wmi_bScanning = false;
 static bool ap_connected = false;
 
 static bool has_sent_hs2 = false;
@@ -223,7 +222,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     // if (ap_found)
     //     return;
 
-    // WLOG_PUTS("WMI_BSSINFO");
+    // WLOG_PUTS("WMI_BSSINFO\n");
     // WLOG_FLUSH();
 
     struct __attribute__((packed))
@@ -682,7 +681,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan();
+                wmi_scan_mode_start();
             }
 
             if (ap_connected &&
@@ -695,7 +694,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan();
+                wmi_scan_mode_start();
             }
 
             break;
@@ -724,7 +723,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan();
+                wmi_scan_mode_start();
             }
 
             break;
@@ -1096,8 +1095,11 @@ void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 
 void wmi_connect(void);
 
-void wmi_scan(void)
+void wmi_scan_mode_start(void)
 {
+    WLOG_PUTS("W: Scan mode init\n");
+    WLOG_FLUSH();
+
     int lock = enterCriticalSection();
 
     // Begin connecting...
@@ -1126,17 +1128,12 @@ void wmi_scan(void)
 
     wmi_send_pkt(WMI_SET_PROBED_SSID_CMD, MBOXPKT_REQACK, &wmi_probed_ssid, sizeof(wmi_probed_ssid));
 
-    wmi_bScanning = true;
-
-    WLOG_PUTS("Scanning\n");
-    WLOG_FLUSH();
-
     leaveCriticalSection(lock);
 }
 
 //static int test_tick = 0;
 
-static void wmi_scantick(void)
+void wmi_scan_mode_tick(void)
 {
     // WLOG_PRINTF("asdf2 %x %x\r", test_tick++, device_num_channels);
     if (!device_num_channels)
@@ -1164,7 +1161,7 @@ static void wmi_scantick(void)
     {
         u16 mhz = channel_freqs[device_cur_channel_idx];
 
-        // WLOG_PRINTF("Scanning channel %u %x (%u)", device_cur_channel_idx, mhz, mhz);
+        // WLOG_PRINTF("Scanning channel %u %x (%u)\n", device_cur_channel_idx, mhz, mhz);
         // WLOG_FLUSH();
 
         device_cur_channel_idx++;
@@ -1188,12 +1185,6 @@ static void wmi_scantick(void)
 
         wmi_start_scan();
     }
-}
-
-void wmi_tick(void)
-{
-    if (wmi_bScanning)
-        wmi_scantick();
 }
 
 void wmi_connect(void)
@@ -1237,11 +1228,6 @@ void wmi_connect(void)
 bool wmi_is_ready(void)
 {
     return wmi_bIsReady;
-}
-
-void wmi_tick_display(void)
-{
-
 }
 
 void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc)

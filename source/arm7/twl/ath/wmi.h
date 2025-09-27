@@ -67,16 +67,15 @@ typedef struct gtk_keyinfo gtk_keyinfo;
 void wmi_handle_pkt(u16 pkt_cmd, u8 *pkt_data, u32 len, u32 ack_len);
 void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len);
 
-void wmi_scan(void);
+void wmi_scan_mode_start(void);
+void wmi_scan_mode_tick(void);
+
 void wmi_dbgoff(void);
 void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc);
-void wmi_tick(void);
 
 void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc);
 
 void wmi_disconnect_cmd(void);
-
-void wmi_tick_display(void);
 
 bool wmi_is_ready(void);
 

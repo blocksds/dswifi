@@ -15,6 +15,7 @@
 #include "arm7/twl/card.h"
 #include "arm7/twl/ndma.h"
 #include "arm7/twl/utils.h"
+#include "arm7/twl/update.h"
 #include "arm7/twl/ath/wmi.h"
 #include "arm7/twl/ath/bmi.h"
 #include "arm7/twl/ath/htc.h"
@@ -1188,19 +1189,6 @@ void wifi_card_send_connect(void)
 #endif
 }
 
-void wifi_card_tick(void)
-{
-    if (!wifi_card_bInitted)
-        return;
-
-    // wifi_card_process_pkts();
-
-    wmi_tick();
-
-    // WLOG_PUTS("tick end\n");
-    // WLOG_FLUSH();
-}
-
 int wifi_card_wlan_init(void)
 {
     wifi_card_ctx *ctx = &wlan_ctx;
@@ -1556,7 +1544,7 @@ skip_opcond:
     wifi_card_write_func0_u8(0x4, 0x3); // CCCR irq_enable, master+func1
 
     // 100ms timer
-    timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), wifi_card_tick);
+    timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), Wifi_TWL_Update);
     //                               ((u64)TIMER_CLOCK * SDIO_TICK_INTERVAL_MS) / 1000
 
     WLOG_PUTS("W: Waiting for WMI...\n");

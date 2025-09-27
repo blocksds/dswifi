@@ -63,7 +63,7 @@ void Wifi_TWL_Update(void)
                 WifiData->curApScanFlags = WifiData->reqApScanFlags;
                 //Wifi_ClearListOfAP();
 
-                wmi_scan();
+                wmi_scan_mode_start();
                 WifiData->curMode = WIFIMODE_SCAN;
                 break;
             }
@@ -76,6 +76,8 @@ void Wifi_TWL_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
+
+            wmi_scan_mode_tick();
             break;
         }
         case WIFIMODE_ASSOCIATE:
