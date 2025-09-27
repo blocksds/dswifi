@@ -8,9 +8,6 @@
 
 #include <nds/ndstypes.h>
 
-int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2);
-void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src);
-
 // This initializes registers related to the MAC RAM.
 void Wifi_MacInit(void);
 

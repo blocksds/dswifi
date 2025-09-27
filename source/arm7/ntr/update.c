@@ -9,6 +9,7 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
+#include "arm7/mac.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/beacon.h"
 #include "arm7/ntr/mac.h"

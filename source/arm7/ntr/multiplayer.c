@@ -10,6 +10,7 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
+#include "arm7/mac.h"
 #include "arm7/ntr/beacon.h"
 #include "arm7/ntr/ieee_802_11/authentication.h"
 #include "arm7/ntr/mac.h"
