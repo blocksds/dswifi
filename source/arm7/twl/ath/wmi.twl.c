@@ -9,6 +9,7 @@
 
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
+#include "arm7/ipc.h"
 #include "arm7/twl/ath/wmi.h"
 #include "arm7/twl/ath/mbox.h"
 #include "arm7/twl/ieee/wpa.h"
@@ -57,7 +58,6 @@ static u16 channel_freqs[32];
 
 static u8 ap_wep_dummy[16] = { 0 };
 
-static bool ap_found = false;
 static u16 ap_channel = 0;
 static u8 ap_bssid[6];
 static u16 ap_caps;
@@ -82,7 +82,6 @@ static bool wmi_bIsReady = false;
 // Set to true between WMI_START_SCAN_CMD and WMI_SCAN_COMPLETE_EVENT
 static bool wmi_is_scanning = false;
 
-static bool sent_connect = false;
 static bool ap_connected = false;
 
 static bool has_sent_hs2 = false;
@@ -227,6 +226,14 @@ static int wifi_mhz_to_channel(unsigned int mhz)
         return 14;
 
     return 1 + ((mhz - 2412) / 5);
+}
+
+static unsigned int wifi_channel_to_mhz(int channel)
+{
+    if (channel == 14)
+        return 2484;
+
+    return 2412 + (channel - 1) * 5;
 }
 
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
@@ -472,7 +479,6 @@ skip_parse:
             ap_caps = wmi_frame_hdr->capability;
 
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
-            ap_found = true;
 
             WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
@@ -487,10 +493,6 @@ skip_parse:
             break;
         }
     }
-
-    // If we have found an access point in the DSi configs ignore the DS configs
-    if (ap_found)
-        return;
 
     // WEP/NDS legacy configs
     for (int i = 0; i < 3; i++)
@@ -548,7 +550,6 @@ skip_parse:
             }
 
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
-            ap_found = true;
 
             WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
@@ -696,11 +697,9 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                         pkt_data[2], pkt_data[3], pkt_data[4], disconnectReason);
             WLOG_FLUSH();
 
-            if (!ap_connected && sent_connect)
+            if (!ap_connected)
             {
-                ap_found = false;
                 ap_connected = false;
-                sent_connect = false;
                 num_rounds_scanned = 0;
 
                 wmi_disconnect_cmd();
@@ -711,9 +710,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             if (ap_connected &&
                 (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5))
             {
-                ap_found = false;
                 ap_connected = false;
-                sent_connect = false;
                 num_rounds_scanned = 0;
 
                 wmi_disconnect_cmd();
@@ -740,9 +737,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             if (err_id == 0x8)
             {
-                ap_found = false;
                 ap_connected = false;
-                sent_connect = false;
                 num_rounds_scanned = 0;
 
                 wmi_disconnect_cmd();
@@ -854,6 +849,9 @@ void wmi_connect_cmd(void)
 {
     if (ap_security_type == AP_OPEN)
     {
+        size_t ssid_len = WifiData->ssid7[0];
+        u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
+
         struct __attribute__((packed))
         {
             u8 networkType;
@@ -871,16 +869,18 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 1, 1, 1, 0, 1, 0, strlen(ap_name), {0}, ap_channel, {0}, 0
+            1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, ap_name);
-        memcpy(wmi_params.bssid, ap_bssid, 6);
+        strcpy(wmi_params.ssid, &WifiData->ssid7[1]);
+        memcpy(wmi_params.bssid, &WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
     else if (ap_security_type == AP_WEP)
     {
+        // TODO: Support WEP APs
+
         // Keys have to be set before connect
         wmi_add_cipher_key(0, 3, ap_wep1, NULL);
         wmi_add_cipher_key(1, 1, ap_wep2, NULL);
@@ -914,6 +914,8 @@ void wmi_connect_cmd(void)
     }
     else //if (ap_security_type == AP_WPA2)
     {
+        // TODO: Support WPA APs
+
         struct __attribute__((packed))
         {
             u8 networkType;
@@ -1160,25 +1162,6 @@ void wmi_scan_mode_tick(void)
     if (!device_num_channels)
         return;
 
-#if 0
-    // If enough scan rounds have happened (so that we don't connect to the
-    // first AP we find).
-    if (num_rounds_scanned >= (5 - 1))
-    {
-        // If we have found an AP
-        if (ap_found)
-        {
-            // Try to connect to it and stop scanning
-            if (!sent_connect)
-            {
-                wmi_connect();
-                sent_connect = true;
-            }
-
-            return;
-        }
-    }
-#endif
     if (!wmi_is_scanning)
     {
         u16 mhz = channel_freqs[device_cur_channel_idx];
@@ -1214,7 +1197,7 @@ void wmi_connect(void)
     wmi_set_bss_filter(4, 0); // current beacon
     wmi_set_scan_params(5, 200, 200, 200);
 
-    wmi_set_channel_params(ap_channel);
+    wmi_set_channel_params(wifi_channel_to_mhz(WifiData->apchannel7));
 
     //u16 tmp16 = 0xFFF;
     //wmi_send_pkt(WMI_SET_FIXRATES_CMD, MBOXPKT_REQACK, &tmp16, sizeof(tmp16));

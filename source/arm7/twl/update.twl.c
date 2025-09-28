@@ -11,6 +11,7 @@
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
+#include "arm7/mac.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/setup.h"
 #include "arm7/twl/ath/wmi.h"
@@ -69,6 +70,37 @@ void Wifi_TWL_Update(void)
                 WifiData->curMode = WIFIMODE_SCAN;
                 break;
             }
+
+            if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
+            {
+                if (WifiData->reqReqFlags & WFLAG_REQ_APCOPYVALUES)
+                {
+                    WifiData->wepkeyid7  = WifiData->wepkeyid9;
+                    WifiData->wepmode7   = WifiData->wepmode9;
+                    WifiData->apchannel7 = WifiData->apchannel9;
+                    Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
+                    Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
+
+                    // Copy the full array to clear the original trailing data
+                    // if the new key is shorter than the old one.
+                    for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
+                        WifiData->wepkey7[i] = WifiData->wepkey9[i];
+
+                    for (int i = 0; i < 34; i++)
+                        WifiData->ssid7[i] = WifiData->ssid9[i];
+                    if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
+                        WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
+                    else
+                        WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
+                }
+
+                WifiData->txbufIn = WifiData->txbufOut; // empty tx buffer.
+                WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
+
+                wmi_connect();
+                WifiData->curMode = WIFIMODE_ASSOCIATE;
+            }
+
             break;
         }
         case WIFIMODE_SCAN:
@@ -83,12 +115,30 @@ void Wifi_TWL_Update(void)
             break;
         }
         case WIFIMODE_ASSOCIATE:
-        // TODO: When we connect to an AP call wmi_get_ap_mac() and save the
-        // result to the right WifiData->bssid[]
+        {
+            if (wmi_is_ap_connected())
+            {
+                WifiData->curMode = WIFIMODE_ASSOCIATED;
+                break;
+            }
+            break;
+        }
         case WIFIMODE_ASSOCIATED:
+        {
+            // Check if we're still connected. If not, try to reconnect.
+            if (!wmi_is_ap_connected())
+            {
+                wmi_connect();
+                WifiData->curMode = WIFIMODE_ASSOCIATE;
+                break;
+            }
+            break;
+        }
         case WIFIMODE_CANNOTASSOCIATE:
-        case WIFIMODE_ACCESSPOINT:
             WifiData->curMode = WIFIMODE_NORMAL;
+            break;
+        case WIFIMODE_ACCESSPOINT:
+            libndsCrash("Unsupported AP mode in TWL");
             break;
     }
 }

@@ -380,6 +380,8 @@ int Wifi_AssocStatus(void)
 
         case WIFI_CONNECT_SEARCHING_WFC: // search nintendo WFC data for a suitable AP
         {
+            // TODO: Wait for at least a few frames before trying to connect to
+            // any AP. This will let us find the best one available.
             int numap;
             for (numap = 0; numap < 6; numap++)
             {
