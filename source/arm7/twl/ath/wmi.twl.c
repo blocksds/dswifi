@@ -872,8 +872,8 @@ void wmi_connect_cmd(void)
             1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, &WifiData->ssid7[1]);
-        memcpy(wmi_params.bssid, &WifiData->bssid7[0], 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
