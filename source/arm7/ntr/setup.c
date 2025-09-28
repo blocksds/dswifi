@@ -376,7 +376,11 @@ void Wifi_NTR_Init(void)
 
     // Load WFC data from flash
     Wifi_NTR_GetWfcSettings(WifiData);
-    // TODO: Load the TWL APs and try to use them in NTR mode as well
+    // TODO: Load the TWL APs and try to use them in NTR mode as well, as long
+    // as they haven't been setup to use WPA.
+
+    WLOG_PRINTF("W: %d valid AP found\n", WifiData->wfc_number_of_configs);
+    WLOG_FLUSH();
 
     for (int i = 0; i < 3; i++)
         WifiData->MacAddr[i] = Wifi_FlashReadHWord(F_MAC_ADDRESS + i * 2);

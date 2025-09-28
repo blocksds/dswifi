@@ -223,7 +223,8 @@ void Wifi_AutoConnect(void)
 {
     Wifi_InternetMode();
 
-    if (!(WifiData->wfc_enable[0] & 0x80))
+    // If there are no saved configs we can't autoconnect
+    if (WifiData->wfc_number_of_configs == 0)
     {
         wifi_connect_state = WIFI_CONNECT_ERROR;
     }
@@ -380,7 +381,7 @@ int Wifi_AssocStatus(void)
         case WIFI_CONNECT_SEARCHING_WFC: // search nintendo WFC data for a suitable AP
         {
             int numap;
-            for (numap = 0; numap < 3; numap++)
+            for (numap = 0; numap < 6; numap++)
             {
                 if (!(WifiData->wfc_enable[numap] & 0x80))
                     break;

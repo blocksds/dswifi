@@ -90,7 +90,7 @@
 #define AP_SSID_WEP64_AOSS      0x060 // 32 bytes, ASCII padded with zeroes
 #define AP_WEP_KEY_1            0x080 // 16 bytes (check AP_WEP_MODE)
 #define AP_WEP_KEY_2            0x090
-#define AP_WEP_KEY_3            0x0A0
+#define AP_WEP_KEY_3            0x0A0 // TODO: Are keys 2, 3 and 4 ever used?
 #define AP_WEP_KEY_4            0x0B0
 #define AP_IP_ADDR              0x0C0 // 4 bytes, 0=Auto/DHCP
 #define AP_GATEWAY              0x0C4 // 4 bytes, 0=Auto/DHCP
@@ -140,8 +140,6 @@ nvram_cfg_wep;
 // DSi Firmware Wifi Internet Access Points
 // ========================================
 
-#define NVRAM_ADDR_WIFICFG      0x1F400
-
 typedef struct
 {
     char proxy_username[0x20];
@@ -184,14 +182,13 @@ nvram_cfg;
 // Functions
 // =========
 
-extern nvram_cfg_wep wifi_card_nvram_wep_configs[3];
-extern nvram_cfg wifi_card_nvram_configs[3];
-
 void Wifi_FlashInitData(void);
 u8 Wifi_FlashReadByte(u32 address);
 u32 Wifi_FlashReadBytes(u32 address, size_t numbytes);
 u16 Wifi_FlashReadHWord(u32 address);
 
+// Ensure that WifiData is cleared before the functions are called. Then, call
+// the NTR and TWL functions one after the other.
 void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
 void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
 
