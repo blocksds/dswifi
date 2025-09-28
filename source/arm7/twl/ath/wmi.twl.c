@@ -164,6 +164,11 @@ int wmi_ieee_to_crypt(u32 ieee)
     }
 }
 
+bool wmi_is_ap_connected(void)
+{
+    return ap_connected;
+}
+
 void wmi_handle_ready_event(u8 *pkt_data, u32 len)
 {
     (void)pkt_data;
@@ -1150,11 +1155,8 @@ void wmi_scan_mode_start(void)
     leaveCriticalSection(lock);
 }
 
-//static int test_tick = 0;
-
 void wmi_scan_mode_tick(void)
 {
-    // WLOG_PRINTF("asdf2 %x %x\r", test_tick++, device_num_channels);
     if (!device_num_channels)
         return;
 
@@ -1181,7 +1183,7 @@ void wmi_scan_mode_tick(void)
     {
         u16 mhz = channel_freqs[device_cur_channel_idx];
 
-        // WLOG_PRINTF("Scanning channel %u %x (%u)\n", device_cur_channel_idx, mhz, mhz);
+        // WLOG_PRINTF("Scanning channel %u (%u)\n", device_cur_channel_idx, mhz);
         // WLOG_FLUSH();
 
         device_cur_channel_idx++;
@@ -1563,11 +1565,6 @@ bool wmi_handshake_done(void)
 u8 *wmi_get_mac(void)
 {
     return device_mac;
-}
-
-u8 *wmi_get_ap_mac(void)
-{
-    return ap_bssid;
 }
 
 #pragma pack(pop)

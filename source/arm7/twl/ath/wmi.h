@@ -75,8 +75,12 @@ void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc);
 
 void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc);
 
+void wmi_connect(void);
+bool wmi_is_ap_connected(void);
+
 void wmi_disconnect_cmd(void);
 
+// Returns true if the WMI interface is ready
 bool wmi_is_ready(void);
 
 void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt);
@@ -88,6 +92,5 @@ void data_send_to_lwip(void *data, u32 len);
 bool wmi_handshake_done();
 
 u8 *wmi_get_mac(void);
-u8 *wmi_get_ap_mac(void);
 
 #endif // DSWIFI_ARM7_TWL_ATH_WMI_H__
