@@ -154,7 +154,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
     WifiData->wfc_number_of_configs = c;
 }
 
-void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
+void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
 {
     WLOG_PUTS("W: Loading TWL WFC AP settings\n");
 
@@ -195,6 +195,11 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             continue;
 
         u8 wepmode = ap_data.wep_mode & 0x03;
+        u8 wpamode = ap_data.wpa_mode;
+
+        // Only load WPA settings if requested by the caller
+        if ((wpamode != 0) && !allow_wpa)
+            continue;
 
         WifiData->wfc_enable[c]     = 0x80 | wepmode;
         WifiData->wfc_ap[c].channel = 0;

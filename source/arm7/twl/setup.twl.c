@@ -31,7 +31,7 @@ void Wifi_TWL_Init(void)
 
     // Load WFC data from flash
     Wifi_NTR_GetWfcSettings(WifiData);
-    Wifi_TWL_GetWfcSettings(WifiData);
+    Wifi_TWL_GetWfcSettings(WifiData, true);
 
     WLOG_PRINTF("W: %d valid AP found\n", WifiData->wfc_number_of_configs);
     WLOG_FLUSH();

@@ -376,8 +376,12 @@ void Wifi_NTR_Init(void)
 
     // Load WFC data from flash
     Wifi_NTR_GetWfcSettings(WifiData);
-    // TODO: Load the TWL APs and try to use them in NTR mode as well, as long
-    // as they haven't been setup to use WPA.
+    if (isDSiMode())
+    {
+        // If this is a DSi, try to load the additional AP settings. However,
+        // ignore all the APs that use WPA, only load open and WPE APs.
+        Wifi_TWL_GetWfcSettings(WifiData, false);
+    }
 
     WLOG_PRINTF("W: %d valid AP found\n", WifiData->wfc_number_of_configs);
     WLOG_FLUSH();
