@@ -209,7 +209,7 @@ typedef struct WIFI_ACCESSPOINT
     /// Internal data word used to lock the record to guarantee data coherence.
     /// [not required to connect]
     u32 spinlock;
-    /// Valid channels are 1-13, setting the channel to 0 will indicate the
+    /// Valid channels are 1-14, setting the channel to 0 will indicate the
     /// system should search. [REQUIRED]
     u8 channel;
     /// Information send by Nintendo DS hosts in beacon frames, used if
