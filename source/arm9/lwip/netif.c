@@ -107,6 +107,19 @@ err_t dswifi_init_fn(struct netif *netif)
     return ERR_OK;
 }
 
+static void wifi_refresh_mac(void)
+{
+    dswifi_netif.hwaddr_len = 6;
+    memcpy(dswifi_netif.hwaddr, (void *)&WifiData->MacAddr[0], 6);
+
+    // Set our hostname based on our MAC address
+    snprintf(dswifi_netif_hostname, sizeof(dswifi_netif_hostname),
+             "nintendods-%02x%02x%02x%02x%02x%02x",
+             WifiData->MacAddr[0] & 0xFF, (WifiData->MacAddr[0] >> 8) & 0xFF,
+             WifiData->MacAddr[1] & 0xFF, (WifiData->MacAddr[1] >> 8) & 0xFF,
+             WifiData->MacAddr[2] & 0xFF, (WifiData->MacAddr[2] >> 8) & 0xFF);
+}
+
 int gethostname(char *name, size_t len)
 {
     if (name == NULL)
@@ -149,6 +162,12 @@ int sethostname(const char *name, size_t len)
 
 void wifi_dhcp_start(void)
 {
+    // In DSi we don't know the MAC address of the device until the hardware is
+    // completely initialized. DHCP will start after the console is connected to
+    // an Access Point, so wifi_dhcp_start() is a good place to refresh
+    // everything related to the MAC address.
+    wifi_refresh_mac();
+
     if (dswifi_use_dhcp)
         dhcp_start(&dswifi_netif);
 }
@@ -282,12 +301,7 @@ int wifi_lwip_init(void)
     // Use DHCP by default
     wifi_set_automatic_ip();
 
-    // Set our hostname based on our MAC address
-    snprintf(dswifi_netif_hostname, sizeof(dswifi_netif_hostname),
-             "nintendods-%02x%02x%02x%02x%02x%02x",
-             WifiData->MacAddr[0] & 0xFF, (WifiData->MacAddr[0] >> 8) & 0xFF,
-             WifiData->MacAddr[1] & 0xFF, (WifiData->MacAddr[1] >> 8) & 0xFF,
-             WifiData->MacAddr[2] & 0xFF, (WifiData->MacAddr[2] >> 8) & 0xFF);
+    wifi_refresh_mac();
 
     // Add our netif to LWIP (netif_add calls our driver initialization function)
     if (netif_add(&dswifi_netif,
