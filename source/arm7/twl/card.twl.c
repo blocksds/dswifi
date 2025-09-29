@@ -564,7 +564,7 @@ void wifi_card_mbox0_send_packet(u8 type, u8 ack_type, const u8* data, u16 len, 
     wifi_card_mbox0_sendbytes(mbox_out_buffer, len); // len
 }
 
-void data_handle_pkt(u8* pkt_data, u32 len)
+void data_handle_pkt(u8 *pkt_data, u32 len)
 {
     struct __attribute__((packed)) {
         s16 rssi;
@@ -635,7 +635,7 @@ void data_handle_pkt(u8* pkt_data, u32 len)
     }
 }
 
-void data_send_pkt(u8 *pkt_data, u32 len)
+void data_send_pkt(const u8 *pkt_data, u32 len)
 {
     int lock = enterCriticalSection();
     // 0x2008 causes broadcast packets?
@@ -643,7 +643,7 @@ void data_send_pkt(u8 *pkt_data, u32 len)
     leaveCriticalSection(lock);
 }
 
-void data_send_pkt_idk(u8 *pkt_data, u32 len)
+void data_send_pkt_idk(const u8 *pkt_data, u32 len)
 {
     int lock = enterCriticalSection();
     // 0x2008 causes broadcast packets? and might be faster?
@@ -1158,17 +1158,6 @@ void wifi_card_send_ready(void)
 #if 0
     Wifi_FifoMsg msg;
     msg.cmd = WIFI_IPCINT_READY;
-
-    fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
-#endif
-}
-
-void wifi_card_send_connect(void)
-{
-    // TODO: FIFO: Replace by new code
-#if 0
-    Wifi_FifoMsg msg;
-    msg.cmd = WIFI_IPCINT_CONNECT;
 
     fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
 #endif

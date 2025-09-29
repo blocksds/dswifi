@@ -50,8 +50,8 @@ void wifi_card_write_intern_word(u32 addr, u32 data);
 void wifi_card_mbox0_send_packet(u8 type, u8 ack_type, const u8* data, u16 len, u16 idk);
 u16 wifi_card_mbox0_readpkt(void);
 
-void data_send_pkt_idk(u8* pkt_data, u32 len);
-void data_send_pkt(u8* pkt_data, u32 len);
+void data_send_pkt_idk(const u8 *pkt_data, u32 len);
+void data_send_pkt(const u8 *pkt_data, u32 len);
 void data_send_test(const u8* dst_bssid, const u8* src_bssid, u16 idk);
 
 u32 wifi_card_host_interest_addr(void);
@@ -70,6 +70,5 @@ void wifi_card_setclk(u32 data);
 void wifi_card_stop(void);
 
 void wifi_card_send_ready(void);
-void wifi_card_send_connect(void);
 
 #endif // DSWIFI_ARM7_TWL_CARD_H__

@@ -683,8 +683,6 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             ap_connected = true;
 
-            wifi_card_send_connect();
-
             if (ap_security_type == AP_OPEN || ap_security_type == AP_WEP)
                 wmi_post_handshake(NULL, NULL, NULL);
 
