@@ -148,26 +148,6 @@ const char *wifi_card_get_chip_str(void)
     }
 }
 
-#if 0
-static void wifi_card_print_mac(const char* prefix, const u8* mac)
-{
-    (void)prefix;
-    (void)mac;
-
-    if (prefix)
-    {
-        WLOG_PRINTF("%s %x:%x:%x:%x:%x:%x\n", prefix,
-                    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-        WLOG_FLUSH();
-    }
-    else
-    {
-        WLOG_PRINTF("%x:%x:%x:%x:%x:%x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-        WLOG_FLUSH();
-    }
-}
-#endif
-
 // SDIO basics
 
 int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
@@ -611,16 +591,7 @@ void data_handle_pkt(u8 *pkt_data, u32 len)
         fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
 #endif
 
-        // while (*(vu32*)(pkt_data - 6) != 0xF00FF00F);
-        // WLOG_PUTS(""); // HACK force ARM7 to wait for ARM9 to copy packet
-        // WLOG_FLUSH();
 #if 0
-        data_send_to_lwip(pkt_data, len);
-#endif
-#if 0
-        wifi_card_print_mac("Dst:", data_hdr->dst_bssid);
-        wifi_card_print_mac("Src:", data_hdr->src_bssid);
-
         WLOG_PUTS("Data Pkt:\n");
 
         u8* dump_data = data_hdr->body;
