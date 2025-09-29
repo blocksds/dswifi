@@ -23,4 +23,21 @@ typedef struct __attribute__((packed))
 }
 mbox_hdr_tx_data_packet;
 
+// MBOX RX Header
+// ==============
+
+// Header used for data packets.
+// https://problemkaputt.de/gbatek.htm#dsiatheroswifimboxtransferheaders
+typedef struct __attribute__((packed))
+{
+    u8  rssi;         // 0 to 0x3C
+    u8  unknknown_07; // 0x00
+    u8  dst_mac[6];   // MAC of the DSi or broadcast address (FF:FF:FF:FF:FF:FF)
+    u8  src_mac[6];   // MAC of the AP
+    u16 length;       // Big endian. Length of data after this field.
+    u16 llc[3];       // LLC header (0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00)
+    u16 ether_type;
+}
+mbox_hdr_rx_data_packet;
+
 #endif // DSWIFI_COMMON_TWL_DEFS_H__

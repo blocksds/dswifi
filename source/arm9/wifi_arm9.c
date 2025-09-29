@@ -33,25 +33,8 @@ void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
 // Functions that behave differently with lwIP and without it
 // ==========================================================
 
-void Wifi_Update(void)
+static void Wifi_NTR_Update(void)
 {
-    if (!WifiData)
-        return;
-
-#ifdef DSWIFI_ENABLE_LWIP
-    if (wifi_lwip_enabled)
-    {
-        if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
-        {
-            WifiData->flags9 |= WFLAG_ARM9_NETUP;
-        }
-        else
-        {
-            WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
-        }
-    }
-#endif
-
     // check for received packets, forward to whatever wants them.
     int cnt = 0;
     while (WifiData->rxbufIn != WifiData->rxbufOut)
@@ -92,4 +75,75 @@ void Wifi_Update(void)
         if (cnt++ > 80)
             break;
     }
+}
+
+TWL_CODE static void Wifi_TWL_Update(void)
+{
+    // check for received packets, forward to whatever wants them.
+    int cnt = 0;
+    while (WifiData->rxbufIn != WifiData->rxbufOut)
+    {
+        int base = WifiData->rxbufOut;
+
+        size_t size = WifiData->rxbufData[base];
+
+        if (size == 0xFFFF) // Mark to reset pointer
+        {
+            base = 0;
+            size = WifiData->rxbufData[base];
+        }
+
+        base++;
+
+        size_t total_size = 2 + size;
+
+#ifdef DSWIFI_ENABLE_LWIP
+        if (wifi_lwip_enabled)
+        {
+            // Only send packets to lwIP if we are trying to access the Internet
+            if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                Wifi_SendPacketToLwip(base, size);
+        }
+#endif
+
+        base += (size + 1) / 2; // Round up to 16 bit
+
+        if (base == (WIFI_RXBUFFER_SIZE / 2))
+            base = 0;
+
+        WifiData->rxbufOut = base;
+
+        WifiData->stats[WSTAT_TXPACKETS]++;
+        WifiData->stats[WSTAT_TXBYTES] += total_size;
+        WifiData->stats[WSTAT_TXDATABYTES] += size;
+
+        // Exit if we have already handled a lot of packets
+        if (cnt++ > 80)
+            break;
+    }
+}
+
+void Wifi_Update(void)
+{
+    if (!WifiData)
+        return;
+
+#ifdef DSWIFI_ENABLE_LWIP
+    if (wifi_lwip_enabled)
+    {
+        if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
+        {
+            WifiData->flags9 |= WFLAG_ARM9_NETUP;
+        }
+        else
+        {
+            WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
+        }
+    }
+#endif
+
+    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+        Wifi_TWL_Update();
+    else
+        Wifi_NTR_Update();
 }

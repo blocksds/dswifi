@@ -49,7 +49,7 @@ static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
 
     // Data in "src" is a "Ethernet II" frame
     if (Wifi_TransmitFunctionLink(src, len) != 0)
-        return ERR_CONN; // Not connected yet
+        return ERR_CONN; // Not connected yet. TODO: Should we fail with ERR_MEM?
 
     return ERR_OK;
 }

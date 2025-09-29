@@ -15,6 +15,7 @@
 #include "arm7/flash.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/ndma.h"
+#include "arm7/twl/rx_queue.h"
 #include "arm7/twl/utils.h"
 #include "arm7/twl/update.h"
 #include "arm7/twl/ath/wmi.h"
@@ -565,34 +566,17 @@ void data_handle_pkt(u8 *pkt_data, u32 len)
 
     } *data_snap = (void*)data_hdr->body;
 
-    //u16 data_len = getbe16(data_hdr->data_len_be);
-
     if (getbe16(data_snap->type_be) == 0x888E)
     {
-        data_handle_auth(data_snap->body, &pkt_data[len] - data_snap->body, data_hdr->dst_bssid, data_hdr->src_bssid);
+        data_handle_auth(data_snap->body, &pkt_data[len] - data_snap->body,
+                         data_hdr->dst_bssid, data_hdr->src_bssid);
     }
     else
     {
-        // TODO fragment it?
-        if (len > DATA_BUF_LEN - 6)
-            len = DATA_BUF_LEN - 6;
-
-        //memcpy(ip_data_out_buf, pkt_data, len);
-
-        // WLOG_PRINTF("%x %x\n", ip_data_out_buf, pkt_data);
-        // WLOG_FLUSH();
-
-        // TODO: FIFO: Replace by new code
-#if 0
-        Wifi_FifoMsg msg;
-        msg.cmd = WIFI_IPCINT_PKTDATA;
-        msg.pkt_data = pkt_data;//ip_data_out_buf;
-        msg.pkt_len = len;
-        fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
-#endif
-
 #if 0
         WLOG_PUTS("Data Pkt:\n");
+
+        u16 data_len = getbe16(data_hdr->data_len_be);
 
         u8* dump_data = data_hdr->body;
         for (int i = 0; i < data_len; i += 8)
@@ -603,6 +587,12 @@ void data_handle_pkt(u8 *pkt_data, u32 len)
         }
         WLOG_FLUSH();
 #endif
+
+        if (Wifi_TWL_RxAddPacketToQueue(pkt_data, len) != 0)
+        {
+            WLOG_PUTS("W: RX queue full\n");
+            WLOG_FLUSH();
+        }
     }
 }
 
@@ -638,6 +628,7 @@ void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len)
     *(u16*)&mbox_out_buffer[6 + 0] = wmi_type;
 
     // Truncate to mbox_out_buffer size
+    // TODO: Crash here?
     if (len > (MBOX_TMPBUF_SIZE - 0x8))
         len = (MBOX_TMPBUF_SIZE - 0x8);
 

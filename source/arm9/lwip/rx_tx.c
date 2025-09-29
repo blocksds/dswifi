@@ -255,7 +255,9 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size)
         return Wifi_NTR_TransmitFunctionLink(src, size);
 }
 
-void Wifi_SendPacketToLwip(int base, int len)
+// =============================================================================
+
+static void Wifi_NTR_SendPacketToLwip(int base, int len)
 {
     // Do lwIP interfacing for RX packets here.
     //
@@ -342,6 +344,40 @@ void Wifi_SendPacketToLwip(int base, int len)
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
 
     free(lwip_buffer);
+}
+
+TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
+{
+    void *packet = (void *)&(WifiData->rxbufData[base]);
+
+    // Build Ethernet header from MBOX header
+
+    mbox_hdr_rx_data_packet *mbox_hdr = packet;
+
+    EthernetFrameHeader eth_hdr;
+    memcpy(&eth_hdr.dest_mac[0], mbox_hdr->dst_mac, 6);
+    memcpy(&eth_hdr.src_mac[0], mbox_hdr->src_mac, 6);
+    eth_hdr.ether_type = mbox_hdr->ether_type;
+
+    // Overwrite MBOX header with Ethernet header before sending it to lwIP
+
+    void *lwip_buffer = (u8*)packet + sizeof(mbox_hdr_rx_data_packet)
+                      - sizeof(EthernetFrameHeader);
+
+    memcpy(lwip_buffer, &eth_hdr, sizeof(EthernetFrameHeader));
+
+    size_t lwip_buffer_size = len - sizeof(mbox_hdr_rx_data_packet)
+                            + sizeof(EthernetFrameHeader);
+
+    dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
+}
+
+void Wifi_SendPacketToLwip(int base, int len)
+{
+    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+        Wifi_TWL_SendPacketToLwip(base, len);
+    else
+        Wifi_NTR_SendPacketToLwip(base, len);
 }
 
 #endif // DSWIFI_ENABLE_LWIP
