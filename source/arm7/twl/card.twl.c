@@ -2,6 +2,7 @@
 //
 // Copyright (C) 2015-2016, Daz Jones
 // Copyright (C) 2021 Max Thomas
+// Copyright (C) 2025 Antonio Niño Díaz
 
 #include <stdlib.h>
 #include <string.h>
