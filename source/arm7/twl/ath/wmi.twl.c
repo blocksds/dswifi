@@ -173,7 +173,7 @@ void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
 
     u8 num_entries = pkt_data[1];
     u16 *channel_entries = (u16*)&pkt_data[2];
-    WLOG_PRINTF("T: WMI_GET_CHANNEL_LIST_RESP (%u entries)\n", num_entries);
+    WLOG_PRINTF("T: GET_CHANNEL_LIST_RESP (%u entries)\n", num_entries);
     WLOG_FLUSH();
 
     device_num_channels = num_entries;
@@ -202,7 +202,7 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     }
     *wmi_params = (void*)pkt_data;
 
-    WLOG_PRINTF("T: WMI_SCAN_COMPLETE_EVENT (%u B) %x\n", len, wmi_params->status);
+    WLOG_PRINTF("T: SCAN_COMPLETE_EVENT (%u B) %x\n", len, wmi_params->status);
     WLOG_FLUSH();
 #endif
     wmi_is_scanning = false;
@@ -226,7 +226,7 @@ static unsigned int wifi_channel_to_mhz(int channel)
 
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 {
-    // WLOG_PRINTF("T: WMI_BSSINFO (%u B)\n", len_);
+    // WLOG_PRINTF("T: BSSINFO (%u B)\n", len_);
     // WLOG_FLUSH();
 
     typedef struct __attribute__((packed)) {
@@ -580,7 +580,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         case WMI_READY_EVENT:
         {
             memcpy(device_mac, pkt_data, sizeof(device_mac));
-            WLOG_PRINTF("T: WMI_READY_EVENT, %x\nT: MAC: %x:%x:%x:%x:%x:%x\n",
+            WLOG_PRINTF("T: READY_EVENT, %x\nT: MAC: %x:%x:%x:%x:%x:%x\n",
                         pkt_data[6], pkt_data[0], pkt_data[1], pkt_data[2],
                         pkt_data[3], pkt_data[4], pkt_data[5]);
             WLOG_FLUSH();
@@ -588,7 +588,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_REG_DOMAIN_EVENT:
         {
-            WLOG_PRINTF("T: WMI_REG_DOMAIN_EVENT %x\n", (unsigned int)*(u32*)pkt_data);
+            WLOG_PRINTF("T: REG_DOMAIN_EVENT %x\n", (unsigned int)*(u32*)pkt_data);
             WLOG_FLUSH();
 
             const u8 wmi_handshake_7[20] =
@@ -616,7 +616,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             break;
         case WMI_CMD_ERROR_EVENT:
         {
-            WLOG_PRINTF("T: WMI_CMD_ERROR_EVENT, 0x%x 0x%x\n", *(u16*)pkt_data, pkt_data[2]);
+            WLOG_PRINTF("T: CMD_ERROR_EVENT, 0x%x 0x%x\n", *(u16*)pkt_data, pkt_data[2]);
             WLOG_FLUSH();
 
             wifi_card_write_func1_u32(0x400, wifi_card_read_func1_u32(0x400)); // ack ints?
@@ -640,7 +640,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_CONNECT_EVENT:
         {
-            WLOG_PRINTF("T: WMI_CONNECT_EVENT (%u B)\n", (unsigned int)len);
+            WLOG_PRINTF("T: CONNECT_EVENT (%u B)\n", (unsigned int)len);
             WLOG_FLUSH();
 
             ap_connected = true;
@@ -652,7 +652,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_DISCONNECT_EVENT:
         {
-            WLOG_PRINTF("T: WMI_DISCONNECT %u, %u\n", *(u16*)pkt_data,
+            WLOG_PRINTF("T: DISCONNECT %u, %u\n", *(u16*)pkt_data,
                         pkt_data[8]); // Disconnect reason
             WLOG_PRINTF("T: BSSID %x:%x:%x:%x:%x:%x\n", pkt_data[2], pkt_data[3],
                         pkt_data[4], pkt_data[5], pkt_data[6], pkt_data[7]);
@@ -677,14 +677,14 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_TKIP_MICERR_EVENT:
         {
-            WLOG_PRINTF("T: WMI_TKIP_MICERR_EVENT 0x%x 0x%x\n", pkt_data[0], pkt_data[1]);
+            WLOG_PRINTF("T: TKIP_MICERR_EVENT 0x%x 0x%x\n", pkt_data[0], pkt_data[1]);
             WLOG_FLUSH();
             break;
         }
         case WMI_TARGET_ERROR_REPORT_EVENT:
         {
             u32 err_id = *(u32*)pkt_data;
-            WLOG_PRINTF("T: WMI_TARGET_ERROR_REPORT_EVENT 0x%x\n", (unsigned int)err_id);
+            WLOG_PRINTF("T: TARGET_ERROR_REPORT_EVENT 0x%x\n", (unsigned int)err_id);
             WLOG_FLUSH();
 
             u32 arg0 = 0x7F;
@@ -701,7 +701,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             break;
         }
         case WMI_ACL_DATA_EVENT:
-            // WLOG_PRINTF("T: WMI_ACL_DATA_EVENT (%u B, %u B)", len, ack_len);
+            // WLOG_PRINTF("T: ACL_DATA_EVENT (%u, %u B)", len, ack_len);
             // hexdump(pkt_data, len);
             // WLOG_FLUSH();
             break;
@@ -1074,7 +1074,7 @@ void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 
 void wmi_scan_mode_start(void)
 {
-    WLOG_PUTS("W: Scan mode init\n");
+    WLOG_PUTS("T: Scan mode init\n");
     WLOG_FLUSH();
 
     num_rounds_scanned = 0;
@@ -1202,7 +1202,7 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
         wmi_add_cipher_key(0, 0, tk, NULL);
 
         wmi_add_cipher_key(gtk_info->keyidx, 1, gtk_info->key, rsc);
-        WLOG_PRINTF("Added GTK %x\n", gtk_info->keyidx);
+        WLOG_PRINTF("T: Added GTK 0x%x\n", gtk_info->keyidx);
         WLOG_FLUSH();
     }
 

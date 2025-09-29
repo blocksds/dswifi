@@ -1294,7 +1294,8 @@ skip_opcond:
         //return -1;
     }
 
-    WLOG_PRINTF("T: Mfg %x Cid %x (%s)\n", (unsigned int)device_manufacturer,
+    WLOG_PRINTF("T: Manufacturer: 0x%x\nT: Chip ID 0x%x (%s)\n",
+                (unsigned int)device_manufacturer,
                 (unsigned int)device_chip_id, wifi_card_get_chip_str());
     WLOG_FLUSH();
 
@@ -1426,7 +1427,7 @@ skip_opcond:
     device_eeprom_addr = wifi_card_read_intern_word(device_host_interest_addr + 0x54);
     device_eeprom_version = wifi_card_read_intern_word(device_eeprom_addr + 0x10); // version, 609C0202
 
-    WLOG_PRINTF("T: FW %x ready. Handshaking.\n", (unsigned int)device_eeprom_version);
+    WLOG_PRINTF("T: FW %x ready.\nT: Handshaking...\n", (unsigned int)device_eeprom_version);
     WLOG_FLUSH();
 
     wifi_card_bInitted = true;
