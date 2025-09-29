@@ -175,7 +175,7 @@ void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
 
     u8 num_entries = pkt_data[1];
     u16 *channel_entries = (u16*)&pkt_data[2];
-    WLOG_PRINTF("WMI_GET_CHANNEL_LIST_RESP num %x\n", num_entries);
+    WLOG_PRINTF("T: WMI_GET_CHANNEL_LIST_RESP (%u entries)\n", num_entries);
     WLOG_FLUSH();
 
     device_num_channels = num_entries;
@@ -188,11 +188,9 @@ void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
 
     //channel_freqs[0] = 5825;
 
-    for (int i = 0; i < num_entries; i++)
-    {
-        //WLOG_PRINTF("%u: %x\n", i, channel_entries[i]);
-        //WLOG_FLUSH();
-    }
+    // for (int i = 0; i < num_entries; i++)
+    //     WLOG_PRINTF("T: %d: 0x%x\n", i, (unsigned int)channel_entries[i]);
+    // WLOG_FLUSH();
 }
 
 void wmi_handle_scan_complete(u8* pkt_data, u32 len)
@@ -206,7 +204,7 @@ void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     }
     *wmi_params = (void*)pkt_data;
 
-    WLOG_PRINTF("WMI_SCAN_COMPLETE_EVENT len %x %x\n", len, wmi_params->status);
+    WLOG_PRINTF("T: WMI_SCAN_COMPLETE_EVENT (%u B) %x\n", len, wmi_params->status);
     WLOG_FLUSH();
 #endif
     wmi_is_scanning = false;
@@ -230,7 +228,7 @@ static unsigned int wifi_channel_to_mhz(int channel)
 
 void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 {
-    // WLOG_PUTS("WMI_BSSINFO\n");
+    // WLOG_PRINTF("T: WMI_BSSINFO (%u B)\n", len_);
     // WLOG_FLUSH();
 
     typedef struct __attribute__((packed)) {
@@ -303,14 +301,14 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 
             if (version != 0x0001)
             {
-                // WLOG_PRINTF("AP had bad version 0x%x\n", version);
+                // WLOG_PRINTF("T: Bad AP version 0x%x\n", version);
                 // WLOG_FLUSH();
                 goto skip_parse;
             }
 
             u32 group_cipher = getbe32(read_ptr + 2);
             u16 read_idx = 2 + 4;
-            // WLOG_PRINTF("g %x\n", group_cipher);
+            // WLOG_PRINTF("T: AP group cipher 0x%x\n", group_cipher);
             // WLOG_FLUSH();
 
             group_crypto = wmi_ieee_to_crypt(group_cipher);
@@ -322,7 +320,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
             for (int i = 0; i < num_pairwise; i++)
             {
                 u32 cipher = getbe32(read_ptr + read_idx + i * 4);
-                //WLOG_PRINTF("p %x\n", cipher);
+                //WLOG_PRINTF("AP cipher 0x%x\n", cipher);
                 //WLOG_FLUSH();
                 pair_crypto = wmi_ieee_to_crypt(cipher);
                 if (pair_crypto == CRYPT_AES) // use AES by default if we can
@@ -338,7 +336,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
             for (int i = 0; i < num_authkey; i++)
             {
                 u32 auth = getbe32(read_ptr + read_idx + i * 4);
-                // WLOG_PRINTF("a%u %x\n", i, auth);
+                // WLOG_PRINTF("T: AP auth %u 0x%x\n", i, auth);
                 // WLOG_FLUSH();
                 auth_type = auth & 0xFF;
 
@@ -556,48 +554,23 @@ skip_parse:
     }
 #endif
 
-#if 0
     // if (ap_ssid[0])
-    //     WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, sec_type);
-
-    // WLOG_PRINTF("WMI_BSSINFO len %x\n", len_);
-
-    u8 *dump_ptr = wmi_frame_hdr->elements;
-    for (int i = 0; i < 0x30; i += 8)
-    {
-        WLOG_PRINTF("%x: %x %x %x %x %x %x %x %x\n", i, dump_ptr[i + 0], dump_ptr[i + 1],
-                    dump_ptr[i + 2], dump_ptr[i + 3], dump_ptr[i + 4], dump_ptr[i + 5],
-                    dump_ptr[i + 6], dump_ptr[i + 7]);
-    }
-    WLOG_FLUSH();
-#endif
+    //     WLOG_PRINTF("T: \"%s\" (%s)\n", ap_ssid, sec_type);
 }
 
 void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
 {
     (void)pkt_data;
 
-    bool dump = false;
     switch (pkt_cmd)
     {
         case WMIX_DBGLOG_EVENT:
             break;
         default:
-            WLOG_PRINTF("WMIX pkt ID %x, len %x\n", (unsigned int)pkt_cmd,
+            WLOG_PRINTF("T: WMIX pkt ID %x (%u B)\n", (unsigned int)pkt_cmd,
                         (unsigned int)len);
             WLOG_FLUSH();
             break;
-    }
-
-    if (dump)
-    {
-        for (size_t i = 0; i < len; i += 8)
-        {
-            WLOG_PRINTF("%x: %x %x %x %x %x %x %x %x\n", i,
-                        pkt_data[i + 0], pkt_data[i + 1], pkt_data[i + 2], pkt_data[i + 3],
-                        pkt_data[i + 4], pkt_data[i + 5], pkt_data[i + 6], pkt_data[i + 7]);
-            WLOG_FLUSH();
-        }
     }
 }
 
@@ -610,7 +583,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         case WMI_READY_EVENT:
         {
             memcpy(device_mac, pkt_data, sizeof(device_mac));
-            WLOG_PRINTF("WMI_READY_EVENT, %x MAC: %x:%x:%x:%x:%x:%x\n",
+            WLOG_PRINTF("T: WMI_READY_EVENT, %x\nT: MAC: %x:%x:%x:%x:%x:%x\n",
                         pkt_data[6], pkt_data[0], pkt_data[1], pkt_data[2],
                         pkt_data[3], pkt_data[4], pkt_data[5]);
             WLOG_FLUSH();
@@ -618,7 +591,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_REG_DOMAIN_EVENT:
         {
-            WLOG_PRINTF("WMI_REG_DOMAIN_EVENT %x\n", (unsigned int)*(u32*)pkt_data);
+            WLOG_PRINTF("T: WMI_REG_DOMAIN_EVENT %x\n", (unsigned int)*(u32*)pkt_data);
             WLOG_FLUSH();
 
             const u8 wmi_handshake_7[20] =
@@ -646,7 +619,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             break;
         case WMI_CMD_ERROR_EVENT:
         {
-            WLOG_PRINTF("WMI_CMD_ERROR_EVENT, %x %x\n", *(u16*)pkt_data, pkt_data[2]);
+            WLOG_PRINTF("T: WMI_CMD_ERROR_EVENT, 0x%x 0x%x\n", *(u16*)pkt_data, pkt_data[2]);
             WLOG_FLUSH();
 
             wifi_card_write_func1_u32(0x400, wifi_card_read_func1_u32(0x400)); // ack ints?
@@ -670,7 +643,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_CONNECT_EVENT:
         {
-            WLOG_PRINTF("WMI_CONNECT_EVENT len %x\n", (unsigned int)len);
+            WLOG_PRINTF("T: WMI_CONNECT_EVENT (%u B)\n", (unsigned int)len);
             WLOG_FLUSH();
 
             ap_connected = true;
@@ -683,8 +656,9 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         case WMI_DISCONNECT_EVENT:
         {
             u8 disconnectReason = pkt_data[8];
-            WLOG_PRINTF("WMI_DISCONNECT %x %x:%x:%x.. %x\n", *(u16*)pkt_data,
-                        pkt_data[2], pkt_data[3], pkt_data[4], disconnectReason);
+            WLOG_PRINTF("T: WMI_DISCONNECT %u, %u\n", *(u16*)pkt_data, disconnectReason);
+            WLOG_PRINTF("T: BSSID %x:%x:%x:%x:%x:%x\n", pkt_data[2], pkt_data[3],
+                        pkt_data[4], pkt_data[5], pkt_data[6], pkt_data[7]);
             WLOG_FLUSH();
 
             ap_connected = false;
@@ -706,14 +680,14 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_TKIP_MICERR_EVENT:
         {
-            WLOG_PRINTF("WMI_TKIP_MICERR_EVENT %x %x\n", pkt_data[0], pkt_data[1]);
+            WLOG_PRINTF("T: WMI_TKIP_MICERR_EVENT 0x%x 0x%x\n", pkt_data[0], pkt_data[1]);
             WLOG_FLUSH();
             break;
         }
         case WMI_TARGET_ERROR_REPORT_EVENT:
         {
             u32 err_id = *(u32*)pkt_data;
-            WLOG_PRINTF("WMI_TARGET_ERROR_REPORT_EVENT %x\n", (unsigned int)err_id);
+            WLOG_PRINTF("T: WMI_TARGET_ERROR_REPORT_EVENT 0x%x\n", (unsigned int)err_id);
             WLOG_FLUSH();
 
             u32 arg0 = 0x7F;
@@ -730,12 +704,12 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             break;
         }
         case WMI_ACL_DATA_EVENT:
-            //WLOG_PRINTF("WMI_ACL_DATA_EVENT len %x %x", len, ack_len);
-            //hexdump(pkt_data, len);
-            //WLOG_FLUSH();
+            // WLOG_PRINTF("T: WMI_ACL_DATA_EVENT (%u B, %u B)", len, ack_len);
+            // hexdump(pkt_data, len);
+            // WLOG_FLUSH();
             break;
         default:
-            WLOG_PRINTF("WMI pkt ID %x, len %x %x\n", (unsigned int)pkt_cmd,
+            WLOG_PRINTF("T: WMI pkt ID 0x%x (%u B) 0x%x\n", (unsigned int)pkt_cmd,
                         (unsigned int)len, (unsigned int)ack_len);
             WLOG_FLUSH();
             break;
@@ -1483,11 +1457,11 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
 
         //hexdump(mbox_out_buffer, 0x90);
 
-        WLOG_PUTS("WPA2 Handshake 1/4:\n");
+        WLOG_PUTS("T: WPA2 Handshake 1/4\n");
     }
     else if (keyinfo == 0x13CA)
     {
-        WLOG_PUTS("WPA2 Handshake 3/4:\n");
+        WLOG_PUTS("T: WPA2 Handshake 3/4\n");
         WLOG_FLUSH();
 
         // TODO verify MIC
@@ -1502,7 +1476,7 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
     }
     else if (keyinfo == 0x1382)
     {
-        WLOG_PUTS("Group message:\n");
+        WLOG_PUTS("T: Group message\n");
         WLOG_FLUSH();
 
         // Send our OK before we actually load keys
@@ -1514,11 +1488,11 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
     }
     else
     {
-        WLOG_PRINTF("Unk Auth Pkt: %x\n", keyinfo);
+        WLOG_PRINTF("T: Unk Auth Pkt: 0x%x\n", keyinfo);
         //hexdump(pkt_data, len);
     }
 
-    WLOG_PUTS("Done auth\n");
+    WLOG_PUTS("T: Done auth\n");
     WLOG_FLUSH();
 }
 

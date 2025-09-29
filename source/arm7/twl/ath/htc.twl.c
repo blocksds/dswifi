@@ -24,7 +24,7 @@ void htc_handle_pkt(u16 pkt_cmd, u8 *pkt_data, u32 len, u32 ack_len)
     {
         case HTC_MSG_READY:
         {
-            WLOG_PRINTF("HTC_MSG_READY, len %x %x\n", (unsigned int)len,
+            WLOG_PRINTF("T: HTC_MSG_READY (%u B) 0x%x\n", (unsigned int)len,
                         (unsigned int)ack_len);
             WLOG_FLUSH();
 
@@ -53,18 +53,18 @@ void htc_handle_pkt(u16 pkt_cmd, u8 *pkt_data, u32 len, u32 ack_len)
             break;
         }
         case HTC_MSG_CONN_SVC_RESP:
-            // WLOG_PUTS("HTC_MSG_CONN_SVC_RESP\n");
+            // WLOG_PUTS("T: HTC_MSG_CONN_SVC_RESP\n");
             // WLOG_FLUSH();
             break;
         case HTC_MSG_UNK_0201:
-            // WLOG_PUTS("HTC_ACK\n");
+            // WLOG_PUTS("T: HTC_ACK\n");
             // WLOG_FLUSH();
             break;
         case HTC_MSG_UNK_0401:
             break;
         default:
-            WLOG_PRINTF("HTC pkt ID %x, len %x %x\n", (unsigned int)pkt_cmd, (unsigned int)len,
-                        (unsigned int)ack_len);
+            WLOG_PRINTF("T: HTC ID 0x%x (%u B) 0x%x\n", (unsigned int)pkt_cmd,
+                        (unsigned int)len, (unsigned int)ack_len);
             WLOG_FLUSH();
             break;
     }

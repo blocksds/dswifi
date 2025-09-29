@@ -109,7 +109,7 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
 #ifdef WIFI_SDIO_DEBUG
     if (ctx->debug)
     {
-        WLOG_PRINTF("CMD#: 0x%X (%u) (%X) -> %u:%u\n",
+        WLOG_PRINTF("T: CMD#: 0x%X (%u) (%X) -> %u:%u\n",
                     cmd.raw, cmd.cmd, stat0_completion_flags, ctx->port, ctx->address);
         WLOG_FLUSH();
     }
@@ -246,7 +246,7 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
 #ifdef WIFI_SDIO_DEBUG
             if (ctx->debug)
             {
-                WLOG_PRINTF("ERR#: %X 0000\n", stat1 & WIFI_SDIO_MASK_ERR);
+                WLOG_PRINTF("T: ERR#: %X 0000\n", stat1 & WIFI_SDIO_MASK_ERR);
                 WLOG_FLUSH();
             }
 #endif
@@ -310,19 +310,19 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
 #ifdef WIFI_SDIO_DEBUG
     if (ctx->debug)
     {
-        WLOG_PRINTF("STAT: %X %X (%X) INFO: %X %X\n", ctx->stat1, ctx->stat0,
+        WLOG_PRINTF("T: STAT: %X %X (%X) INFO: %X %X\n", ctx->stat1, ctx->stat0,
                     ctx->status, ctx->err1, ctx->err0);
 
         if (cmd.response_type != wifi_sdio_resp_none)
         {
             if (cmd.response_type == wifi_sdio_resp_136bit)
             {
-                WLOG_PRINTF("RESP: %X %X %X %X\n",
+                WLOG_PRINTF("T: RESP: %X %X %X %X\n",
                             ctx->resp[0], ctx->resp[1], ctx->resp[2], ctx->resp[3]);
             }
             else
             {
-                WLOG_PRINTF("RESP: %X\n", ctx->resp[0]);
+                WLOG_PRINTF("T: RESP: %X\n", ctx->resp[0]);
             }
         }
 

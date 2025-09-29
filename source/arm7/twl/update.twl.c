@@ -46,7 +46,7 @@ void Wifi_TWL_Update(void)
                 memcpy((void *)WifiData->MacAddr, wmi_get_mac(), sizeof(WifiData->MacAddr));
 
                 WifiData->curMode = WIFIMODE_NORMAL;
-                WLOG_PUTS("W: Initialized\n");
+                WLOG_PUTS("T: Initialized\n");
                 WLOG_FLUSH();
             }
             break;

@@ -155,7 +155,8 @@ const char *wifi_card_get_chip_str(void)
 int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
 {
     // Read register 0x02 (function enable) hibyte until it's ready
-    wifi_card_send_command(cmd52, BIT(31) /* write flag */ | (func << 28) | addr << 9 | val);
+    wifi_card_send_command(cmd52,
+            BIT(31) /* write flag */ | (func << 28) | addr << 9 | val);
     if (wlan_ctx.tmio.status & 4)
         return -1;
 
@@ -174,7 +175,8 @@ int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
     wlan_ctx.tmio.block_size = sizeof(u32);
     u8 blkcnt = len;
     u8 funcnum = 1;
-    wifi_card_send_command_alt(cmd53_read_single, (funcnum << 28) | (1 << 26) | (addr & 0x1FFFF) << 9 | (blkcnt));
+    wifi_card_send_command_alt(cmd53_read_single,
+            (funcnum << 28) | (1 << 26) | (addr & 0x1FFFF) << 9 | (blkcnt));
 
     //wlan_ctx.tmio.break_early = false;
 
@@ -257,12 +259,12 @@ u8 wifi_card_read_func0_u8(u32 addr)
 
 u16 wifi_card_read_func0_u16(u32 addr)
 {
-    return wifi_card_read_func0_u8(addr) | (wifi_card_read_func0_u8(addr+1) << 8);
+    return wifi_card_read_func0_u8(addr) | (wifi_card_read_func0_u8(addr + 1) << 8);
 }
 
 u32 wifi_card_read_func0_u32(u32 addr)
 {
-    return wifi_card_read_func0_u16(addr) | (wifi_card_read_func0_u16(addr+2) << 16);
+    return wifi_card_read_func0_u16(addr) | (wifi_card_read_func0_u16(addr + 2) << 16);
 }
 
 u16 wifi_card_write_func0_u16(u32 addr, u16 val)
@@ -344,6 +346,8 @@ void wifi_card_write_intern_word(u32 addr, u32 data)
 // MBOX
 //
 
+// TODO: Unused, remove?
+#if 0
 void wifi_card_mbox_clear(void)
 {
     WLOG_PRINTF("%x %x %x\n",
@@ -417,6 +421,7 @@ void wifi_card_mbox_clear(void)
     WLOG_PUTS("leave\n");
     WLOG_FLUSH();
 }
+#endif
 
 // Idk what this even is, no$ wifiboot does it before every BMI cmd,
 // but I suspect it's a workaround for writing too much to FIFOs w/
@@ -509,11 +514,10 @@ void wifi_card_mbox0_sendbytes(const u8 *data, u32 len)
     u32 intval = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
     if (intval & 0x00010000) // tx overflow
     {
-        WLOG_PRINTF("Mbox Full!: %x %x\n",
+        WLOG_PRINTF("T: mbox full 0x%x 0x%x\n",
                     (unsigned int)wifi_card_read_func1_u32(F1_HOST_INT_STATUS),
                     (unsigned int)wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID));
         WLOG_FLUSH();
-        //break;
     }
 
     //wifi_card_bmi_wait_count4();
@@ -591,7 +595,7 @@ void data_handle_pkt(u8 *pkt_data, u32 len)
 
         if (Wifi_TWL_RxAddPacketToQueue(pkt_data, len) != 0)
         {
-            WLOG_PUTS("W: RX queue full\n");
+            WLOG_PUTS("T: RX queue full\n");
             WLOG_FLUSH();
         }
     }
@@ -746,7 +750,7 @@ u16 wifi_card_mbox0_readpkt(void)
             wifi_card_read_func1_u8(0xFF);
             actual_len++;
         }
-        WLOG_PRINTF("?? Pkt len %x %x, %x %x", len, (unsigned int)header, actual_len,
+        WLOG_PRINTF("T: ?? Pkt (%u B) 0x%x, 0x%x 0x%x", len, (unsigned int)header, actual_len,
                     (unsigned int)wifi_card_read_func1_u32(F1_RX_LOOKAHEAD0));
         WLOG_FLUSH();
         return 0;
@@ -791,7 +795,7 @@ u16 wifi_card_mbox0_readpkt(void)
     // Short packet? Shouldn't happen.
     if (actual_len < 6)
     {
-        WLOG_PRINTF("Packet too short?? %x", actual_len);
+        WLOG_PRINTF("T: Packet too short? (%u B)", actual_len);
         WLOG_FLUSH();
         return actual_len;
     }
@@ -825,12 +829,12 @@ u16 wifi_card_mbox0_readpkt(void)
     }
     else
     {
-        WLOG_PRINTF("wat %x %x %x %x %x %x %x %x\n", read_buffer[0], read_buffer[1],
+        WLOG_PRINTF("T: UNK %x %x %x %x %x %x %x %x\n", read_buffer[0], read_buffer[1],
                     read_buffer[2], read_buffer[3], read_buffer[4], read_buffer[5],
                     read_buffer[6], read_buffer[7]);
-        WLOG_PRINTF("wat %x %x %x %x %x %x %x %x\n", read_buffer[8+0], read_buffer[8+1],
-                    read_buffer[8+2], read_buffer[8+3], read_buffer[8+4], read_buffer[8+5],
-                    read_buffer[8+6], read_buffer[8+7]);
+        WLOG_PRINTF("T: UNK %x %x %x %x %x %x %x %x\n", read_buffer[8 + 0], read_buffer[8 + 1],
+                    read_buffer[8 + 2], read_buffer[8 + 3], read_buffer[8 + 4], read_buffer[8 + 5],
+                    read_buffer[8 + 6], read_buffer[8 + 7]);
         WLOG_FLUSH();
     }
 
@@ -864,11 +868,11 @@ u16 wifi_card_mbox0_readpkt(void)
 
     if (ack_present != MBOXPKT_RETACK)
     {
-        // WLOG_PRINTF("%x %x %x %x\n", pkt_type, ack_present, len, actual_len);
-        // WLOG_PRINTF("%x %x %x %x %x %x %x %x\n", read_buffer[0], read_buffer[1], read_buffer[2],
+        // WLOG_PRINTF("T: %x %x %x %x\n", pkt_type, ack_present, len, actual_len);
+        // WLOG_PRINTF("T: %x %x %x %x %x %x %x %x\n", read_buffer[0], read_buffer[1], read_buffer[2],
         //             read_buffer[3], read_buffer[4], read_buffer[5], read_buffer[6],
         //             read_buffer[7]);
-        // WLOG_PRINTF("%x %x %x %x %x %x %x %x\n", read_buffer[8 + 0], read_buffer[8 + 1],
+        // WLOG_PRINTF("T: %x %x %x %x %x %x %x %x\n", read_buffer[8 + 0], read_buffer[8 + 1],
         //             read_buffer[8 + 2], read_buffer[8 + 3], read_buffer[8 + 4],
         //             read_buffer[8 + 5], read_buffer[8 + 6], read_buffer[8 + 7]);
         // WLOG_FLUSH();
@@ -1120,13 +1124,13 @@ int wifi_card_wlan_init(void)
     {
         ctx->tmio.bus_width = 1;
         wifi_card_switch_device();
-        WLOG_PUTS("Failed to read revision, assuming 1bit\n");
+        WLOG_PUTS("T: Can't read revision. Assuming 1bit bus\n");
         WLOG_FLUSH();
     }
 
     //if (is_firstboot)
     {
-        WLOG_PUTS("Resetting SDIO...\n");
+        WLOG_PUTS("T: Resetting SDIO...\n");
         WLOG_FLUSH();
 
         wifi_sdio_stop();
@@ -1162,7 +1166,7 @@ int wifi_card_wlan_init(void)
                 wifi_card_send_command(cmd5, ocr);
                 if (ctx->tmio.status & 4)
                 {
-                    WLOG_PUTS("Skip opcond...\n");
+                    WLOG_PUTS("T: Skip opcond...\n");
                     WLOG_FLUSH();
                     goto skip_opcond;
                 }
@@ -1260,7 +1264,7 @@ skip_opcond:
     if (ctx->tmio.status & 4)
         return -1;
 
-    WLOG_PRINTF("Rev: %x\n", revision);
+    WLOG_PRINTF("T: Rev: 0x%x\n", revision);
     WLOG_FLUSH();
 
     // Set function1 enable
@@ -1285,12 +1289,12 @@ skip_opcond:
     device_chip_id = wifi_card_read_intern_word(0x000040ec);
     if (ctx->tmio.status & 4)
     {
-        WLOG_PUTS("Error status reading manufacturer\n");
+        WLOG_PUTS("T: Can't read manufacturer\n");
         WLOG_FLUSH();
         //return -1;
     }
 
-    WLOG_PRINTF("Mfg %x Cid %x (%s)\n", (unsigned int)device_manufacturer,
+    WLOG_PRINTF("T: Mfg %x Cid %x (%s)\n", (unsigned int)device_manufacturer,
                 (unsigned int)device_chip_id, wifi_card_get_chip_str());
     WLOG_FLUSH();
 
@@ -1302,7 +1306,7 @@ skip_opcond:
     unsigned int is_uploaded = wifi_card_read_intern_word(device_host_interest_addr + 0x58);
     if (!is_uploaded)
     {
-        WLOG_PRINTF("%s needs firmware upload %x\n", wifi_card_get_chip_str(), is_uploaded);
+        WLOG_PRINTF("T: Needs FW upload: %d\n", is_uploaded);
         WLOG_FLUSH();
     }
 
@@ -1311,14 +1315,13 @@ skip_opcond:
     ioDelay(0x10000);
 
     // RESET_CAUSE, expecting 0x02
-    WLOG_PRINTF("Reset cause: %x\n", (unsigned int)wifi_card_read_intern_word(0x40C0));
-    WLOG_FLUSH();
+    WLOG_PRINTF("T: Reset cause: 0x%x\n", (unsigned int)wifi_card_read_intern_word(0x40C0));
 
     // FIFOs are weird after reset?
     //wifi_card_bmi_wait_count4();
 
     // Begin talking to bootloader
-    WLOG_PRINTF("BMI version: %x\n", (unsigned int)wifi_card_bmi_get_version());
+    WLOG_PRINTF("T: BMI version: 0x%x\n", (unsigned int)wifi_card_bmi_get_version());
     WLOG_FLUSH();
 
     u32 mem_write32 = 0x2;
@@ -1386,7 +1389,7 @@ skip_opcond:
     */
 
     // BMI finish
-    WLOG_PUTS("BMI finishing...\n");
+    WLOG_PUTS("T: BMI finishing...\n");
     WLOG_FLUSH();
 
     // TODO: What was this about...? Is it just a warm boot thing?
@@ -1407,7 +1410,7 @@ skip_opcond:
     wifi_card_bmi_cmd_write_memory(device_host_interest_addr + 0x74, (u8*)&mem_write32, sizeof(u32));
 
     // Launch firmware
-    WLOG_PUTS("Launching!\n");
+    WLOG_PUTS("T: Launching FW\n");
     WLOG_FLUSH();
     wifi_card_bmi_start_firmware();
 
@@ -1423,7 +1426,7 @@ skip_opcond:
     device_eeprom_addr = wifi_card_read_intern_word(device_host_interest_addr + 0x54);
     device_eeprom_version = wifi_card_read_intern_word(device_eeprom_addr + 0x10); // version, 609C0202
 
-    WLOG_PRINTF("Firmware %x ready, handshaking...\n", (unsigned int)device_eeprom_version);
+    WLOG_PRINTF("T: FW %x ready. Handshaking.\n", (unsigned int)device_eeprom_version);
     WLOG_FLUSH();
 
     wifi_card_bInitted = true;
@@ -1440,7 +1443,7 @@ skip_opcond:
     timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), Wifi_TWL_Update);
     //                               ((u64)TIMER_CLOCK * SDIO_TICK_INTERVAL_MS) / 1000
 
-    WLOG_PUTS("W: Waiting for WMI...\n");
+    WLOG_PUTS("T: Waiting for WMI...\n");
     WLOG_FLUSH();
 
     // The chip is now starting. When it's ready, wifi_card_initted() will
@@ -1464,7 +1467,7 @@ void wifi_card_deinit(void)
 
     wifi_card_bInitted = false;
 
-    WLOG_PRINTF("%s deinitted\n", wifi_card_get_chip_str());
+    WLOG_PUTS("T: Card deinitted\n");
     WLOG_FLUSH();
 }
 
