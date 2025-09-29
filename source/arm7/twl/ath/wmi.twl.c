@@ -687,25 +687,19 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                         pkt_data[2], pkt_data[3], pkt_data[4], disconnectReason);
             WLOG_FLUSH();
 
+            ap_connected = false;
+
             if (!ap_connected)
             {
-                ap_connected = false;
-                num_rounds_scanned = 0;
-
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan_mode_start();
             }
 
-            if (ap_connected &&
-                (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5))
+            if (ap_connected /*&&
+                (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5)*/)
             {
-                ap_connected = false;
-                num_rounds_scanned = 0;
-
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan_mode_start();
             }
 
             break;
@@ -728,11 +722,9 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             if (err_id == 0x8)
             {
                 ap_connected = false;
-                num_rounds_scanned = 0;
 
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
-                wmi_scan_mode_start();
             }
 
             break;
@@ -1113,6 +1105,8 @@ void wmi_scan_mode_start(void)
 {
     WLOG_PUTS("W: Scan mode init\n");
     WLOG_FLUSH();
+
+    num_rounds_scanned = 0;
 
     int lock = enterCriticalSection();
 
