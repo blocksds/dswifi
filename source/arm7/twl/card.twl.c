@@ -1077,17 +1077,6 @@ void wifi_card_irq(void)
     //wmi_tick(); // TODO
 }
 
-void wifi_card_send_ready(void)
-{
-    // TODO: FIFO: Replace by new code
-#if 0
-    Wifi_FifoMsg msg;
-    msg.cmd = WIFI_IPCINT_READY;
-
-    fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
-#endif
-}
-
 int wifi_card_wlan_init(void)
 {
     wifi_card_ctx *ctx = &wlan_ctx;

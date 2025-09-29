@@ -1209,8 +1209,6 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
     tmp8 = 1;
     wmi_send_pkt(WMI_SYNCHRONIZE_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8)); // 0x0?
 
-    wifi_card_send_ready();
-
     // Helps somewhat with some APs? Limited by region info.
     //wmi_set_tx_power();
 }

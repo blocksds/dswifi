@@ -69,6 +69,4 @@ void wifi_card_send_command_alt(wifi_sdio_command cmd, u32 args);
 void wifi_card_setclk(u32 data);
 void wifi_card_stop(void);
 
-void wifi_card_send_ready(void);
-
 #endif // DSWIFI_ARM7_TWL_CARD_H__
