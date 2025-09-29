@@ -36,7 +36,6 @@
 
 // request - request flags
 #define WFLAG_REQ_APCONNECT    0x0001
-#define WFLAG_REQ_APCOPYVALUES 0x0002
 #define WFLAG_REQ_APADHOC      0x0008
 #define WFLAG_REQ_PROMISC      0x0010
 #define WFLAG_REQ_USEWEP       0x0020

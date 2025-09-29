@@ -192,7 +192,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
         WifiData->apchannel9 = ap.channel;
         WifiData->reqMode = WIFIMODE_NORMAL;
-        WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
+        WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
         wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
     }
     else
@@ -257,7 +257,7 @@ int Wifi_AssocStatus(void)
 
                 WifiData->apchannel9 = ap.channel;
                 WifiData->reqMode = WIFIMODE_NORMAL;
-                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
+                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
             }
             return ASSOCSTATUS_SEARCHING;
@@ -416,7 +416,7 @@ int Wifi_AssocStatus(void)
 
                 WifiData->apchannel9 = ap.channel;
                 WifiData->reqMode = WIFIMODE_NORMAL;
-                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT | WFLAG_REQ_APCOPYVALUES;
+                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
                 return ASSOCSTATUS_SEARCHING;
             }

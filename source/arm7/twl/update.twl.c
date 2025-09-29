@@ -74,26 +74,23 @@ void Wifi_TWL_Update(void)
 
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
-                if (WifiData->reqReqFlags & WFLAG_REQ_APCOPYVALUES)
-                {
-                    WifiData->wepkeyid7  = WifiData->wepkeyid9;
-                    WifiData->wepmode7   = WifiData->wepmode9;
-                    WifiData->apchannel7 = WifiData->apchannel9;
-                    Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
-                    Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
+                WifiData->wepkeyid7  = WifiData->wepkeyid9;
+                WifiData->wepmode7   = WifiData->wepmode9;
+                WifiData->apchannel7 = WifiData->apchannel9;
+                Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
+                Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
 
-                    // Copy the full array to clear the original trailing data
-                    // if the new key is shorter than the old one.
-                    for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
-                        WifiData->wepkey7[i] = WifiData->wepkey9[i];
+                // Copy the full array to clear the original trailing data
+                // if the new key is shorter than the old one.
+                for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
+                    WifiData->wepkey7[i] = WifiData->wepkey9[i];
 
-                    for (int i = 0; i < 34; i++)
-                        WifiData->ssid7[i] = WifiData->ssid9[i];
-                    if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
-                        WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
-                    else
-                        WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
-                }
+                for (int i = 0; i < 34; i++)
+                    WifiData->ssid7[i] = WifiData->ssid9[i];
+                if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
+                    WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
+                else
+                    WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
 
                 WifiData->txbufIn = WifiData->txbufOut; // empty tx buffer.
                 WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
