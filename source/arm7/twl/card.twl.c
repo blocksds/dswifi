@@ -1064,48 +1064,6 @@ void wifi_card_bmi_lz_upload(u32 addr, const u8* data, u32 len)
     }
 }
 
-// TODO: FIFO: Replace by new code
-#if 0
-static void wifi_card_handleMsg(int len, void *user_data)
-{
-    (void)user_data;
-
-    Wifi_FifoMsg msg;
-
-    if (len < 4)
-    {
-        // WLOG_PRINTF("Bad msg len %x\n", len);
-        // WLOG_FLUSH();
-        return;
-    }
-
-    fifoGetDatamsg(FIFO_DSWIFI, len, (u8*)&msg);
-
-    u32 cmd = msg.cmd;
-    if (cmd == WIFI_IPCCMD_INITBUFS)
-    {
-        void *data = msg.pkt_data;
-        u32 pkt_len = msg.pkt_len;
-
-        ip_data_out_buf = data;
-        ip_data_out_buf_totlen = pkt_len;
-    }
-    else if (cmd == WIFI_IPCCMD_SENDPKT)
-    {
-        void *data = msg.pkt_data;
-        u32 pkt_len = msg.pkt_len;
-
-        data_send_pkt_idk(data, pkt_len);
-
-        *(vu32*)data = 0xF00FF00F; // mark packet processed
-
-        // Craft and send msg
-        //msg.cmd = WIFI_IPCINT_PKTSENT;
-        //fifoSendDatamsg(FIFO_DSWIFI, sizeof(msg), (u8*)&msg);
-    }
-}
-#endif
-
 // SDIO main functions
 void wifi_card_init(void)
 {

@@ -14,16 +14,12 @@
 #include "arm9/rx_tx_queue.h"
 #include "arm9/wifi_arm9.h"
 #include "common/common_defs.h"
+#include "common/common_twl_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
 
-int Wifi_TransmitFunctionLink(const void *src, size_t size)
+static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
 {
-    // Wait until the network is up to send frames to lwIP
-    // TODO: Is this needed?
-    //if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
-    //    return -1;
-
     // We receive Ethernet frames. The following two variables contain the size
     // of the actual data without the Ethernet header, and the pointer to the
     // beginning of the data skipping the header.
@@ -164,6 +160,99 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size)
     Wifi_CallSyncHandler();
 
     return 0;
+}
+
+TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
+{
+    // We receive Ethernet frames. The following two variables contain the size
+    // of the actual data without the Ethernet header, and the pointer to the
+    // beginning of the data skipping the header.
+    size_t data_size = size - sizeof(EthernetFrameHeader);
+    const void *data_src = ((u8 *)src) + sizeof(EthernetFrameHeader);
+
+    // Convert ethernet frame into mailbox header
+    // ==========================================
+
+    const EthernetFrameHeader *eth = src;
+
+    mbox_hdr_tx_data_packet tx_header = { 0 };
+
+    Wifi_CopyMacAddr(&tx_header.dst_mac[0], eth->dest_mac);
+    Wifi_CopyMacAddr(&tx_header.src_mac[0], eth->src_mac);
+    size_t len_in_header = data_size + 6 + 2; // Data + LLC + ethernet type
+    tx_header.length = (len_in_header >> 8) | ((len_in_header & 0xFF) << 8);
+    tx_header.llc[0] = 0xAAAA;
+    tx_header.llc[1] = 0x0003;
+    tx_header.llc[2] = 0x0000;
+    tx_header.ether_type = eth->ether_type;
+
+    // Copy data to buffer
+    // ===================
+
+    // Before the packet we will store a u16 with the total packet size
+    // (excluding the u16).
+    size_t total_size = 2 + sizeof(mbox_hdr_tx_data_packet) + data_size;
+
+    // TODO: Replace this by a mutex?
+    int oldIME = enterCriticalSection();
+
+    int base = WifiData->txbufOut;
+
+    if (base + (total_size / 2) > (WIFI_TXBUFFER_SIZE / 2))
+    {
+        // If the packet doesn't fit at the end of the buffer, try to fit it at
+        // the beginning. Don't wrap it.
+
+        if ((total_size / 2) >= WifiData->txbufIn)
+        {
+            // TODO: Add lost data to the stats
+            leaveCriticalSection(oldIME);
+            return -1;
+        }
+
+        WifiData->txbufData[base] = 0xFFFF; // Mark to reset pointer
+        base = 0;
+    }
+
+    WifiData->txbufData[base] = total_size - 2;
+    base++;
+
+    Wifi_TxBufferWrite(base * 2, sizeof(tx_header), &tx_header);
+    base += sizeof(tx_header) / 2;
+
+    Wifi_TxBufferWrite(base * 2, data_size, data_src);
+    base += (data_size + 1) / 2; // Pad to 16 bit
+
+    if (base == (WIFI_TXBUFFER_SIZE / 2))
+        base = 0;
+
+    // Only update the pointer after the whole packet has been writen to RAM or
+    // the ARM7 may see that the pointer has changed and send whatever is in the
+    // buffer at that point.
+    WifiData->txbufOut = base;
+
+    leaveCriticalSection(oldIME);
+
+    WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += size;
+
+    Wifi_CallSyncHandler();
+
+    return 0;
+}
+
+// This function needs to get an Ethernet frame
+int Wifi_TransmitFunctionLink(const void *src, size_t size)
+{
+    // Wait until the network is up to send frames to lwIP
+    // TODO: Is this needed?
+    //if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
+    //    return -1;
+
+    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+        return Wifi_TWL_TransmitFunctionLink(src, size);
+    else
+        return Wifi_NTR_TransmitFunctionLink(src, size);
 }
 
 void Wifi_SendPacketToLwip(int base, int len)

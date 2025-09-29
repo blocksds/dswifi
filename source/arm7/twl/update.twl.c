@@ -14,6 +14,7 @@
 #include "arm7/mac.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/setup.h"
+#include "arm7/twl/tx_queue.h"
 #include "arm7/twl/ath/wmi.h"
 
 void Wifi_TWL_Update(void)
@@ -141,4 +142,10 @@ void Wifi_TWL_Update(void)
             libndsCrash("Unsupported AP mode in TWL");
             break;
     }
+
+    // First, check if we have received anything and handle it
+    // TODO Wifi_TWL_RxQueueFlush();
+
+    // Check if we need to transfer anything
+    Wifi_TWL_TxArm9QueueFlush();
 }
