@@ -29,11 +29,6 @@ static wifi_card_ctx wlan_ctx = {0};
 
 int wifi_card_wlan_init(void);
 
-// TODO: FIFO: Replace by old RX/TX queues
-static int ip_data_out_buf_idx = 0;
-static u8* ip_data_out_buf = NULL;
-static u32 ip_data_out_buf_totlen = 0;
-
 #define ID_AR6002 (0x02000271)
 #define ID_AR601x (0x02010271)
 
@@ -656,43 +651,6 @@ void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len)
 static bool mbox_has_lookahead = false;
 static u32 mbox_lookahead = 0;
 
-void *data_next_buf(void)
-{
-#if 0
-    //for (int j = 0; j < 1000000; j++)
-    while (1)
-    {
-        for (int i = 0; i < (ip_data_out_buf_totlen / DATA_BUF_LEN); i++)
-        {
-            void* dst = memUncached(ip_data_out_buf + (DATA_BUF_LEN * i));
-            if (*(vu32*)dst == 0xF00FF00F)
-            {
-                // WLOG_PRINTF("ret %u\n", i);
-                // WLOG_FLUSH();
-                return dst;
-            }
-        }
-        // WLOG_PUTS("ARM9 loop...\n");
-        // WLOG_FLUSH();
-    }
-    //return ip_data_out_buf;
-    return NULL;
-#endif
-
-#if 1
-    void *ret = ip_data_out_buf + (DATA_BUF_LEN * ip_data_out_buf_idx);
-
-    // WLOG_PRINTF("ret %u\n", ip_data_out_buf_idx);
-    // WLOG_FLUSH();
-
-    ip_data_out_buf_idx = (ip_data_out_buf_idx + 1) % (ip_data_out_buf_totlen / DATA_BUF_LEN);
-
-    // memset(ret, 0, DATA_BUF_LEN);
-
-    return ret;
-#endif
-}
-
 u16 wifi_card_mbox0_readpkt(void)
 {
     //memset(mbox_buffer, 0, MBOX_TMPBUF_SIZE);
@@ -722,21 +680,12 @@ u16 wifi_card_mbox0_readpkt(void)
         header = wifi_card_read_func1_u32(F1_RX_LOOKAHEAD0); // read lookahead
     }
 
-    u8* read_buffer = mbox_buffer;
+    u8 *read_buffer = mbox_buffer;
 
     u8 pkt_type = header & 0xFF;
     u8 ack_present = (header >> 8) & 0xFF;
     u16 len = header >> 16;
     u16 full_len = round_up(len + 6, 0x80);
-
-    if (ip_data_out_buf && (pkt_type == 2 || pkt_type == 3 || pkt_type == 4 || pkt_type == 5))
-    {
-        //read_buffer = ip_data_out_buf + (ip_data_out_buf_idx * DATA_BUF_LEN);
-        //ip_data_out_buf_idx = (ip_data_out_buf_idx + 1) % (ip_data_out_buf_totlen / DATA_BUF_LEN);
-        read_buffer = data_next_buf();
-
-        //while (*(vu32*)ip_data_out_buf != 0xF00FF00F);
-    }
 
     // On the off chance that a packet gets parsed incorrectly (full_len off-by-one, etc)
     // just discard in chunks of 4 and be loud about it.
