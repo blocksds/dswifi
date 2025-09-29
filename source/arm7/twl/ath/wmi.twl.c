@@ -61,7 +61,6 @@ static u8 ap_wep_dummy[16] = { 0 };
 
 static u16 ap_channel = 0;
 static u8 ap_bssid[6];
-static u16 ap_caps;
 static char ap_name[32 + 1];
 static char *ap_pass = "";
 static u8 *ap_wep1 = ap_wep_dummy;
@@ -70,7 +69,6 @@ static u8 *ap_wep3 = ap_wep_dummy;
 static u8 *ap_wep4 = ap_wep_dummy;
 static u8 ap_wepmode = 0;
 static u8 ap_pmk[0x20];
-static int ap_nvram_idx = 0;
 static u16 ap_snr = 0;
 static u16 num_rounds_scanned = 0;
 static u8 ap_group_crypt_type = CRYPT_AES;
@@ -381,7 +379,7 @@ skip_parse:
         // TODO if an AP fails too many times, ignore it.
         if (!strcmp(ap_ssid, nvram_ssid) && wmi_params->snr > ap_snr)
         {
-            ap_nvram_idx = i + 3;
+            int ap_nvram_idx = i + 3;
             strcpy(ap_name, nvram_ssid);
             ap_pass = wifi_card_nvram_configs[ap_nvram_idx - 3].pass;
             memcpy(ap_pmk, wifi_card_nvram_configs[ap_nvram_idx - 3].pmk, 0x20);
@@ -466,7 +464,6 @@ skip_parse:
             ap_auth_type = auth_type;
             ap_snr = wmi_params->snr;
             ap_channel = wmi_params->channel;
-            ap_caps = wmi_frame_hdr->capability;
 
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
 
@@ -500,9 +497,8 @@ skip_parse:
         // TODO if an AP fails too many times, ignore it.
         if (!strcmp(ap_ssid, nvram_ssid) && wmi_params->snr > ap_snr)
         {
-            ap_nvram_idx = i;
+            int ap_nvram_idx = i;
             ap_channel = wmi_params->channel;
-            ap_caps = wmi_frame_hdr->capability;
             strcpy(ap_name, nvram_ssid);
             ap_wep1 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key1;
             ap_wep2 = wifi_card_nvram_wep_configs[ap_nvram_idx].wep_key2;
@@ -561,6 +557,7 @@ skip_parse:
 void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
 {
     (void)pkt_data;
+    (void)len;
 
     switch (pkt_cmd)
     {
@@ -655,8 +652,8 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
         }
         case WMI_DISCONNECT_EVENT:
         {
-            u8 disconnectReason = pkt_data[8];
-            WLOG_PRINTF("T: WMI_DISCONNECT %u, %u\n", *(u16*)pkt_data, disconnectReason);
+            WLOG_PRINTF("T: WMI_DISCONNECT %u, %u\n", *(u16*)pkt_data,
+                        pkt_data[8]); // Disconnect reason
             WLOG_PRINTF("T: BSSID %x:%x:%x:%x:%x:%x\n", pkt_data[2], pkt_data[3],
                         pkt_data[4], pkt_data[5], pkt_data[6], pkt_data[7]);
             WLOG_FLUSH();
