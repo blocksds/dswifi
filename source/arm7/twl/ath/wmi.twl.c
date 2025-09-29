@@ -169,15 +169,6 @@ bool wmi_is_ap_connected(void)
     return ap_connected;
 }
 
-void wmi_handle_ready_event(u8 *pkt_data, u32 len)
-{
-    (void)pkt_data;
-    (void)len;
-
-    WLOG_PRINTF("WMI_GET_CHANNEL_LIST_RESP len %x\n", (unsigned int)len);
-    WLOG_FLUSH();
-}
-
 void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
 {
     (void)len;
@@ -1117,8 +1108,6 @@ void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 }
 
 // Utilty functions
-
-void wmi_connect(void);
 
 void wmi_scan_mode_start(void)
 {

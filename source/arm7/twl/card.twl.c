@@ -1273,8 +1273,6 @@ skip_opcond:
         // Read register 0x02 (function enable) hibyte until it's ready
         if (wifi_card_read_func0_u8(0x3) == 0x02)
             break;
-        // if (wifi_sdio_critical_fail)
-        //     return -1;
     }
 
     //WLOG_PRINTF("Int status: %x %x",
