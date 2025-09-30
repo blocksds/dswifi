@@ -12,7 +12,7 @@
 #include "arm7/ntr/ieee_802_11/beacon.h"
 #include "arm7/ntr/ieee_802_11/header.h"
 #include "arm7/ntr/ieee_802_11/other.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/wifi_shared.h"
 

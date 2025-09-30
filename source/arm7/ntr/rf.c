@@ -10,7 +10,7 @@
 #include "arm7/ntr/beacon.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 
 static int chdata_save5 = 0;

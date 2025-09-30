@@ -2,8 +2,8 @@
 //
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_COMMON_DEFS_H__
-#define DSWIFI_COMMON_DEFS_H__
+#ifndef DSWIFI_COMMON_NTR_DEFS_H__
+#define DSWIFI_COMMON_NTR_DEFS_H__
 
 // Hardware TX Header (12 bytes)
 // =============================
@@ -84,4 +84,4 @@
 #define MAC_RXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_RXBUF_START_OFFSET)
 #define MAC_RXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_RXBUF_END_OFFSET)
 
-#endif // DSWIFI_COMMON_DEFS_H__
+#endif // DSWIFI_COMMON_NTR_DEFS_H__

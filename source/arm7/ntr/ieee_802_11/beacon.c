@@ -13,7 +13,7 @@
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/tx_queue.h"
 #include "arm7/ntr/ieee_802_11/header.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/spinlock.h"
 #include "common/wifi_shared.h"

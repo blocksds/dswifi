@@ -13,7 +13,7 @@
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/rf.h"
 #include "arm7/ntr/setup.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 
 void Wifi_NTR_SetWepKey(void *wepkey, int wepmode)
 {

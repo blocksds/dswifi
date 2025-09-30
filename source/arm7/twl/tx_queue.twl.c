@@ -5,7 +5,6 @@
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/twl/card.h"
-#include "common/common_defs.h"
 
 void Wifi_TWL_TxArm9QueueFlush(void)
 {

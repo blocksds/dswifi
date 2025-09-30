@@ -9,7 +9,7 @@
 #include "arm9/multiplayer.h"
 #include "arm9/rx_tx_queue.h"
 #include "arm9/wifi_arm9.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 #include "common/mac_addresses.h"
 #include "lwip/lwip_nds.h"
 

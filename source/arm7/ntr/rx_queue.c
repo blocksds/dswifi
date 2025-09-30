@@ -9,7 +9,7 @@
 #include "arm7/ntr/rx_queue.h"
 #include "arm7/ntr/update.h"
 #include "arm7/ntr/ieee_802_11/process.h"
-#include "common/common_defs.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 
 // This function tries to read up to "len" bytes from the RX queue in MAC RAM

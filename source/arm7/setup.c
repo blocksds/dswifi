@@ -7,7 +7,6 @@
 #include "arm7/setup.h"
 #include "arm7/ntr/setup.h"
 #include "arm7/twl/setup.h"
-#include "common/common_defs.h"
 
 // Requires the data returned by the ARM9 WiFi init call.
 //
