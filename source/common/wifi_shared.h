@@ -100,6 +100,10 @@ static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
         return 5;
     else if (wepmode == WEPMODE_128BIT)
         return 13;
+    else if (wepmode == 5)
+        return 5;
+    else if (wepmode == 6)
+        return 13;
 
     return -1;
 }

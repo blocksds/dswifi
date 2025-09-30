@@ -33,22 +33,10 @@ static u8 device_num_channels = 0;
 static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
 
-static u8 ap_wep_dummy[16] = { 0 };
-
-static u16 ap_channel = 0;
-static u8 ap_bssid[6];
-static char ap_name[32 + 1];
-static char *ap_pass = "";
-static u8 *ap_wep1 = ap_wep_dummy;
-static u8 *ap_wep2 = ap_wep_dummy;
-static u8 *ap_wep3 = ap_wep_dummy;
-static u8 *ap_wep4 = ap_wep_dummy;
-static u8 ap_wepmode = 0;
 static u8 ap_pmk[0x20];
 static u16 ap_snr = 0;
 static u16 num_rounds_scanned = 0;
 
-static Wifi_ApSecurityType ap_security_type = AP_SECURITY_OPEN;
 static Wifi_ApCryptType ap_group_crypt_type = AP_CRYPT_AES;
 static Wifi_ApCryptType ap_pair_crypt_type = AP_CRYPT_AES;
 static Wifi_ApAuthType ap_auth_type = AP_AUTH_PSK;
@@ -575,7 +563,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             ap_connected = true;
 
-            if (ap_security_type == AP_SECURITY_OPEN || ap_security_type == AP_SECURITY_WEP)
+            if ((WifiData->sectype7 == AP_SECURITY_OPEN) || (WifiData->sectype7 == AP_SECURITY_WEP))
                 wmi_post_handshake(NULL, NULL, NULL);
 
             break;
@@ -730,7 +718,7 @@ void wmi_start_scan(void)
 
 void wmi_connect_cmd(void)
 {
-    if (ap_security_type == AP_SECURITY_OPEN)
+    if (WifiData->sectype7 == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->ssid7[0];
         u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
@@ -760,15 +748,16 @@ void wmi_connect_cmd(void)
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else if (ap_security_type == AP_SECURITY_WEP)
+    else if (WifiData->sectype7 == AP_SECURITY_WEP)
     {
-        // TODO: Support WEP APs
+        size_t ssid_len = WifiData->ssid7[0];
+        u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
 
         // Keys have to be set before connect
-        wmi_add_cipher_key(0, 3, ap_wep1, NULL);
-        wmi_add_cipher_key(1, 1, ap_wep2, NULL);
-        wmi_add_cipher_key(2, 1, ap_wep3, NULL);
-        wmi_add_cipher_key(3, 1, ap_wep4, NULL);
+        wmi_add_cipher_key(0, 3, (const void*)&(WifiData->wepkey7[0]), NULL);
+        wmi_add_cipher_key(1, 1, (const void*)&(WifiData->wepkey7[0]), NULL);
+        wmi_add_cipher_key(2, 1, (const void*)&(WifiData->wepkey7[0]), NULL);
+        wmi_add_cipher_key(3, 1, (const void*)&(WifiData->wepkey7[0]), NULL);
 
         struct __attribute__((packed))
         {
@@ -787,17 +776,19 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, strlen(ap_name), {0}, ap_channel, {0}, 0
+            1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, ap_name);
-        memcpy(wmi_params.bssid, ap_bssid, 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else //if (ap_security_type == AP_SECURITY_WPA2)
+    else //if (WifiData->sectype7 == AP_SECURITY_WPA2)
     {
         // TODO: Support WPA APs
+        size_t ssid_len = WifiData->ssid7[0];
+        u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
 
         struct __attribute__((packed))
         {
@@ -816,12 +807,11 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 1, 5, ap_pair_crypt_type, 0, ap_group_crypt_type, 0, strlen(ap_name), {0},
-            ap_channel, {0}, 0
+            1, 1, 5, ap_pair_crypt_type, 0, ap_group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, ap_name);
-        memcpy(wmi_params.bssid, ap_bssid, 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
@@ -960,15 +950,27 @@ void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
     u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
 
     // Figure out the correct keylens for WEP; WEP40 vs WEP104 vs WEP128(?)
-    if (ap_security_type == AP_SECURITY_WEP)
+    if (WifiData->sectype7 == AP_SECURITY_WEP)
     {
         crypt_type = AP_CRYPT_WEP;
 
-        crypt_keylen = 13;
-        if (ap_wepmode == 0x1 || ap_wepmode == 0x5)
-            crypt_keylen = 5;
-        else if (ap_wepmode == 0x3 || ap_wepmode == 0x7)
-            crypt_keylen = 0x10;
+        crypt_keylen = 0;
+
+        switch (WifiData->wepmode7)
+        {
+            case 1:
+            case 5:
+                crypt_keylen = 5;
+                break;
+            case 2:
+            case 6:
+                crypt_keylen = 13;
+                break;
+            case 3:
+            case 7:
+                crypt_keylen = 16; // Unused
+                break;
+        }
     }
 
     struct
@@ -1127,7 +1129,7 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
     data_send_pkt((u8*)&dummy, sizeof(dummy));
     data_send_pkt((u8*)&dummy, sizeof(dummy));
 
-    if (ap_security_type == AP_SECURITY_WPA2)
+    if (WifiData->sectype7 == AP_SECURITY_WPA2)
     {
         wmi_add_cipher_key(0, 0, tk, NULL);
 
