@@ -401,6 +401,7 @@ int Wifi_AssocStatus(void)
                                WifiData->wfc_dns_secondary[n]);
                 }
 #endif
+                WifiData->sectype9  = AP_SECURITY_WEP;
                 WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
                 WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
                 for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
