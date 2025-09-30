@@ -136,13 +136,43 @@ void Wifi_TWL_Update(void)
         }
         case WIFIMODE_ASSOCIATED:
         {
-            // Check if we're still connected. If not, try to reconnect.
-            if (!wmi_is_ap_connected())
+            if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
-                wmi_connect();
-                WifiData->curMode = WIFIMODE_ASSOCIATE;
-                break;
+                // If the ARM9 has asked us to stay connected, but we're
+                // disconnected, that's an error.
+                if (!wmi_is_ap_connected())
+                {
+                    wmi_disconnect_cmd();
+                    WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                    WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
+                    WLOG_PUTS("T: Connection lost\n");
+                    WLOG_FLUSH();
+                    break;
+                }
             }
+            else
+            {
+                // If the ARM has asked us to disconnect, and we're still
+                // connected, send a disconnection request. Then wait until the
+                // WMI state machine tells us we're disconnected
+                if (WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
+                {
+                    wmi_disconnect_cmd();
+                    WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
+                    WLOG_PUTS("T: Disconnecting...\n");
+                    WLOG_FLUSH();
+                }
+
+                // If the WMI state machine tells us we're disconnected, go back
+                // to idle mode.
+                if (!wmi_is_ap_connected())
+                {
+                    WifiData->curMode = WIFIMODE_NORMAL;
+                    WLOG_PUTS("T: Disconnected\n");
+                    WLOG_FLUSH();
+                }
+            }
+
             break;
         }
         case WIFIMODE_CANNOTASSOCIATE:

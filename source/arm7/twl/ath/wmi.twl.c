@@ -582,20 +582,15 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                         pkt_data[4], pkt_data[5], pkt_data[6], pkt_data[7]);
             WLOG_FLUSH();
 
+#if 0
+            if (ap_connected &&
+                (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5))
+            {
+            }
+
+            wmi_delete_bad_ap_cmd();
+#endif
             ap_connected = false;
-
-            if (!ap_connected)
-            {
-                wmi_disconnect_cmd();
-                wmi_delete_bad_ap_cmd();
-            }
-
-            if (ap_connected /*&&
-                (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5)*/)
-            {
-                wmi_disconnect_cmd();
-                wmi_delete_bad_ap_cmd();
-            }
             ap_connecting = false;
 
             break;
@@ -615,12 +610,9 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             u32 arg0 = 0x7F;
             wmi_send_pkt(WMI_TARGET_ERROR_REPORT_BITMASK_CMD, MBOXPKT_REQACK, &arg0, sizeof(u32));
 
-            if (err_id == 0x8)
+            if (err_id == 0x8) // ???
             {
-                ap_connected = false;
-
                 wmi_disconnect_cmd();
-                wmi_delete_bad_ap_cmd();
             }
 
             break;
