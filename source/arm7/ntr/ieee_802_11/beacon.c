@@ -131,7 +131,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     Wifi_MACRead((u16 *)data, macbase, HDR_RX_SIZE, (datalen + 1) & ~1);
 
     // Information about the data rates
-    u16 compatible = 1; // Assume that the AP is compatible
+    bool compatible = true; // Assume that the AP is compatible
 
     Wifi_ApSecurityType sec_type = AP_SECURITY_OPEN;
 
@@ -169,7 +169,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 
             case MGT_FIE_ID_SUPPORTED_RATES: // Rate set
             {
-                compatible = 0;
+                compatible = false;
 
                 // Read the list of rates and look for some specific frequencies
                 for (unsigned int i = 0; i < seglen; i++)
@@ -180,7 +180,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                         (thisrate == (RATE_MANDATORY | RATE_2_MBPS)))
                     {
                         // 1, 2 Mbit: Fully compatible
-                        compatible = 1;
+                        compatible = true;
                     }
                     else if ((thisrate == (RATE_MANDATORY | RATE_5_5_MBPS)) ||
                              (thisrate == (RATE_MANDATORY | RATE_11_MBPS)))
@@ -189,11 +189,11 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                         // compatible with the 802.11b standard. We can still
                         // try to connect to this AP, but we need to be lucky
                         // and hope that the AP uses the NDS rates.
-                        compatible = 2;
+                        compatible = true;
                     }
                     else if (thisrate & RATE_MANDATORY)
                     {
-                        compatible = 0;
+                        compatible = false;
                         break;
                     }
                 }
@@ -265,7 +265,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
 
     // Regular DS consoles aren't compatible with WPA
     if (sec_type == AP_SECURITY_WPA)
-        compatible = 0;
+        compatible = false;
 
     // Apply filters to the AP list
     {
