@@ -16,7 +16,7 @@ const char *Wifi_ApSecurityTypeString(Wifi_ApSecurityType type)
         case AP_SECURITY_WPA:
             return "WPA";
         case AP_SECURITY_WPA2:
-            return "WPA2-PSK";
+            return "WPA2"; // WPA2-PSK
         default:
             return "Unk";
     }

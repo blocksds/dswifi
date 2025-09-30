@@ -35,7 +35,7 @@ void Wifi_AccessPointClearAll(void)
 
 void Wifi_AccessPointAdd(const void *bssid, const void *sa,
                          const uint8_t *ssid_ptr, size_t ssid_len, u32 channel,
-                         int rssi, bool wepmode, bool wpamode, int compatible,
+                         int rssi, Wifi_ApSecurityType sec_type, int compatible,
                          Wifi_NintendoVendorInfo *nintendo_info)
 {
     // Now, check the list of APs that we have found so far. If the AP of this
@@ -109,7 +109,7 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
 
         bool fromsta = Wifi_CmpMacAddr(sa, bssid);
         ap->flags = WFLAG_APDATA_ACTIVE
-                  | (wepmode ? WFLAG_APDATA_WEP : 0)
+                  | ((sec_type == AP_SECURITY_WEP) ? WFLAG_APDATA_WEP : 0)
                   | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
                   | ((nintendo_info != NULL) ? WFLAG_APDATA_NINTENDO_TAG : 0);
 
@@ -121,8 +121,10 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
         if (compatible == 2)
             ap->flags |= WFLAG_APDATA_EXTCOMPATIBLE;
 
-        if (wpamode)
+        if ((sec_type == AP_SECURITY_WPA) || (sec_type == AP_SECURITY_WPA2))
             ap->flags |= WFLAG_APDATA_WPA;
+
+        ap->security_type = sec_type;
 
         if (ssid_ptr)
         {

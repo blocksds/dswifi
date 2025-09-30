@@ -51,7 +51,7 @@ static bool Wifi_IsVendorNintendo(u8 *data, size_t len)
 }
 
 static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
-                                  bool *wpamode, bool *wepmode,
+                                  Wifi_ApSecurityType *sec_type,
                                   Wifi_NintendoVendorInfo *info)
 {
     if (Wifi_IsVendorMicrosoft(data, len))
@@ -78,11 +78,11 @@ static void Wifi_ProcessVendorTag(u8 *data, size_t len, bool *has_nintendo_info,
                     case 2: // TKIP
                     case 3: // AES WRAP
                     case 4: // AES CCMP
-                        *wpamode = true;
+                        *sec_type = AP_SECURITY_WPA; // TODO: WPA vs WPA2
                         break;
                     case 1: // WEP64
                     case 5: // WEP128
-                        *wepmode = true;
+                        *sec_type = AP_SECURITY_WEP;
                     default:
                         // Others: Reserved/Ignored
                         break;
@@ -133,8 +133,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     // Information about the data rates
     u16 compatible = 1; // Assume that the AP is compatible
 
-    bool wepmode = false;
-    bool wpamode = false;
+    Wifi_ApSecurityType sec_type = AP_SECURITY_OPEN;
 
     Wifi_NintendoVendorInfo nintendo_info;
     bool has_nintendo_info = false;
@@ -143,7 +142,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     // byte beacon interval.
     u32 caps_index = HDR_MGT_MAC_SIZE + 8 + 2;
     if (*(u16 *)(data + caps_index) & CAPS_PRIVACY)
-        wepmode = true;
+        sec_type = AP_SECURITY_WEP;
 
     u16 ptr_ssid = 0;
 
@@ -233,11 +232,11 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
                                 case 2: // TKIP
                                 case 3: // AES WRAP
                                 case 4: // AES CCMP
-                                    wpamode = true;
+                                    sec_type = AP_SECURITY_WPA; // TODO: WPA vs WPA2
                                     break;
                                 case 1: // WEP64
                                 case 5: // WEP128
-                                    wepmode = true;
+                                    sec_type = AP_SECURITY_WEP;
                                     break;
                                 default:
                                     // Others: Reserved/Ignored
@@ -252,7 +251,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
             case MGT_FIE_ID_VENDOR: // Vendor specific
             {
                 Wifi_ProcessVendorTag(data + curloc, seglen, &has_nintendo_info,
-                                      &wpamode, &wepmode, &nintendo_info);
+                                      &sec_type, &nintendo_info);
                 break;
             }
 
@@ -265,7 +264,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
     }
 
     // Regular DS consoles aren't compatible with WPA
-    if (wpamode)
+    if (sec_type == AP_SECURITY_WPA)
         compatible = 0;
 
     // Apply filters to the AP list
@@ -310,8 +309,7 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         rssi = packetheader->rssi_ & 255;
 
     Wifi_AccessPointAdd(data + HDR_MGT_BSSID, data + HDR_MGT_SA,
-                        ssid_ptr, ssid_len, channel, rssi,
-                        wepmode, wpamode, compatible,
+                        ssid_ptr, ssid_len, channel, rssi, sec_type, compatible,
                         has_nintendo_info ? &nintendo_info : NULL);
 
     //WLOG_FLUSH();

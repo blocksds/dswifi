@@ -226,7 +226,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 
             if (version != 0x0001)
             {
-                // WLOG_PRINTF("T: Bad AP version 0x%x\n", version);
+                // WLOG_PRINTF("T: Bad RSN version 0x%x\n", version);
                 // WLOG_FLUSH();
                 goto skip_parse;
             }
@@ -238,7 +238,8 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 
             group_crypto = wmi_ieee_to_crypt(group_cipher);
 
-            u16 num_pairwise = getle16(read_ptr+read_idx); read_idx+=2;
+            u16 num_pairwise = getle16(read_ptr + read_idx);
+            read_idx += 2;
             if (num_pairwise > 4)
                 num_pairwise = 4;
 
@@ -281,9 +282,7 @@ skip_parse:
     Wifi_AccessPointAdd(wmi_params->bssid, wmi_params->bssid,
                         (const void *)ap_ssid, ap_ssid_len,
                         wifi_mhz_to_channel(wmi_params->channel), wmi_params->rssi,
-                        (sec_type_enum == AP_SECURITY_WEP),
-                        (sec_type_enum == AP_SECURITY_WPA) || (sec_type_enum == AP_SECURITY_WPA2),
-                        1,
+                        sec_type_enum, 1,
                         NULL); // TODO: Check vendor tags for Wifi_NintendoVendorInfo
 
 #if 0
