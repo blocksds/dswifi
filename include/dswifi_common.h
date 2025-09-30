@@ -30,7 +30,7 @@ extern "C" {
 #define WFLAG_APDATA_WPA           0x0004
 #define WFLAG_APDATA_COMPATIBLE    0x0008
 #define WFLAG_APDATA_EXTCOMPATIBLE 0x0010
-#define WFLAG_APDATA_SHORTPREAMBLE 0x0020
+#define WFLAG_APDATA_SHORTPREAMBLE 0x0020 // TODO: Unused
 #define WFLAG_APDATA_NINTENDO_TAG  0x0040 // Beacon frames have a Nintendo tag
 #define WFLAG_APDATA_ACTIVE        0x8000
 
@@ -119,7 +119,7 @@ enum WIFI_STATS
     WSTAT_ARM7_UPDATES,
     WSTAT_DEBUG,
 
-    // Harware statistics (function mostly unknown.)
+    // DS mode harware statistics (function mostly unknown)
     WSTAT_HW_1B0,
     WSTAT_HW_1B1,
     WSTAT_HW_1B2,
