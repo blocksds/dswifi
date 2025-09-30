@@ -189,13 +189,13 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     char ap_ssid[32 + 1] = { 0 };
     size_t ap_ssid_len = 0;
 
-    Wifi_ApSecurityType sec_type_enum = AP_SECURITY_OPEN;
+    Wifi_ApSecurityType sec_type = AP_SECURITY_OPEN;
     Wifi_ApCryptType group_crypto = AP_CRYPT_NONE;
     Wifi_ApCryptType pair_crypto = AP_CRYPT_NONE;
     Wifi_ApAuthType auth_type = AP_AUTH_NONE;
 
     if (wmi_frame_hdr->capability & CAPS_PRIVACY)
-        sec_type_enum = AP_SECURITY_WEP;
+        sec_type = AP_SECURITY_WEP;
 
     while (data_left > 0)
     {
@@ -216,11 +216,11 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
         else if (id == MGT_FIE_ID_VENDOR) // RSN - Microsoft/Vendor
         {
             // TODO: Handle RSN here as well
-            //sec_type_enum = AP_SECURITY_WPA2;
+            //sec_type = AP_SECURITY_WPA2;
         }
         else if (id == MGT_FIE_ID_RSN) // RSN
         {
-            sec_type_enum = AP_SECURITY_WPA2;
+            sec_type = AP_SECURITY_WPA2;
 
             u16 version = getle16(read_ptr);
 
@@ -271,7 +271,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
             }
 
             if (pair_crypto == AP_CRYPT_TKIP)
-                sec_type_enum = AP_SECURITY_WPA;
+                sec_type = AP_SECURITY_WPA;
         }
 
 skip_parse:
@@ -282,7 +282,7 @@ skip_parse:
     Wifi_AccessPointAdd(wmi_params->bssid, wmi_params->bssid,
                         (const void *)ap_ssid, ap_ssid_len,
                         wifi_mhz_to_channel(wmi_params->channel), wmi_params->rssi,
-                        sec_type_enum, true,
+                        sec_type, true,
                         NULL); // TODO: Check vendor tags for Wifi_NintendoVendorInfo
 
 #if 0
@@ -317,7 +317,7 @@ skip_parse:
 
             if (wep_mode)
             {
-                sec_type_enum = AP_SECURITY_WEP;
+                sec_type = AP_SECURITY_WEP;
                 ap_wepmode = wep_mode;
                 ap_wep1 = wifi_card_nvram_configs[ap_nvram_idx - 3].wep_key1;
                 ap_wep2 = wifi_card_nvram_configs[ap_nvram_idx - 3].wep_key2;
@@ -329,14 +329,14 @@ skip_parse:
             // If the password is empty, assume open.
             if (ap_pass[0] == 0)
             {
-                sec_type_enum = AP_SECURITY_OPEN;
+                sec_type = AP_SECURITY_OPEN;
             }
 
-            if (ap_pass[0] != 0 && auth_type == AP_AUTH_NONE && sec_type_enum == AP_SECURITY_OPEN)
+            if (ap_pass[0] != 0 && auth_type == AP_AUTH_NONE && sec_type == AP_SECURITY_OPEN)
             {
                 WLOG_PUTS("AP missing RSN? Using flash values.\n");
                 WLOG_FLUSH();
-                sec_type_enum = AP_SECURITY_WPA2;
+                sec_type = AP_SECURITY_WPA2;
                 auth_type = AP_AUTH_PSK;
                 if (ap_flash_wpa_type == WPATYPE_WPA_TKIP || ap_flash_wpa_type == WPATYPE_WPA_AES)
                 {
@@ -365,10 +365,10 @@ skip_parse:
             // Definitely WPA2 though, in this case
             if (pair_crypto == AP_CRYPT_AES && auth_type == AP_AUTH_PSK)
             {
-                sec_type_enum = AP_SECURITY_WPA2;
+                sec_type = AP_SECURITY_WPA2;
             }
 
-            if (sec_type_enum == AP_SECURITY_WEP)
+            if (sec_type == AP_SECURITY_WEP)
             {
                 group_crypto = AP_CRYPT_WEP;
                 pair_crypto = AP_CRYPT_WEP;
@@ -377,14 +377,14 @@ skip_parse:
                 WLOG_FLUSH();
             }
 
-            if (sec_type_enum == AP_SECURITY_WPA)
+            if (sec_type == AP_SECURITY_WPA)
             {
                 WLOG_PUTS("WPA is currently unsupported.\n");
                 WLOG_FLUSH();
                 continue;
             }
 
-            ap_security_type = sec_type_enum;
+            ap_security_type = sec_type;
             ap_group_crypt_type = group_crypto;
             ap_pair_crypt_type = pair_crypto;
             ap_auth_type = auth_type;
@@ -441,14 +441,14 @@ skip_parse:
             // If the password is empty, assume open.
             if (ap_pass[0] == 0)
             {
-                sec_type_enum = AP_SECURITY_OPEN;
+                sec_type = AP_SECURITY_OPEN;
             }
             else
             {
-                sec_type_enum = AP_SECURITY_WEP;
+                sec_type = AP_SECURITY_WEP;
             }
 
-            ap_security_type = sec_type_enum;
+            ap_security_type = sec_type;
             if (ap_security_type == AP_SECURITY_OPEN)
             {
                 ap_group_crypt_type = AP_CRYPT_NONE;
