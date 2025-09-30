@@ -157,11 +157,17 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     wifi_connect_state = WIFI_CONNECT_SEARCHING;
 
-    WifiData->wepmode9  = wepmode; // copy data
-    WifiData->wepkeyid9 = wepkeyid;
-
-    if (wepmode != WEPMODE_NONE)
+    if (wepmode == WEPMODE_NONE)
     {
+        WifiData->sectype9 = AP_SECURITY_OPEN;
+        WifiData->wepmode9 = 0;
+    }
+    else
+    {
+        WifiData->sectype9  = AP_SECURITY_WEP;
+        WifiData->wepmode9  = wepmode;
+        WifiData->wepkeyid9 = wepkeyid;
+
         size_t i;
         for (i = 0; i < Wifi_WepKeySize(wepmode); i++)
             WifiData->wepkey9[i] = wepkey[i];

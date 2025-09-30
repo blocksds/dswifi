@@ -209,6 +209,7 @@ void Wifi_NTR_Update(void)
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
                 // Not connected - connect!
+                WifiData->sectype7   = WifiData->sectype9;
                 WifiData->wepkeyid7  = WifiData->wepkeyid9;
                 WifiData->wepmode7   = WifiData->wepmode9;
                 WifiData->apchannel7 = WifiData->apchannel9;

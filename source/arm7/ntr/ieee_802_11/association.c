@@ -39,7 +39,7 @@ int Wifi_SendAssocPacket(void)
     // Fixed-length fields
     // -------------------
 
-    if (WifiData->wepmode7)
+    if (WifiData->sectype7 == AP_SECURITY_WEP)
         ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
     else
         ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info
@@ -223,7 +223,7 @@ static int Wifi_MPHost_SendAssocResponsePacket(void *client_mac, u16 status_code
     // Fixed-length fields
     // -------------------
 
-    if (WifiData->wepmode7)
+    if (WifiData->sectype7 == AP_SECURITY_WEP)
         ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
     else
         ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info

@@ -193,6 +193,7 @@ typedef struct WIFI_MAINSTRUCT
     char ssid7[34], ssid9[34]; // Index 0 is the size
     u16 bssid7[3], bssid9[3];
     u8 apmac7[6], apmac9[6];
+    Wifi_ApSecurityType sectype7, sectype9;
     char wepmode7, wepmode9;
     char wepkeyid7, wepkeyid9;
     u8 wepkey7[13], wepkey9[13]; // Max size: 13 bytes (WEPMODE_128BIT)
