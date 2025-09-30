@@ -5,7 +5,6 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/multiplayer.h"
@@ -16,6 +15,7 @@
 #include "arm7/ntr/ieee_802_11/header.h"
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 #include "common/wifi_shared.h"
 
 // This function can send an association request frame with the real data rates

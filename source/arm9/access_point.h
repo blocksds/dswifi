@@ -17,6 +17,4 @@ typedef enum {
 
 extern WIFI_CONNECT_STATE wifi_connect_state;
 
-int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2);
-
 #endif // DSWIFI_ARM9_ACCESS_POINT_H__

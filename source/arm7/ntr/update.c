@@ -10,7 +10,6 @@
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/beacon.h"
 #include "arm7/ntr/mac.h"
@@ -24,6 +23,7 @@
 #include "arm7/ntr/ieee_802_11/authentication.h"
 #include "arm7/ntr/ieee_802_11/other.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
 // The keepalive counter is updated in Wifi_Update(), which is called once per

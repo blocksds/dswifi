@@ -20,16 +20,6 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
     wifi_rawpackethandler = wphfunc;
 }
 
-void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src)
-{
-    volatile u16 *d = dest;
-    const volatile u16 *s = src;
-
-    d[0] = s[0];
-    d[1] = s[1];
-    d[2] = s[2];
-}
-
 // Functions that behave differently with lwIP and without it
 // ==========================================================
 

@@ -11,11 +11,11 @@
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/setup.h"
 #include "arm7/twl/tx_queue.h"
 #include "arm7/twl/ath/wmi.h"
+#include "common/mac_addresses.h"
 
 void Wifi_TWL_Update(void)
 {

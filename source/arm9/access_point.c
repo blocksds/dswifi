@@ -12,6 +12,7 @@
 #include "arm9/ipc.h"
 #include "arm9/lwip/lwip_nds.h"
 #include "arm9/wifi_arm9.h"
+#include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
 WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
@@ -27,14 +28,6 @@ const char *ASSOCSTATUS_STRINGS[] = {
     [ASSOCSTATUS_ASSOCIATED] = "ASSOCSTATUS_ASSOCIATED",
     [ASSOCSTATUS_CANNOTCONNECT] = "ASSOCSTATUS_CANNOTCONNECT",
 };
-
-int Wifi_CmpMacAddr(const volatile void *mac1, const volatile void *mac2)
-{
-    const volatile u16 *m1 = mac1;
-    const volatile u16 *m2 = mac2;
-
-    return (m1[0] == m2[0]) && (m1[1] == m2[1]) && (m1[2] == m2[2]);
-}
 
 int Wifi_GetNumAP(void)
 {

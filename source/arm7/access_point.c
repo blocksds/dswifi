@@ -7,7 +7,7 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
+#include "common/mac_addresses.h"
 #include "common/spinlock.h"
 #include "common/wifi_shared.h"
 

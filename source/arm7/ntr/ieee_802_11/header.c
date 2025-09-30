@@ -7,10 +7,10 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
-#include "arm7/mac.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
 #include "common/ieee_defs.h"
+#include "common/mac_addresses.h"
 
 // This returns the size in bytes that have been added to the body due to WEP
 // encryption. The size of the TX and IEEE 802.11 management frame headers is

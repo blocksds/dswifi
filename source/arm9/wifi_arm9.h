@@ -14,8 +14,6 @@
 // that there aren't cache management issues.
 extern volatile Wifi_MainStruct *WifiData;
 
-void Wifi_CopyMacAddr(volatile void *dest, const volatile void *src);
-
 // Checks for new data from the ARM7 and initiates routing if data is available.
 void Wifi_Update(void);
 
