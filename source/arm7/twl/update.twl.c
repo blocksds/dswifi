@@ -162,8 +162,7 @@ void Wifi_TWL_Update(void)
             break;
     }
 
-    // First, check if we have received anything and handle it
-    // TODO Wifi_TWL_RxQueueFlush();
+    // TODO: Check if there are RX packets left to send to the ARM9?
 
     // Check if we need to transfer anything
     Wifi_TWL_TxArm9QueueFlush();

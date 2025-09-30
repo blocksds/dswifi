@@ -14,7 +14,7 @@
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
 #define WIFI_MAX_AP          32
-#define WIFI_MAX_ASSOC_RETRY 30
+#define WIFI_MAX_ASSOC_RETRY 30 // TODO: Use in TLW driver
 #define WIFI_PS_POLL_CONST   2
 
 // In scan mode, whenever there is a channel switch, the timeout counter in each

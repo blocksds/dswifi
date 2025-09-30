@@ -1115,7 +1115,7 @@ void wmi_connect(void)
     tmp8 = 0;
     wmi_send_pkt(WMI_SET_WSC_STATUS_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8));
 
-    tmp8 = 5;
+    tmp8 = 5; // 5 seconds
     wmi_send_pkt(WMI_SET_DISCONNECT_TIMEOUT_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8));
 
     tmp8 = 0;
