@@ -67,6 +67,38 @@ enum WEPMODES
     WEPMODE_128BIT = 2  ///< 13 ASCII characters.
 };
 
+typedef enum
+{
+    AP_SECURITY_OPEN,
+    AP_SECURITY_WEP,
+    AP_SECURITY_WPA,
+    AP_SECURITY_WPA2,
+}
+Wifi_ApSecurityType;
+
+const char *Wifi_ApSecurityTypeString(Wifi_ApSecurityType type);
+
+typedef enum
+{
+    AP_CRYPT_NONE = 1,
+    AP_CRYPT_WEP = 2,
+    AP_CRYPT_TKIP = 3, // WPA, and WPA/WPA2 hotspots
+    AP_CRYPT_AES = 4,
+}
+Wifi_ApCryptType;
+
+const char *Wifi_ApCryptString(Wifi_ApCryptType type);
+
+typedef enum {
+    AP_AUTH_NONE = 0,
+    AP_AUTH_8021X = 1,
+    AP_AUTH_PSK = 2,
+    AP_AUTH_FT = 3,
+}
+Wifi_ApAuthType;
+
+const char *Wifi_ApAuthTypeString(Wifi_ApAuthType type);
+
 /// List of available WiFi statistics.
 enum WIFI_STATS
 {

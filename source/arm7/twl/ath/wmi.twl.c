@@ -8,6 +8,8 @@
 
 #include <nds.h>
 
+#include <dswifi_common.h>
+
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
@@ -20,36 +22,10 @@
 
 #pragma pack(push, 1)
 
-enum ap_security_type_t
-{
-    AP_OPEN,
-    AP_WEP,
-    AP_WPA,
-    AP_WPA2,
-};
-
-enum ap_cipher_type_t
-{
-    CRYPT_NONE = 1,
-    CRYPT_WEP = 2,
-    CRYPT_TKIP = 3, // WPA, and WPA/WPA2 hotspots
-    CRYPT_AES = 4,
-};
-
-enum ap_auth_type_t
-{
-    AUTH_NONE = 0,
-    AUTH_8021X = 1,
-    AUTH_PSK = 2,
-    AUTH_FT = 3,
-};
-
 #define IEEE_CRYPT_TKIP     (0x000FAC02)
 #define IEEE_CRYPT_AES_CCMP (0x000FAC04)
 
 #define IEEE_AUTH_PSK       (0x000FAC02)
-
-static int ap_security_type = AP_OPEN;
 
 static u8 device_mac[6];
 
@@ -71,9 +47,11 @@ static u8 ap_wepmode = 0;
 static u8 ap_pmk[0x20];
 static u16 ap_snr = 0;
 static u16 num_rounds_scanned = 0;
-static u8 ap_group_crypt_type = CRYPT_AES;
-static u8 ap_pair_crypt_type = CRYPT_AES;
-static u8 ap_auth_type = AUTH_PSK;
+
+static Wifi_ApSecurityType ap_security_type = AP_SECURITY_OPEN;
+static Wifi_ApCryptType ap_group_crypt_type = AP_CRYPT_AES;
+static Wifi_ApCryptType ap_pair_crypt_type = AP_CRYPT_AES;
+static Wifi_ApAuthType ap_auth_type = AP_AUTH_PSK;
 
 u16 wmi_idk = 0;
 static bool wmi_bIsReady = false;
@@ -98,67 +76,16 @@ void wmi_set_bss_filter(u8 filter, u32 ieMask);
 
 // Pkt handlers
 
-const char *wmi_ap_sec_type_str(int type)
-{
-    switch (type)
-    {
-        case AP_OPEN:
-            return "Open";
-        case AP_WEP:
-            return "WEP";
-        case AP_WPA:
-            return "WPA";
-        case AP_WPA2:
-            return "WPA2-PSK";
-        default:
-            return "Unk";
-    }
-}
-
-const char *wmi_ap_crypt_str(u8 type)
-{
-    switch (type)
-    {
-        case CRYPT_NONE:
-            return "NONE";
-        case CRYPT_WEP:
-            return "WEP";
-        case CRYPT_TKIP:
-            return "TKIP";
-        case CRYPT_AES:
-            return "AES";
-        default:
-            return "Unk";
-    }
-}
-
-const char *wmi_ap_auth_str(u8 type)
-{
-    switch (type)
-    {
-        case AUTH_NONE:
-            return "NONE";
-        case AUTH_8021X:
-            return "802.1X";
-        case AUTH_PSK:
-            return "PSK";
-        case AUTH_FT:
-            return "FT";
-        default:
-            return "Unk";
-    }
-}
-
 int wmi_ieee_to_crypt(u32 ieee)
 {
     switch (ieee)
     {
         case IEEE_CRYPT_TKIP:
-            return CRYPT_TKIP;
+            return AP_CRYPT_TKIP;
         case IEEE_CRYPT_AES_CCMP:
-            return CRYPT_AES;
+            return AP_CRYPT_AES;
         default:
-            return CRYPT_NONE;
+            return AP_CRYPT_NONE;
     }
 }
 
@@ -262,13 +189,13 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
     char ap_ssid[32 + 1] = { 0 };
     size_t ap_ssid_len = 0;
 
-    int sec_type_enum = AP_OPEN;
-    int group_crypto = CRYPT_NONE;
-    int pair_crypto = CRYPT_NONE;
-    u8 auth_type = AUTH_NONE;
+    Wifi_ApSecurityType sec_type_enum = AP_SECURITY_OPEN;
+    Wifi_ApCryptType group_crypto = AP_CRYPT_NONE;
+    Wifi_ApCryptType pair_crypto = AP_CRYPT_NONE;
+    Wifi_ApAuthType auth_type = AP_AUTH_NONE;
 
     if (wmi_frame_hdr->capability & CAPS_PRIVACY)
-        sec_type_enum = AP_WEP;
+        sec_type_enum = AP_SECURITY_WEP;
 
     while (data_left > 0)
     {
@@ -289,11 +216,11 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
         else if (id == MGT_FIE_ID_VENDOR) // RSN - Microsoft/Vendor
         {
             // TODO: Handle RSN here as well
-            //sec_type_enum = AP_WPA2;
+            //sec_type_enum = AP_SECURITY_WPA2;
         }
         else if (id == MGT_FIE_ID_RSN) // RSN
         {
-            sec_type_enum = AP_WPA2;
+            sec_type_enum = AP_SECURITY_WPA2;
 
             u16 version = getle16(read_ptr);
 
@@ -321,7 +248,7 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
                 //WLOG_PRINTF("AP cipher 0x%x\n", cipher);
                 //WLOG_FLUSH();
                 pair_crypto = wmi_ieee_to_crypt(cipher);
-                if (pair_crypto == CRYPT_AES) // use AES by default if we can
+                if (pair_crypto == AP_CRYPT_AES) // use AES by default if we can
                     break;
             }
             read_idx += 4 * num_pairwise;
@@ -342,8 +269,8 @@ void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
                     break;
             }
 
-            if (pair_crypto == CRYPT_TKIP)
-                sec_type_enum = AP_WPA;
+            if (pair_crypto == AP_CRYPT_TKIP)
+                sec_type_enum = AP_SECURITY_WPA;
         }
 
 skip_parse:
@@ -354,8 +281,8 @@ skip_parse:
     Wifi_AccessPointAdd(wmi_params->bssid, wmi_params->bssid,
                         (const void *)ap_ssid, ap_ssid_len,
                         wifi_mhz_to_channel(wmi_params->channel), wmi_params->rssi,
-                        (sec_type_enum == AP_WEP),
-                        (sec_type_enum == AP_WPA) || (sec_type_enum == AP_WPA2),
+                        (sec_type_enum == AP_SECURITY_WEP),
+                        (sec_type_enum == AP_SECURITY_WPA) || (sec_type_enum == AP_SECURITY_WPA2),
                         1,
                         NULL); // TODO: Check vendor tags for Wifi_NintendoVendorInfo
 
@@ -391,7 +318,7 @@ skip_parse:
 
             if (wep_mode)
             {
-                sec_type_enum = AP_WEP;
+                sec_type_enum = AP_SECURITY_WEP;
                 ap_wepmode = wep_mode;
                 ap_wep1 = wifi_card_nvram_configs[ap_nvram_idx - 3].wep_key1;
                 ap_wep2 = wifi_card_nvram_configs[ap_nvram_idx - 3].wep_key2;
@@ -403,15 +330,15 @@ skip_parse:
             // If the password is empty, assume open.
             if (ap_pass[0] == 0)
             {
-                sec_type_enum = AP_OPEN;
+                sec_type_enum = AP_SECURITY_OPEN;
             }
 
-            if (ap_pass[0] != 0 && auth_type == AUTH_NONE && sec_type_enum == AP_OPEN)
+            if (ap_pass[0] != 0 && auth_type == AP_AUTH_NONE && sec_type_enum == AP_SECURITY_OPEN)
             {
                 WLOG_PUTS("AP missing RSN? Using flash values.\n");
                 WLOG_FLUSH();
-                sec_type_enum = AP_WPA2;
-                auth_type = AUTH_PSK;
+                sec_type_enum = AP_SECURITY_WPA2;
+                auth_type = AP_AUTH_PSK;
                 if (ap_flash_wpa_type == WPATYPE_WPA_TKIP || ap_flash_wpa_type == WPATYPE_WPA_AES)
                 {
                     WLOG_PUTS("WPA mode currently unsupported.\n");
@@ -420,13 +347,13 @@ skip_parse:
                 }
                 else if (ap_flash_wpa_type == WPATYPE_WPA2_TKIP)
                 {
-                    group_crypto = CRYPT_TKIP;
-                    pair_crypto = CRYPT_AES;
+                    group_crypto = AP_CRYPT_TKIP;
+                    pair_crypto = AP_CRYPT_AES;
                 }
                 else if (ap_flash_wpa_type == WPATYPE_WPA2_AES)
                 {
-                    group_crypto = CRYPT_AES;
-                    pair_crypto = CRYPT_AES;
+                    group_crypto = AP_CRYPT_AES;
+                    pair_crypto = AP_CRYPT_AES;
                 }
                 else
                 {
@@ -437,21 +364,21 @@ skip_parse:
             }
 
             // Definitely WPA2 though, in this case
-            if (pair_crypto == CRYPT_AES && auth_type == AUTH_PSK)
+            if (pair_crypto == AP_CRYPT_AES && auth_type == AP_AUTH_PSK)
             {
-                sec_type_enum = AP_WPA2;
+                sec_type_enum = AP_SECURITY_WPA2;
             }
 
-            if (sec_type_enum == AP_WEP)
+            if (sec_type_enum == AP_SECURITY_WEP)
             {
-                group_crypto = CRYPT_WEP;
-                pair_crypto = CRYPT_WEP;
-                auth_type = AUTH_NONE;
+                group_crypto = AP_CRYPT_WEP;
+                pair_crypto = AP_CRYPT_WEP;
+                auth_type = AP_AUTH_NONE;
                 WLOG_PUTS("Only shared auth WEP40 is verified...\n");
                 WLOG_FLUSH();
             }
 
-            if (sec_type_enum == AP_WPA)
+            if (sec_type_enum == AP_SECURITY_WPA)
             {
                 WLOG_PUTS("WPA is currently unsupported.\n");
                 WLOG_FLUSH();
@@ -467,11 +394,14 @@ skip_parse:
 
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
 
-            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
+            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid,
+                        Wifi_ApSecurityTypeString((ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
                         ap_bssid[3], ap_bssid[4], ap_bssid[5]);
-            WLOG_PRINTF("  G %s P %s A %s\n", wmi_ap_crypt_str(ap_group_crypt_type),
-                        wmi_ap_crypt_str(ap_pair_crypt_type), wmi_ap_auth_str(ap_auth_type));
+            WLOG_PRINTF("  G %s P %s A %s\n",
+                        Wifi_ApCryptString(ap_group_crypt_type),
+                        Wifi_ApCryptString(ap_pair_crypt_type),
+                        Wifi_ApAuthTypeString(ap_auth_type));
             WLOG_PRINTF("  %x %x %x -- %x %x\n", ap_group_crypt_type, ap_pair_crypt_type,
                         ap_auth_type, wmi_params->snr, ap_channel);
             WLOG_FLUSH();
@@ -512,32 +442,33 @@ skip_parse:
             // If the password is empty, assume open.
             if (ap_pass[0] == 0)
             {
-                sec_type_enum = AP_OPEN;
+                sec_type_enum = AP_SECURITY_OPEN;
             }
             else
             {
-                sec_type_enum = AP_WEP;
+                sec_type_enum = AP_SECURITY_WEP;
             }
 
             ap_security_type = sec_type_enum;
-            if (ap_security_type == AP_OPEN)
+            if (ap_security_type == AP_SECURITY_OPEN)
             {
-                ap_group_crypt_type = CRYPT_NONE;
-                ap_pair_crypt_type = CRYPT_NONE;
-                ap_auth_type = AUTH_NONE;
+                ap_group_crypt_type = AP_CRYPT_NONE;
+                ap_pair_crypt_type = AP_CRYPT_NONE;
+                ap_auth_type = AP_AUTH_NONE;
             }
             else
             {
-                ap_group_crypt_type = CRYPT_WEP;
-                ap_pair_crypt_type = CRYPT_WEP;
-                ap_auth_type = AUTH_NONE;
+                ap_group_crypt_type = AP_CRYPT_WEP;
+                ap_pair_crypt_type = AP_CRYPT_WEP;
+                ap_auth_type = AP_AUTH_NONE;
                 WLOG_PUTS("Only shared auth WEP40 is verified...\n");
                 WLOG_FLUSH();
             }
 
             memcpy(ap_bssid, &pkt_data[6], sizeof(ap_bssid));
 
-            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid, wmi_ap_sec_type_str(ap_security_type));
+            WLOG_PRINTF("WMI_BSSINFO %s (%s)\n", ap_ssid,
+                        Wifi_ApSecurityTypeString((ap_security_type));
             WLOG_PRINTF("  BSSID %x:%x:%x:%x:%x:%x\n", ap_bssid[0], ap_bssid[1], ap_bssid[2],
                         ap_bssid[3], ap_bssid[4], ap_bssid[5]);
             WLOG_PRINTF("  %x %x %x -- %x %x\n", ap_group_crypt_type, ap_pair_crypt_type,
@@ -645,7 +576,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             ap_connected = true;
 
-            if (ap_security_type == AP_OPEN || ap_security_type == AP_WEP)
+            if (ap_security_type == AP_SECURITY_OPEN || ap_security_type == AP_SECURITY_WEP)
                 wmi_post_handshake(NULL, NULL, NULL);
 
             break;
@@ -800,7 +731,7 @@ void wmi_start_scan(void)
 
 void wmi_connect_cmd(void)
 {
-    if (ap_security_type == AP_OPEN)
+    if (ap_security_type == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->ssid7[0];
         u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
@@ -830,7 +761,7 @@ void wmi_connect_cmd(void)
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else if (ap_security_type == AP_WEP)
+    else if (ap_security_type == AP_SECURITY_WEP)
     {
         // TODO: Support WEP APs
 
@@ -857,7 +788,7 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 2, 1, CRYPT_WEP, 0, CRYPT_WEP, 0, strlen(ap_name), {0}, ap_channel, {0}, 0
+            1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, strlen(ap_name), {0}, ap_channel, {0}, 0
         };
 
         strcpy(wmi_params.ssid, ap_name);
@@ -865,7 +796,7 @@ void wmi_connect_cmd(void)
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else //if (ap_security_type == AP_WPA2)
+    else //if (ap_security_type == AP_SECURITY_WPA2)
     {
         // TODO: Support WPA APs
 
@@ -1026,13 +957,13 @@ void wmi_dbgoff(void)
 
 void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 {
-    u8 crypt_type = (usage == 1) ? ap_group_crypt_type : CRYPT_AES /* WPA2, AES */;
-    u8 crypt_keylen = (crypt_type == CRYPT_TKIP) ? 0x20 : 0x10;
+    u8 crypt_type = (usage == 1) ? ap_group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
+    u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
 
     // Figure out the correct keylens for WEP; WEP40 vs WEP104 vs WEP128(?)
-    if (ap_security_type == AP_WEP)
+    if (ap_security_type == AP_SECURITY_WEP)
     {
-        crypt_type = CRYPT_WEP;
+        crypt_type = AP_CRYPT_WEP;
 
         crypt_keylen = 13;
         if (ap_wepmode == 0x1 || ap_wepmode == 0x5)
@@ -1197,7 +1128,7 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
     data_send_pkt((u8*)&dummy, sizeof(dummy));
     data_send_pkt((u8*)&dummy, sizeof(dummy));
 
-    if (ap_security_type == AP_WPA2)
+    if (ap_security_type == AP_SECURITY_WPA2)
     {
         wmi_add_cipher_key(0, 0, tk, NULL);
 
@@ -1251,7 +1182,7 @@ void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 repl
         1, 3, {0}, 2, {0}, {0,0}, {0}, {0}, {0}, {0}, {0}, {0}, {0},
         {
             0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac,
-            ap_group_crypt_type == CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
+            ap_group_crypt_type == AP_CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
             0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x02, 0x00, 0x00
         }
     };
