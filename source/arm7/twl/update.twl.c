@@ -115,9 +115,21 @@ void Wifi_TWL_Update(void)
         }
         case WIFIMODE_ASSOCIATE:
         {
+            if (!wmi_is_ap_connecting())
+            {
+                wmi_disconnect_cmd();
+                WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
+                WLOG_PUTS("T: Can't connect to AP\n");
+                WLOG_FLUSH();
+                break;
+            }
+
             if (wmi_is_ap_connected())
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATED;
+                WLOG_PUTS("T: Connected to AP\n");
+                WLOG_FLUSH();
                 break;
             }
             break;
@@ -134,8 +146,17 @@ void Wifi_TWL_Update(void)
             break;
         }
         case WIFIMODE_CANNOTASSOCIATE:
-            WifiData->curMode = WIFIMODE_NORMAL;
+        {
+            // Stay in this mode until the ARM9 asks us to stop connecting
+            if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
+            {
+                WifiData->curMode = WIFIMODE_NORMAL;
+                WLOG_PUTS("T: Leaving error mode\n");
+                WLOG_FLUSH();
+                break;
+            }
             break;
+        }
         case WIFIMODE_ACCESSPOINT:
             libndsCrash("Unsupported AP mode in TWL");
             break;

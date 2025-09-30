@@ -77,6 +77,7 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
 
 void wmi_connect(void);
 bool wmi_is_ap_connected(void);
+bool wmi_is_ap_connecting(void);
 
 void wmi_disconnect_cmd(void);
 

@@ -48,6 +48,7 @@ static bool wmi_bIsReady = false;
 static bool wmi_is_scanning = false;
 
 static bool ap_connected = false;
+static bool ap_connecting = true;
 
 static bool has_sent_hs2 = false;
 static bool has_sent_hs4 = false;
@@ -80,6 +81,11 @@ int wmi_ieee_to_crypt(u32 ieee)
 bool wmi_is_ap_connected(void)
 {
     return ap_connected;
+}
+
+bool wmi_is_ap_connecting(void)
+{
+    return ap_connecting;
 }
 
 void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
@@ -590,6 +596,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                 wmi_disconnect_cmd();
                 wmi_delete_bad_ap_cmd();
             }
+            ap_connecting = false;
 
             break;
         }
@@ -745,6 +752,8 @@ void wmi_connect_cmd(void)
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
         memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
+
+        ap_connecting = true;
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
