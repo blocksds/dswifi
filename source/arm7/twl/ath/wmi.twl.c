@@ -59,13 +59,13 @@ static u8 device_ap_mic[16];
 static gtk_keyinfo device_gtk_keyinfo;
 static ptk_keyinfo device_ptk;
 
-void wmi_delete_bad_ap_cmd();
-
-void wmi_set_bss_filter(u8 filter, u32 ieMask);
+static void wmi_set_bss_filter(u8 filter, u32 ieMask);
+static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc);
+static void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc);
 
 // Pkt handlers
 
-int wmi_ieee_to_crypt(u32 ieee)
+static int wmi_ieee_to_crypt(u32 ieee)
 {
     switch (ieee)
     {
@@ -88,7 +88,7 @@ bool wmi_is_ap_connecting(void)
     return ap_connecting;
 }
 
-void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
+static void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
 {
     (void)len;
 
@@ -112,7 +112,7 @@ void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
     // WLOG_FLUSH();
 }
 
-void wmi_handle_scan_complete(u8* pkt_data, u32 len)
+static void wmi_handle_scan_complete(u8* pkt_data, u32 len)
 {
     (void)pkt_data;
     (void)len;
@@ -145,7 +145,7 @@ static unsigned int wifi_channel_to_mhz(int channel)
     return 2412 + (channel - 1) * 5;
 }
 
-void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
+static void wmi_handle_bss_info(u8 *pkt_data, u32 len_)
 {
     // WLOG_PRINTF("T: BSSINFO (%u B)\n", len_);
     // WLOG_FLUSH();
@@ -478,7 +478,7 @@ skip_parse:
     //     WLOG_PRINTF("T: \"%s\" (%s)\n", ap_ssid, sec_type);
 }
 
-void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
+static void wmi_handle_wmix_pkt(u16 pkt_cmd, u8* pkt_data, u32 len)
 {
     (void)pkt_data;
     (void)len;
@@ -632,7 +632,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
 // Pkt sending
 
-void wmi_set_bss_filter(u8 filter, u32 ieMask)
+static void wmi_set_bss_filter(u8 filter, u32 ieMask)
 {
     const struct __attribute__((packed))
     {
@@ -668,8 +668,8 @@ void wmi_set_channel_params(u16 mhz)
     wmi_send_pkt(WMI_SET_CHANNEL_PARAMS_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_set_scan_params(u8 flags, u16 maxact_chdwell_time, u16 pas_chdwell_time,
-                         u16 minact_chdwell_time)
+static void wmi_set_scan_params(u8 flags, u16 maxact_chdwell_time,
+                                u16 pas_chdwell_time, u16 minact_chdwell_time)
 {
     const struct __attribute__((packed))
     {
@@ -832,7 +832,9 @@ void wmi_disconnect_cmd(void)
     wmi_send_pkt(WMI_DISCONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_delete_bad_ap_cmd(void)
+// TODO: Unused
+#if 0
+static void wmi_delete_bad_ap_cmd(void)
 {
     struct __attribute__((packed))
     {
@@ -845,8 +847,9 @@ void wmi_delete_bad_ap_cmd(void)
 
     wmi_send_pkt(WMI_DELETE_BAD_AP_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
+#endif
 
-void wmi_create_pstream(void)
+static void wmi_create_pstream(void)
 {
     struct __attribute__((packed))
     {
@@ -883,7 +886,9 @@ void wmi_create_pstream(void)
     wmi_send_pkt(WMI_CREATE_PSTREAM_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_set_bitrate(void)
+// TODO: Unused
+#if 0
+static void wmi_set_bitrate(void)
 {
     struct
     {
@@ -899,7 +904,7 @@ void wmi_set_bitrate(void)
     wmi_send_pkt(WMI_SET_BITRATE_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_set_framerate(void)
+static void wmi_set_framerate(void)
 {
     struct
     {
@@ -915,7 +920,7 @@ void wmi_set_framerate(void)
     wmi_send_pkt(WMI_SET_FRAMERATES_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_set_tx_power(void)
+static void wmi_set_tx_power(void)
 {
     struct
     {
@@ -928,6 +933,7 @@ void wmi_set_tx_power(void)
 
     wmi_send_pkt(WMI_SET_TX_PWR_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
+#endif
 
 void wmi_dbgoff(void)
 {
@@ -945,7 +951,7 @@ void wmi_dbgoff(void)
     wmi_send_pkt(WMI_WMIX_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
 }
 
-void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
+static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 {
     u8 crypt_type = (usage == 1) ? ap_group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
     u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
@@ -1123,7 +1129,7 @@ bool wmi_is_ready(void)
     return wmi_bIsReady;
 }
 
-void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc)
+static void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc)
 {
     u8 tmp8 = 1;
     wmi_send_pkt(WMI_SYNCHRONIZE_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8)); // 0x0?
@@ -1152,7 +1158,7 @@ void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc
 // WPA
 //
 
-void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
+static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
 {
     u8 mic_out[16];
     struct __attribute__((packed))
@@ -1230,7 +1236,7 @@ void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 repl
     has_sent_hs2 = true;
 }
 
-void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
+static void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
 {
     u8 mic_out[16];
     struct __attribute__((packed))
@@ -1286,7 +1292,7 @@ void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u64 repl
     has_sent_hs4 = true;
 }
 
-void data_send_wpa_gtkrenew(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
+static void data_send_wpa_gtkrenew(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt)
 {
     u8 mic_out[16];
     struct __attribute__((packed))

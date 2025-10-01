@@ -71,9 +71,6 @@ void wmi_scan_mode_start(void);
 void wmi_scan_mode_tick(void);
 
 void wmi_dbgoff(void);
-void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc);
-
-void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc);
 
 void wmi_connect(void);
 bool wmi_is_ap_connected(void);
@@ -84,8 +81,6 @@ void wmi_disconnect_cmd(void);
 // Returns true if the WMI interface is ready
 bool wmi_is_ready(void);
 
-void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt);
-void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u64 replay_cnt);
 void data_send_ip(const u8 *dst_bssid, const u8 *src_bssid, void *ip_data, u32 ip_data_len);
 void data_send_link(void *ip_data, u32 ip_data_len);
 void data_handle_auth(u8 *pkt_data, u32 len, const u8 *dev_bssid, const u8 *ap_bssid);
