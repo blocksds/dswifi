@@ -37,37 +37,81 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->rxbufIn;
+    u32 write_idx = WifiData->rxbufWrite;
+    u32 read_idx = WifiData->rxbufRead;
 
-    if (base + (total_size / 2) > (WIFI_RXBUFFER_SIZE / 2))
+    if (read_idx <= write_idx)
     {
-        // If the packet doesn't fit at the end of the buffer, try to fit it at
-        // the beginning. Don't wrap it.
-
-        if ((total_size / 2) >= WifiData->rxbufOut)
+        if (write_idx + (total_size / 2) > (WIFI_RXBUFFER_SIZE / 2))
         {
+            // The packet doesn't fit at the end of the buffer:
+            //
+            //                    | NEW |
+            //
+            // | ......... | XXXX | . |           ("X" = Used, "." = Empty)
+            //            RD      WR
+
+            // Try to fit it at the beginning. Don't wrap it.
+            if ((total_size / 2) >= read_idx)
+            {
+                // The packet doesn't fit anywhere:
+
+                // | NEW |            | NEW |
+                //
+                // | . | XXXXXXXXXXXX | . |
+                //     RD             WR
+
+                // TODO: Add lost data to the stats
+                leaveCriticalSection(oldIME);
+                return -1;
+            }
+
+            WifiData->rxbufData[write_idx] = 0xFFFF; // Mark to reset pointer
+            write_idx = 0;
+        }
+        else
+        {
+            // The packet fits at the end:
+            //
+            //               | NEW |
+            //
+            // | .... | XXXX | ...... |
+            //       RD      WR
+        }
+    }
+    else
+    {
+        if (write_idx + (total_size / 2) >= read_idx)
+        {
+            //      | NEW |
+            //
+            // | XX | . | XXXXXXXXXXX |
+            //     WR   RD
+
             // TODO: Add lost data to the stats
             leaveCriticalSection(oldIME);
             return -1;
         }
 
-        WifiData->rxbufData[base] = 0xFFFF; // Mark to reset pointer
-        base = 0;
+        //      | NEW |
+        //
+        // | XX | ........ | XXXX |
+        //     WR          RD
     }
 
-    WifiData->rxbufData[base] = total_size - 2;
-    base++;
+    WifiData->rxbufData[write_idx] = total_size - 2;
+    write_idx++;
 
-    Wifi_TWL_RxBufferWrite(base * 2, size, src);
-    base += (size + 1) / 2; // Pad to 16 bit
+    Wifi_TWL_RxBufferWrite(write_idx * 2, size, src);
+    write_idx += (size + 1) / 2; // Pad to 16 bit
 
-    if (base == (WIFI_RXBUFFER_SIZE / 2))
-        base = 0;
+    if (write_idx == (WIFI_RXBUFFER_SIZE / 2))
+        write_idx = 0;
 
     // Only update the pointer after the whole packet has been writen to RAM or
     // the ARM7 may see that the pointer has changed and send whatever is in the
     // buffer at that point.
-    WifiData->rxbufIn = base;
+    WifiData->rxbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 

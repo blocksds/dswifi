@@ -27,39 +27,40 @@ static void Wifi_NTR_Update(void)
 {
     // check for received packets, forward to whatever wants them.
     int cnt = 0;
-    while (WifiData->rxbufIn != WifiData->rxbufOut)
+    while (WifiData->rxbufWrite != WifiData->rxbufRead)
     {
-        int base    = WifiData->rxbufIn;
+        u32 read_idx = WifiData->rxbufRead;
 
-        int len     = Wifi_RxReadHWordOffset(base * 2, HDR_RX_IEEE_FRAME_SIZE);
-        int fulllen = ((len + 3) & (~3)) + HDR_RX_SIZE;
+        int len     = Wifi_RxReadHWordOffset(read_idx * 2, HDR_RX_IEEE_FRAME_SIZE);
+        int fulllen = ((len + 3) & ~3) + HDR_RX_SIZE;
 
-        int base2 = base + HDR_RX_SIZE / 2;
-        if (base2 >= (WIFI_RXBUFFER_SIZE / 2))
-            base2 -= WIFI_RXBUFFER_SIZE / 2;
+        u32 data_idx = read_idx + HDR_RX_SIZE / 2;
+        if (data_idx >= (WIFI_RXBUFFER_SIZE / 2))
+            data_idx -= WIFI_RXBUFFER_SIZE / 2;
 
 #ifdef DSWIFI_ENABLE_LWIP
         if (wifi_lwip_enabled)
         {
             // Only send packets to lwIP if we are trying to access the Internet
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-                Wifi_SendPacketToLwip(base2, len);
+                Wifi_SendPacketToLwip(data_idx, len);
         }
 #endif
 
         if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_HOST)
-            Wifi_MultiplayerHandlePacketFromClient(base2, len);
+            Wifi_MultiplayerHandlePacketFromClient(data_idx, len);
         else if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-            Wifi_MultiplayerHandlePacketFromHost(base2, len);
+            Wifi_MultiplayerHandlePacketFromHost(data_idx, len);
 
         // Check if we have a handler of raw packets
         if (wifi_rawpackethandler)
-            (*wifi_rawpackethandler)(base2 * 2, len);
+            (*wifi_rawpackethandler)(data_idx * 2, len);
 
-        base += fulllen / 2;
-        if (base >= (WIFI_RXBUFFER_SIZE / 2))
-            base -= (WIFI_RXBUFFER_SIZE / 2);
-        WifiData->rxbufIn = base;
+        read_idx += fulllen / 2;
+        if (read_idx >= (WIFI_RXBUFFER_SIZE / 2))
+            read_idx -= (WIFI_RXBUFFER_SIZE / 2);
+
+        WifiData->rxbufRead = read_idx;
 
         // Exit if we have already handled a lot of packets
         if (cnt++ > 80)
@@ -71,19 +72,17 @@ TWL_CODE static void Wifi_TWL_Update(void)
 {
     // check for received packets, forward to whatever wants them.
     int cnt = 0;
-    while (WifiData->rxbufIn != WifiData->rxbufOut)
+    while (WifiData->rxbufWrite != WifiData->rxbufRead)
     {
-        int base = WifiData->rxbufOut;
+        u32 read_idx = WifiData->rxbufRead;
 
-        size_t size = WifiData->rxbufData[base];
-
+        size_t size = WifiData->rxbufData[read_idx];
         if (size == 0xFFFF) // Mark to reset pointer
         {
-            base = 0;
-            size = WifiData->rxbufData[base];
+            read_idx = 0;
+            size = WifiData->rxbufData[read_idx];
         }
-
-        base++;
+        read_idx++;
 
         size_t total_size = 2 + size;
 
@@ -92,16 +91,16 @@ TWL_CODE static void Wifi_TWL_Update(void)
         {
             // Only send packets to lwIP if we are trying to access the Internet
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-                Wifi_SendPacketToLwip(base, size);
+                Wifi_SendPacketToLwip(read_idx, size);
         }
 #endif
 
-        base += (size + 1) / 2; // Round up to 16 bit
+        read_idx += (size + 1) / 2; // Round up to 16 bit
 
-        if (base == (WIFI_RXBUFFER_SIZE / 2))
-            base = 0;
+        if (read_idx == (WIFI_RXBUFFER_SIZE / 2))
+            read_idx = 0;
 
-        WifiData->rxbufOut = base;
+        WifiData->rxbufRead = read_idx;
 
         WifiData->stats[WSTAT_TXPACKETS]++;
         WifiData->stats[WSTAT_TXBYTES] += total_size;

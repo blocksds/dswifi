@@ -18,7 +18,11 @@
 // It returns 0 if there isn't enough space in the ARM9 buffer, or 1 on success.
 static int Wifi_RxArm9QueueAdd(u32 base, int len)
 {
-    int buflen = (WifiData->rxbufIn - WifiData->rxbufOut - 1) * 2;
+    int write_idx = WifiData->rxbufWrite;
+    int read_idx = WifiData->rxbufRead;
+
+    // Remove one entry from the total size to prevent overflows
+    int buflen = (read_idx - write_idx - 1) * 2;
     if (buflen < 0)
     {
         buflen += WIFI_RXBUFFER_SIZE;
@@ -32,26 +36,26 @@ static int Wifi_RxArm9QueueAdd(u32 base, int len)
     WifiData->stats[WSTAT_RXQUEUEDPACKETS]++;
     WifiData->stats[WSTAT_RXQUEUEDBYTES] += len;
 
-    int temp    = WIFI_RXBUFFER_SIZE - (WifiData->rxbufOut * 2);
-    int tempout = WifiData->rxbufOut;
+    int temp = WIFI_RXBUFFER_SIZE - (write_idx * 2);
 
     // TODO: How do we know that there are enough bytes in MAC RAM?
 
     int macofs = 0;
     if (len > temp)
     {
-        Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, temp);
+        Wifi_MACRead((u16 *)WifiData->rxbufData + write_idx, base, macofs, temp);
         macofs += temp;
         len -= temp;
-        tempout = 0;
+        write_idx = 0;
     }
 
-    Wifi_MACRead((u16 *)WifiData->rxbufData + tempout, base, macofs, len);
+    Wifi_MACRead((u16 *)WifiData->rxbufData + write_idx, base, macofs, len);
 
-    tempout += len / 2;
-    if (tempout >= (WIFI_RXBUFFER_SIZE / 2))
-        tempout -= (WIFI_RXBUFFER_SIZE / 2);
-    WifiData->rxbufOut = tempout;
+    write_idx += len / 2;
+    if (write_idx >= (WIFI_RXBUFFER_SIZE / 2))
+        write_idx -= (WIFI_RXBUFFER_SIZE / 2);
+
+    WifiData->rxbufWrite = write_idx;
 
     Wifi_CallSyncHandler();
 

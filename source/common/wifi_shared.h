@@ -232,7 +232,8 @@ typedef struct WIFI_MAINSTRUCT
 
     // RX buffer. It sends received packets from other devices from the ARM7
     // to the ARM9.
-    u32 rxbufIn, rxbufOut;
+    u32 rxbufWrite; // We will write starting from this entry in rxbufData[]
+    u32 rxbufRead;  // And we will read starting from this entry in rxbufData[]
     u16 rxbufData[WIFI_RXBUFFER_SIZE / 2];
 
     // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
