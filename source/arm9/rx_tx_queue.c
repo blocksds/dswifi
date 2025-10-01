@@ -17,7 +17,7 @@
 
 u32 Wifi_TxBufferBytesAvailable(void)
 {
-    s32 size = WifiData->txbufIn - WifiData->txbufOut - 1;
+    s32 size = WifiData->txbufRead - WifiData->txbufWrite - 1;
     if (size < 0)
         size += WIFI_TXBUFFER_SIZE / 2;
 
@@ -72,21 +72,21 @@ int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
     {
-        Wifi_TxBufferWrite(base * 2, sizeof(txh), &txh);
+        Wifi_TxBufferWrite(write_idx * 2, sizeof(txh), &txh);
 
-        base += sizeof(txh) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += sizeof(txh) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-        Wifi_TxBufferWrite(base * 2, datalen, src);
+        Wifi_TxBufferWrite(write_idx * 2, datalen, src);
 
-        base += (datalen + 1) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += (datalen + 1) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
@@ -143,21 +143,21 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
     {
-        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
 
-        base += sizeof(frame) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += sizeof(frame) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-        Wifi_TxBufferWrite(base * 2, datalen, data);
+        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
 
-        base += (datalen + 1) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += (datalen + 1) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
@@ -213,21 +213,21 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
     {
-        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
 
-        base += sizeof(frame) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += sizeof(frame) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-        Wifi_TxBufferWrite(base * 2, datalen, data);
+        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
 
-        base += (datalen + 1) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += (datalen + 1) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
@@ -277,21 +277,21 @@ int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datal
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
     {
-        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
 
-        base += sizeof(frame) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += sizeof(frame) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-        Wifi_TxBufferWrite(base * 2, datalen, data);
+        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
 
-        base += (datalen + 1) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += (datalen + 1) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
@@ -340,21 +340,21 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
     {
-        Wifi_TxBufferWrite(base * 2, sizeof(frame), &frame);
+        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
 
-        base += sizeof(frame) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += sizeof(frame) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-        Wifi_TxBufferWrite(base * 2, datalen, data);
+        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
 
-        base += (datalen + 1) / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += (datalen + 1) / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 

@@ -147,7 +147,7 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
 // packet in the queue.
 static int Wifi_TxArm9BufCheck(s32 offset)
 {
-    offset = WifiData->txbufIn + (offset / 2);
+    offset = WifiData->txbufRead + (offset / 2);
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
         offset -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -158,7 +158,7 @@ static int Wifi_TxArm9BufCheck(s32 offset)
 // packet in the queue.
 static void Wifi_TxArm9BufWrite(s32 offset, u16 data)
 {
-    offset = WifiData->txbufIn + (offset / 2);
+    offset = WifiData->txbufRead + (offset / 2);
     if (offset >= WIFI_TXBUFFER_SIZE / 2)
         offset -= WIFI_TXBUFFER_SIZE / 2;
 
@@ -174,7 +174,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
     // Length to be copied, rounded up to a halfword
     int length = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
 
-    int max = WifiData->txbufOut - WifiData->txbufIn;
+    int max = WifiData->txbufWrite - WifiData->txbufRead;
     if (max < 0)
         max += WIFI_TXBUFFER_SIZE / 2;
     if (max < length)
@@ -187,25 +187,25 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
         return 0;
 
     // TODO: Do we need to check that this code isn't interrupted?
-    int readbase = WifiData->txbufIn;
+    int read_idx = WifiData->txbufRead;
     while (length > 0)
     {
         int seglen = length;
 
-        if (readbase + seglen > WIFI_TXBUFFER_SIZE / 2)
-            seglen = WIFI_TXBUFFER_SIZE / 2 - readbase;
+        if (read_idx + seglen > WIFI_TXBUFFER_SIZE / 2)
+            seglen = WIFI_TXBUFFER_SIZE / 2 - read_idx;
 
         length -= seglen;
         while (seglen--)
         {
-            W_MACMEM(macbase) = WifiData->txbufData[readbase++];
+            W_MACMEM(macbase) = WifiData->txbufData[read_idx++];
             macbase += 2;
         }
 
-        if (readbase >= WIFI_TXBUFFER_SIZE / 2)
-            readbase -= WIFI_TXBUFFER_SIZE / 2;
+        if (read_idx >= WIFI_TXBUFFER_SIZE / 2)
+            read_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
-    WifiData->txbufIn = readbase;
+    WifiData->txbufRead = read_idx;
 
     WifiData->stats[WSTAT_TXPACKETS]++;
     WifiData->stats[WSTAT_TXBYTES] += packetlen + HDR_TX_SIZE - 4;
@@ -216,7 +216,7 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
 
 static bool Wifi_TxArm9QueueIsEmpty(void)
 {
-    if (WifiData->txbufOut == WifiData->txbufIn)
+    if (WifiData->txbufRead == WifiData->txbufWrite)
         return true;
 
     return false;

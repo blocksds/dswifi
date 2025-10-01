@@ -3,6 +3,7 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"

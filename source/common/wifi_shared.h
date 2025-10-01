@@ -238,7 +238,8 @@ typedef struct WIFI_MAINSTRUCT
 
     // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
     // transferred to other devices.
-    u32 txbufIn, txbufOut;
+    u32 txbufWrite; // We will write starting from this entry in txbufData[]
+    u32 txbufRead;  // And we will read starting from this entry in txbufData[]
     u16 txbufData[WIFI_TXBUFFER_SIZE / 2];
 
     // Local multiplay information

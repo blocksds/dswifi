@@ -10,29 +10,27 @@ void Wifi_TWL_TxArm9QueueFlush(void)
 {
     int oldIME = enterCriticalSection();
 
-    while (WifiData->txbufIn != WifiData->txbufOut)
+    while (WifiData->txbufRead != WifiData->txbufWrite)
     {
-        int base = WifiData->txbufIn;
+        u32 read_idx = WifiData->txbufRead;
 
-        size_t size = WifiData->txbufData[base];
-
+        size_t size = WifiData->txbufData[read_idx];
         if (size == 0xFFFF) // Mark to reset pointer
         {
-            base = 0;
-            size = WifiData->txbufData[base];
+            read_idx = 0;
+            size = WifiData->txbufData[read_idx];
         }
-
-        base++;
+        read_idx++;
 
         size_t total_size = 2 + size;
 
-        data_send_pkt_idk((const void *)&(WifiData->txbufData[base]), size);
-        base += (size + 1) / 2; // Round up to 16 bit
+        data_send_pkt_idk((const void *)&(WifiData->txbufData[read_idx]), size);
+        read_idx += (size + 1) / 2; // Round up to 16 bit
 
-        if (base == (WIFI_TXBUFFER_SIZE / 2))
-            base = 0;
+        if (read_idx == (WIFI_TXBUFFER_SIZE / 2))
+            read_idx = 0;
 
-        WifiData->txbufIn = base;
+        WifiData->txbufRead = read_idx;
 
         WifiData->stats[WSTAT_TXPACKETS]++;
         WifiData->stats[WSTAT_TXBYTES] += total_size;

@@ -93,7 +93,7 @@ void Wifi_TWL_Update(void)
                 else
                     WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
 
-                WifiData->txbufIn = WifiData->txbufOut; // empty tx buffer.
+                WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
                 WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
 
                 wmi_connect();

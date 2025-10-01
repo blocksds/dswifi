@@ -165,14 +165,14 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     if (required_buffer_size > MAC_BEACON_SIZE)
         return -1;
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
 
-    Wifi_TxBufferWrite(base * 2, hdr_size + body_size, data);
-    base += (hdr_size + body_size + 1) / 2; // Round up to a halfword
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
+    Wifi_TxBufferWrite(write_idx * 2, hdr_size + body_size, data);
+    write_idx += (hdr_size + body_size + 1) / 2; // Round up to a halfword
+    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+        write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-    WifiData->txbufOut = base; // Update FIFO out pos, done sending packet.
+    WifiData->txbufWrite = write_idx; // Update FIFO out pos, done sending packet.
 
     // That's all!
 

@@ -106,12 +106,12 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    int write_idx = WifiData->txbufWrite;
 
-    Wifi_TxBufferWrite(base * 2, hdrlen, framehdr);
-    base += hdrlen / 2;
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
+    Wifi_TxBufferWrite(write_idx * 2, hdrlen, framehdr);
+    write_idx += hdrlen / 2;
+    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+        write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
     // Copy LLC/SNAP encapsulation information
     // =======================================
@@ -124,33 +124,33 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
     // After the SNAP header add the protocol type
     framehdr[3] = eth->ether_type;
 
-    Wifi_TxBufferWrite(base * 2, 8, framehdr);
-    base += 8 / 2;
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
+    Wifi_TxBufferWrite(write_idx * 2, 8, framehdr);
+    write_idx += 8 / 2;
+    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+        write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
     // Now, write the data
     if (data_size & 1) // Make sure we send an even number of bytes
         data_size++;
-    Wifi_TxBufferWrite(base * 2, data_size, data_src);
-    base += data_size / 2;
-    if (base >= (WIFI_TXBUFFER_SIZE / 2))
-        base -= WIFI_TXBUFFER_SIZE / 2;
+    Wifi_TxBufferWrite(write_idx * 2, data_size, data_src);
+    write_idx += data_size / 2;
+    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+        write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
     if (WifiData->wepmode7)
     {
         // Allocate 4 more bytes for the WEP ICV in the TX buffer. However,
         // don't write anything. We just need to remember to not fill it and to
         // reserve that space so that the hardware can fill it.
-        base += 4 / 2;
-        if (base >= (WIFI_TXBUFFER_SIZE / 2))
-            base -= WIFI_TXBUFFER_SIZE / 2;
+        write_idx += 4 / 2;
+        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
+            write_idx -= WIFI_TXBUFFER_SIZE / 2;
     }
 
     // Only update the pointer after the whole packet has been writen to RAM or
     // the ARM7 may see that the pointer has changed and send whatever is in the
     // buffer at that point.
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
@@ -196,40 +196,84 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
-    int base = WifiData->txbufOut;
+    u32 write_idx = WifiData->txbufWrite;
+    u32 read_idx = WifiData->txbufRead;
 
-    if (base + (total_size / 2) > (WIFI_TXBUFFER_SIZE / 2))
+    if (read_idx <= write_idx)
     {
-        // If the packet doesn't fit at the end of the buffer, try to fit it at
-        // the beginning. Don't wrap it.
-
-        if ((total_size / 2) >= WifiData->txbufIn)
+        if (write_idx + (total_size / 2) > (WIFI_TXBUFFER_SIZE / 2))
         {
+            // The packet doesn't fit at the end of the buffer:
+            //
+            //                    | NEW |
+            //
+            // | ......... | XXXX | . |           ("X" = Used, "." = Empty)
+            //            RD      WR
+
+            // Try to fit it at the beginning. Don't wrap it.
+            if ((total_size / 2) >= read_idx)
+            {
+                // The packet doesn't fit anywhere:
+
+                // | NEW |            | NEW |
+                //
+                // | . | XXXXXXXXXXXX | . |
+                //     RD             WR
+
+                // TODO: Add lost data to the stats
+                leaveCriticalSection(oldIME);
+                return -1;
+            }
+
+            WifiData->txbufData[write_idx] = 0xFFFF; // Mark to reset pointer
+            write_idx = 0;
+        }
+        else
+        {
+            // The packet fits at the end:
+            //
+            //               | NEW |
+            //
+            // | .... | XXXX | ...... |
+            //       RD      WR
+        }
+    }
+    else
+    {
+        if (write_idx + (total_size / 2) >= read_idx)
+        {
+            //      | NEW |
+            //
+            // | XX | . | XXXXXXXXXXX |
+            //     WR   RD
+
             // TODO: Add lost data to the stats
             leaveCriticalSection(oldIME);
             return -1;
         }
 
-        WifiData->txbufData[base] = 0xFFFF; // Mark to reset pointer
-        base = 0;
+        //      | NEW |
+        //
+        // | XX | ........ | XXXX |
+        //     WR          RD
     }
 
-    WifiData->txbufData[base] = total_size - 2;
-    base++;
+    WifiData->txbufData[write_idx] = total_size - 2;
+    write_idx++;
 
-    Wifi_TxBufferWrite(base * 2, sizeof(tx_header), &tx_header);
-    base += sizeof(tx_header) / 2;
+    Wifi_TxBufferWrite(write_idx * 2, sizeof(tx_header), &tx_header);
+    write_idx += sizeof(tx_header) / 2;
 
-    Wifi_TxBufferWrite(base * 2, data_size, data_src);
-    base += (data_size + 1) / 2; // Pad to 16 bit
+    Wifi_TxBufferWrite(write_idx * 2, data_size, data_src);
+    write_idx += (data_size + 1) / 2; // Pad to 16 bit
 
-    if (base == (WIFI_TXBUFFER_SIZE / 2))
-        base = 0;
+    if (write_idx == (WIFI_TXBUFFER_SIZE / 2))
+        write_idx = 0;
 
     // Only update the pointer after the whole packet has been writen to RAM or
     // the ARM7 may see that the pointer has changed and send whatever is in the
     // buffer at that point.
-    WifiData->txbufOut = base;
+    WifiData->txbufWrite = write_idx;
 
     leaveCriticalSection(oldIME);
 
