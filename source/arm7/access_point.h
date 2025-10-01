@@ -18,4 +18,6 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
                          int rssi, Wifi_ApSecurityType sec_type, bool compatible,
                          Wifi_NintendoVendorInfo *nintendo_info);
 
+void Wifi_AccessPointTick(void);
+
 #endif // DSWIFI_ARM7_ACCESS_POINT_H__

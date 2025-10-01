@@ -281,19 +281,7 @@ void Wifi_NTR_Update(void)
                 WifiData->reqChannel = scanlist[wifi_scan_index];
                 Wifi_SetChannel(WifiData->reqChannel);
 
-                // Update timeout counters of all APs.
-                for (int i = 0; i < WIFI_MAX_AP; i++)
-                {
-                    if (WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE)
-                    {
-                        WifiData->aplist[i].timectr++;
-
-                        // If we haven't seen an AP for a long time, mark it as
-                        // inactive by clearing the WFLAG_APDATA_ACTIVE flag
-                        if (WifiData->aplist[i].timectr > WIFI_AP_TIMEOUT)
-                            WifiData->aplist[i].flags = 0;
-                    }
-                }
+                Wifi_AccessPointTick();
 
                 wifi_scan_index++;
                 if (wifi_scan_index == scanlist_size)

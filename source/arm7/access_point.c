@@ -168,3 +168,26 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
         Spinlock_Release(WifiData->aplist[chosen_slot]);
     }
 }
+
+void Wifi_AccessPointTick(void)
+{
+    // The DSi iterates through all channels much faster than the DS, so let's
+    // increase the timeout accordingly.
+    u32 timeout = WIFI_AP_TIMEOUT;
+    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+        timeout = WIFI_AP_TIMEOUT * 10;
+
+    // Update timeout counters of all APs.
+    for (int i = 0; i < WIFI_MAX_AP; i++)
+    {
+        if (WifiData->aplist[i].flags & WFLAG_APDATA_ACTIVE)
+        {
+            WifiData->aplist[i].timectr++;
+
+            // If we haven't seen an AP for a long time, mark it as inactive by
+            // clearing the WFLAG_APDATA_ACTIVE flag
+            if (WifiData->aplist[i].timectr > timeout)
+                WifiData->aplist[i].flags = 0;
+        }
+    }
+}

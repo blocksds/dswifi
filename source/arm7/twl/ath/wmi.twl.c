@@ -1050,6 +1050,8 @@ void wmi_scan_mode_tick(void)
 
     if (!wmi_is_scanning)
     {
+        Wifi_AccessPointTick();
+
         u16 mhz = channel_freqs[device_cur_channel_idx];
 
         // WLOG_PRINTF("Scanning channel %u (%u)\n", device_cur_channel_idx, mhz);
