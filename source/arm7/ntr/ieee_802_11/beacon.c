@@ -263,9 +263,24 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         curloc += seglen;
     }
 
-    // Regular DS consoles aren't compatible with WPA
-    if (sec_type == AP_SECURITY_WPA)
+
+    Wifi_ApCryptType group_crypt_type = AP_CRYPT_NONE;
+    Wifi_ApCryptType pair_crypt_type = AP_CRYPT_NONE;
+    Wifi_ApAuthType auth_type = AP_AUTH_NONE;
+
+    if (sec_type == AP_SECURITY_WEP)
+    {
+        group_crypt_type = AP_CRYPT_WEP;
+        pair_crypt_type = AP_CRYPT_WEP;
+        auth_type = AP_AUTH_NONE;
+    }
+    else if ((sec_type == AP_SECURITY_WPA) || (sec_type == AP_SECURITY_WPA2))
+    {
+        // Regular DS consoles aren't compatible with WPA
         compatible = false;
+
+        // TODO: Save information about crypt types and auth types
+    }
 
     // Apply filters to the AP list
     {
@@ -309,8 +324,9 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         rssi = packetheader->rssi_ & 255;
 
     Wifi_AccessPointAdd(data + HDR_MGT_BSSID, data + HDR_MGT_SA,
-                        ssid_ptr, ssid_len, channel, rssi, sec_type, compatible,
-                        has_nintendo_info ? &nintendo_info : NULL);
+                        ssid_ptr, ssid_len, channel, rssi, sec_type,
+                        group_crypt_type, pair_crypt_type, auth_type,
+                        compatible, has_nintendo_info ? &nintendo_info : NULL);
 
     //WLOG_FLUSH();
 }

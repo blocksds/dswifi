@@ -247,8 +247,15 @@ typedef struct WIFI_ACCESSPOINT
     /// Information send by Nintendo DS hosts in beacon frames, used if
     /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".
     Wifi_NintendoVendorInfo nintendo;
+
     /// Type of security used in this Access Point.
     Wifi_ApSecurityType security_type;
+    /// Group cipher
+    Wifi_ApCryptType group_crypt_type;
+    /// Pair cipher
+    Wifi_ApCryptType pair_crypt_type;
+    /// Authentication cipher
+    Wifi_ApAuthType auth_type;
 } Wifi_AccessPoint;
 
 /// Possible states of a client

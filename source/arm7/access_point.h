@@ -14,9 +14,11 @@
 void Wifi_AccessPointClearAll(void);
 
 void Wifi_AccessPointAdd(const void *bssid, const void *sa,
-                         const uint8_t *ssid_ptr, size_t ssid_len, u32 channel,
-                         int rssi, Wifi_ApSecurityType sec_type, bool compatible,
-                         Wifi_NintendoVendorInfo *nintendo_info);
+                         const uint8_t *ssid_ptr, size_t ssid_len,
+                         u32 channel, int rssi, Wifi_ApSecurityType sec_type,
+                         Wifi_ApCryptType group_crypt_type,
+                         Wifi_ApCryptType pair_crypt_type, Wifi_ApAuthType auth_type,
+                         bool compatible, Wifi_NintendoVendorInfo *nintendo_info);
 
 void Wifi_AccessPointTick(void);
 

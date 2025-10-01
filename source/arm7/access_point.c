@@ -32,9 +32,11 @@ void Wifi_AccessPointClearAll(void)
 }
 
 void Wifi_AccessPointAdd(const void *bssid, const void *sa,
-                         const uint8_t *ssid_ptr, size_t ssid_len, u32 channel,
-                         int rssi, Wifi_ApSecurityType sec_type, bool compatible,
-                         Wifi_NintendoVendorInfo *nintendo_info)
+                         const uint8_t *ssid_ptr, size_t ssid_len,
+                         u32 channel, int rssi, Wifi_ApSecurityType sec_type,
+                         Wifi_ApCryptType group_crypt_type,
+                         Wifi_ApCryptType pair_crypt_type, Wifi_ApAuthType auth_type,
+                         bool compatible, Wifi_NintendoVendorInfo *nintendo_info)
 {
     // Now, check the list of APs that we have found so far. If the AP of this
     // frame is already in the list, store it there. If not, this loop will
@@ -107,7 +109,6 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
 
         bool fromsta = Wifi_CmpMacAddr(sa, bssid);
         ap->flags = WFLAG_APDATA_ACTIVE
-                  | ((sec_type == AP_SECURITY_WEP) ? WFLAG_APDATA_WEP : 0)
                   | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
                   | ((nintendo_info != NULL) ? WFLAG_APDATA_NINTENDO_TAG : 0);
 
@@ -117,10 +118,16 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
         if (compatible)
             ap->flags |= WFLAG_APDATA_COMPATIBLE;
 
-        if ((sec_type == AP_SECURITY_WPA) || (sec_type == AP_SECURITY_WPA2))
-            ap->flags |= WFLAG_APDATA_WPA;
-
         ap->security_type = sec_type;
+        ap->group_crypt_type = group_crypt_type;
+        ap->pair_crypt_type = pair_crypt_type;
+        ap->auth_type = auth_type;
+
+        // Flags for compatibility with old code that uses DSWiFi
+        if (sec_type == AP_SECURITY_WEP)
+            ap->flags |= WFLAG_APDATA_WEP;
+        else if ((sec_type == AP_SECURITY_WPA) || (sec_type == AP_SECURITY_WPA2))
+            ap->flags |= WFLAG_APDATA_WPA;
 
         if (ssid_ptr)
         {

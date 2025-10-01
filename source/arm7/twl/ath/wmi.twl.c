@@ -276,7 +276,7 @@ skip_parse:
     Wifi_AccessPointAdd(wmi_params->bssid, wmi_params->bssid,
                         (const void *)ap_ssid, ap_ssid_len,
                         wifi_mhz_to_channel(wmi_params->channel), wmi_params->rssi,
-                        sec_type, true,
+                        sec_type, group_crypto, pair_crypto, auth_type, true,
                         NULL); // TODO: Check vendor tags for Wifi_NintendoVendorInfo
 
 #if 0
