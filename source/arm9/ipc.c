@@ -192,9 +192,9 @@ bool Wifi_Deinit(void)
 
 int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer)
 {
-    int i;
     if (datatype < 0 || datatype >= MAX_WIFIGETDATA)
         return -1;
+
     switch (datatype)
     {
         case WIFIGETDATA_MACADDRESS:
@@ -203,14 +203,11 @@ int Wifi_GetData(int datatype, int bufferlen, unsigned char *buffer)
             memcpy(buffer, (void *)WifiData->MacAddr, 6);
             return 6;
         case WIFIGETDATA_NUMWFCAPS:
-            // TODO: This exits as soon as an AP isn't enabled. Fix it.
-            for (i = 0; i < 3; i++)
-                if (!(WifiData->wfc_enable[i] & 0x80))
-                    break;
-            return i;
+            return WifiData->wfc_number_of_configs;
         case WIFIGETDATA_RSSI:
             return WifiData->rssi;
     }
+
     return -1;
 }
 
