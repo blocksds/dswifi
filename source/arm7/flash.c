@@ -106,14 +106,14 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             if (wepmode > 2) // Invalid WEP mode
                 continue;
 
-            WifiData->wfc_enable[c]     = 0x80 | wepmode;
+            WifiData->wfc[c].enable     = 0x80 | wepmode;
             WifiData->wfc_ap[c].channel = 0;
 
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
             for (size_t n = 0; n < Wifi_WepKeySize(wepmode); n++)
-                WifiData->wfc_wepkey[c][n] = ap_data.wep_key1[n];
+                WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
             for (int n = 0; n < 32; n++)
                 WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
@@ -126,10 +126,10 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             }
             WifiData->wfc_ap[c].ssid_len = len;
 
-            WifiData->wfc_ip[c]            = *(u32 *)&ap_data.ip[0];
-            WifiData->wfc_gateway[c]       = *(u32 *)&ap_data.gateway[0];
-            WifiData->wfc_dns_primary[c]   = *(u32 *)&ap_data.primary_dns[0];
-            WifiData->wfc_dns_secondary[c] = *(u32 *)&ap_data.secondary_dns[0];
+            WifiData->wfc[c].ip            = *(u32 *)&ap_data.ip[0];
+            WifiData->wfc[c].gateway       = *(u32 *)&ap_data.gateway[0];
+            WifiData->wfc[c].dns_primary   = *(u32 *)&ap_data.primary_dns[0];
+            WifiData->wfc[c].dns_secondary = *(u32 *)&ap_data.secondary_dns[0];
 
             // Subnet mask
             unsigned long s = 0;
@@ -137,7 +137,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
                 s |= 1 << (31 - n);
             s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl
 
-            WifiData->wfc_subnet_mask[c] = s;
+            WifiData->wfc[c].subnet_mask = s;
 
             WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc_ap[c].ssid);
 
@@ -201,14 +201,14 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
         if ((wpamode != 0) && !allow_wpa)
             continue;
 
-        WifiData->wfc_enable[c]     = 0x80 | wepmode;
+        WifiData->wfc[c].enable     = 0x80 | wepmode;
         WifiData->wfc_ap[c].channel = 0;
 
         for (int n = 0; n < 6; n++)
             WifiData->wfc_ap[c].bssid[n] = 0;
 
         for (size_t n = 0; n < Wifi_WepKeySize(wepmode); n++)
-            WifiData->wfc_wepkey[c][n] = ap_data.wep_key1[n];
+            WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
         for (int n = 0; n < 32; n++)
             WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
@@ -221,10 +221,10 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
         }
         WifiData->wfc_ap[c].ssid_len = len;
 
-        WifiData->wfc_ip[c]            = *(u32 *)&ap_data.ip[0];
-        WifiData->wfc_gateway[c]       = *(u32 *)&ap_data.gateway[0];
-        WifiData->wfc_dns_primary[c]   = *(u32 *)&ap_data.primary_dns[0];
-        WifiData->wfc_dns_secondary[c] = *(u32 *)&ap_data.secondary_dns[0];
+        WifiData->wfc[c].ip            = *(u32 *)&ap_data.ip[0];
+        WifiData->wfc[c].gateway       = *(u32 *)&ap_data.gateway[0];
+        WifiData->wfc[c].dns_primary   = *(u32 *)&ap_data.primary_dns[0];
+        WifiData->wfc[c].dns_secondary = *(u32 *)&ap_data.secondary_dns[0];
 
         // Subnet mask
         unsigned long s = 0;
@@ -232,7 +232,7 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
             s |= 1 << (31 - n);
         s = (s << 24) | (s >> 24) | ((s & 0xFF00) << 8) | ((s & 0xFF0000) >> 8); // htonl
 
-        WifiData->wfc_subnet_mask[c] = s;
+        WifiData->wfc[c].subnet_mask = s;
 
         WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc_ap[c].ssid);
 

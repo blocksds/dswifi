@@ -384,7 +384,7 @@ int Wifi_AssocStatus(void)
             int numap;
             for (numap = 0; numap < 6; numap++)
             {
-                if (!(WifiData->wfc_enable[numap] & 0x80))
+                if (!(WifiData->wfc[numap].enable & 0x80))
                     break;
             }
 
@@ -395,17 +395,17 @@ int Wifi_AssocStatus(void)
 #ifdef DSWIFI_ENABLE_LWIP
                 if (wifi_lwip_enabled)
                 {
-                    Wifi_SetIP(WifiData->wfc_ip[n], WifiData->wfc_gateway[n],
-                               WifiData->wfc_subnet_mask[n],
-                               WifiData->wfc_dns_primary[n],
-                               WifiData->wfc_dns_secondary[n]);
+                    Wifi_SetIP(WifiData->wfc[n].ip, WifiData->wfc[n].gateway,
+                               WifiData->wfc[n].subnet_mask,
+                               WifiData->wfc[n].dns_primary,
+                               WifiData->wfc[n].dns_secondary);
                 }
 #endif
                 WifiData->sectype9  = AP_SECURITY_WEP;
-                WifiData->wepmode9  = WifiData->wfc_enable[n] & 0x03; // copy data
-                WifiData->wepkeyid9 = (WifiData->wfc_enable[n] >> 4) & 7;
+                WifiData->wepmode9  = WifiData->wfc[n].enable & 0x03; // copy data
+                WifiData->wepkeyid9 = (WifiData->wfc[n].enable >> 4) & 7;
                 for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
-                    WifiData->wepkey9[i] = WifiData->wfc_wepkey[n][i];
+                    WifiData->wepkey9[i] = WifiData->wfc[n].wepkey[i];
 
                 Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
                 Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);

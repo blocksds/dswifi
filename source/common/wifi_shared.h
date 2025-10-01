@@ -215,14 +215,16 @@ typedef struct WIFI_MAINSTRUCT
 
     // WFC data
     u8 wfc_number_of_configs; // Total number of configs loaded
-    u8 wfc_enable[6]; // (WEP mode) | (0x80 for "enabled")
     Wifi_AccessPoint wfc_ap[6];
-    u32 wfc_ip[6];
-    u32 wfc_gateway[6];
-    u32 wfc_subnet_mask[6];
-    u32 wfc_dns_primary[6];
-    u32 wfc_dns_secondary[6];
-    u8 wfc_wepkey[6][13]; // Max size: 13 bytes (WEPMODE_128BIT)
+    struct {
+        u32 ip;
+        u32 gateway;
+        u32 subnet_mask;
+        u32 dns_primary;
+        u32 dns_secondary;
+        u8  wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
+        u8  enable; // (WEP mode) | (0x80 for "enabled")
+    } wfc[6];
 
     // ARM9 <-> ARM7 transfer circular buffers
     // ---------------------------------------
