@@ -186,7 +186,6 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
         // If we have found the requested AP, ask the ARM7 to connect to it
 
         Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-        Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
 
         WifiData->ap_req.ssid_len = ap.ssid_len;
         for (int i = 0; i < 32; i++)
@@ -255,7 +254,6 @@ int Wifi_AssocStatus(void)
             {
                 // Set settings of requested AP
                 Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-                Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
 
                 WifiData->ap_req.ssid_len = ap.ssid_len;
                 for (int i = 0; i < 32; i++)
@@ -415,7 +413,6 @@ int Wifi_AssocStatus(void)
                     WifiData->ap_req.wepkey[i] = WifiData->wfc[n].wepkey[i];
 
                 Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-                Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
 
                 WifiData->ap_req.ssid_len = ap.ssid_len;
                 for (int i = 0; i < 32; i++)

@@ -25,7 +25,7 @@ extern "C" {
 /// Size in bytes reserved in beacon frames for the multiplayer host player name.
 #define DSWIFI_BEACON_NAME_SIZE 20
 
-#define WFLAG_APDATA_ADHOC         0x0001
+#define WFLAG_APDATA_ADHOC         0x0001 // TODO: Not supported
 #define WFLAG_APDATA_WEP           0x0002
 #define WFLAG_APDATA_WPA           0x0004
 #define WFLAG_APDATA_COMPATIBLE    0x0008

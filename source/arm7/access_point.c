@@ -167,7 +167,7 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
 
         // If the WifiData AP MAC is the same as this beacon MAC, then update
         // RSSI in WifiData as well.
-        if (Wifi_CmpMacAddr(WifiData->ap_cur.apmac, sa))
+        if (Wifi_CmpMacAddr(WifiData->ap_cur.bssid, sa))
         {
             WifiData->rssi = ap->rssi;
         }

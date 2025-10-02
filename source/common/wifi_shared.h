@@ -184,7 +184,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 reqPacketFlags;
     u16 curReqFlags, reqReqFlags;
     u32 counter7;
-    u16 MacAddr[3];
+    u16 MacAddr[3]; // MAC address of this console
     u32 ip, snmask, gateway;
 
     // Mode of operation of DSWifi. Check enum DSWifi_Mode
@@ -198,7 +198,6 @@ typedef struct WIFI_MAINSTRUCT
         char ssid[33]; // Last byte is 0 so that it's a valid C string
         u8 ssid_len;
         u16 bssid[3];
-        u8 apmac[6]; // TODO: Isn't this the same thing as bssid[]?
         Wifi_ApSecurityType sectype;
         char wepmode;
         u8 wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
