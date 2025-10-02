@@ -161,19 +161,19 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (wepmode == WEPMODE_NONE)
     {
-        WifiData->sectype9 = AP_SECURITY_OPEN;
-        WifiData->wepmode9 = 0;
+        WifiData->ap_req.sectype = AP_SECURITY_OPEN;
+        WifiData->ap_req.wepmode = 0;
     }
     else
     {
-        WifiData->sectype9  = AP_SECURITY_WEP;
-        WifiData->wepmode9  = wepmode;
+        WifiData->ap_req.sectype = AP_SECURITY_WEP;
+        WifiData->ap_req.wepmode = wepmode;
 
         size_t i;
         for (i = 0; i < Wifi_WepKeySize(wepmode); i++)
-            WifiData->wepkey9[i] = wepkey[i];
-        for ( ; i < sizeof(WifiData->wepkey9); i++)
-            WifiData->wepkey9[i] = 0;
+            WifiData->ap_req.wepkey[i] = wepkey[i];
+        for ( ; i < sizeof(WifiData->ap_req.wepkey); i++)
+            WifiData->ap_req.wepkey[i] = 0;
     }
 
     WifiData->realRates = true;
@@ -183,15 +183,18 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     int error = Wifi_FindMatchingAP(1, apdata, &ap);
     if (error == 0)
     {
-        Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
-        Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+        // If we have found the requested AP, ask the ARM7 to connect to it
 
-        WifiData->ssid_len9 = ap.ssid_len;
+        Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
+        Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
+
+        WifiData->ap_req.ssid_len = ap.ssid_len;
         for (int i = 0; i < 32; i++)
-            WifiData->ssid9[i] = ap.ssid[i];
-        WifiData->ssid9[32] = '\0';
+            WifiData->ap_req.ssid[i] = ap.ssid[i];
+        WifiData->ap_req.ssid[32] = '\0';
 
-        WifiData->apchannel9 = ap.channel;
+        WifiData->ap_req.channel = ap.channel;
+
         WifiData->reqMode = WIFIMODE_NORMAL;
         WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
         wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
@@ -245,19 +248,22 @@ int Wifi_AssocStatus(void)
 
         case WIFI_CONNECT_SEARCHING:
         {
+            // Check if we have found the AP requested by the user
             Wifi_AccessPoint ap;
             int error = Wifi_FindMatchingAP(1, &wifi_connect_point, &ap);
             if (error == 0)
             {
-                Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
-                Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+                // Set settings of requested AP
+                Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
 
-                WifiData->ssid_len9 = ap.ssid_len;
+                WifiData->ap_req.ssid_len = ap.ssid_len;
                 for (int i = 0; i < 32; i++)
-                    WifiData->ssid9[i] = ap.ssid[i];
-                WifiData->ssid9[32] = '\0';
+                    WifiData->ap_req.ssid[i] = ap.ssid[i];
+                WifiData->ap_req.ssid[32] = '\0';
 
-                WifiData->apchannel9 = ap.channel;
+                WifiData->ap_req.channel = ap.channel;
+
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
@@ -386,6 +392,8 @@ int Wifi_AssocStatus(void)
             // any AP. This will let us find the best one available.
             int numap = WifiData->wfc_number_of_configs;
 
+            // Check if any of the APs we have found so far is in the WFC
+            // settings we have read.
             Wifi_AccessPoint ap;
             int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
             if (n != -1)
@@ -399,20 +407,23 @@ int Wifi_AssocStatus(void)
                                WifiData->wfc[n].dns_secondary);
                 }
 #endif
-                WifiData->sectype9  = ap.security_type;
-                WifiData->wepmode9  = WifiData->wfc[n].wepmode;
-                for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
-                    WifiData->wepkey9[i] = WifiData->wfc[n].wepkey[i];
+                // Set requested AP settings
 
-                Wifi_CopyMacAddr(WifiData->bssid9, ap.bssid);
-                Wifi_CopyMacAddr(WifiData->apmac9, ap.bssid);
+                WifiData->ap_req.sectype = ap.security_type;
+                WifiData->ap_req.wepmode = WifiData->wfc[n].wepmode;
+                for (size_t i = 0; i < Wifi_WepKeySize(WifiData->ap_req.wepmode); i++)
+                    WifiData->ap_req.wepkey[i] = WifiData->wfc[n].wepkey[i];
 
-                WifiData->ssid_len9 = ap.ssid_len;
+                Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
+                Wifi_CopyMacAddr(WifiData->ap_req.apmac, ap.bssid);
+
+                WifiData->ap_req.ssid_len = ap.ssid_len;
                 for (int i = 0; i < 32; i++)
-                    WifiData->ssid9[i] = ap.ssid[i];
-                WifiData->ssid9[32] = '\0';
+                    WifiData->ap_req.ssid[i] = ap.ssid[i];
+                WifiData->ap_req.ssid[32] = '\0';
 
-                WifiData->apchannel9 = ap.channel;
+                WifiData->ap_req.channel = ap.channel;
+
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;

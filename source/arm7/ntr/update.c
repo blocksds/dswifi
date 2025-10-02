@@ -176,9 +176,9 @@ void Wifi_NTR_Update(void)
 
                 Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
 
-                WifiData->ssid_len7 = WifiData->ssid_len9;
-                for (size_t i = 0; i < sizeof(WifiData->ssid7); i++)
-                    WifiData->ssid7[i] = WifiData->ssid9[i];
+                WifiData->ap_cur.ssid_len = WifiData->ap_req.ssid_len;
+                for (size_t i = 0; i < sizeof(WifiData->ap_cur.ssid); i++)
+                    WifiData->ap_cur.ssid[i] = WifiData->ap_req.ssid[i];
 
                 Wifi_MPHost_ResetClients();
                 WifiData->curMaxClients = WifiData->reqMaxClients;
@@ -212,32 +212,21 @@ void Wifi_NTR_Update(void)
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
                 // Not connected - connect!
-                WifiData->sectype7   = WifiData->sectype9;
-                WifiData->wepmode7   = WifiData->wepmode9;
-                WifiData->apchannel7 = WifiData->apchannel9;
-                Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
-                Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
-
-                // Copy the full array to clear the original trailing data
-                // if the new key is shorter than the old one.
-                for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
-                    WifiData->wepkey7[i] = WifiData->wepkey9[i];
-
-                WifiData->ssid_len7 = WifiData->ssid_len9;
-                for (size_t i = 0; i < sizeof(WifiData->ssid7); i++)
-                    WifiData->ssid7[i] = WifiData->ssid9[i];
+                WifiData->ap_cur = WifiData->ap_req;
 
                 if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
                     WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
                 else
                     WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
 
-                Wifi_NTR_SetWepKey((void *)WifiData->wepkey7, WifiData->wepmode7);
-                Wifi_NTR_SetWepMode(WifiData->wepmode7);
-                // latch BSSID
-                W_BSSID[0] = WifiData->bssid7[0];
-                W_BSSID[1] = WifiData->bssid7[1];
-                W_BSSID[2] = WifiData->bssid7[2];
+                Wifi_NTR_SetWepKey((void *)WifiData->ap_cur.wepkey,
+                                   WifiData->ap_cur.wepmode);
+                Wifi_NTR_SetWepMode(WifiData->ap_cur.wepmode);
+
+                // Latch BSSID
+                W_BSSID[0] = WifiData->ap_cur.bssid[0];
+                W_BSSID[1] = WifiData->ap_cur.bssid[1];
+                W_BSSID[2] = WifiData->ap_cur.bssid[2];
 
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 {
@@ -249,8 +238,9 @@ void Wifi_NTR_Update(void)
                     Wifi_SetupFilterMode(WIFI_FILTERMODE_INTERNET);
                 }
 
-                WifiData->reqChannel = WifiData->apchannel7;
-                Wifi_SetChannel(WifiData->apchannel7);
+                WifiData->reqChannel = WifiData->ap_cur.channel;
+                Wifi_SetChannel(WifiData->ap_cur.channel);
+
                 if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
                 {
                     WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;

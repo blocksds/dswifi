@@ -74,20 +74,7 @@ void Wifi_TWL_Update(void)
 
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
-                WifiData->sectype7   = WifiData->sectype9;
-                WifiData->wepmode7   = WifiData->wepmode9;
-                WifiData->apchannel7 = WifiData->apchannel9;
-                Wifi_CopyMacAddr(WifiData->bssid7, WifiData->bssid9);
-                Wifi_CopyMacAddr(WifiData->apmac7, WifiData->apmac9);
-
-                // Copy the full array to clear the original trailing data
-                // if the new key is shorter than the old one.
-                for (size_t i = 0; i < sizeof(WifiData->wepkey7); i++)
-                    WifiData->wepkey7[i] = WifiData->wepkey9[i];
-
-                WifiData->ssid_len7 = WifiData->ssid_len9;
-                for (int i = 0; i < sizeof(WifiData->ssid9); i++)
-                    WifiData->ssid7[i] = WifiData->ssid9[i];
+                WifiData->ap_cur = WifiData->ap_req;
 
                 if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
                     WifiData->curReqFlags |= WFLAG_REQ_APADHOC;

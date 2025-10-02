@@ -194,14 +194,17 @@ typedef struct WIFI_MAINSTRUCT
     // ------------------------
 
     // Data of the AP we are connecting/connected to
-    char ssid7[33], ssid9[33]; // Last byte is 0 so that it's a valid C string
-    u8 ssid_len7, ssid_len9;
-    u16 bssid7[3], bssid9[3];
-    u8 apmac7[6], apmac9[6];
-    Wifi_ApSecurityType sectype7, sectype9;
-    char wepmode7, wepmode9;
-    u8 wepkey7[13], wepkey9[13]; // Max size: 13 bytes (WEPMODE_128BIT)
-    u8 apchannel7, apchannel9;
+    struct {
+        char ssid[33]; // Last byte is 0 so that it's a valid C string
+        u8 ssid_len;
+        u16 bssid[3];
+        u8 apmac[6]; // TODO: Isn't this the same thing as bssid[]?
+        Wifi_ApSecurityType sectype;
+        char wepmode;
+        u8 wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
+        u8 channel;
+    } ap_req, ap_cur; // Requested AP by ARM9, Current AP used in ARM7
+
     u8 maxrate7;
     bool realRates;
     u8 rssi;

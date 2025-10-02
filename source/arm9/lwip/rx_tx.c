@@ -36,7 +36,7 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
 
     // Total amount of bytes to be written to TX buffer after the IEEE header
     // (and after the WEP IV)
-    size_t body_size = (WifiData->wepmode7 ? 4 : 0) // WEP IV + (exclude ICV)
+    size_t body_size = (WifiData->ap_cur.wepmode ? 4 : 0) // WEP IV + (exclude ICV)
                      + 8 // LLC/SNAP header
                      + data_size; // Actual size of the data in the memory block
 
@@ -77,20 +77,20 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
         ieee->duration = 0;
         Wifi_CopyMacAddr(ieee->addr_1, eth->dest_mac);
         Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-        Wifi_CopyMacAddr(ieee->addr_3, WifiData->bssid7);
+        Wifi_CopyMacAddr(ieee->addr_3, WifiData->ap_cur.bssid);
         ieee->seq_ctl = 0;
     }
     else
     {
         ieee->frame_control = FC_TO_DS | TYPE_DATA;
         ieee->duration = 0;
-        Wifi_CopyMacAddr(ieee->addr_1, WifiData->bssid7);
+        Wifi_CopyMacAddr(ieee->addr_1, WifiData->ap_cur.bssid);
         Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
         Wifi_CopyMacAddr(ieee->addr_3, eth->dest_mac);
         ieee->seq_ctl = 0;
     }
 
-    if (WifiData->wepmode7)
+    if (WifiData->ap_cur.wepmode)
     {
         ieee->frame_control |= FC_PROTECTED_FRAME;
 
@@ -137,7 +137,7 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
     if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
         write_idx -= WIFI_TXBUFFER_SIZE / 2;
 
-    if (WifiData->wepmode7)
+    if (WifiData->ap_cur.wepmode)
     {
         // Allocate 4 more bytes for the WEP ICV in the TX buffer. However,
         // don't write anything. We just need to remember to not fill it and to

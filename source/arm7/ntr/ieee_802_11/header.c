@@ -33,9 +33,9 @@ size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 
     ieee->frame_control = headerflags;
     ieee->duration = 0;
-    Wifi_CopyMacAddr(ieee->da, WifiData->apmac7);
+    Wifi_CopyMacAddr(ieee->da, WifiData->ap_cur.apmac);
     Wifi_CopyMacAddr(ieee->sa, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee->bssid, WifiData->bssid7);
+    Wifi_CopyMacAddr(ieee->bssid, WifiData->ap_cur.bssid);
     ieee->seq_ctl = 0;
 
     // Fill in WEP-specific stuff
