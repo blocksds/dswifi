@@ -651,6 +651,11 @@ void wmi_start_scan(void)
 
 void wmi_connect_cmd(void)
 {
+    WLOG_PRINTF("T: CONNECT_CMD (Security: %s)\nT: SSID: [%s]\n",
+                Wifi_ApSecurityTypeString(WifiData->ap_cur.sectype),
+                (const char *)&WifiData->ap_cur.ssid[0]);
+    WLOG_FLUSH();
+
     if (WifiData->ap_cur.sectype == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->ap_cur.ssid_len;
@@ -1122,7 +1127,7 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     data_hdr =
     {
         { 0x00, 0x1C }, {0}, {0}, {0},
-        { 0xAA, 0xAA, 0x03, 0, 0, 0, 0x88, 0x8E },
+        { 0xAA, 0xAA, 0x03, 0, 0, 0, 0x88, 0x8E }, // SNAP
         1, 3, {0}, 2, {0}, {0,0}, {0}, {0}, {0}, {0}, {0}, {0}, {0},
         {
             0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac,
@@ -1177,7 +1182,7 @@ static void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u
     {
         u8 idk[2];
         u8 dst_bssid[6]; // AP MAC
-        u8 src_bssid[6]; // 3DS MAC
+        u8 src_bssid[6]; // DSi MAC
         u8 data_len_be[2];
         u8 snap_hdr[8];
 
@@ -1199,7 +1204,8 @@ static void data_send_wpa_handshake4(const u8 *dst_bssid, const u8 *src_bssid, u
     data_hdr =
     {
         { 0x00, 0x1C }, {0}, {0}, {0},
-        { 0xAA,0xAA,0x03,0,0,0, 0x88, 0x8E }, 1, 3, {0}, 2, {0}, {0,0},
+        { 0xAA, 0xAA, 0x03, 0, 0, 0, 0x88, 0x8E }, // SNAP
+        1, 3, {0}, 2, {0}, {0,0},
         {0}, {0}, {0}, {0}, {0}, {0}, {0}
     };
 

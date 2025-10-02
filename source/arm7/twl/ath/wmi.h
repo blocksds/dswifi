@@ -72,10 +72,14 @@ void wmi_scan_mode_tick(void);
 
 void wmi_dbgoff(void);
 
+// Connect to the AP stored in WifiData->ap_cur
 void wmi_connect(void);
+
 bool wmi_is_ap_connected(void);
 bool wmi_is_ap_connecting(void);
 
+// Ask the device to disconnect and stop trying to reconnect. This is required
+// to try to connect to an AP later.
 void wmi_disconnect_cmd(void);
 
 // Returns true if the WMI interface is ready
