@@ -188,9 +188,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
         Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
 
         WifiData->ap_req.ssid_len = ap.ssid_len;
-        for (int i = 0; i < 32; i++)
-            WifiData->ap_req.ssid[i] = ap.ssid[i];
-        WifiData->ap_req.ssid[32] = '\0';
+        memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
 
         WifiData->ap_req.channel = ap.channel;
 
@@ -256,9 +254,7 @@ int Wifi_AssocStatus(void)
                 Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
 
                 WifiData->ap_req.ssid_len = ap.ssid_len;
-                for (int i = 0; i < 32; i++)
-                    WifiData->ap_req.ssid[i] = ap.ssid[i];
-                WifiData->ap_req.ssid[32] = '\0';
+                memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
 
                 WifiData->ap_req.channel = ap.channel;
 
@@ -415,9 +411,7 @@ int Wifi_AssocStatus(void)
                 Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
 
                 WifiData->ap_req.ssid_len = ap.ssid_len;
-                for (int i = 0; i < 32; i++)
-                    WifiData->ap_req.ssid[i] = ap.ssid[i];
-                WifiData->ap_req.ssid[32] = '\0';
+                memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
 
                 WifiData->ap_req.channel = ap.channel;
 
