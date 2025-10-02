@@ -85,57 +85,33 @@
 // Connection data 2: Address F_USER_SETTINGS_OFFSET * 8 - 0x300
 // Connection data 3: Address F_USER_SETTINGS_OFFSET * 8 - 0x200
 
-#define AP_UNKNOWN_000          0x000 // 64 bytes
-#define AP_SSID_NAME            0x040 // 32 bytes, ASCII padded with zeroes
-#define AP_SSID_WEP64_AOSS      0x060 // 32 bytes, ASCII padded with zeroes
-#define AP_WEP_KEY_1            0x080 // 16 bytes (check AP_WEP_MODE)
-#define AP_WEP_KEY_2            0x090
-#define AP_WEP_KEY_3            0x0A0 // TODO: Are keys 2, 3 and 4 ever used?
-#define AP_WEP_KEY_4            0x0B0
-#define AP_IP_ADDR              0x0C0 // 4 bytes, 0=Auto/DHCP
-#define AP_GATEWAY              0x0C4 // 4 bytes, 0=Auto/DHCP
-#define AP_DNS_PRIMARY          0x0C8 // 4 bytes, 0=Auto/DHCP
-#define AP_DNS_SECONDARY        0x0CC // 4 bytes, 0=Auto/DHCP
-#define AP_SUBNET_MASK          0x0D0 // 1 byte, 0=Auto/DHCP, 1..0x1C=Leading ones
-#define AP_UNKNOWN_0D1          0x0D1
-#define AP_WEP_MODE             0x0E6
-#define AP_STATUS               0x0E7 // 0=Normal, 1=AOSS, 0xFF=Not configured
-#define AP_UNKNOWN_0E8          0x0E8
-#define AP_UNKNOWN_0E9          0x0E9
-#define AP_TWL_MTU              0x0EA
-#define AP_UNKNOWN_0EC          0x0EC
-#define AP_CONNECTION_SETUP     0x0EF // Bits 0..2 = Connection 1..3 configured
-#define AP_NINTENDO_WFC_USER_ID 0x0F0 // 6 bytes, 43 bits
-#define AP_UNKNOWN_0F6          0x0F6
-#define AP_CRC16                0x0FE // CRC16 of the previous 0xFD bytes (start=0x0000)
-
 typedef struct
 {
-    u8 unk_00[0x40];
-    char ssid[0x20];
-    char ssid_wep64[0x20];
+    u8 unk_00[0x40];        // 64 bytes
+    char ssid[0x20];        // 32 bytes, ASCII padded with zeroes
+    char ssid_wep64[0x20];  // 32 bytes, ASCII padded with zeroes
     u8 wep_key1[0x10];
     u8 wep_key2[0x10];
-    u8 wep_key3[0x10];
+    u8 wep_key3[0x10];      // TODO: Are keys 2, 3 and 4 ever used?
     u8 wep_key4[0x10];
-    u8 ip[4];
-    u8 gateway[4];
-    u8 primary_dns[4];
-    u8 secondary_dns[4];
-    u8 subnet_mask;
+    u8 ip[4];               // 4 bytes, 0=Auto/DHCP
+    u8 gateway[4];          // 4 bytes, 0=Auto/DHCP
+    u8 primary_dns[4];      // 4 bytes, 0=Auto/DHCP
+    u8 secondary_dns[4];    // 4 bytes, 0=Auto/DHCP
+    u8 subnet_mask;         // 1 byte, 0=Auto/DHCP, 1..0x1C=Leading ones
     u8 unk_D1[0x15];
     u8 wep_mode;
-    u8 status; // 00 = Normal, 01 = AOSS, FF = not configured/deleted
+    u8 status;              // 00 = Normal, 01 = AOSS, FF = not configured/deleted
     u8 unk_E8;
     u8 unk_E9;
     u16 mtu;
     u8 unk_EC[3];
-    u8 slot_idx;
-    u8 wfc_uid[6];
+    u8 slot_idx;            // Bits 0..2 = Connection 1..3 configured
+    u8 wfc_uid[6];          // 43 bits
     u8 unk_F6[0x8];
-    u16 crc16_0_to_FD;
+    u16 crc16_0_to_FD;      // CRC16 of the previous 0xFD bytes (start=0x0000)
 }
-nvram_cfg_wep;
+nvram_cfg_ntr;
 
 // DSi Firmware Wifi Internet Access Points
 // ========================================
@@ -177,7 +153,7 @@ typedef struct
     u8 unk_1EA[0x14];
     u16 crc16_100_to_1FE;
 }
-nvram_cfg;
+nvram_cfg_twl;
 
 // Functions
 // =========

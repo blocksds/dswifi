@@ -76,7 +76,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
     for (int i = 0; i < 3; i++)
     {
-        nvram_cfg_wep ap_data = { 0 };
+        nvram_cfg_ntr ap_data = { 0 };
 
         readFirmware(wfcBase + (i * sizeof(ap_data)), &ap_data, sizeof(ap_data));
 
@@ -166,7 +166,7 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
 
     for (int i = 0; i < 3; i++)
     {
-        nvram_cfg ap_data = { 0 };
+        nvram_cfg_twl ap_data = { 0 };
 
         readFirmware(wfcBase + (i * sizeof(ap_data)), &ap_data, sizeof(ap_data));
 
