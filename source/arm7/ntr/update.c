@@ -219,7 +219,7 @@ void Wifi_NTR_Update(void)
                 else
                     WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
 
-                Wifi_NTR_SetWepKey((void *)WifiData->ap_cur.wepkey,
+                Wifi_NTR_SetWepKey((void *)WifiData->ap_cur.pass,
                                    WifiData->ap_cur.wepmode);
                 Wifi_NTR_SetWepMode(WifiData->ap_cur.wepmode);
 

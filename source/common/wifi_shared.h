@@ -198,13 +198,13 @@ typedef struct WIFI_MAINSTRUCT
         char ssid[33]; // Last byte is 0 so that it's a valid C string
         u8 ssid_len;
         u16 bssid[3];
+        u8 channel;
         Wifi_ApSecurityType sectype;
         Wifi_ApCryptType group_crypt_type;
         Wifi_ApCryptType pair_crypt_type;
         Wifi_ApAuthType auth_type;
-        char wepmode;
-        u8 wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
-        u8 channel;
+        u8 wepmode;  // In WEP mode we need to know the length of the key
+        u8 pass[64]; // Max size for WPA is 63 bytes
     } ap_req, ap_cur; // Requested AP by ARM9, Current AP used in ARM7
 
     u8 maxrate7;
