@@ -62,9 +62,14 @@ typedef enum {
 /// - 128 bit (104 bit) WEP mode: 13 ASCII characters (or 26 hex numbers).
 enum WEPMODES
 {
-    WEPMODE_NONE   = 0, ///< No WEP security is used.
-    WEPMODE_40BIT  = 1, ///< 5 ASCII characters.
-    WEPMODE_128BIT = 2  ///< 13 ASCII characters.
+    WEPMODE_NONE         = 0, ///< No WEP security is used.
+    WEPMODE_64BIT        = 1, ///< 10 hexadecimal digits.
+    WEPMODE_128BIT       = 2, ///< 26 hexadecimal digits.
+    WEPMODE_152BIT       = 3, ///< 32 hexadecimal digits (Unsupported?)
+    WEPMODE_64BIT_ASCII  = 5, ///< 5 ASCII characters.
+    WEPMODE_128BIT_ASCII = 6, ///< 13 ASCII characters.
+    WEPMODE_152BIT_ASCII = 7, ///< 16 ASCII characters (Unsupported?).
+    WEPMODE_40BIT        = WEPMODE_64BIT, ///< Compatibility define
 };
 
 typedef enum

@@ -67,7 +67,13 @@ void Wifi_NTR_SetWepMode(int wepmode)
         W_WEP_CNT = WEP_CNT_ENABLE;
 
     if (wepmode == WEPMODE_NONE)
-        wepmode = WEPMODE_40BIT;
+        wepmode = WEPMODE_64BIT;
+    else if (wepmode == WEPMODE_64BIT_ASCII)
+        wepmode = WEPMODE_64BIT;
+    else if (wepmode == WEPMODE_128BIT_ASCII)
+        wepmode = WEPMODE_128BIT;
+    else if (wepmode == WEPMODE_152BIT_ASCII)
+        wepmode = WEPMODE_152BIT;
 
     W_MODE_WEP = (W_MODE_WEP & ~MODE_WEP_KEYLEN_MASK)
                | (wepmode << MODE_WEP_KEYLEN_SHIFT);

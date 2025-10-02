@@ -223,7 +223,8 @@ typedef struct WIFI_MAINSTRUCT
         u32 dns_primary;
         u32 dns_secondary;
         u8  wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
-        u8  enable; // (WEP mode) | (0x80 for "enabled")
+        u8  wepkeyid;
+        u8  wepmode;
     } wfc[6];
 
     // ARM9 <-> ARM7 transfer circular buffers

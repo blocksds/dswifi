@@ -102,17 +102,17 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
         {
             // Normal network
 
-            u8 wepmode = ap_data.wep_mode & 0x03;
-            if (wepmode > 2) // Invalid WEP mode
+            if (ap_data.wep_mode > 7) // Invalid WEP mode
                 continue;
 
-            WifiData->wfc[c].enable     = 0x80 | wepmode;
+            WifiData->wfc[c].wepmode    = ap_data.wep_mode;
+            WifiData->wfc[c].wepkeyid   = 0; // TODO: Is this anywhere?
             WifiData->wfc_ap[c].channel = 0;
 
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
-            for (size_t n = 0; n < Wifi_WepKeySize(wepmode); n++)
+            for (size_t n = 0; n < Wifi_WepKeySize(ap_data.wep_mode); n++)
                 WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
             for (int n = 0; n < 32; n++)
@@ -194,20 +194,21 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
         if (ap_data.slot_idx == 0x00)
             continue;
 
-        u8 wepmode = ap_data.wep_mode & 0x03;
-        u8 wpamode = ap_data.wpa_mode;
-
-        // Only load WPA settings if requested by the caller
-        if ((wpamode != 0) && !allow_wpa)
+        if (ap_data.wep_mode > 7) // Invalid WEP mode
             continue;
 
-        WifiData->wfc[c].enable     = 0x80 | wepmode;
+        // Only load WPA settings if requested by the caller
+        if ((ap_data.wpa_mode != 0) && !allow_wpa)
+            continue;
+
+        WifiData->wfc[c].wepmode    = ap_data.wep_mode;
+        WifiData->wfc[c].wepkeyid   = 0; // TODO: Is this anywhere?
         WifiData->wfc_ap[c].channel = 0;
 
         for (int n = 0; n < 6; n++)
             WifiData->wfc_ap[c].bssid[n] = 0;
 
-        for (size_t n = 0; n < Wifi_WepKeySize(wepmode); n++)
+        for (size_t n = 0; n < Wifi_WepKeySize(ap_data.wep_mode); n++)
             WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
         for (int n = 0; n < 32; n++)

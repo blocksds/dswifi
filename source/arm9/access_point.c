@@ -381,12 +381,7 @@ int Wifi_AssocStatus(void)
         {
             // TODO: Wait for at least a few frames before trying to connect to
             // any AP. This will let us find the best one available.
-            int numap;
-            for (numap = 0; numap < 6; numap++)
-            {
-                if (!(WifiData->wfc[numap].enable & 0x80))
-                    break;
-            }
+            int numap = WifiData->wfc_number_of_configs;
 
             Wifi_AccessPoint ap;
             int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
@@ -401,9 +396,9 @@ int Wifi_AssocStatus(void)
                                WifiData->wfc[n].dns_secondary);
                 }
 #endif
-                WifiData->sectype9  = WifiData->wfc[n].sec_type;
-                WifiData->wepmode9  = WifiData->wfc[n].enable & 0x03; // copy data
-                WifiData->wepkeyid9 = (WifiData->wfc[n].enable >> 4) & 7;
+                WifiData->sectype9  = ap.security_type;
+                WifiData->wepmode9  = WifiData->wfc[n].wepmode;
+                WifiData->wepkeyid9 = WifiData->wfc[n].wepkeyid;
                 for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
                     WifiData->wepkey9[i] = WifiData->wfc[n].wepkey[i];
 

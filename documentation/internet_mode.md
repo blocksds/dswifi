@@ -84,7 +84,7 @@ Wifi_SetIP(0, 0, 0, 0, 0);
 // If the access point requires a WEP password, ask the user to provide it
 if (AccessPoint.flags & WFLAG_APDATA_WEP)
 {
-    // For 5 character long passwords, use WEPMODE_40BIT. For 13 character long
+    // For 5 character long passwords, use WEPMODE_64BIT. For 13 character long
     // passwords, use WEPMODE_128BIT.
     int wepmode = WEPMODE_128BIT;
     const char *password = "MyPassword123";
