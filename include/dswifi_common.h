@@ -238,11 +238,9 @@ typedef struct WIFI_ACCESSPOINT
     /// between 0 and 255. On DSi it's a value in dBm. Usual values are -40 dBm
     /// (strong signal) to -90 dBm (weak signal).
     s16 rssi;
-    /// Flags indicating various parameters for the AP. [not required, but the
-    /// WFLAG_APDATA_ADHOC flag will be used]
+    /// Flags indicating various parameters for the AP
     u16 flags;
     /// Internal data word used to lock the record to guarantee data coherence.
-    /// [not required to connect]
     u32 spinlock;
     /// Valid channels are 1-14.
     u8 channel;

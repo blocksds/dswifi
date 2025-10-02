@@ -71,24 +71,12 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
 
     int hdrlen = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
 
-    if (WifiData->curReqFlags & WFLAG_REQ_APADHOC) // adhoc mode
-    {
-        ieee->frame_control = TYPE_DATA;
-        ieee->duration = 0;
-        Wifi_CopyMacAddr(ieee->addr_1, eth->dest_mac);
-        Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-        Wifi_CopyMacAddr(ieee->addr_3, WifiData->ap_cur.bssid);
-        ieee->seq_ctl = 0;
-    }
-    else
-    {
-        ieee->frame_control = FC_TO_DS | TYPE_DATA;
-        ieee->duration = 0;
-        Wifi_CopyMacAddr(ieee->addr_1, WifiData->ap_cur.bssid);
-        Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-        Wifi_CopyMacAddr(ieee->addr_3, eth->dest_mac);
-        ieee->seq_ctl = 0;
-    }
+    ieee->frame_control = FC_TO_DS | TYPE_DATA;
+    ieee->duration = 0;
+    Wifi_CopyMacAddr(ieee->addr_1, WifiData->ap_cur.bssid);
+    Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee->addr_3, eth->dest_mac);
+    ieee->seq_ctl = 0;
 
     if (WifiData->ap_cur.wepmode)
     {

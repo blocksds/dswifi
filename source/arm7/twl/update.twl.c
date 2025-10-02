@@ -74,11 +74,6 @@ void Wifi_TWL_Update(void)
             {
                 WifiData->ap_cur = WifiData->ap_req;
 
-                if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
-                    WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
-                else
-                    WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
-
                 WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
                 WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
 

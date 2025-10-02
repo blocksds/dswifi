@@ -305,16 +305,8 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     if (reconnect)
     {
         // They have booted us. Back to square 1.
-        if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
-        {
-            WifiData->authlevel = WIFI_AUTHLEVEL_AUTHENTICATED;
-            Wifi_SendAssocPacket();
-        }
-        else
-        {
-            WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
-            Wifi_SendOpenSystemAuthPacket();
-        }
+        WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+        Wifi_SendOpenSystemAuthPacket();
     }
     else
     {

@@ -88,13 +88,6 @@ static void Wifi_UpdateAssociate(void)
             // Fallthrough
 
         case WIFI_AUTHLEVEL_DISCONNECTED:
-            if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
-            {
-                // For ad hoc APs we don't need to do this
-                WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
-                WifiData->curMode   = WIFIMODE_ASSOCIATED;
-                break;
-            }
             Wifi_SendOpenSystemAuthPacket();
             break;
 
@@ -214,11 +207,6 @@ void Wifi_NTR_Update(void)
                 // Not connected - connect!
                 WifiData->ap_cur = WifiData->ap_req;
 
-                if (WifiData->reqReqFlags & WFLAG_REQ_APADHOC)
-                    WifiData->curReqFlags |= WFLAG_REQ_APADHOC;
-                else
-                    WifiData->curReqFlags &= ~WFLAG_REQ_APADHOC;
-
                 Wifi_NTR_SetWepKey((void *)WifiData->ap_cur.pass,
                                    WifiData->ap_cur.wepmode);
                 Wifi_NTR_SetWepMode(WifiData->ap_cur.wepmode);
@@ -241,15 +229,9 @@ void Wifi_NTR_Update(void)
                 WifiData->reqChannel = WifiData->ap_cur.channel;
                 Wifi_SetChannel(WifiData->ap_cur.channel);
 
-                if (WifiData->curReqFlags & WFLAG_REQ_APADHOC)
-                {
-                    WifiData->authlevel = WIFI_AUTHLEVEL_ASSOCIATED;
-                }
-                else
-                {
-                    Wifi_SendOpenSystemAuthPacket();
-                    WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
-                }
+                Wifi_SendOpenSystemAuthPacket();
+                WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
+
                 WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
                 WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)

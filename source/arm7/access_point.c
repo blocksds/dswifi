@@ -106,12 +106,18 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
         ap->timectr = 0;
 
         bool fromsta = Wifi_CmpMacAddr(sa, bssid);
-        ap->flags = WFLAG_APDATA_ACTIVE
-                  | (fromsta ? 0 : WFLAG_APDATA_ADHOC)
-                  | ((nintendo_info != NULL) ? WFLAG_APDATA_NINTENDO_TAG : 0);
+        if (!fromsta)
+        {
+            // TODO: This is an ad hoc device, ignore it?
+        }
+
+        ap->flags = WFLAG_APDATA_ACTIVE;
 
         if (nintendo_info != NULL)
+        {
+            ap->flags |= WFLAG_APDATA_NINTENDO_TAG;
             ap->nintendo = *nintendo_info; // Copy struct
+        }
 
         if (compatible)
             ap->flags |= WFLAG_APDATA_COMPATIBLE;
