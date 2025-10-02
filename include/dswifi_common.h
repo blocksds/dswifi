@@ -30,7 +30,6 @@ extern "C" {
 #define WFLAG_APDATA_WPA           0x0004
 #define WFLAG_APDATA_COMPATIBLE    0x0008
 #define WFLAG_APDATA_EXTCOMPATIBLE 0x0010 // TODO: Unused
-#define WFLAG_APDATA_SHORTPREAMBLE 0x0020 // TODO: Unused
 #define WFLAG_APDATA_NINTENDO_TAG  0x0040 // Beacon frames have a Nintendo tag
 #define WFLAG_APDATA_ACTIVE        0x8000
 
