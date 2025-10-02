@@ -139,6 +139,8 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
 {
+    (void)wepkeyid; // Not needed
+
     wifi_connect_state = WIFI_CONNECT_ERROR;
 
     if (!apdata)
@@ -166,7 +168,6 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     {
         WifiData->sectype9  = AP_SECURITY_WEP;
         WifiData->wepmode9  = wepmode;
-        WifiData->wepkeyid9 = wepkeyid;
 
         size_t i;
         for (i = 0; i < Wifi_WepKeySize(wepmode); i++)
@@ -398,7 +399,6 @@ int Wifi_AssocStatus(void)
 #endif
                 WifiData->sectype9  = ap.security_type;
                 WifiData->wepmode9  = WifiData->wfc[n].wepmode;
-                WifiData->wepkeyid9 = WifiData->wfc[n].wepkeyid;
                 for (size_t i = 0; i < Wifi_WepKeySize(WifiData->wepmode9); i++)
                     WifiData->wepkey9[i] = WifiData->wfc[n].wepkey[i];
 

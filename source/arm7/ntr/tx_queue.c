@@ -240,7 +240,7 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
         // WEP is enabled, fill in the IV.
         W_MACMEM(iv_base + 0) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
         W_MACMEM(iv_base + 2) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
-                              | (WifiData->wepkeyid7 << 14);
+                              | (0 << 14); // WEP Key ID
     }
 
     // The hardware fills in the duration field for us.

@@ -106,7 +106,6 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
                 continue;
 
             WifiData->wfc[c].wepmode    = ap_data.wep_mode;
-            WifiData->wfc[c].wepkeyid   = 0; // TODO: Is this anywhere?
             WifiData->wfc_ap[c].channel = 0;
 
             for (int n = 0; n < 6; n++)
@@ -202,7 +201,6 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
             continue;
 
         WifiData->wfc[c].wepmode    = ap_data.wep_mode;
-        WifiData->wfc[c].wepkeyid   = 0; // TODO: Is this anywhere?
         WifiData->wfc_ap[c].channel = 0;
 
         for (int n = 0; n < 6; n++)

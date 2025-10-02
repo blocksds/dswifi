@@ -199,7 +199,6 @@ typedef struct WIFI_MAINSTRUCT
     u8 apmac7[6], apmac9[6];
     Wifi_ApSecurityType sectype7, sectype9;
     char wepmode7, wepmode9;
-    char wepkeyid7, wepkeyid9;
     u8 wepkey7[13], wepkey9[13]; // Max size: 13 bytes (WEPMODE_128BIT)
     u8 apchannel7, apchannel9;
     u8 maxrate7;
@@ -223,7 +222,6 @@ typedef struct WIFI_MAINSTRUCT
         u32 dns_primary;
         u32 dns_secondary;
         u8  wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
-        u8  wepkeyid;
         u8  wepmode;
     } wfc[6];
 

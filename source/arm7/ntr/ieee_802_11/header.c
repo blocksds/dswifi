@@ -45,7 +45,7 @@ size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
 
         // TODO: This isn't done to spec
         *iv_key_id = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
-                   | (WifiData->wepkeyid7 << 30);
+                   | (0 << 30); // WEP Key ID
 
         // The body is already 4 bytes in size
         return 4;
