@@ -55,11 +55,11 @@ int Wifi_SendAssocPacket(void)
     // SSID
 
     *body++ = MGT_FIE_ID_SSID; // Element ID: Service Set Identity (SSID)
-    *body++ = WifiData->ssid7[0]; // SSID length
-    for (int j = 0; j < WifiData->ssid7[0]; j++) // 0 to 32 bytes: SSID
-        *body++ = WifiData->ssid7[1 + j];
+    *body++ = WifiData->ssid_len7; // SSID length
+    for (int j = 0; j < WifiData->ssid_len7; j++) // 0 to 32 bytes: SSID
+        *body++ = WifiData->ssid7[j];
 
-    body_size += 2 + WifiData->ssid7[0];
+    body_size += 2 + WifiData->ssid_len7;
 
     // Supported rates
 

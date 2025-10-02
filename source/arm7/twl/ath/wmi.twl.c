@@ -650,7 +650,7 @@ void wmi_connect_cmd(void)
 {
     if (WifiData->sectype7 == AP_SECURITY_OPEN)
     {
-        size_t ssid_len = WifiData->ssid7[0];
+        size_t ssid_len = WifiData->ssid_len7;
         u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
 
         struct __attribute__((packed))
@@ -673,7 +673,7 @@ void wmi_connect_cmd(void)
             1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[0]);
         memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         ap_connecting = true;
@@ -682,7 +682,7 @@ void wmi_connect_cmd(void)
     }
     else if (WifiData->sectype7 == AP_SECURITY_WEP)
     {
-        size_t ssid_len = WifiData->ssid7[0];
+        size_t ssid_len = WifiData->ssid_len7;
         u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
 
         // Keys have to be set before connect
@@ -711,7 +711,7 @@ void wmi_connect_cmd(void)
             1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[0]);
         memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
@@ -719,7 +719,7 @@ void wmi_connect_cmd(void)
     else //if (WifiData->sectype7 == AP_SECURITY_WPA2)
     {
         // TODO: Support WPA APs
-        size_t ssid_len = WifiData->ssid7[0];
+        size_t ssid_len = WifiData->ssid_len7;
         u32 mhz = wifi_channel_to_mhz(WifiData->apchannel7);
 
         struct __attribute__((packed))
@@ -742,7 +742,7 @@ void wmi_connect_cmd(void)
             1, 1, 5, ap_pair_crypt_type, 0, ap_group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[1]);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->ssid7[0]);
         memcpy(wmi_params.bssid, (const char *)&WifiData->bssid7[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));

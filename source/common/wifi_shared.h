@@ -194,7 +194,8 @@ typedef struct WIFI_MAINSTRUCT
     // ------------------------
 
     // Data of the AP we are connecting/connected to
-    char ssid7[34], ssid9[34]; // Index 0 is the size
+    char ssid7[33], ssid9[33]; // Last byte is 0 so that it's a valid C string
+    u8 ssid_len7, ssid_len9;
     u16 bssid7[3], bssid9[3];
     u8 apmac7[6], apmac9[6];
     Wifi_ApSecurityType sectype7, sectype9;
