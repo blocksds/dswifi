@@ -59,16 +59,12 @@ while (1)
         Wifi_AccessPoint ap;
         Wifi_GetAPData(i, &ap);
 
-        const char *security = "Open";
-        if (ap.flags & WFLAG_APDATA_WPA)
-            security = "WPA ";
-        else if (ap.flags & WFLAG_APDATA_WEP)
-            security = "WEP ";
-
         // WPA isn't supported!
 
         printf("[%.24s]\n", ap.ssid)
-        printf("%s | Channel %2d | RSSI %d\n", security, ap.channel, ap.rssi);
+        printf("%s | Channel %2d | RSSI %d\n",
+               Wifi_ApSecurityTypeString(ap.security_type),
+               ap.channel, ap.rssi);
         printf("\n");
     }
 }
