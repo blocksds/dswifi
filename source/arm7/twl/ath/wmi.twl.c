@@ -30,17 +30,13 @@
 static u8 device_num_channels = 0;
 static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
-
-static u8 ap_pmk[0x20];
-static u16 ap_snr = 0;
 static u16 num_rounds_scanned = 0;
 
-static Wifi_ApCryptType ap_group_crypt_type = AP_CRYPT_AES;
-static Wifi_ApCryptType ap_pair_crypt_type = AP_CRYPT_AES;
-static Wifi_ApAuthType ap_auth_type = AP_AUTH_PSK;
+static u8 ap_pmk[0x20]; // TODO: Move to IPC struct
+static u16 ap_snr = 0; // TODO: Move to IPC struct
 
 u16 wmi_idk = 0;
-static bool wmi_bIsReady = false;
+static bool wmi_bIsReady = false; // TODO: Initialize to false
 
 // Set to true between WMI_START_SCAN_CMD and WMI_SCAN_COMPLETE_EVENT
 static bool wmi_is_scanning = false;
@@ -48,8 +44,8 @@ static bool wmi_is_scanning = false;
 static bool ap_connected = false;
 static bool ap_connecting = true;
 
-static bool has_sent_hs2 = false;
-static bool has_sent_hs4 = false;
+static bool has_sent_hs2 = false; // TODO: Initialize to false
+static bool has_sent_hs4 = false; // TODO: Initialize to false
 
 static u8 device_ap_nonce[32];
 static u8 device_nonce[32];
@@ -745,7 +741,8 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 1, 5, ap_pair_crypt_type, 0, ap_group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
+            1, 1, 5, WifiData->ap_cur.pair_crypt_type, 0,
+            WifiData->ap_cur.group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->ap_cur.ssid[0]);
@@ -890,7 +887,8 @@ void wmi_dbgoff(void)
 
 static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 {
-    u8 crypt_type = (usage == 1) ? ap_group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
+    u8 crypt_type = (usage == 1) ?
+                    WifiData->ap_cur.group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
     u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
 
     // Figure out the correct keylens for WEP; WEP40 vs WEP104 vs WEP128(?)
@@ -1129,7 +1127,7 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
         1, 3, {0}, 2, {0}, {0,0}, {0}, {0}, {0}, {0}, {0}, {0}, {0},
         {
             0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac,
-            ap_group_crypt_type == AP_CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
+            WifiData->ap_cur.group_crypt_type == AP_CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
             0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x02, 0x00, 0x00
         }
     };
