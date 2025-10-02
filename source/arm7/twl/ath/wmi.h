@@ -91,6 +91,4 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8 *dev_bssid, const u8 *ap_b
 void data_send_to_lwip(void *data, u32 len);
 bool wmi_handshake_done();
 
-u8 *wmi_get_mac(void);
-
 #endif // DSWIFI_ARM7_TWL_ATH_WMI_H__

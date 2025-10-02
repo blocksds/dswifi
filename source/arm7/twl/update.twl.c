@@ -43,8 +43,6 @@ void Wifi_TWL_Update(void)
             // Wait until the card is fully initialized to enter normal mode
             if (wifi_card_initted())
             {
-                memcpy((void *)WifiData->MacAddr, wmi_get_mac(), sizeof(WifiData->MacAddr));
-
                 WifiData->curMode = WIFIMODE_NORMAL;
                 WLOG_PUTS("T: Initialized\n");
                 WLOG_FLUSH();

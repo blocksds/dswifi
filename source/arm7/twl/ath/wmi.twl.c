@@ -27,8 +27,6 @@
 
 #define IEEE_AUTH_PSK       (0x000FAC02)
 
-static u8 device_mac[6];
-
 static u8 device_num_channels = 0;
 static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
@@ -434,7 +432,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
     {
         case WMI_READY_EVENT:
         {
-            memcpy(device_mac, pkt_data, sizeof(device_mac));
+            memcpy((void *)WifiData->MacAddr, pkt_data, sizeof(WifiData->MacAddr));
             WLOG_PRINTF("T: READY_EVENT, %x\nT: MAC: %x:%x:%x:%x:%x:%x\n",
                         pkt_data[6], pkt_data[0], pkt_data[1], pkt_data[2],
                         pkt_data[3], pkt_data[4], pkt_data[5]);
@@ -1375,11 +1373,6 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
 bool wmi_handshake_done(void)
 {
     return has_sent_hs4;
-}
-
-u8 *wmi_get_mac(void)
-{
-    return device_mac;
 }
 
 #pragma pack(pop)
