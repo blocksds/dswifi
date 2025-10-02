@@ -97,12 +97,10 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
         volatile Wifi_AccessPoint *ap = &(WifiData->aplist[chosen_slot]);
 
         // Save the BSSID only if this is a new AP (the BSSID is used to
-        // identify APs that are already in the list).
+        // identify APs that are already in the list, so we don't need to copy
+        // it again).
         if (!in_aplist)
             Wifi_CopyMacAddr(ap->bssid, bssid);
-
-        // Save MAC address
-        Wifi_CopyMacAddr(ap->macaddr, sa);
 
         // Set the counter to 0 to mark the AP as just updated
         ap->timectr = 0;

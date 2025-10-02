@@ -225,19 +225,18 @@ typedef struct WIFI_ACCESSPOINT
     /// BSSID is the AP's SSID. Setting it to all 00's indicates this is not
     /// known and it will be ignored [REQUIRED]
     u8 bssid[6];
-    /// MAC address of the "AP" is only necessary in ad-hoc mode. [generally not
-    /// required to connect].
-    u8 macaddr[6];
+    /// MAC address of the "AP" is only necessary in ad-hoc mode. This is
+    /// currently unused.
+    u8 macaddr[6]; // TODO: Remove? It may be confusing to leave it
     /// Max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented
-    /// as 11, or 0x0B [not required to connect]
+    /// as 11, or 0x0B
     u16 maxrate;
-    // Internal information about how recently a beacon has been received [not
-    // required to connect].
+    // Internal information about how recently a beacon has been received
     u32 timectr;
     /// Running average of the recent RSSI values for this AP, will be set to 0
     /// after not receiving beacons for a while. On DS this is a positive value
     /// between 0 and 255. On DSi it's a value in dBm. Usual values are -40 dBm
-    /// (strong signal) to -90 dBm (weak signal). [not required to connect]
+    /// (strong signal) to -90 dBm (weak signal).
     s16 rssi;
     /// Flags indicating various parameters for the AP. [not required, but the
     /// WFLAG_APDATA_ADHOC flag will be used]
@@ -245,8 +244,7 @@ typedef struct WIFI_ACCESSPOINT
     /// Internal data word used to lock the record to guarantee data coherence.
     /// [not required to connect]
     u32 spinlock;
-    /// Valid channels are 1-14, setting the channel to 0 will indicate the
-    /// system should search. [REQUIRED]
+    /// Valid channels are 1-14.
     u8 channel;
     /// Information send by Nintendo DS hosts in beacon frames, used if
     /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".

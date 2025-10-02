@@ -305,8 +305,11 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata);
 /// Determines whether various APs exist in the local area.
 ///
 /// You provide a list of APs, and it will return the index of the first one in
-/// the list that can be found in the internal list of APs that are being
-/// tracked.
+/// the list that can be found in the internal list of APs that have been found
+/// by the console.
+///
+/// The APs in the "apdata" list must contain a BSSID or SSID. If neither are
+/// provided, the AP will be ignored.
 ///
 /// @param numaps
 ///     Number of records in the list.

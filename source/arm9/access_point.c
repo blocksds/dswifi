@@ -84,57 +84,53 @@ int Wifi_GetAPData(int apnum, Wifi_AccessPoint *apdata)
 
 int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *match_dest)
 {
-    int ap_match = -1;
+    if (apdata == NULL)
+        return -1;
+
     for (int i = 0; i < Wifi_GetNumAP(); i++)
     {
-        Wifi_AccessPoint ap;
+        Wifi_AccessPoint ap = { 0 };
         Wifi_GetAPData(i, &ap);
 
         for (int j = 0; j < numaps; j++)
         {
-            if (apdata[j].ssid_len > 32 || ((signed char)apdata[j].ssid_len) < 0)
-                continue;
+            // For each AP provided in apdata we need to check if there is any
+            // identifying information that matches what we have received in
+            // beacon frames.
 
-            if (apdata[j].ssid_len > 0)
+            u16 macaddrzero[3] = { 0, 0, 0 };
+            if (!Wifi_CmpMacAddr(apdata[j].bssid, macaddrzero))
             {
-                // compare SSIDs
+                // If there is a specified MAC address it must match the one
+                // that we have seen in beacon frames.
+                if (!Wifi_CmpMacAddr(apdata[j].bssid, ap.bssid))
+                    continue;
+            }
+            else
+            {
+                // If no MAC has been provided, a SSID must have been provided
+                if (apdata[j].ssid_len == 0)
+                    continue;
+
+                if (apdata[j].ssid_len > 32)
+                    continue;
+
                 if (apdata[j].ssid_len != ap.ssid_len)
                     continue;
 
-                int n;
-                for (n = 0; n < apdata[j].ssid_len; n++)
-                {
-                    if (apdata[j].ssid[n] != ap.ssid[n])
-                        break;
-                }
-                if (n != apdata[j].ssid_len)
+                if (memcmp(apdata[j].ssid, ap.ssid, ap.ssid_len) != 0)
                     continue;
             }
 
-            u16 macaddrzero[3] = { 0, 0, 0 }; // check for empty mac addr
-            if (!Wifi_CmpMacAddr(apdata[j].macaddr, macaddrzero))
-            {
-                // compare mac addr
-                if (!Wifi_CmpMacAddr(apdata[j].macaddr, ap.macaddr))
-                    continue;
-            }
-            if (apdata[j].channel != 0)
-            {
-                // compare channels
-                if (apdata[j].channel != ap.channel)
-                    continue;
-            }
-            if (j < ap_match || ap_match == -1)
-            {
-                ap_match = j;
-                if (match_dest)
-                    *match_dest = ap;
-            }
-            if (ap_match == 0)
-                return ap_match;
+            // If there's a match, this is the right AP, ignore the rest.
+            if (match_dest)
+                *match_dest = ap;
+
+            return j;
         }
     }
-    return ap_match;
+
+    return -1;
 }
 
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
@@ -145,7 +141,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (!apdata)
         return -1;
-    if (((signed char)apdata->ssid_len) < 0 || apdata->ssid_len > 32)
+    if (apdata->ssid_len > 32)
         return -1;
 
     // If WEP encryption is enabled, the key must be provided
