@@ -896,23 +896,7 @@ static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
     {
         crypt_type = AP_CRYPT_WEP;
 
-        crypt_keylen = 0;
-
-        switch (WifiData->ap_cur.wepmode)
-        {
-            case WEPMODE_64BIT:
-            case WEPMODE_64BIT_ASCII:
-                crypt_keylen = 5;
-                break;
-            case WEPMODE_128BIT:
-            case WEPMODE_128BIT_ASCII:
-                crypt_keylen = 13;
-                break;
-            case WEPMODE_152BIT:
-            case WEPMODE_152BIT_ASCII:
-                crypt_keylen = 16; // Unused
-                break;
-        }
+        crypt_keylen = Wifi_WepKeySize(WifiData->ap_cur.wepmode);
     }
 
     struct

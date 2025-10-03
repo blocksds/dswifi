@@ -92,18 +92,22 @@ enum WIFI_AUTHLEVEL
 // Returns the size in bytes
 static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
 {
-    if (wepmode == WEPMODE_NONE)
-        return 0;
-    else if (wepmode == WEPMODE_40BIT)
-        return 5;
-    else if (wepmode == WEPMODE_128BIT)
-        return 13;
-    else if (wepmode == 5)
-        return 5;
-    else if (wepmode == 6)
-        return 13;
+    switch (wepmode)
+    {
+        case WEPMODE_NONE:
+            return 0;
+        case WEPMODE_64BIT:
+        case WEPMODE_64BIT_ASCII:
+            return 5;
+        case WEPMODE_128BIT:
+        case WEPMODE_128BIT_ASCII:
+            return 13;
+        case WEPMODE_152BIT:
+        case WEPMODE_152BIT_ASCII:
+            return 16; // Unused
+    }
 
-    return -1;
+    return 0;
 }
 
 enum WIFI_TRANSFERRATES
