@@ -201,7 +201,7 @@ typedef struct WIFI_MAINSTRUCT
         u8 ssid_len;
         u16 bssid[3];
         u8 channel;
-        Wifi_ApSecurityType sectype;
+        Wifi_ApSecurityType security_type;
         Wifi_ApCryptType group_crypt_type;
         Wifi_ApCryptType pair_crypt_type;
         Wifi_ApAuthType auth_type;

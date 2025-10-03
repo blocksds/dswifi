@@ -157,12 +157,12 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (wepmode == WEPMODE_NONE)
     {
-        WifiData->ap_req.sectype = AP_SECURITY_OPEN;
+        WifiData->ap_req.security_type = AP_SECURITY_OPEN;
         WifiData->ap_req.wepmode = 0;
     }
     else
     {
-        WifiData->ap_req.sectype = AP_SECURITY_WEP;
+        WifiData->ap_req.security_type = AP_SECURITY_WEP;
         WifiData->ap_req.wepmode = wepmode;
 
         // Copy the key and pad with zeroes
@@ -397,7 +397,7 @@ int Wifi_AssocStatus(void)
 #endif
                 // Set requested AP settings
 
-                WifiData->ap_req.sectype = ap.security_type;
+                WifiData->ap_req.security_type = ap.security_type;
                 WifiData->ap_req.wepmode = WifiData->wfc[n].wepmode;
                 if (ap.security_type == AP_SECURITY_WEP)
                 {

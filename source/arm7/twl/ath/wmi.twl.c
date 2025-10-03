@@ -490,8 +490,8 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             ap_connected = true;
 
-            if ((WifiData->ap_cur.sectype == AP_SECURITY_OPEN) ||
-                (WifiData->ap_cur.sectype == AP_SECURITY_WEP))
+            if ((WifiData->ap_cur.security_type == AP_SECURITY_OPEN) ||
+                (WifiData->ap_cur.security_type == AP_SECURITY_WEP))
             {
                 wmi_post_handshake(NULL, NULL, NULL);
             }
@@ -640,11 +640,11 @@ void wmi_start_scan(void)
 void wmi_connect_cmd(void)
 {
     WLOG_PRINTF("T: CONNECT_CMD (Security: %s)\nT: SSID: [%s]\n",
-                Wifi_ApSecurityTypeString(WifiData->ap_cur.sectype),
+                Wifi_ApSecurityTypeString(WifiData->ap_cur.security_type),
                 (const char *)&WifiData->ap_cur.ssid[0]);
     WLOG_FLUSH();
 
-    if (WifiData->ap_cur.sectype == AP_SECURITY_OPEN)
+    if (WifiData->ap_cur.security_type == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->ap_cur.ssid_len;
         u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
@@ -678,7 +678,7 @@ void wmi_connect_cmd(void)
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else if (WifiData->ap_cur.sectype == AP_SECURITY_WEP)
+    else if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
     {
         size_t ssid_len = WifiData->ap_cur.ssid_len;
         u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
@@ -714,7 +714,7 @@ void wmi_connect_cmd(void)
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else //if (WifiData->ap_cur.sectype == AP_SECURITY_WPA2)
+    else //if (WifiData->ap_cur.security_type == AP_SECURITY_WPA2)
     {
         // TODO: Support WPA APs
         size_t ssid_len = WifiData->ap_cur.ssid_len;
@@ -864,7 +864,7 @@ static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
     u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
 
     // Figure out the correct keylens for WEP; WEP40 vs WEP104 vs WEP128(?)
-    if (WifiData->ap_cur.sectype == AP_SECURITY_WEP)
+    if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
     {
         crypt_type = AP_CRYPT_WEP;
 
@@ -1029,7 +1029,7 @@ static void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const 
     data_send_pkt((u8*)&dummy, sizeof(dummy));
     data_send_pkt((u8*)&dummy, sizeof(dummy));
 
-    if (WifiData->ap_cur.sectype == AP_SECURITY_WPA2)
+    if (WifiData->ap_cur.security_type == AP_SECURITY_WPA2)
     {
         wmi_add_cipher_key(0, 0, tk, NULL);
 
