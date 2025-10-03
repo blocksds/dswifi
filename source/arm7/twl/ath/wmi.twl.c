@@ -754,16 +754,9 @@ void wmi_connect_cmd(void)
 
 void wmi_disconnect_cmd(void)
 {
-    struct __attribute__((packed))
-    {
-        u32 unk;
-    }
-    wmi_params =
-    {
-        0
-    };
-
-    wmi_send_pkt(WMI_DISCONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
+    // This command doesn't have any parameter. If any parameter is passed to it
+    // the command won't work.
+    wmi_send_pkt(WMI_DISCONNECT_CMD, MBOXPKT_REQACK, NULL, 0);
 }
 
 // TODO: Unused
