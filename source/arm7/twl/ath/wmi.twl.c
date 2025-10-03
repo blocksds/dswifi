@@ -56,6 +56,8 @@ static ptk_keyinfo device_ptk;
 static void wmi_set_bss_filter(u8 filter, u32 ieMask);
 static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc);
 static void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const u8 *rsc);
+static void wmi_set_scan_params(u8 flags, u16 maxact_chdwell_time,
+                                u16 pas_chdwell_time, u16 minact_chdwell_time);
 
 // Pkt handlers
 
@@ -440,17 +442,11 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             WLOG_PRINTF("T: REG_DOMAIN_EVENT %x\n", (unsigned int)*(u32*)pkt_data);
             WLOG_FLUSH();
 
-            const u8 wmi_handshake_7[20] =
-            {
-                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x14, 0, 0x32, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0
-            };
-
             // Allows more commands to be sent
             u32 idk_addr = wifi_card_read_intern_word(wifi_card_host_interest_addr());
             wifi_card_write_intern_word(idk_addr, 0x3); // WMI_PROTOCOL_VERSION?
 
-            wmi_send_pkt(WMI_SET_SCAN_PARAMS_CMD, MBOXPKT_REQACK, wmi_handshake_7,
-                         sizeof(wmi_handshake_7));
+            wmi_set_scan_params(0, 20, 50, 0);
 
             wmi_dbgoff();
 
@@ -610,7 +606,7 @@ static void wmi_set_scan_params(u8 flags, u16 maxact_chdwell_time,
         u8 scanCtrlFlags;
         u16 minact_chdwell_time;
         u16 maxact_scan_per_ssid;
-        u16 max_dfsch_act_time;
+        u32 max_dfsch_act_time;
     }
     wmi_params =
     {
