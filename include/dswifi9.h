@@ -326,7 +326,8 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 /// Connect to an Access Point.
 ///
 /// @param apdata
-///     Basic data about the AP.
+///     Basic data about the AP. The user must fill either the bssid field or
+///     the ssid and ssid_len fields. Other fields are ignored.
 /// @param wepmode
 ///     Indicates whether WEP is used, and what kind (WEPMODES). Use
 ///     WEPMODE_NONE if WEP isn't required.
@@ -343,7 +344,8 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned
 /// Connect to an AP without encryption (and NDS multiplayer hosts).
 ///
 /// @param apdata
-///     Basic data about the AP.
+///     Basic data about the AP. The user must fill either the bssid field or
+///     the ssid and ssid_len fields. Other fields are ignored.
 ///
 /// @return
 ///     0 for ok, -1 for error with input data.

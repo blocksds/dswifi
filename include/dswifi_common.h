@@ -209,30 +209,18 @@ typedef struct {
     u16 name[DSWIFI_BEACON_NAME_SIZE / sizeof(u16)];
 } Wifi_NintendoVendorInfo;
 
-/// Structure that defines how to connect to an access point.
-///
-/// If a field is not necessary for Wifi_ConnectAP it is marked as such.
-/// *only* 4 fields are absolutely required to be filled in correctly for the
-/// connection to work, they are: SSID, ssid_len, bssid, and channel. All others
-/// can be ignored (though flags should be set to 0).
+/// Structure that defines information about an Access Point.
 typedef struct WIFI_ACCESSPOINT
 {
-    /// AP's SSID. Zero terminated is not necessary. If ssid[0] is zero, the
-    /// SSID will be ignored in trying to find an AP to connect to. [REQUIRED]
+    /// Name (SSID) of the Access Point. The max supported length is 32
+    /// characters, the last byte of the array must be zero.
     char ssid[33];
-    // Number of valid bytes in the ssid field (0-32) [REQUIRED]
+    // Number of valid bytes in the ssid field (0-32)
     u8 ssid_len;
-    /// BSSID is the AP's SSID. Setting it to all 00's indicates this is not
-    /// known and it will be ignored [REQUIRED]
+    /// BSSID of the Access Point (usually the same value as the MAC address).
     u8 bssid[6];
-    /// MAC address of the "AP" is only necessary in ad-hoc mode. This is
-    /// currently unused.
-    u8 macaddr[6]; // TODO: Remove? It may be confusing to leave it
-    /// Max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented
-    /// as 11, or 0x0B
-    u16 maxrate;
-    // Internal information about how recently a beacon has been received
-    u32 timectr;
+    /// Valid channels are 1-14.
+    u8 channel;
     /// Running average of the recent RSSI values for this AP, will be set to 0
     /// after not receiving beacons for a while. On DS this is a positive value
     /// between 0 and 255. On DSi it's a value in dBm. Usual values are -40 dBm
@@ -240,10 +228,6 @@ typedef struct WIFI_ACCESSPOINT
     s16 rssi;
     /// Flags indicating various parameters for the AP
     u16 flags;
-    /// Internal data word used to lock the record to guarantee data coherence.
-    u32 spinlock;
-    /// Valid channels are 1-14.
-    u8 channel;
     /// Information send by Nintendo DS hosts in beacon frames, used if
     /// WFLAG_APDATA_NINTENDO_TAG is set in "flags".
     Wifi_NintendoVendorInfo nintendo;
@@ -256,6 +240,19 @@ typedef struct WIFI_ACCESSPOINT
     Wifi_ApCryptType pair_crypt_type;
     /// Authentication cipher
     Wifi_ApAuthType auth_type;
+
+    // Private fields
+    // --------------
+
+    // Max rate is measured in steps of 1/2Mbit - 5.5Mbit will be represented
+    // as 11, or 0x0B (NTR mode only).
+    u16 maxrate;
+    // Internal information about how recently a beacon has been received
+    u32 timectr;
+    // Internal data word used to lock the record to guarantee data coherence.
+    // Its size must be a word because the swp instruction is used to access it,
+    // which operates on words.
+    u32 spinlock;
 } Wifi_AccessPoint;
 
 /// Possible states of a client
