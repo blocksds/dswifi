@@ -511,8 +511,6 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                 (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5))
             {
             }
-
-            wmi_delete_bad_ap_cmd();
 #endif
             ap_connected = false;
             ap_connecting = false;
@@ -665,6 +663,8 @@ void wmi_connect_cmd(void)
             u16 channel;
             u8 bssid[6];
             u32 ctrl_flags;
+            // Some documentation says that ctrl_flags is u8 or u16, but the DSi
+            // hangs if u16 is used.
         }
         wmi_params =
         {
@@ -754,23 +754,6 @@ void wmi_disconnect_cmd(void)
     // the command won't work.
     wmi_send_pkt(WMI_DISCONNECT_CMD, MBOXPKT_REQACK, NULL, 0);
 }
-
-// TODO: Unused
-#if 0
-static void wmi_delete_bad_ap_cmd(void)
-{
-    struct __attribute__((packed))
-    {
-        u8 unk;
-    }
-    wmi_params =
-    {
-        0
-    };
-
-    wmi_send_pkt(WMI_DELETE_BAD_AP_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
-}
-#endif
 
 static void wmi_create_pstream(void)
 {
@@ -938,7 +921,7 @@ void wmi_scan_mode_start(void)
     //if (!device_num_channels)
         wmi_send_pkt(WMI_GET_CHANNEL_LIST_CMD, MBOXPKT_REQACK, NULL, 0);
 
-    wmi_set_bss_filter(0,0); // scan for beacons
+    wmi_set_bss_filter(0, 0); // scan for beacons
 
     const struct
     {
