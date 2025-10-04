@@ -131,7 +131,7 @@ void Wifi_Update(void)
     }
 #endif
 
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Update();
     else
         Wifi_NTR_Update();

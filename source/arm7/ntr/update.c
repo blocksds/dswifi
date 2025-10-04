@@ -46,7 +46,7 @@ void Wifi_NTR_KeepaliveCountReset(void)
 
 static void Wifi_SetLedState(int state)
 {
-    if (WifiData->reqReqFlags & WFLAG_REQ_USELED)
+    if (WifiData->reqFlags & WFLAG_REQ_USELED)
     {
         if (wifi_led_state != state)
         {
@@ -385,7 +385,7 @@ void Wifi_NTR_Update(void)
             }
 
             bool cur_allow = Wifi_GetBeaconAllowsConnections();
-            bool req_allow = WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS;
+            bool req_allow = WifiData->reqFlags & WFLAG_REQ_ALLOWCLIENTS;
 
             // If the flag to allow clients has changed
             if (cur_allow != req_allow)

@@ -79,11 +79,11 @@ static bool Wifi_InitIPC(unsigned int flags)
 
     // Use the LED by default
     if ((flags & WIFI_DISABLE_LED) == 0)
-        WifiData->reqReqFlags |= WFLAG_REQ_USELED;
+        WifiData->reqFlags |= WFLAG_REQ_USELED;
 
     // Use DSi mode only if has been requested and we're running on a DSi
     if ((flags & WIFI_ENABLE_DSI_MODE) && isDSiMode())
-        WifiData->reqReqFlags |= WFLAG_REQ_DSI_MODE;
+        WifiData->reqFlags |= WFLAG_REQ_DSI_MODE;
 
     // Set the default host name from the firmware settings
     WifiData->hostPlayerNameLen = PersonalData->nameLen;
@@ -231,9 +231,9 @@ void Wifi_EnableWifi(void)
 void Wifi_SetPromiscuousMode(int enable)
 {
     if (enable)
-        WifiData->reqReqFlags |= WFLAG_REQ_PROMISC;
+        WifiData->reqFlags |= WFLAG_REQ_PROMISC;
     else
-        WifiData->reqReqFlags &= ~WFLAG_REQ_PROMISC;
+        WifiData->reqFlags &= ~WFLAG_REQ_PROMISC;
 }
 
 void Wifi_ScanModeFilter(Wifi_APScanFlags flags)
@@ -313,7 +313,7 @@ int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
     WifiData->reqReplyDataSize = client_size;
 
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
-    WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
+    WifiData->reqFlags |= WFLAG_REQ_ALLOWCLIENTS;
 
     return 0;
 }
@@ -321,9 +321,9 @@ int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
 void Wifi_MultiplayerAllowNewClients(bool allow)
 {
     if (allow)
-        WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
+        WifiData->reqFlags |= WFLAG_REQ_ALLOWCLIENTS;
     else
-        WifiData->reqReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
+        WifiData->reqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
 }
 
 void Wifi_MultiplayerHostName(const void *buffer, u8 len)

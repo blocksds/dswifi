@@ -19,7 +19,7 @@ void Wifi_Init(void *wifidata)
 {
     WifiData = (Wifi_MainStruct *)wifidata;
 
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Init();
     else
         Wifi_NTR_Init();
@@ -37,7 +37,7 @@ void Wifi_Deinit(void)
     WLOG_PUTS("W: Stopping WiFi\n");
     WLOG_FLUSH();
 
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Deinit();
     else
         Wifi_NTR_Deinit();
@@ -52,7 +52,7 @@ void Wifi_Deinit(void)
 
 void Wifi_Start(void)
 {
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Start();
     else
         Wifi_NTR_Start();
@@ -60,7 +60,7 @@ void Wifi_Start(void)
 
 void Wifi_Stop(void)
 {
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Stop();
     else
         Wifi_NTR_Stop();
@@ -68,7 +68,7 @@ void Wifi_Stop(void)
 
 void Wifi_SetupFilterMode(Wifi_FilterMode mode)
 {
-    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_SetupFilterMode(mode);
     else
         Wifi_NTR_SetupFilterMode(mode);

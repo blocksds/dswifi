@@ -140,7 +140,7 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
 
     fie->extra_data.players_max = WifiData->curMaxClients + 1; // Clients + host
     fie->extra_data.players_current = 1; // No clients, only host. Updated from the ARM7
-    int allow = WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS ? 1 : 0;
+    int allow = WifiData->reqFlags & WFLAG_REQ_ALLOWCLIENTS ? 1 : 0;
     fie->extra_data.allows_connections = allow; // Updated from the ARM7
 
     fie->extra_data.name_len = WifiData->hostPlayerNameLen;

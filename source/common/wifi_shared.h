@@ -150,8 +150,8 @@ typedef struct WIFI_MAINSTRUCT
     u8 curChannel, reqChannel;
     u8 curMode, reqMode;
     u8 authlevel, authctr;
-    vu32 flags9, flags7;
-    u16 reqReqFlags; // ARM9 writes requests, the ARM7 reads them
+    u32 flags9, flags7; // Current status of the ARM9 and ARM7
+    u16 reqFlags; // ARM9 writes requests, the ARM7 reads them
     u32 counter7;
     u16 MacAddr[3]; // MAC address of this console
     u32 ip, snmask, gateway;
