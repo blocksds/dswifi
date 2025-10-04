@@ -105,8 +105,6 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             if (ap_data.wep_mode > 7) // Invalid WEP mode
                 continue;
 
-            WifiData->wfc_ap[c].channel = 0;
-
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
@@ -200,8 +198,6 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
         // Only load WPA settings if requested by the caller
         if ((ap_data.wpa_mode != 0) && !allow_wpa)
             continue;
-
-        WifiData->wfc_ap[c].channel = 0;
 
         for (int n = 0; n < 6; n++)
             WifiData->wfc_ap[c].bssid[n] = 0;
