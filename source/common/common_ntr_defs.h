@@ -19,6 +19,16 @@
 
 #define HDR_TX_SIZE             0xC
 
+#define WIFI_TRANSFER_RATE_1MBPS    0x0A // 1 Mbit/s
+#define WIFI_TRANSFER_RATE_2MBPS    0x14 // 2 Mbit/s
+
+// Modes to send NTR packets. They aren't official values recognized by the
+// hardware, but we write them in the HDR_TX_STATUS field to pass them with the
+// packet from the ARM9 to the ARM7, and the ARM7 clears them.
+#define WFLAG_SEND_AS_BEACON    0x2000
+#define WFLAG_SEND_AS_REPLY     0x4000
+#define WFLAG_SEND_AS_CMD       0x8000
+
 // Hardware RX Header (12 bytes)
 // =============================
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
+// Copyright (C) 2025 Antonio Niño Díaz
 
 // Shared structures to be used by arm9 and arm7
 
@@ -15,7 +16,6 @@
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
 #define WIFI_MAX_AP          32
 #define WIFI_MAX_ASSOC_RETRY 30 // TODO: Use in TLW driver
-#define WIFI_PS_POLL_CONST   2
 
 // In scan mode, whenever there is a channel switch, the timeout counter in each
 // AP is incremented. When WIFI_AP_TIMEOUT is reached, the AP is removed from
@@ -32,15 +32,10 @@
 #define WFLAG_ARM9_NETREADY  0x0004
 
 // Requests from the ARM9 to the ARM7
-#define WFLAG_REQ_USELED        0x0001
-#define WFLAG_REQ_PROMISC       0x0010
-#define WFLAG_REQ_ALLOWCLIENTS  0x0040
+#define WFLAG_REQ_USELED        0x0001 // NTR only
+#define WFLAG_REQ_PROMISC       0x0010 // NTR only
+#define WFLAG_REQ_ALLOWCLIENTS  0x0040 // NTR only
 #define WFLAG_REQ_DSI_MODE      0x0080
-
-// Modes to send NTR packets
-#define WFLAG_SEND_AS_BEACON 0x2000
-#define WFLAG_SEND_AS_REPLY  0x4000
-#define WFLAG_SEND_AS_CMD    0x8000
 
 // Enum values for the FIFO WiFi commands (FIFO_DSWIFI).
 typedef enum
@@ -110,34 +105,6 @@ static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
 
     return 0;
 }
-
-enum WIFI_TRANSFERRATES
-{
-    WIFI_TRANSFER_RATE_1MBPS = 0x0A, // 1 Mbit/s
-    WIFI_TRANSFER_RATE_2MBPS = 0x14, // 1 Mbit/s
-};
-
-typedef struct
-{
-    u16 frame_control;
-    u16 duration;
-    u16 da[3];
-    u16 sa[3];
-    u16 bssid[3];
-    u16 seq_ctl;
-    u8 body[0];
-} IEEE_MgtFrameHeader;
-
-typedef struct
-{
-    u16 frame_control;
-    u16 duration;
-    u16 addr_1[3];
-    u16 addr_2[3];
-    u16 addr_3[3];
-    u16 seq_ctl;
-    u8 body[0];
-} IEEE_DataFrameHeader;
 
 typedef struct {
     // List of clients connected
@@ -276,32 +243,5 @@ typedef struct WIFI_MAINSTRUCT
 
     u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
 } Wifi_MainStruct;
-
-// Struct with information specific to DSWifi
-typedef struct {
-    u8 players_max;
-    u8 players_current;
-    u8 allows_connections;
-    u8 name_len; // Length in UTF-16LE characters
-    u8 name[10 * 2]; // UTF16-LE
-} DSWifiExtraData;
-
-// Vendor beacon info (Nintendo Co., Ltd.)
-typedef struct {
-    u8 oui[3]; // 0x00, 0x09, 0xBF
-    u8 oui_type; // 0x00
-    u8 stepping_offset[2];
-    u8 lcd_video_sync[2];
-    u8 fixed_id[4]; // 0x00400001
-    u8 game_id[4];
-    u8 stream_code[2];
-    u8 extra_data_size;
-    u8 beacon_type; // 1 = Multicart
-    u8 cmd_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
-    u8 reply_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
-    DSWifiExtraData extra_data;
-} FieVendorNintendo;
-
-static_assert(sizeof(FieVendorNintendo) == 48);
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__

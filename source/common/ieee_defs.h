@@ -5,6 +5,8 @@
 #ifndef DSWIFI_IEEE_DEFS_H__
 #define DSWIFI_IEEE_DEFS_H__
 
+#include <nds/ndstypes.h>
+
 // 802.11b management frame header (Indices in bytes)
 // ===============================
 
@@ -18,6 +20,17 @@
 
 #define HDR_MGT_MAC_SIZE        24 // Size of the header up to the body in bytes
 
+typedef struct
+{
+    u16 frame_control;
+    u16 duration;
+    u16 da[3];
+    u16 sa[3];
+    u16 bssid[3];
+    u16 seq_ctl;
+    u8 body[0];
+} IEEE_MgtFrameHeader;
+
 // 802.11b data frame header (Indices in bytes)
 // =========================
 
@@ -30,6 +43,17 @@
 #define HDR_DATA_BODY           24 // The body has a variable size
 
 #define HDR_DATA_MAC_SIZE       24 // Size of the header up to the body in bytes
+
+typedef struct
+{
+    u16 frame_control;
+    u16 duration;
+    u16 addr_1[3];
+    u16 addr_2[3];
+    u16 addr_3[3];
+    u16 seq_ctl;
+    u8 body[0];
+} IEEE_DataFrameHeader;
 
 // Frame control bitfields
 // =======================
@@ -190,5 +214,35 @@
 #define REASON_CLASS_3_FRAME_FROM_UNASSOC_STATION   7
 #define REASON_THIS_STATION_LEFT_DISASSOC           8
 #define REASON_ASSOCIATION_BEFORE_AUTH              9
+
+// Nintendo vendor information
+// ===========================
+
+// Struct with additional information specific to DSWifi
+typedef struct {
+    u8 players_max;
+    u8 players_current;
+    u8 allows_connections;
+    u8 name_len; // Length in UTF-16LE characters
+    u8 name[10 * 2]; // UTF16-LE
+} DSWifiExtraData;
+
+// Vendor beacon info (Nintendo Co., Ltd.)
+typedef struct {
+    u8 oui[3]; // 0x00, 0x09, 0xBF
+    u8 oui_type; // 0x00
+    u8 stepping_offset[2];
+    u8 lcd_video_sync[2];
+    u8 fixed_id[4]; // 0x00400001
+    u8 game_id[4];
+    u8 stream_code[2];
+    u8 extra_data_size;
+    u8 beacon_type; // 1 = Multicart
+    u8 cmd_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
+    u8 reply_data_size[2]; // Size in bytes (in Nintendo games it's in halfwords)
+    DSWifiExtraData extra_data;
+} FieVendorNintendo;
+
+static_assert(sizeof(FieVendorNintendo) == 48);
 
 #endif // DSWIFI_IEEE_DEFS_H__

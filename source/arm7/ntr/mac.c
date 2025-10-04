@@ -8,6 +8,7 @@
 #include "arm7/ntr/baseband.h"
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/setup.h"
+#include "common/common_ntr_defs.h"
 
 void Wifi_MacInit(void)
 {

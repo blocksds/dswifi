@@ -7,7 +7,7 @@
 
 #include <dswifi_common.h>
 
-#include "common/wifi_shared.h"
+#include "common/ieee_defs.h"
 
 // Sent by the host with CMD packets
 

@@ -22,6 +22,7 @@
 #include "arm7/ntr/ieee_802_11/association.h"
 #include "arm7/ntr/ieee_802_11/authentication.h"
 #include "arm7/ntr/ieee_802_11/other.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
 #include "common/spinlock.h"
@@ -304,6 +305,8 @@ void Wifi_NTR_Update(void)
                 Wifi_SendNullFrame();
             }
 #if 0
+#define WIFI_PS_POLL_CONST   2
+
             if ((W_US_COUNT1 - WifiData->pspoll_period) > WIFI_PS_POLL_CONST)
             {
                 WifiData->pspoll_period = W_US_COUNT1;
