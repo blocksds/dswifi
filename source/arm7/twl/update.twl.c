@@ -115,7 +115,7 @@ void Wifi_TWL_Update(void)
             if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
             {
                 wmi_disconnect_cmd();
-                WifiData->curMode = WIFIMODE_NORMAL;
+                WifiData->curMode = WIFIMODE_DISCONNECTING;
                 break;
             }
 
