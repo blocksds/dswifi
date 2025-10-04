@@ -8,14 +8,22 @@
 #include <nds.h>
 #include <dswifi9.h>
 
-#include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/lwip/lwip_nds.h"
 #include "arm9/wifi_arm9.h"
 #include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
-WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
+typedef enum {
+    WIFI_CONNECT_ERROR          = -1,
+    WIFI_CONNECT_SEARCHING      = 0,
+    WIFI_CONNECT_ASSOCIATING    = 1,
+    WIFI_CONNECT_DHCPING        = 2,
+    WIFI_CONNECT_DONE           = 3,
+    WIFI_CONNECT_SEARCHING_WFC  = 4,
+} WIFI_CONNECT_STATE;
+
+static WIFI_CONNECT_STATE wifi_connect_state = WIFI_CONNECT_SEARCHING;
 
 static Wifi_AccessPoint wifi_connect_point;
 

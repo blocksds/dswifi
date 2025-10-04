@@ -9,7 +9,6 @@
 #include "lwip/sys.h"
 #include "lwip/tcpip.h"
 
-#include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/lwip/lwip_nds.h"
 #include "arm9/wifi_arm9.h"

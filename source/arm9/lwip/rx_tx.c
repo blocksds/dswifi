@@ -8,7 +8,6 @@
 #include <nds.h>
 #include <dswifi9.h>
 
-#include "arm9/access_point.h"
 #include "arm9/ipc.h"
 #include "arm9/lwip/lwip_nds.h"
 #include "arm9/rx_tx_queue.h"

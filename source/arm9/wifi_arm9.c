@@ -5,7 +5,6 @@
 
 #include <dswifi9.h>
 
-#include "arm9/access_point.h"
 #include "arm9/multiplayer.h"
 #include "arm9/rx_tx_queue.h"
 #include "arm9/wifi_arm9.h"
