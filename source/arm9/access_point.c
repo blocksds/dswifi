@@ -155,46 +155,23 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     wifi_connect_state = WIFI_CONNECT_SEARCHING;
 
+    // Save password
+
+    memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
+
     if (wepmode == WEPMODE_NONE)
     {
-        WifiData->ap_req.security_type = AP_SECURITY_OPEN;
-        WifiData->ap_req.wepmode = 0;
+        // Nothing to do
     }
     else
     {
-        WifiData->ap_req.security_type = AP_SECURITY_WEP;
-        WifiData->ap_req.wepmode = wepmode;
-
-        // Copy the key and pad with zeroes
-        memset((void *)WifiData->ap_req.pass, 0, sizeof(WifiData->ap_req.pass));
-        memcpy((void *)WifiData->ap_req.pass, wepkey, Wifi_WepKeySize(wepmode));
+        WifiData->curApSecurity.wepmode = wepmode;
+        memcpy((void *)WifiData->curApSecurity.pass, wepkey, Wifi_WepKeySize(wepmode));
     }
 
-    WifiData->realRates = true;
-
-    Wifi_AccessPoint ap;
-
-    int error = Wifi_FindMatchingAP(1, apdata, &ap);
-    if (error == 0)
-    {
-        // If we have found the requested AP, ask the ARM7 to connect to it
-
-        Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-
-        WifiData->ap_req.ssid_len = ap.ssid_len;
-        memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
-
-        WifiData->ap_req.channel = ap.channel;
-
-        WifiData->reqMode = WIFIMODE_NORMAL;
-        WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
-        wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
-    }
-    else
-    {
-        Wifi_ScanMode();
-        wifi_connect_point = *apdata;
-    }
+    // Ask the ARM7 to start scanning and the ARM9 to look for this specific AP
+    wifi_connect_point = *apdata;
+    Wifi_ScanMode();
 
     return 0;
 }
@@ -239,18 +216,16 @@ int Wifi_AssocStatus(void)
 
         case WIFI_CONNECT_SEARCHING:
         {
-            // Check if we have found the AP requested by the user
-            Wifi_AccessPoint ap;
-            int error = Wifi_FindMatchingAP(1, &wifi_connect_point, &ap);
-            if (error == 0)
+            // Check if we have found the AP requested by the user. The security
+            // settings have been set with Wifi_ConnectAP().
+            Wifi_AccessPoint found;
+            int ret = Wifi_FindMatchingAP(1, &wifi_connect_point, &found);
+            if (ret != -1)
             {
-                // Set settings of requested AP
-                Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-
-                WifiData->ap_req.ssid_len = ap.ssid_len;
-                memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
-
-                WifiData->ap_req.channel = ap.channel;
+                // If we have found the requested AP, ask the ARM7 to connect to
+                // it. Use the information that the ARM7 has found, not the one
+                // provided by the user.
+                WifiData->ap_cur = found;
 
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
@@ -380,10 +355,10 @@ int Wifi_AssocStatus(void)
             // any AP. This will let us find the best one available.
             int numap = WifiData->wfc_number_of_configs;
 
-            // Check if any of the APs we have found so far is in the WFC
-            // settings we have read.
-            Wifi_AccessPoint ap;
-            int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &ap);
+            // Check if we have found any AP stored in the WFC settings. The
+            // security settings can be obtained from the WFC settings.
+            Wifi_AccessPoint found;
+            int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &found);
             if (n != -1)
             {
 #ifdef DSWIFI_ENABLE_LWIP
@@ -397,21 +372,26 @@ int Wifi_AssocStatus(void)
 #endif
                 // Set requested AP settings
 
-                WifiData->ap_req.security_type = ap.security_type;
-                WifiData->ap_req.wepmode = WifiData->wfc[n].wepmode;
-                if (ap.security_type == AP_SECURITY_WEP)
+                // If we have found the requested AP, ask the ARM7 to connect to
+                // it. Use the information that the ARM7 has found, not the one
+                // provided by the user.
+                WifiData->ap_cur = found;
+
+                // Load security settings from WFC settings
+
+                memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
+
+                if (found.security_type == AP_SECURITY_OPEN)
                 {
-                    memcpy((void *)WifiData->ap_req.pass,
-                           (const void *)WifiData->wfc[n].wepkey,
-                           Wifi_WepKeySize(WifiData->ap_req.wepmode));
+                    // Nothing to do
                 }
-
-                Wifi_CopyMacAddr(WifiData->ap_req.bssid, ap.bssid);
-
-                WifiData->ap_req.ssid_len = ap.ssid_len;
-                memcpy((void *)WifiData->ap_req.ssid, ap.ssid, sizeof(ap.ssid));
-
-                WifiData->ap_req.channel = ap.channel;
+                else if (found.security_type == AP_SECURITY_WEP)
+                {
+                    WifiData->curApSecurity.wepmode = WifiData->wfc[n].wepmode;
+                    memcpy((void *)WifiData->curApSecurity.pass,
+                           (const void *)WifiData->wfc[n].wepkey,
+                           Wifi_WepKeySize(WifiData->wfc[n].wepmode));
+                }
 
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;

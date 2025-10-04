@@ -195,19 +195,15 @@ typedef struct WIFI_MAINSTRUCT
     // Access Point information
     // ------------------------
 
-    // Data of the AP we are connecting/connected to
+    // Data of the AP the ARM9 has requested and the one currently being used by
+    // the ARM7.
+    Wifi_AccessPoint ap_cur;
+
+    // Security information about the AP
     struct {
-        char ssid[33]; // Last byte is 0 so that it's a valid C string
-        u8 ssid_len;
-        u16 bssid[3];
-        u8 channel;
-        Wifi_ApSecurityType security_type;
-        Wifi_ApCryptType group_crypt_type;
-        Wifi_ApCryptType pair_crypt_type;
-        Wifi_ApAuthType auth_type;
         u8 wepmode;  // In WEP mode we need to know the length of the key
         u8 pass[64]; // Max size for WPA is 63 bytes
-    } ap_req, ap_cur; // Requested AP by ARM9, Current AP used in ARM7
+    } curApSecurity;
 
     u8 maxrate7;
     bool realRates;

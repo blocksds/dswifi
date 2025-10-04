@@ -169,10 +169,6 @@ void Wifi_NTR_Update(void)
 
                 Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
 
-                WifiData->ap_cur.ssid_len = WifiData->ap_req.ssid_len;
-                for (size_t i = 0; i < sizeof(WifiData->ap_cur.ssid); i++)
-                    WifiData->ap_cur.ssid[i] = WifiData->ap_req.ssid[i];
-
                 Wifi_MPHost_ResetClients();
                 WifiData->curMaxClients = WifiData->reqMaxClients;
                 WifiData->curCmdDataSize = WifiData->reqCmdDataSize;
@@ -205,11 +201,9 @@ void Wifi_NTR_Update(void)
             if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
             {
                 // Not connected - connect!
-                WifiData->ap_cur = WifiData->ap_req;
-
-                Wifi_NTR_SetWepKey((void *)WifiData->ap_cur.pass,
-                                   WifiData->ap_cur.wepmode);
-                Wifi_NTR_SetWepMode(WifiData->ap_cur.wepmode);
+                Wifi_NTR_SetWepKey((void *)WifiData->curApSecurity.pass,
+                                   WifiData->curApSecurity.wepmode);
+                Wifi_NTR_SetWepMode(WifiData->curApSecurity.wepmode);
 
                 // Latch BSSID
                 W_BSSID[0] = WifiData->ap_cur.bssid[0] | WifiData->ap_cur.bssid[1] << 8;
@@ -225,6 +219,8 @@ void Wifi_NTR_Update(void)
                 {
                     Wifi_SetupFilterMode(WIFI_FILTERMODE_INTERNET);
                 }
+
+                WifiData->realRates = true;
 
                 WifiData->reqChannel = WifiData->ap_cur.channel;
                 Wifi_SetChannel(WifiData->ap_cur.channel);

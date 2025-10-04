@@ -684,10 +684,10 @@ void wmi_connect_cmd(void)
         u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
 
         // Keys have to be set before connect
-        wmi_add_cipher_key(0, 3, (const void*)WifiData->ap_cur.pass, NULL);
-        wmi_add_cipher_key(1, 1, (const void*)WifiData->ap_cur.pass, NULL);
-        wmi_add_cipher_key(2, 1, (const void*)WifiData->ap_cur.pass, NULL);
-        wmi_add_cipher_key(3, 1, (const void*)WifiData->ap_cur.pass, NULL);
+        wmi_add_cipher_key(0, 3, (const void*)WifiData->curApSecurity.pass, NULL);
+        wmi_add_cipher_key(1, 1, (const void*)WifiData->curApSecurity.pass, NULL);
+        wmi_add_cipher_key(2, 1, (const void*)WifiData->curApSecurity.pass, NULL);
+        wmi_add_cipher_key(3, 1, (const void*)WifiData->curApSecurity.pass, NULL);
 
         struct __attribute__((packed))
         {
@@ -868,7 +868,7 @@ static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
     {
         crypt_type = AP_CRYPT_WEP;
 
-        crypt_keylen = Wifi_WepKeySize(WifiData->ap_cur.wepmode);
+        crypt_keylen = Wifi_WepKeySize(WifiData->curApSecurity.wepmode);
     }
 
     struct
