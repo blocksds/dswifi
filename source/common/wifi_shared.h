@@ -12,8 +12,11 @@
 #include <nds/arm9/cp15_asm.h>
 #include <dswifi_common.h>
 
+// Space reserved for incoming and outgoing packets
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
+
+// Max number of Access Points that the library will keep track of
 #define WIFI_MAX_AP          32
 
 // In scan mode, whenever there is a channel switch, the timeout counter in each
@@ -221,7 +224,7 @@ typedef struct WIFI_MAINSTRUCT
     u32 txbufRead;  // And we will read starting from this entry in txbufData[]
     u16 txbufData[WIFI_TXBUFFER_SIZE / 2];
 
-    // Local multiplay information
+    // Local multiplay information (NTR mode only)
     // ---------------------------
 
     // This struct can only be modified by the ARM7, the ARM9 should only read
