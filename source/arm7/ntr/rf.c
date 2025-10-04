@@ -110,8 +110,8 @@ void Wifi_SetChannel(int channel)
     if (channel < 1 || channel > 13)
         return;
 
-    WLOG_PRINTF("W: Set channel %d\n", channel);
-    WLOG_FLUSH();
+    // WLOG_PRINTF("W: Set channel %d\n", channel);
+    // WLOG_FLUSH();
 
     Wifi_SetBeaconChannel(channel);
 

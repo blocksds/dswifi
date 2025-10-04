@@ -278,7 +278,7 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
-            if ((W_US_COUNT1 - WifiData->counter7) > 6) // TODO: Increase scan speed
+            if ((W_US_COUNT1 - WifiData->counter7) > 1)
             {
                 // Request changing channel
                 WifiData->counter7   = W_US_COUNT1;
