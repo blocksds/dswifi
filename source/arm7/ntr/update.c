@@ -59,14 +59,34 @@ static void Wifi_SetLedState(int state)
     }
 }
 
-static void Wifi_UpdateAssociate(void)
+// =====================================================================
+
+static void Wifi_AssociationStart(void)
 {
-    // 20 units is around 1 second
-    if ((W_US_COUNT1 - WifiData->counter7) <= 20)
-        return;
+    WifiData->authctr  = 0;
+    WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
 
-    WifiData->counter7 = W_US_COUNT1;
+    Wifi_SendOpenSystemAuthPacket();
+}
 
+static bool Wifi_AssociationIsSuccess(void)
+{
+    if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
+        return true;
+
+    return false;
+}
+
+static bool Wifi_AssociationIsFailure(void)
+{
+    if (WifiData->authlevel == WIFI_AUTHLEVEL_ERROR)
+        return true;
+
+    return false;
+}
+
+static void Wifi_AssociationUpdate(void)
+{
     // If this point is reached, we haven't received any reply to one of our
     // packets. We need to send one again to try to connect.
 
@@ -74,7 +94,7 @@ static void Wifi_UpdateAssociate(void)
     WifiData->authctr++;
     if (WifiData->authctr > WIFI_MAX_ASSOC_RETRY)
     {
-        WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+        WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
         return;
     }
 
@@ -92,14 +112,19 @@ static void Wifi_UpdateAssociate(void)
             // Fallthrough
 
         case WIFI_AUTHLEVEL_DISCONNECTED:
+            // Try to connect again if we haven't received any reply.
             Wifi_SendOpenSystemAuthPacket();
             break;
 
         case WIFI_AUTHLEVEL_ASSOCIATED:
-            // Let Wifi_NTR_Update() change WifiData->curMode
+        case WIFI_AUTHLEVEL_ERROR:
+            // If either of the two modes is reached wait until Wifi_NTR_Update()
+            // changes WifiData->curMode to WIFIMODE_CONNECTED.
             break;
     }
 }
+
+// =====================================================================
 
 void Wifi_NTR_Update(void)
 {
@@ -232,15 +257,13 @@ void Wifi_NTR_Update(void)
                 WifiData->reqChannel = WifiData->curAp.channel;
                 Wifi_SetChannel(WifiData->curAp.channel);
 
-                Wifi_SendOpenSystemAuthPacket();
-                WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
-
                 WifiData->txbufRead = 0; // Empty TX buffer
                 WifiData->txbufWrite = 0;
 
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_CONNECTING;
-                WifiData->authctr  = 0;
+
+                Wifi_AssociationStart();
             }
             break;
         }
@@ -255,7 +278,7 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
-            if ((W_US_COUNT1 - WifiData->counter7) > 6)
+            if ((W_US_COUNT1 - WifiData->counter7) > 6) // TODO: Increase scan speed
             {
                 // Request changing channel
                 WifiData->counter7   = W_US_COUNT1;
@@ -281,20 +304,32 @@ void Wifi_NTR_Update(void)
                 break;
             }
 
-            if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
-            {
-                WifiData->curMode = WIFIMODE_CONNECTED;
-                break;
-            }
-
-            Wifi_UpdateAssociate();
-
             // If we have been asked to stop trying to connect, go back to idle
             if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
+            }
+
+            if (Wifi_AssociationIsSuccess())
+            {
+                WifiData->curMode = WIFIMODE_CONNECTED;
+                break;
+            }
+
+            if (Wifi_AssociationIsFailure())
+            {
+                WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+                break;
+            }
+
+            // If the process stops (for example, because we don't receive a
+            // packet) retry manually every now and then.
+            if ((W_US_COUNT1 - WifiData->counter7) > 20) // 20 units is 1 sec aprox
+            {
+                WifiData->counter7 = W_US_COUNT1;
+                Wifi_AssociationUpdate();
             }
             break;
         }
@@ -336,9 +371,9 @@ void Wifi_NTR_Update(void)
                 break;
             }
 
-            if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED)
+            if (Wifi_AssociationIsFailure())
             {
-                WifiData->curMode = WIFIMODE_CONNECTING;
+                WifiData->curMode = WIFIMODE_CANNOTCONNECT;
                 break;
             }
             break;

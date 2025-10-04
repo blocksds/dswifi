@@ -197,7 +197,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         }
         else
         {
-            WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+            WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
         }
     }
 

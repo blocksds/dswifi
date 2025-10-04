@@ -195,7 +195,7 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
                     // This error code is returned by DSWifi multiplayer hosts
                     // when no new connections are allowed or when the maximum
                     // number of clients has been reached.
-                    WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+                    WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
                 }
                 else
                 {
@@ -228,7 +228,7 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             }
             else // Rejection
             {
-                WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+                WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
                 WLOG_PRINTF("W: Rejected: %d\n", body[2]);
             }
         }
@@ -248,7 +248,7 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
             }
             else // Rejection
             {
-                WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+                WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
                 WLOG_PRINTF("W: Rejected: %d\n", body[2]);
             }
         }
@@ -311,7 +311,7 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
     else
     {
         // Stop trying to connect to this AP
-        WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+        WifiData->authlevel = WIFI_AUTHLEVEL_ERROR;
         W_BSSID[0] = 0;
         W_BSSID[1] = 0;
         W_BSSID[2] = 0;

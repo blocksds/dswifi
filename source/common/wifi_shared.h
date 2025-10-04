@@ -81,6 +81,7 @@ enum WIFI_AUTHLEVEL
     WIFI_AUTHLEVEL_AUTHENTICATED,
     WIFI_AUTHLEVEL_ASSOCIATED,
     WIFI_AUTHLEVEL_DEASSOCIATED,
+    WIFI_AUTHLEVEL_ERROR,
 };
 
 // Returns the size in bytes
@@ -156,13 +157,20 @@ typedef struct WIFI_MAINSTRUCT
     // Global library information
     // --------------------------
 
-    // WiFi status
+    // Current mode (enum WIFI_MODE). Written only by Wifi_Update() in the ARM7.
+    u8 curMode;
+    // Requested mode. Written only by the ARM9.
+    u8 reqMode;
+
+    // Current channel and requested channel. NTR mode
     u8 curChannel, reqChannel;
-    u8 curMode, reqMode;
-    u8 authlevel, authctr; // NTR mode only
+
+    // Current AP connection status. NTR mode
+    u8 authlevel, authctr;
+
     u32 flags7; // Current status of the ARM7
     u16 reqFlags; // ARM9 writes requests, the ARM7 reads them
-    u32 counter7;
+    u32 counter7; // NTR mode
     u16 MacAddr[3]; // MAC address of this console
 
     // Mode of operation of DSWifi. Check enum DSWifi_Mode
