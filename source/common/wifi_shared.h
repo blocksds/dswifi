@@ -15,7 +15,6 @@
 #define WIFI_RXBUFFER_SIZE   (1024 * 12)
 #define WIFI_TXBUFFER_SIZE   (1024 * 24)
 #define WIFI_MAX_AP          32
-#define WIFI_MAX_ASSOC_RETRY 30 // TODO: Use in TLW driver
 
 // In scan mode, whenever there is a channel switch, the timeout counter in each
 // AP is incremented. When WIFI_AP_TIMEOUT is reached, the AP is removed from

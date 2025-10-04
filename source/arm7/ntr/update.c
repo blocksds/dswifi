@@ -27,6 +27,9 @@
 #include "common/mac_addresses.h"
 #include "common/spinlock.h"
 
+// Max number of retries when connecting to an Access Point
+#define WIFI_MAX_ASSOC_RETRY 5
+
 // The keepalive counter is updated in Wifi_Update(), which is called once per
 // frame. If this counter reaches 2 minutes, a NULL frame will be sent to keep
 // the connection alive.
