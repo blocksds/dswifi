@@ -84,7 +84,7 @@ end:
 int Wifi_MPHost_ClientAuthenticate(void *macaddr)
 {
     // Check if we don't allow new authentications
-    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS))
+    if (!(WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS))
         return -1;
 
     int oldIME = enterCriticalSection();
@@ -137,7 +137,7 @@ end:
 int Wifi_MPHost_ClientAssociate(void *macaddr)
 {
     // Check if we don't allow new associations
-    if (!(WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS))
+    if (!(WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS))
         return -1;
 
     int oldIME = enterCriticalSection();

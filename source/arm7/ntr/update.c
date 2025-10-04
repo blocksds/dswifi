@@ -384,7 +384,7 @@ void Wifi_NTR_Update(void)
                 }
             }
 
-            bool cur_allow = WifiData->curReqFlags & WFLAG_REQ_ALLOWCLIENTS;
+            bool cur_allow = Wifi_GetBeaconAllowsConnections();
             bool req_allow = WifiData->reqReqFlags & WFLAG_REQ_ALLOWCLIENTS;
 
             // If the flag to allow clients has changed
@@ -392,12 +392,10 @@ void Wifi_NTR_Update(void)
             {
                 if (req_allow)
                 {
-                    WifiData->curReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
                     Wifi_SetBeaconAllowsConnections(1);
                 }
                 else
                 {
-                    WifiData->curReqFlags &= ~WFLAG_REQ_ALLOWCLIENTS;
                     Wifi_SetBeaconAllowsConnections(0);
 
                     // Kick clients authenticated but not associated

@@ -152,7 +152,7 @@ typedef struct WIFI_MAINSTRUCT
     u8 authlevel, authctr;
     vu32 flags9, flags7;
     u32 reqPacketFlags;
-    u16 curReqFlags, reqReqFlags;
+    u16 reqReqFlags;
     u32 counter7;
     u16 MacAddr[3]; // MAC address of this console
     u32 ip, snmask, gateway;
