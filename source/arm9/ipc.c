@@ -146,6 +146,7 @@ bool Wifi_InitDefault(unsigned int flags)
 
         while (true)
         {
+            // TODO: Stop using association status, use wifi mode
             wifiStatus = Wifi_AssocStatus(); // check status
             if (wifiStatus == ASSOCSTATUS_ASSOCIATED)
                 break;
@@ -170,8 +171,6 @@ bool Wifi_Deinit(void)
         return false;
 
     fifoSetValue32Handler(FIFO_DSWIFI, NULL, 0);
-
-    timerStop(3);
 
     fifoSendValue32(FIFO_DSWIFI, WIFI_DEINIT);
 
