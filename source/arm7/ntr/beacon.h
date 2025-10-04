@@ -10,7 +10,10 @@ void Wifi_BeaconStop(void);
 void Wifi_BeaconSetup(void);
 void Wifi_SetBeaconChannel(int channel);
 void Wifi_SetBeaconCurrentPlayers(int num);
+
 void Wifi_SetBeaconAllowsConnections(int allows);
+int Wifi_GetBeaconAllowsConnections(void);
+
 void Wifi_SetBeaconPeriod(int beacon_period);
 
 #endif // DSWIFI_ARM7_NTR_BEACON_H__

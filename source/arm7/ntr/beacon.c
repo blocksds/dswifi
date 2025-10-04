@@ -130,6 +130,17 @@ void Wifi_SetBeaconAllowsConnections(int allows)
         Wifi_MacWriteByte(dswifi_information_addr + 2, allows);
 }
 
+int Wifi_GetBeaconAllowsConnections(void)
+{
+    if (dswifi_information_addr == 0)
+        return 0;
+
+    if (W_TXBUF_BEACON & TXBUF_BEACON_ENABLE)
+        return Wifi_MacReadByte(dswifi_information_addr + 2);
+
+    return 0;
+}
+
 void Wifi_SetBeaconPeriod(int beacon_period)
 {
     if (beacon_period < 0x10 || beacon_period > 0x3E7)

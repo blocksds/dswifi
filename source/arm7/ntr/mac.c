@@ -112,3 +112,16 @@ void Wifi_MacWriteByte(int address, int value)
     else
         W_MACMEM(addr) = (W_MACMEM(addr) & 0xFF00) | (value << 0);
 }
+
+int Wifi_MacReadByte(int address)
+{
+    // We can only read/write this RAM in 16-bit units, so we need to check
+    // which of the two halves of the halfword needs to be edited.
+
+    u16 addr = address & ~1;
+
+    if (address & 1)
+        return W_MACMEM(addr) >> 8;
+    else
+        return W_MACMEM(addr) & 0xFF;
+}
