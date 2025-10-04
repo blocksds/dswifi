@@ -72,7 +72,8 @@ void Wifi_TWL_Update(void)
 
             if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
             {
-                WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
+                WifiData->txbufRead = 0; // Empty TX buffer
+                WifiData->txbufWrite = 0;
 
                 wmi_connect();
                 WifiData->curMode = WIFIMODE_ASSOCIATE;

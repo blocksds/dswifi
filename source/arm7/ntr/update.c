@@ -234,7 +234,8 @@ void Wifi_NTR_Update(void)
                 Wifi_SendOpenSystemAuthPacket();
                 WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
 
-                WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
+                WifiData->txbufRead = 0; // Empty TX buffer
+                WifiData->txbufWrite = 0;
 
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_ASSOCIATE;
