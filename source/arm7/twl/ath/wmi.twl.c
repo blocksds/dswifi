@@ -506,12 +506,8 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
                         pkt_data[4], pkt_data[5], pkt_data[6], pkt_data[7]);
             WLOG_FLUSH();
 
-#if 0
-            if (ap_connected &&
-                (disconnectReason == 4 || disconnectReason == 1 || disconnectReason == 5))
-            {
-            }
-#endif
+            // TODO: Do different things depending on the disconnect reason?
+
             ap_connected = false;
             ap_connecting = false;
 
