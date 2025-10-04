@@ -255,42 +255,7 @@ int Wifi_AssocStatus(void)
                         return ASSOCSTATUS_AUTHENTICATING;
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_CONNECTING:
-                    switch (WifiData->authlevel)
-                    {
-                        case WIFI_AUTHLEVEL_DISCONNECTED:
-                            return ASSOCSTATUS_AUTHENTICATING;
-                        case WIFI_AUTHLEVEL_AUTHENTICATED:
-                        case WIFI_AUTHLEVEL_DEASSOCIATED:
-                            return ASSOCSTATUS_ASSOCIATING;
-                        case WIFI_AUTHLEVEL_ASSOCIATED:
-#ifdef DSWIFI_ENABLE_LWIP
-                            if (wifi_lwip_enabled)
-                            {
-                                // We only need to use DHCP if we are connected to an AP
-                                // to access the Internet.
-                                if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-                                {
-                                    wifi_netif_set_up();
-
-                                    if (wifi_using_dhcp())
-                                    {
-                                        // Only use DHCP if we don't have an IP
-                                        // that has been set manually.
-                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
-                                        return ASSOCSTATUS_ACQUIRINGDHCP;
-                                    }
-                                    else
-                                    {
-                                        wifi_connect_state = WIFI_CONNECT_DONE;
-                                        return ASSOCSTATUS_ASSOCIATED;
-                                    }
-                                }
-                            }
-#endif
-                            wifi_connect_state = WIFI_CONNECT_DONE;
-                            return ASSOCSTATUS_ASSOCIATED;
-                    }
-                    break;
+                    return ASSOCSTATUS_ASSOCIATING;
                 case WIFIMODE_CONNECTED:
 #ifdef DSWIFI_ENABLE_LWIP
                     if (wifi_lwip_enabled)
