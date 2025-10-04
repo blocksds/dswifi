@@ -290,7 +290,7 @@ int Wifi_AssocStatus(void)
 #ifdef DSWIFI_ENABLE_LWIP
             if (wifi_lwip_enabled)
             {
-                if ((wifi_get_ip() != INADDR_NONE) && (wifi_get_dns(0) != INADDR_NONE))
+                if ((wifi_get_ip() != 0) && (wifi_get_dns(0) != 0))
                 {
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     return ASSOCSTATUS_ASSOCIATED;
