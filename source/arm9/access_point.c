@@ -291,10 +291,6 @@ int Wifi_AssocStatus(void)
 #ifdef DSWIFI_ENABLE_LWIP
             if (wifi_lwip_enabled)
             {
-                // If we are in multiplayer client mode we are done.
-                if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-                    return ASSOCSTATUS_ASSOCIATED;
-
                 if ((wifi_get_ip() != INADDR_NONE) && (wifi_get_dns(0) != INADDR_NONE))
                 {
                     wifi_connect_state = WIFI_CONNECT_DONE;
