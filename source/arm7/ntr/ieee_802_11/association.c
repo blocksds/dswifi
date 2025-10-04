@@ -39,7 +39,7 @@ int Wifi_SendAssocPacket(void)
     // Fixed-length fields
     // -------------------
 
-    if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
+    if (WifiData->curAp.security_type == AP_SECURITY_WEP)
         ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
     else
         ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info
@@ -55,11 +55,11 @@ int Wifi_SendAssocPacket(void)
     // SSID
 
     *body++ = MGT_FIE_ID_SSID; // Element ID: Service Set Identity (SSID)
-    *body++ = WifiData->ap_cur.ssid_len; // SSID length
-    for (int j = 0; j < WifiData->ap_cur.ssid_len; j++) // 0 to 32 bytes: SSID
-        *body++ = WifiData->ap_cur.ssid[j];
+    *body++ = WifiData->curAp.ssid_len; // SSID length
+    for (int j = 0; j < WifiData->curAp.ssid_len; j++) // 0 to 32 bytes: SSID
+        *body++ = WifiData->curAp.ssid[j];
 
-    body_size += 2 + WifiData->ap_cur.ssid_len;
+    body_size += 2 + WifiData->curAp.ssid_len;
 
     // Supported rates
 
@@ -123,7 +123,7 @@ void Wifi_ProcessAssocResponse(Wifi_RxHeader *packetheader, int macbase)
         return;
 
     // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->ap_cur.bssid))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->curAp.bssid))
         return;
 
     WLOG_PUTS("W: [R] Assoc Response\n");
@@ -223,7 +223,7 @@ static int Wifi_MPHost_SendAssocResponsePacket(void *client_mac, u16 status_code
     // Fixed-length fields
     // -------------------
 
-    if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
+    if (WifiData->curAp.security_type == AP_SECURITY_WEP)
         ((u16 *)body)[0] = CAPS_ESS | CAPS_PRIVACY | CAPS_SHORT_PREAMBLE; // CAPS info
     else
         ((u16 *)body)[0] = CAPS_ESS | CAPS_SHORT_PREAMBLE; // CAPS info

@@ -206,9 +206,9 @@ void Wifi_NTR_Update(void)
                 Wifi_NTR_SetWepMode(WifiData->curApSecurity.wepmode);
 
                 // Latch BSSID
-                W_BSSID[0] = WifiData->ap_cur.bssid[0] | WifiData->ap_cur.bssid[1] << 8;
-                W_BSSID[1] = WifiData->ap_cur.bssid[2] | WifiData->ap_cur.bssid[3] << 8;
-                W_BSSID[2] = WifiData->ap_cur.bssid[4] | WifiData->ap_cur.bssid[5] << 8;
+                W_BSSID[0] = WifiData->curAp.bssid[0] | WifiData->curAp.bssid[1] << 8;
+                W_BSSID[1] = WifiData->curAp.bssid[2] | WifiData->curAp.bssid[3] << 8;
+                W_BSSID[2] = WifiData->curAp.bssid[4] | WifiData->curAp.bssid[5] << 8;
 
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 {
@@ -222,8 +222,8 @@ void Wifi_NTR_Update(void)
 
                 WifiData->realRates = true;
 
-                WifiData->reqChannel = WifiData->ap_cur.channel;
-                Wifi_SetChannel(WifiData->ap_cur.channel);
+                WifiData->reqChannel = WifiData->curAp.channel;
+                Wifi_SetChannel(WifiData->curAp.channel);
 
                 Wifi_SendOpenSystemAuthPacket();
                 WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;

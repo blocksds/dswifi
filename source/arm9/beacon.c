@@ -24,10 +24,10 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     if (ssid_len > 32)
         return -1;
 
-    WifiData->ap_cur.ssid_len = ssid_len;
-    for (size_t i = 0; i < sizeof(WifiData->ap_cur.ssid); i++)
-        WifiData->ap_cur.ssid[i] = ssid[i];
-    WifiData->ap_cur.ssid[32] = '\0';
+    WifiData->curAp.ssid_len = ssid_len;
+    for (size_t i = 0; i < sizeof(WifiData->curAp.ssid); i++)
+        WifiData->curAp.ssid[i] = ssid[i];
+    WifiData->curAp.ssid[32] = '\0';
 
     // Copy hardware TX and IEEE headers
     // =================================

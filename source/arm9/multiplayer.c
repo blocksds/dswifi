@@ -247,7 +247,7 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len)
     }
 
     // Check that the source MAC is the BSSID we're connected to
-    if (Wifi_CmpMacAddr(ieee.addr_3, WifiData->ap_cur.bssid) == 0)
+    if (Wifi_CmpMacAddr(ieee.addr_3, WifiData->curAp.bssid) == 0)
         return;
 
     (*wifi_from_host_packet_handler)(type, base * 2 + header_size,

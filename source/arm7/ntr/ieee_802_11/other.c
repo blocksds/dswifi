@@ -33,9 +33,9 @@ int Wifi_SendNullFrame(void)
 
     frame.ieee.frame_control = TYPE_NULL_FUNCTION | FC_TO_DS;
     frame.ieee.duration = 0;
-    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->ap_cur.bssid);
+    Wifi_CopyMacAddr(frame.ieee.addr_1, WifiData->curAp.bssid);
     Wifi_CopyMacAddr(frame.ieee.addr_2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->ap_cur.bssid);
+    Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->curAp.bssid);
     frame.ieee.seq_ctl = 0;
 
     // Hardware TX header
@@ -70,7 +70,7 @@ int Wifi_SendPSPollFrame(void)
     // fill in packet header fields
     data[6] = 0x01A4;
     data[7] = 0xC000 | W_AID_LOW;
-    Wifi_CopyMacAddr(&data[8], WifiData->ap_cur.bssid);
+    Wifi_CopyMacAddr(&data[8], WifiData->curAp.bssid);
     Wifi_CopyMacAddr(&data[11], WifiData->MacAddr);
 
     return Wifi_TxArm7QueueAdd(data, 28);

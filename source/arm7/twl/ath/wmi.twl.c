@@ -490,8 +490,8 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             ap_connected = true;
 
-            if ((WifiData->ap_cur.security_type == AP_SECURITY_OPEN) ||
-                (WifiData->ap_cur.security_type == AP_SECURITY_WEP))
+            if ((WifiData->curAp.security_type == AP_SECURITY_OPEN) ||
+                (WifiData->curAp.security_type == AP_SECURITY_WEP))
             {
                 wmi_post_handshake(NULL, NULL, NULL);
             }
@@ -640,14 +640,14 @@ void wmi_start_scan(void)
 void wmi_connect_cmd(void)
 {
     WLOG_PRINTF("T: CONNECT_CMD (Security: %s)\nT: SSID: [%s]\n",
-                Wifi_ApSecurityTypeString(WifiData->ap_cur.security_type),
-                (const char *)&WifiData->ap_cur.ssid[0]);
+                Wifi_ApSecurityTypeString(WifiData->curAp.security_type),
+                (const char *)&WifiData->curAp.ssid[0]);
     WLOG_FLUSH();
 
-    if (WifiData->ap_cur.security_type == AP_SECURITY_OPEN)
+    if (WifiData->curAp.security_type == AP_SECURITY_OPEN)
     {
-        size_t ssid_len = WifiData->ap_cur.ssid_len;
-        u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
+        size_t ssid_len = WifiData->curAp.ssid_len;
+        u32 mhz = wifi_channel_to_mhz(WifiData->curAp.channel);
 
         struct __attribute__((packed))
         {
@@ -671,17 +671,17 @@ void wmi_connect_cmd(void)
             1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ap_cur.ssid[0]);
-        memcpy(wmi_params.bssid, (const char *)&WifiData->ap_cur.bssid[0], 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->curAp.bssid[0], 6);
 
         ap_connecting = true;
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
+    else if (WifiData->curAp.security_type == AP_SECURITY_WEP)
     {
-        size_t ssid_len = WifiData->ap_cur.ssid_len;
-        u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
+        size_t ssid_len = WifiData->curAp.ssid_len;
+        u32 mhz = wifi_channel_to_mhz(WifiData->curAp.channel);
 
         // Keys have to be set before connect
         wmi_add_cipher_key(0, 3, (const void*)WifiData->curApSecurity.pass, NULL);
@@ -709,16 +709,16 @@ void wmi_connect_cmd(void)
             1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ap_cur.ssid[0]);
-        memcpy(wmi_params.bssid, (const char *)&WifiData->ap_cur.bssid[0], 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->curAp.bssid[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
-    else //if (WifiData->ap_cur.security_type == AP_SECURITY_WPA2)
+    else //if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
     {
         // TODO: Support WPA APs
-        size_t ssid_len = WifiData->ap_cur.ssid_len;
-        u32 mhz = wifi_channel_to_mhz(WifiData->ap_cur.channel);
+        size_t ssid_len = WifiData->curAp.ssid_len;
+        u32 mhz = wifi_channel_to_mhz(WifiData->curAp.channel);
 
         struct __attribute__((packed))
         {
@@ -737,12 +737,12 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 1, 5, WifiData->ap_cur.pair_crypt_type, 0,
-            WifiData->ap_cur.group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
+            1, 1, 5, WifiData->curAp.pair_crypt_type, 0,
+            WifiData->curAp.group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
         };
 
-        strcpy(wmi_params.ssid, (const char *)&WifiData->ap_cur.ssid[0]);
-        memcpy(wmi_params.bssid, (const char *)&WifiData->ap_cur.bssid[0], 6);
+        strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
+        memcpy(wmi_params.bssid, (const char *)&WifiData->curAp.bssid[0], 6);
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
@@ -860,11 +860,11 @@ void wmi_dbgoff(void)
 static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
 {
     u8 crypt_type = (usage == 1) ?
-                    WifiData->ap_cur.group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
+                    WifiData->curAp.group_crypt_type : AP_CRYPT_AES /* WPA2, AES */;
     u8 crypt_keylen = (crypt_type == AP_CRYPT_TKIP) ? 0x20 : 0x10;
 
     // Figure out the correct keylens for WEP; WEP40 vs WEP104 vs WEP128(?)
-    if (WifiData->ap_cur.security_type == AP_SECURITY_WEP)
+    if (WifiData->curAp.security_type == AP_SECURITY_WEP)
     {
         crypt_type = AP_CRYPT_WEP;
 
@@ -982,7 +982,7 @@ void wmi_connect(void)
     wmi_set_bss_filter(4, 0); // current beacon
     wmi_set_scan_params(5, 200, 200, 200);
 
-    wmi_set_channel_params(wifi_channel_to_mhz(WifiData->ap_cur.channel));
+    wmi_set_channel_params(wifi_channel_to_mhz(WifiData->curAp.channel));
 
     //u16 tmp16 = 0xFFF;
     //wmi_send_pkt(WMI_SET_FIXRATES_CMD, MBOXPKT_REQACK, &tmp16, sizeof(tmp16));
@@ -1029,7 +1029,7 @@ static void wmi_post_handshake(const u8 *tk, const gtk_keyinfo *gtk_info, const 
     data_send_pkt((u8*)&dummy, sizeof(dummy));
     data_send_pkt((u8*)&dummy, sizeof(dummy));
 
-    if (WifiData->ap_cur.security_type == AP_SECURITY_WPA2)
+    if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
     {
         wmi_add_cipher_key(0, 0, tk, NULL);
 
@@ -1083,7 +1083,7 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
         1, 3, {0}, 2, {0}, {0,0}, {0}, {0}, {0}, {0}, {0}, {0}, {0},
         {
             0x30, 0x14, 0x01, 0x00, 0x00, 0x0f, 0xac,
-            WifiData->ap_cur.group_crypt_type == AP_CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
+            WifiData->curAp.group_crypt_type == AP_CRYPT_AES ? 0x04 : 0x02, 0x01, 0x00, 0x00,
             0x0f, 0xac, 0x04, 0x01, 0x00, 0x00, 0x0f, 0xac, 0x02, 0x00, 0x00
         }
     };

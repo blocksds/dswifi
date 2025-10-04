@@ -160,7 +160,7 @@ void Wifi_ProcessAuthentication(Wifi_RxHeader *packetheader, int macbase)
         return;
 
     // Check if packet is indeed from the base station we're trying to associate to.
-    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->ap_cur.bssid))
+    if (!Wifi_CmpMacAddr(data + HDR_MGT_BSSID, WifiData->curAp.bssid))
         return;
 
     WLOG_PUTS("W: [R] Authentication\n");
@@ -281,7 +281,7 @@ void Wifi_ProcessDeauthentication(Wifi_RxHeader *packetheader, int macbase)
 
     // Check if packet is indeed from the base station we're associated to (or
     // trying to associate to).
-    if (!Wifi_CmpMacAddr(frame.ieee.bssid, WifiData->ap_cur.bssid))
+    if (!Wifi_CmpMacAddr(frame.ieee.bssid, WifiData->curAp.bssid))
         return;
 
     WLOG_PUTS("W: [R] Deauthentication\n");

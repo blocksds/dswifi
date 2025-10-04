@@ -225,7 +225,7 @@ int Wifi_AssocStatus(void)
                 // If we have found the requested AP, ask the ARM7 to connect to
                 // it. Use the information that the ARM7 has found, not the one
                 // provided by the user.
-                WifiData->ap_cur = found;
+                WifiData->curAp = found;
 
                 WifiData->reqMode = WIFIMODE_NORMAL;
                 WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
@@ -375,7 +375,7 @@ int Wifi_AssocStatus(void)
                 // If we have found the requested AP, ask the ARM7 to connect to
                 // it. Use the information that the ARM7 has found, not the one
                 // provided by the user.
-                WifiData->ap_cur = found;
+                WifiData->curAp = found;
 
                 // Load security settings from WFC settings
 

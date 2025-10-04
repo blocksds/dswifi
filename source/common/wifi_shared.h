@@ -197,7 +197,7 @@ typedef struct WIFI_MAINSTRUCT
 
     // Data of the AP the ARM9 has requested and the one currently being used by
     // the ARM7.
-    Wifi_AccessPoint ap_cur;
+    Wifi_AccessPoint curAp;
 
     // Security information about the AP
     struct {
