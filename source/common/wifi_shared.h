@@ -35,7 +35,6 @@
 #define WFLAG_SEND_AS_CMD    0x8000
 
 // request - request flags
-#define WFLAG_REQ_APCONNECT    0x0001
 #define WFLAG_REQ_PROMISC      0x0010
 #define WFLAG_REQ_ALLOWCLIENTS 0x0040
 #define WFLAG_REQ_DSI_MODE     0x0080
@@ -72,6 +71,8 @@ enum WIFI_MODE
     WIFIMODE_ASSOCIATE,
     // The ARM7 is connected to the AP.
     WIFIMODE_ASSOCIATED,
+    // The ARM7 is disconnecting from an AP (TWL).
+    WIFIMODE_DISCONNECTING,
     // The ARM7 is unable to connect to the AP.
     WIFIMODE_CANNOTASSOCIATE,
     // The WiFi hardware is on and acting as an AP (multiplayer host).

@@ -221,13 +221,11 @@ u32 Wifi_GetStats(int statnum)
 void Wifi_DisableWifi(void)
 {
     WifiData->reqMode = WIFIMODE_DISABLED;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
 void Wifi_EnableWifi(void)
 {
     WifiData->reqMode = WIFIMODE_NORMAL;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
 void Wifi_SetPromiscuousMode(int enable)
@@ -242,7 +240,6 @@ void Wifi_ScanModeFilter(Wifi_APScanFlags flags)
 {
     WifiData->reqApScanFlags = flags;
     WifiData->reqMode = WIFIMODE_SCAN;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
 void Wifi_ScanMode(void)
@@ -257,7 +254,6 @@ void Wifi_ScanMode(void)
 void Wifi_IdleMode(void)
 {
     WifiData->reqMode = WIFIMODE_NORMAL;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 }
 
 bool Wifi_LibraryModeReady(void)
@@ -273,7 +269,6 @@ void Wifi_InternetMode(void)
 
     WifiData->reqLibraryMode = DSWIFI_INTERNET;
     WifiData->reqMode = WIFIMODE_NORMAL;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 #else
     libndsCrash("Internet mode not available without lwIP");
 #endif
@@ -291,8 +286,6 @@ int Wifi_MultiplayerClientMode(size_t client_packet_size)
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_CLIENT;
     WifiData->reqMode = WIFIMODE_NORMAL;
     WifiData->reqReplyDataSize = client_size;
-
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
 
     return 0;
 }
@@ -320,7 +313,6 @@ int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
     WifiData->reqReplyDataSize = client_size;
 
     WifiData->reqMode = WIFIMODE_ACCESSPOINT;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->reqReqFlags |= WFLAG_REQ_ALLOWCLIENTS;
 
     return 0;

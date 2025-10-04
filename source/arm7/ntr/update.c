@@ -192,26 +192,18 @@ void Wifi_NTR_Update(void)
                 wifi_scan_index = 0;
                 break;
             }
-            if (WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
-            {
-                // already connected; disconnect
-                W_BSSID[0] = WifiData->MacAddr[0];
-                W_BSSID[1] = WifiData->MacAddr[1];
-                W_BSSID[2] = WifiData->MacAddr[2];
 
-                WifiData->curReqFlags &= ~WFLAG_REQ_APCONNECT;
-            }
-            if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
+            if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
             {
-                // Not connected - connect!
-                Wifi_NTR_SetWepKey((void *)WifiData->curApSecurity.pass,
-                                   WifiData->curApSecurity.wepmode);
-                Wifi_NTR_SetWepMode(WifiData->curApSecurity.wepmode);
-
-                // Latch BSSID
+                // Latch BSSID we're connecting to. We can only receive packets
+                // from it and from the broadcast address.
                 W_BSSID[0] = WifiData->curAp.bssid[0] | WifiData->curAp.bssid[1] << 8;
                 W_BSSID[1] = WifiData->curAp.bssid[2] | WifiData->curAp.bssid[3] << 8;
                 W_BSSID[2] = WifiData->curAp.bssid[4] | WifiData->curAp.bssid[5] << 8;
+
+                Wifi_NTR_SetWepKey((void *)WifiData->curApSecurity.pass,
+                                   WifiData->curApSecurity.wepmode);
+                Wifi_NTR_SetWepMode(WifiData->curApSecurity.wepmode);
 
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 {
@@ -233,7 +225,7 @@ void Wifi_NTR_Update(void)
                 WifiData->authlevel = WIFI_AUTHLEVEL_DISCONNECTED;
 
                 WifiData->txbufRead = WifiData->txbufWrite; // empty tx buffer.
-                WifiData->curReqFlags |= WFLAG_REQ_APCONNECT;
+
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_ASSOCIATE;
                 WifiData->authctr  = 0;
@@ -286,7 +278,7 @@ void Wifi_NTR_Update(void)
             Wifi_UpdateAssociate();
 
             // If we have been asked to stop trying to connect, go back to idle
-            if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
+            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
             {
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -318,7 +310,8 @@ void Wifi_NTR_Update(void)
                 Wifi_SendPSPollFrame();
             }
 #endif
-            if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
+            // If we have been asked to stop trying to connect, go back to idle
+            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
                 // Set AID to 0 to stop receiving packets from the host
@@ -347,7 +340,8 @@ void Wifi_NTR_Update(void)
                 break;
             }
 
-            if (!(WifiData->reqReqFlags & WFLAG_REQ_APCONNECT))
+            // If the user has stopped trying to connect, exit error state
+            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
             {
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -412,6 +406,7 @@ void Wifi_NTR_Update(void)
             break;
         }
         default:
+        case WIFIMODE_DISCONNECTING:
         case WIFIMODE_INITIALIZING:
             libndsCrash("Invalid WiFi mode");
             break;

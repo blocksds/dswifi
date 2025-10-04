@@ -183,9 +183,8 @@ int Wifi_ConnectOpenAP(Wifi_AccessPoint *apdata)
 
 int Wifi_DisconnectAP(void)
 {
-    WifiData->reqMode = WIFIMODE_NORMAL;
-    WifiData->reqReqFlags &= ~WFLAG_REQ_APCONNECT;
     WifiData->flags9 &= ~WFLAG_ARM9_NETREADY;
+    WifiData->reqMode = WIFIMODE_NORMAL;
 
     wifi_connect_state = WIFI_CONNECT_ERROR;
     return 0;
@@ -227,8 +226,7 @@ int Wifi_AssocStatus(void)
                 // provided by the user.
                 WifiData->curAp = found;
 
-                WifiData->reqMode = WIFIMODE_NORMAL;
-                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
+                WifiData->reqMode = WIFIMODE_ASSOCIATED;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
             }
             return ASSOCSTATUS_SEARCHING;
@@ -241,7 +239,7 @@ int Wifi_AssocStatus(void)
                 case WIFIMODE_NORMAL:
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_SCAN:
-                    if (WifiData->reqReqFlags & WFLAG_REQ_APCONNECT)
+                    if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
                         return ASSOCSTATUS_AUTHENTICATING;
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_ASSOCIATE:
@@ -393,8 +391,7 @@ int Wifi_AssocStatus(void)
                            Wifi_WepKeySize(WifiData->wfc[n].wepmode));
                 }
 
-                WifiData->reqMode = WIFIMODE_NORMAL;
-                WifiData->reqReqFlags |= WFLAG_REQ_APCONNECT;
+                WifiData->reqMode = WIFIMODE_ASSOCIATED;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
                 return ASSOCSTATUS_SEARCHING;
             }
