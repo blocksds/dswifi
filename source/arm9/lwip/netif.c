@@ -22,6 +22,7 @@
 #include "lwip/dns.h"
 #include "lwip/etharp.h"
 #include "lwip/netif.h"
+#include "lwip/netifapi.h"
 #include "netif/ethernet.h"
 #include "lwip/apps/netbiosns.h"
 #include "lwip/tcpip.h"
@@ -33,6 +34,7 @@ static struct netif dswifi_netif = { 0 };
 
 static char dswifi_netif_hostname[64];
 
+static bool dswifi_link_is_up = false;
 static bool dswifi_use_dhcp = true;
 
 static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
@@ -160,21 +162,14 @@ int sethostname(const char *name, size_t len)
     return 0;
 }
 
-void wifi_dhcp_start(void)
-{
-    // In DSi we don't know the MAC address of the device until the hardware is
-    // completely initialized. DHCP will start after the console is connected to
-    // an Access Point, so wifi_dhcp_start() is a good place to refresh
-    // everything related to the MAC address.
-    wifi_refresh_mac();
-
-    if (dswifi_use_dhcp)
-        dhcp_start(&dswifi_netif);
-}
-
 static void wifi_set_automatic_ip(void)
 {
     dswifi_use_dhcp = true;
+}
+
+bool wifi_using_dhcp(void)
+{
+    return dswifi_use_dhcp;
 }
 
 static void wifi_set_manual_ip(u32 ip_addr, u32 netmask, u32 gw)
@@ -298,11 +293,6 @@ int wifi_lwip_init(void)
 
     tcpip_init(NULL, NULL); // lwip_init() is used when NO_SYS=1
 
-    // Use DHCP by default
-    wifi_set_automatic_ip();
-
-    wifi_refresh_mac();
-
     // Add our netif to LWIP (netif_add calls our driver initialization function)
     if (netif_add(&dswifi_netif,
                   NULL, NULL, NULL, // Initial IP, netmask and gateway
@@ -314,7 +304,13 @@ int wifi_lwip_init(void)
     }
 
     netif_set_default(&dswifi_netif);
+
     netif_set_up(&dswifi_netif);
+    netif_set_link_down(&dswifi_netif);
+    dswifi_link_is_up = false;
+
+    // Use DHCP by default
+    wifi_set_automatic_ip();
 
     netbiosns_set_name(dswifi_netif.hostname);
     netbiosns_init();
@@ -324,6 +320,45 @@ int wifi_lwip_init(void)
     wifi_lwip_enabled = true;
 
     return 0;
+}
+
+bool wifi_netif_is_up(void)
+{
+    return dswifi_link_is_up;
+}
+
+void wifi_netif_set_up(void)
+{
+    if (dswifi_link_is_up)
+        return;
+
+    dswifi_link_is_up = true;
+
+    // In DSi we don't know the MAC address of the device until the hardware is
+    // completely initialized. wifi_lwip_start() will be called after the
+    // console is connected to an Access Point, so it is a good place to refresh
+    // everything related to the MAC address.
+    wifi_refresh_mac();
+
+    // Thread-safe version of netif_set_link_up()
+    netifapi_netif_set_link_up(&dswifi_netif);
+
+    if (dswifi_use_dhcp)
+        netifapi_dhcp_start(&dswifi_netif);
+}
+
+void wifi_netif_set_down(void)
+{
+    if (!dswifi_link_is_up)
+        return;
+
+    dswifi_link_is_up = false;
+
+    if (dswifi_use_dhcp)
+        netifapi_dhcp_stop(&dswifi_netif);
+
+    // Thread-safe version of netif_set_link_down()
+    netifapi_netif_set_link_down(&dswifi_netif);
 }
 
 void wifi_lwip_deinit(void)

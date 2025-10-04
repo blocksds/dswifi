@@ -277,11 +277,6 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
 // This function needs to get an Ethernet frame
 int Wifi_TransmitFunctionLink(const void *src, size_t size)
 {
-    // Wait until the network is up to send frames to lwIP
-    // TODO: Is this needed?
-    //if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
-    //    return -1;
-
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         return Wifi_TWL_TransmitFunctionLink(src, size);
     else

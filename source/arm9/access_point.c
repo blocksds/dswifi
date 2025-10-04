@@ -264,14 +264,13 @@ int Wifi_AssocStatus(void)
                                 // to access the Internet.
                                 if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                                 {
-                                    if (Wifi_GetIP() == 0)
+                                    wifi_netif_set_up();
+
+                                    if (wifi_using_dhcp())
                                     {
-                                        // Switch to DHCPING mode before
-                                        // telling lwIP to start DHCP.
-                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
                                         // Only use DHCP if we don't have an IP
                                         // that has been set manually.
-                                        wifi_dhcp_start();
+                                        wifi_connect_state = WIFI_CONNECT_DHCPING;
                                         return ASSOCSTATUS_ACQUIRINGDHCP;
                                     }
                                     else
@@ -296,12 +295,13 @@ int Wifi_AssocStatus(void)
                         // to access the Internet.
                         if (WifiData->curLibraryMode == DSWIFI_INTERNET)
                         {
-                            if (Wifi_GetIP() == 0)
+                            wifi_netif_set_up();
+
+                            if (wifi_using_dhcp())
                             {
                                 // Switch to DHCPING mode before telling lwIP to
                                 // start DHCP.
                                 wifi_connect_state = WIFI_CONNECT_DHCPING;
-                                wifi_dhcp_start();
                                 return ASSOCSTATUS_ACQUIRINGDHCP;
                             }
                             else

@@ -62,6 +62,11 @@ static int wifi_update_thread(void *arg)
         {
             if (wifi_lwip_enabled)
             {
+                if (WifiData->curMode == WIFIMODE_CONNECTED)
+                    wifi_netif_set_up();
+                else
+                    wifi_netif_set_down();
+
                 // Only update lwIP when we're connected to the access point.
                 // This is during the DHCP process and when DHCP is done.
                 if ((wifi_connect_state == WIFI_CONNECT_DHCPING) ||

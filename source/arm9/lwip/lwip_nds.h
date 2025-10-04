@@ -26,7 +26,15 @@ extern bool wifi_lwip_enabled;
 int wifi_lwip_init(void);
 void wifi_lwip_deinit(void);
 
-void wifi_dhcp_start(void);
+// This must be called when the console connects to an AP.
+void wifi_netif_set_up(void);
+// This must be called when the console disconnects from an AP.
+void wifi_netif_set_down(void);
+// Returns true if the netif is up.
+bool wifi_netif_is_up(void);
+
+// Returns true if DHCP is enabled, false if using manual IP settings.
+bool wifi_using_dhcp(void);
 
 u32 wifi_get_ip(void);
 u32 wifi_get_dns(int index);

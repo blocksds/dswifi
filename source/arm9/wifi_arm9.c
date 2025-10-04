@@ -43,7 +43,10 @@ static void Wifi_NTR_Update(void)
         {
             // Only send packets to lwIP if we are trying to access the Internet
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-                Wifi_SendPacketToLwip(data_idx, len);
+            {
+                if (wifi_netif_is_up())
+                    Wifi_SendPacketToLwip(data_idx, len);
+            }
         }
 #endif
 
@@ -91,7 +94,10 @@ TWL_CODE static void Wifi_TWL_Update(void)
         {
             // Only send packets to lwIP if we are trying to access the Internet
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-                Wifi_SendPacketToLwip(read_idx, size);
+            {
+                if (wifi_netif_is_up())
+                    Wifi_SendPacketToLwip(read_idx, size);
+            }
         }
 #endif
 
@@ -116,20 +122,6 @@ void Wifi_Update(void)
 {
     if (!WifiData)
         return;
-
-#ifdef DSWIFI_ENABLE_LWIP
-    if (wifi_lwip_enabled)
-    {
-        if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
-        {
-            WifiData->flags9 |= WFLAG_ARM9_NETUP;
-        }
-        else
-        {
-            WifiData->flags9 &= ~WFLAG_ARM9_NETUP;
-        }
-    }
-#endif
 
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Update();
