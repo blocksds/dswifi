@@ -282,7 +282,7 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size)
     //if (!(WifiData->flags9 & WFLAG_ARM9_NETUP))
     //    return -1;
 
-    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
         return Wifi_TWL_TransmitFunctionLink(src, size);
     else
         return Wifi_NTR_TransmitFunctionLink(src, size);
@@ -407,7 +407,7 @@ TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
 
 void Wifi_SendPacketToLwip(int base, int len)
 {
-    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_SendPacketToLwip(base, len);
     else
         Wifi_NTR_SendPacketToLwip(base, len);

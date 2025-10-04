@@ -15,7 +15,7 @@ void Wifi_Update(void)
     if (WifiData == NULL)
         return;
 
-    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Update();
     else
         Wifi_NTR_Update();

@@ -83,7 +83,7 @@ static bool Wifi_InitIPC(unsigned int flags)
 
     // Use DSi mode only if has been requested and we're running on a DSi
     if ((flags & WIFI_ENABLE_DSI_MODE) && isDSiMode())
-        WifiData->flags9 |= WFLAG_REQ_DSI_MODE;
+        WifiData->reqReqFlags |= WFLAG_REQ_DSI_MODE;
 
     // Set the default host name from the firmware settings
     WifiData->hostPlayerNameLen = PersonalData->nameLen;

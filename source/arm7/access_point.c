@@ -185,7 +185,7 @@ void Wifi_AccessPointTick(void)
     // The DSi iterates through all channels much faster than the DS, so let's
     // increase the timeout accordingly.
     u32 timeout = WIFI_AP_TIMEOUT;
-    if (WifiData->flags9 & WFLAG_REQ_DSI_MODE)
+    if (WifiData->reqReqFlags & WFLAG_REQ_DSI_MODE)
         timeout = WIFI_AP_TIMEOUT * 10;
 
     // Update timeout counters of all APs.
