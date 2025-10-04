@@ -177,7 +177,7 @@ static void wifi_set_manual_ip(u32 ip_addr, u32 netmask, u32 gw)
     if (!wifi_lwip_enabled)
         return;
 
-    dhcp_stop(&dswifi_netif);
+    netifapi_dhcp_stop(&dswifi_netif);
 
     ip_addr_t new_ip_addr, new_netmask, new_gateway;
 
@@ -185,10 +185,10 @@ static void wifi_set_manual_ip(u32 ip_addr, u32 netmask, u32 gw)
     new_netmask.addr = netmask;
     new_gateway.addr = gw;
 
-    netif_set_addr(&dswifi_netif, &new_ip_addr, &new_netmask, &new_gateway);
+    netifapi_netif_set_addr(&dswifi_netif, &new_ip_addr, &new_netmask, &new_gateway);
 
     // If the network is up, inform of the changes
-    dhcp_inform(&dswifi_netif);
+    netifapi_dhcp_inform(&dswifi_netif);
 
     dswifi_use_dhcp = false;
 }
