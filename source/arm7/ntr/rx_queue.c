@@ -85,7 +85,9 @@ void Wifi_RxQueueFlush(void)
         // can handle the frame type by itself (e.g. frames of beacon type,
         // WFLAG_PACKET_BEACON).
         int type = Wifi_ProcessReceivedFrame(base, full_packetlen);
-        if ((type & WifiData->reqPacketFlags) || (WifiData->reqReqFlags & WFLAG_REQ_PROMISC))
+        const int reqPacketFlags = WFLAG_PACKET_ALL & ~WFLAG_PACKET_BEACON;
+
+        if ((type & reqPacketFlags) || (WifiData->reqReqFlags & WFLAG_REQ_PROMISC))
         {
             // If the packet type is requested by the ARM9 (or promiscous mode
             // is enabled), forward it to the ARM9 RX queue.
