@@ -40,9 +40,6 @@
 #define WFLAG_REQ_ALLOWCLIENTS 0x0040
 #define WFLAG_REQ_DSI_MODE     0x0080
 
-// request - informational flags
-#define WFLAG_REQ_APCONNECTED 0x8000
-
 // Enum values for the FIFO WiFi commands (FIFO_DSWIFI).
 typedef enum
 {

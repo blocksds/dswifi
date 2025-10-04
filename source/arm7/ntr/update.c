@@ -135,6 +135,7 @@ void Wifi_NTR_Update(void)
     switch (WifiData->curMode)
     {
         case WIFIMODE_DISABLED:
+        {
             Wifi_SetLedState(LED_ALWAYS_ON);
 
             // If any other mode has been requested we need to initialize WiFi
@@ -144,8 +145,9 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
             }
             break;
-
+        }
         case WIFIMODE_NORMAL:
+        {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
             // Only change library mode while not doing anything
@@ -177,6 +179,7 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode = WIFIMODE_ACCESSPOINT;
                 break;
             }
+
             if (WifiData->reqMode == WIFIMODE_SCAN)
             {
                 // Refresh filter flags and clear list of APs based on them
@@ -220,6 +223,7 @@ void Wifi_NTR_Update(void)
                     Wifi_SetupFilterMode(WIFI_FILTERMODE_INTERNET);
                 }
 
+                // Make sure that the first attempt uses the real rates
                 WifiData->realRates = true;
 
                 WifiData->reqChannel = WifiData->curAp.channel;
@@ -235,8 +239,9 @@ void Wifi_NTR_Update(void)
                 WifiData->authctr  = 0;
             }
             break;
-
+        }
         case WIFIMODE_SCAN:
+        {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
             if ((WifiData->reqMode != WIFIMODE_SCAN) ||
@@ -260,8 +265,9 @@ void Wifi_NTR_Update(void)
                     wifi_scan_index = 0;
             }
             break;
-
+        }
         case WIFIMODE_ASSOCIATE:
+        {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
@@ -287,8 +293,9 @@ void Wifi_NTR_Update(void)
                 break;
             }
             break;
-
+        }
         case WIFIMODE_ASSOCIATED:
+        {
             Wifi_SetLedState(LED_BLINK_FAST);
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
@@ -321,14 +328,16 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode = WIFIMODE_NORMAL;
                 break;
             }
+
             if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED)
             {
                 WifiData->curMode = WIFIMODE_ASSOCIATE;
                 break;
             }
             break;
-
+        }
         case WIFIMODE_CANNOTASSOCIATE:
+        {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
             if (WifiData->curLibraryMode != WifiData->reqLibraryMode)
@@ -345,7 +354,7 @@ void Wifi_NTR_Update(void)
                 break;
             }
             break;
-
+        }
         case WIFIMODE_ACCESSPOINT:
         {
             Wifi_SetLedState(LED_BLINK_FAST);
@@ -401,12 +410,11 @@ void Wifi_NTR_Update(void)
             }
 
             break;
-
+        }
         default:
         case WIFIMODE_INITIALIZING:
             libndsCrash("Invalid WiFi mode");
             break;
-        }
     }
 
     // Only allow manual changes of the channel if scan mode isn't active

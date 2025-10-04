@@ -119,6 +119,7 @@ void Wifi_TWL_Update(void)
             {
                 // If the ARM9 has asked us to stay connected, but we're
                 // disconnected, that's an error.
+                // TODO: Retry to connect?
                 if (!wmi_is_ap_connected())
                 {
                     wmi_disconnect_cmd();
@@ -131,7 +132,7 @@ void Wifi_TWL_Update(void)
             }
             else
             {
-                // If the ARM has asked us to disconnect, and we're still
+                // If the ARM9 has asked us to disconnect, and we're still
                 // connected, send a disconnection request. Then wait until the
                 // WMI state machine tells us we're disconnected
                 if (WifiData->curReqFlags & WFLAG_REQ_APCONNECT)
