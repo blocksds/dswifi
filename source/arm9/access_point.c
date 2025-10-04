@@ -133,10 +133,8 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
     return -1;
 }
 
-int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
+int Wifi_ConnectSecureAP(Wifi_AccessPoint *apdata, const void *key, size_t key_len)
 {
-    (void)wepkeyid; // Not needed
-
     wifi_connect_state = WIFI_CONNECT_ERROR;
 
     if (!apdata)
@@ -145,12 +143,7 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     if (apdata->ssid_len > 32)
         return -1;
 
-    // If WEP encryption is enabled, the key must be provided
-    if ((wepmode != WEPMODE_NONE) && (wepkey == NULL))
-        return -1;
-
-    // Check that the encryption mode is valid
-    if (wepmode < WEPMODE_NONE || wepmode > WEPMODE_128BIT)
+    if ((key == NULL) && (key_len > 0))
         return -1;
 
     Wifi_DisconnectAP();
@@ -161,16 +154,10 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
 
-    if (wepmode == WEPMODE_NONE)
+    if (key_len > 0)
     {
-        // Nothing to do
-    }
-    else
-    {
-        size_t len = Wifi_WepKeySizeFromMode(wepmode);
-
-        WifiData->curApSecurity.pass_len = len;
-        memcpy((void *)WifiData->curApSecurity.pass, wepkey, len);
+        WifiData->curApSecurity.pass_len = key_len;
+        memcpy((void *)WifiData->curApSecurity.pass, key, key_len);
     }
 
     // Ask the ARM7 to start scanning and the ARM9 to look for this specific AP
@@ -180,9 +167,24 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     return 0;
 }
 
+int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepkey)
+{
+    (void)wepkeyid; // Not needed
+
+    wifi_connect_state = WIFI_CONNECT_ERROR;
+
+    // Check that the encryption mode is valid
+    if (wepmode < WEPMODE_NONE || wepmode > WEPMODE_128BIT)
+        return -1;
+
+    size_t key_len = Wifi_WepKeySizeFromMode(wepmode);
+
+    return Wifi_ConnectSecureAP(apdata, wepkey, key_len);
+}
+
 int Wifi_ConnectOpenAP(Wifi_AccessPoint *apdata)
 {
-    return Wifi_ConnectAP(apdata, 0, 0, NULL);
+    return Wifi_ConnectSecureAP(apdata, NULL, 0);
 }
 
 int Wifi_DisconnectAP(void)

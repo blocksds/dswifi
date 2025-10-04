@@ -337,9 +337,30 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
 ///     The WEP key, to be used in all 4 key slots. For WEPMODE_40BIT it is a 5
 ///     byte long array. For WEPMODE_128BIT it is a 13 byte long array.
 ///
+/// @deprecated
+///     This function only works with open and WEP networks. Use function
+///     Wifi_ConnectSecureAP() instead, which works with all the supported types
+///     of Access Point.
+///
 /// @return
 ///     0 for ok, -1 for error with input data.
+__attribute__((deprecated))
 int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned char *wepkey);
+
+/// Connect to an Access Point.
+///
+/// @param apdata
+///     Basic data about the AP. The user must fill either the bssid field or
+///     the ssid and ssid_len fields. Other fields are ignored.
+/// @param key
+///     The key to be used. For WEP networks it must be 5, 13 or 16 bytes long.
+///     For open networks use NULL.
+/// @param key_len
+///     The size of the key in bytes. For open networks use 0.
+///
+/// @return
+///     0 for ok, -1 for error with input data.
+int Wifi_ConnectSecureAP(Wifi_AccessPoint *apdata, const void *key, size_t key_len);
 
 /// Connect to an AP without encryption (and NDS multiplayer hosts).
 ///
