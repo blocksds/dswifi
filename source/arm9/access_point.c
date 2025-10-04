@@ -266,6 +266,7 @@ int Wifi_AssocStatus(void)
                         {
                             wifi_netif_set_up();
 
+                            // If needed, start DHCP now
                             if (wifi_using_dhcp())
                             {
                                 // Switch to DHCPING mode before telling lwIP to
@@ -273,10 +274,8 @@ int Wifi_AssocStatus(void)
                                 wifi_connect_state = WIFI_CONNECT_DHCPING;
                                 return ASSOCSTATUS_ACQUIRINGDHCP;
                             }
-                            else
-                            {
-                                return ASSOCSTATUS_ASSOCIATED;
-                            }
+
+                            // If DHCP isn't needed, we're done
                         }
                     }
 #endif
