@@ -141,12 +141,14 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
 
     if (!apdata)
         return -1;
+
     if (apdata->ssid_len > 32)
         return -1;
 
     // If WEP encryption is enabled, the key must be provided
     if ((wepmode != WEPMODE_NONE) && (wepkey == NULL))
         return -1;
+
     // Check that the encryption mode is valid
     if (wepmode < WEPMODE_NONE || wepmode > WEPMODE_128BIT)
         return -1;
@@ -165,8 +167,10 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, u8 *wepk
     }
     else
     {
-        WifiData->curApSecurity.wepmode = wepmode;
-        memcpy((void *)WifiData->curApSecurity.pass, wepkey, Wifi_WepKeySize(wepmode));
+        size_t len = Wifi_WepKeySizeFromMode(wepmode);
+
+        WifiData->curApSecurity.pass_len = len;
+        memcpy((void *)WifiData->curApSecurity.pass, wepkey, len);
     }
 
     // Ask the ARM7 to start scanning and the ARM9 to look for this specific AP
@@ -385,10 +389,11 @@ int Wifi_AssocStatus(void)
                 }
                 else if (found.security_type == AP_SECURITY_WEP)
                 {
-                    WifiData->curApSecurity.wepmode = WifiData->wfc[n].wepmode;
+                    size_t len = Wifi_WepKeySizeFromMode(WifiData->wfc[n].wepmode);
+
+                    WifiData->curApSecurity.pass_len = len;
                     memcpy((void *)WifiData->curApSecurity.pass,
-                           (const void *)WifiData->wfc[n].wepkey,
-                           Wifi_WepKeySize(WifiData->wfc[n].wepmode));
+                           (const void *)WifiData->wfc[n].wepkey, len);
                 }
 
                 WifiData->reqMode = WIFIMODE_ASSOCIATED;

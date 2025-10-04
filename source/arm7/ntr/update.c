@@ -210,9 +210,10 @@ void Wifi_NTR_Update(void)
                 W_BSSID[1] = WifiData->curAp.bssid[2] | WifiData->curAp.bssid[3] << 8;
                 W_BSSID[2] = WifiData->curAp.bssid[4] | WifiData->curAp.bssid[5] << 8;
 
-                Wifi_NTR_SetWepKey((void *)WifiData->curApSecurity.pass,
-                                   WifiData->curApSecurity.wepmode);
-                Wifi_NTR_SetWepMode(WifiData->curApSecurity.wepmode);
+                u32 wepmode = Wifi_WepModeFromKeySize(WifiData->curApSecurity.pass_len);
+
+                Wifi_NTR_SetWepKey((void *)WifiData->curApSecurity.pass, wepmode);
+                Wifi_NTR_SetWepMode(wepmode);
 
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 {

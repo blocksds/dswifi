@@ -105,13 +105,14 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             if (ap_data.wep_mode > 7) // Invalid WEP mode
                 continue;
 
-            WifiData->wfc[c].wepmode    = ap_data.wep_mode;
             WifiData->wfc_ap[c].channel = 0;
 
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
 
-            for (size_t n = 0; n < Wifi_WepKeySize(ap_data.wep_mode); n++)
+            WifiData->wfc[c].wepmode = ap_data.wep_mode;
+
+            for (size_t n = 0; n < Wifi_WepKeySizeFromMode(ap_data.wep_mode); n++)
                 WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
             for (int n = 0; n < 32; n++)
@@ -200,13 +201,14 @@ void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
         if ((ap_data.wpa_mode != 0) && !allow_wpa)
             continue;
 
-        WifiData->wfc[c].wepmode    = ap_data.wep_mode;
         WifiData->wfc_ap[c].channel = 0;
 
         for (int n = 0; n < 6; n++)
             WifiData->wfc_ap[c].bssid[n] = 0;
 
-        for (size_t n = 0; n < Wifi_WepKeySize(ap_data.wep_mode); n++)
+        WifiData->wfc[c].wepmode = ap_data.wep_mode;
+
+        for (size_t n = 0; n < Wifi_WepKeySizeFromMode(ap_data.wep_mode); n++)
             WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
         for (int n = 0; n < 32; n++)

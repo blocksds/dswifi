@@ -86,7 +86,7 @@ enum WIFI_AUTHLEVEL
 };
 
 // Returns the size in bytes
-static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
+static inline size_t Wifi_WepKeySizeFromMode(enum WEPMODES wepmode)
 {
     switch (wepmode)
     {
@@ -104,6 +104,18 @@ static inline size_t Wifi_WepKeySize(enum WEPMODES wepmode)
     }
 
     return 0;
+}
+
+static inline enum WEPMODES Wifi_WepModeFromKeySize(size_t size)
+{
+    if (size == 5)
+        return WEPMODE_64BIT;
+    else if (size == 13)
+        return WEPMODE_128BIT;
+    else if (size == 16)
+        return WEPMODE_152BIT;
+
+    return WEPMODE_NONE;
 }
 
 typedef struct {
@@ -168,7 +180,7 @@ typedef struct WIFI_MAINSTRUCT
 
     // Security information about the AP
     struct {
-        u8 wepmode;  // In WEP mode we need to know the length of the key
+        u8 pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
         u8 pass[64]; // Max size for WPA is 63 bytes
     } curApSecurity;
 

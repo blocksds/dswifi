@@ -20,7 +20,7 @@ void Wifi_NTR_SetWepKey(void *wepkey, int wepmode)
     if (wepmode == WEPMODE_NONE)
         return;
 
-    int len = Wifi_WepKeySize(wepmode);
+    int len = Wifi_WepKeySizeFromMode(wepmode);
 
 #if DSWIFI_LOGS
     WLOG_PUTS("W: WEP: ");
