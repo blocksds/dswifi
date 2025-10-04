@@ -116,7 +116,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
     WifiData->wfc_number_of_configs = c;
 }
 
-void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
+TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
 {
     WLOG_PUTS("W: Loading TWL WFC AP settings\n");
 
