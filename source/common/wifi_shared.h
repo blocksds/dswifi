@@ -23,21 +23,24 @@
 // to return to the original channel) before any AP is removed from the list.
 #define WIFI_AP_TIMEOUT (13 * 2 + 1)
 
+// Flags that inform us of the state of the ARM7
 #define WFLAG_ARM7_ACTIVE  0x0001
-#define WFLAG_ARM7_RUNNING 0x0002
+#define WFLAG_ARM7_RUNNING 0x0002 // TODO: Delete? It seems redundant
 
-#define WFLAG_ARM9_USELED    0x0001
+// Flags that inform us of the state of the ARM9
 #define WFLAG_ARM9_NETUP     0x0002
 #define WFLAG_ARM9_NETREADY  0x0004
 
+// Requests from the ARM9 to the ARM7
+#define WFLAG_REQ_USELED        0x0001
+#define WFLAG_REQ_PROMISC       0x0010
+#define WFLAG_REQ_ALLOWCLIENTS  0x0040
+#define WFLAG_REQ_DSI_MODE      0x0080
+
+// Modes to send NTR packets
 #define WFLAG_SEND_AS_BEACON 0x2000
 #define WFLAG_SEND_AS_REPLY  0x4000
 #define WFLAG_SEND_AS_CMD    0x8000
-
-// request - request flags
-#define WFLAG_REQ_PROMISC      0x0010
-#define WFLAG_REQ_ALLOWCLIENTS 0x0040
-#define WFLAG_REQ_DSI_MODE     0x0080
 
 // Enum values for the FIFO WiFi commands (FIFO_DSWIFI).
 typedef enum

@@ -45,7 +45,7 @@ void Wifi_NTR_KeepaliveCountReset(void)
 
 static void Wifi_SetLedState(int state)
 {
-    if (WifiData->flags9 & WFLAG_ARM9_USELED)
+    if (WifiData->flags9 & WFLAG_REQ_USELED)
     {
         if (wifi_led_state != state)
         {
