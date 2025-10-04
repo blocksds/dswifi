@@ -212,9 +212,9 @@ void Wifi_NTR_Update(void)
                 Wifi_NTR_SetWepMode(WifiData->ap_cur.wepmode);
 
                 // Latch BSSID
-                W_BSSID[0] = WifiData->ap_cur.bssid[0];
-                W_BSSID[1] = WifiData->ap_cur.bssid[1];
-                W_BSSID[2] = WifiData->ap_cur.bssid[2];
+                W_BSSID[0] = WifiData->ap_cur.bssid[0] | WifiData->ap_cur.bssid[1] << 8;
+                W_BSSID[1] = WifiData->ap_cur.bssid[2] | WifiData->ap_cur.bssid[3] << 8;
+                W_BSSID[2] = WifiData->ap_cur.bssid[4] | WifiData->ap_cur.bssid[5] << 8;
 
                 if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
                 {
