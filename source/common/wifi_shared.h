@@ -27,10 +27,6 @@
 #define WFLAG_ARM7_ACTIVE  0x0001
 #define WFLAG_ARM7_RUNNING 0x0002 // TODO: Delete? It seems redundant
 
-// Flags that inform us of the state of the ARM9
-#define WFLAG_ARM9_NETUP     0x0002
-#define WFLAG_ARM9_NETREADY  0x0004
-
 // Requests from the ARM9 to the ARM7
 #define WFLAG_REQ_USELED        0x0001 // NTR only
 #define WFLAG_REQ_PROMISC       0x0010 // NTR only
@@ -161,8 +157,8 @@ typedef struct WIFI_MAINSTRUCT
     // WiFi status
     u8 curChannel, reqChannel;
     u8 curMode, reqMode;
-    u8 authlevel, authctr;
-    u32 flags9, flags7; // Current status of the ARM9 and ARM7
+    u8 authlevel, authctr; // NTR mode only
+    u32 flags7; // Current status of the ARM7
     u16 reqFlags; // ARM9 writes requests, the ARM7 reads them
     u32 counter7;
     u16 MacAddr[3]; // MAC address of this console

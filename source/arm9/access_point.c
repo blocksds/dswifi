@@ -189,9 +189,7 @@ int Wifi_ConnectOpenAP(Wifi_AccessPoint *apdata)
 
 int Wifi_DisconnectAP(void)
 {
-    WifiData->flags9 &= ~WFLAG_ARM9_NETREADY;
     WifiData->reqMode = WIFIMODE_NORMAL;
-
     wifi_connect_state = WIFI_CONNECT_ERROR;
     return 0;
 }
@@ -276,14 +274,12 @@ int Wifi_AssocStatus(void)
                                     else
                                     {
                                         wifi_connect_state = WIFI_CONNECT_DONE;
-                                        WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                                         return ASSOCSTATUS_ASSOCIATED;
                                     }
                                 }
                             }
 #endif
                             wifi_connect_state = WIFI_CONNECT_DONE;
-                            WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                             return ASSOCSTATUS_ASSOCIATED;
                     }
                     break;
@@ -313,7 +309,6 @@ int Wifi_AssocStatus(void)
 #endif
 
                     wifi_connect_state = WIFI_CONNECT_DONE;
-                    WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                     return ASSOCSTATUS_ASSOCIATED;
                 case WIFIMODE_CANNOTCONNECT:
                     return ASSOCSTATUS_CANNOTCONNECT;
@@ -331,7 +326,6 @@ int Wifi_AssocStatus(void)
                 if ((wifi_get_ip() != INADDR_NONE) && (wifi_get_dns(0) != INADDR_NONE))
                 {
                     wifi_connect_state = WIFI_CONNECT_DONE;
-                    WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                     return ASSOCSTATUS_ASSOCIATED;
                 }
 
