@@ -223,8 +223,9 @@ int Wifi_AssocStatus(void)
     switch (wifi_connect_state)
     {
         case WIFI_CONNECT_ERROR:
+        {
             return ASSOCSTATUS_CANNOTCONNECT;
-
+        }
         case WIFI_CONNECT_SEARCHING:
         {
             // Check if we have found the AP requested by the user. The security
@@ -243,16 +244,13 @@ int Wifi_AssocStatus(void)
             }
             return ASSOCSTATUS_SEARCHING;
         }
-
         case WIFI_CONNECT_ASSOCIATING:
+        {
             switch (WifiData->curMode)
             {
                 case WIFIMODE_DISABLED:
                 case WIFIMODE_NORMAL:
-                    return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_SCAN:
-                    if (WifiData->reqMode == WIFIMODE_CONNECTED)
-                        return ASSOCSTATUS_AUTHENTICATING;
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_CONNECTING:
                     return ASSOCSTATUS_ASSOCIATING;
@@ -279,15 +277,15 @@ int Wifi_AssocStatus(void)
                         }
                     }
 #endif
-
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     return ASSOCSTATUS_ASSOCIATED;
                 case WIFIMODE_CANNOTCONNECT:
                     return ASSOCSTATUS_CANNOTCONNECT;
             }
             return ASSOCSTATUS_DISCONNECTED;
-
+        }
         case WIFI_CONNECT_DHCPING:
+        {
 #ifdef DSWIFI_ENABLE_LWIP
             if (wifi_lwip_enabled)
             {
@@ -311,11 +309,12 @@ int Wifi_AssocStatus(void)
             Wifi_DisconnectAP();
             wifi_connect_state = WIFI_CONNECT_ERROR;
             return ASSOCSTATUS_CANNOTCONNECT;
-
-        case WIFI_CONNECT_DONE: // connected!
+        }
+        case WIFI_CONNECT_DONE:
+        {
             return ASSOCSTATUS_ASSOCIATED;
-
-        case WIFI_CONNECT_SEARCHING_WFC: // search nintendo WFC data for a suitable AP
+        }
+        case WIFI_CONNECT_SEARCHING_WFC: // Search nintendo WFC data for a suitable AP
         {
             // TODO: Wait for at least a few frames before trying to connect to
             // any AP. This will let us find the best one available.
