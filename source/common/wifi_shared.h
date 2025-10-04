@@ -252,7 +252,7 @@ typedef struct WIFI_MAINSTRUCT
     // initial seeds and such.
     u32 random;
 
-    u32 padding[CACHE_LINE_SIZE / sizeof(u32)]; // See comment at top of struct
+    u8 padding[CACHE_LINE_SIZE]; // See comment at top of struct
 } Wifi_MainStruct;
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__
