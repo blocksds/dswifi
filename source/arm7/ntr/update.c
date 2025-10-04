@@ -151,6 +151,10 @@ void Wifi_NTR_Update(void)
         {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
+            W_BSSID[0] = 0;
+            W_BSSID[1] = 0;
+            W_BSSID[2] = 0;
+
             // Only change library mode while not doing anything
             WifiData->curLibraryMode = WifiData->reqLibraryMode;
 
@@ -171,6 +175,10 @@ void Wifi_NTR_Update(void)
                 W_IE |= IRQ_MULTIPLAY_CMD_DONE;
 
                 Wifi_NTR_SetupTransferOptions(WIFI_TRANSFER_RATE_2MBPS, true);
+
+                W_BSSID[0] = WifiData->MacAddr[0];
+                W_BSSID[1] = WifiData->MacAddr[1];
+                W_BSSID[2] = WifiData->MacAddr[2];
 
                 Wifi_MPHost_ResetClients();
                 WifiData->curMaxClients = WifiData->reqMaxClients;

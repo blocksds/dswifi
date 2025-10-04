@@ -290,9 +290,6 @@ void Wifi_NTR_Start(void)
 
     W_RXSTAT_OVF_IE = 0x1FFF;
     W_RXSTAT_INC_IE = 0; // 0x68
-    W_BSSID[0]      = WifiData->MacAddr[0];
-    W_BSSID[1]      = WifiData->MacAddr[1];
-    W_BSSID[2]      = WifiData->MacAddr[2];
 
     Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
 
