@@ -164,7 +164,6 @@ typedef struct WIFI_MAINSTRUCT
     u16 reqFlags; // ARM9 writes requests, the ARM7 reads them
     u32 counter7;
     u16 MacAddr[3]; // MAC address of this console
-    u32 ip, snmask, gateway;
 
     // Mode of operation of DSWifi. Check enum DSWifi_Mode
     u8 curLibraryMode, reqLibraryMode;
