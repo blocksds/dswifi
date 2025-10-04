@@ -280,6 +280,7 @@ int Wifi_AssocStatus(void)
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     return ASSOCSTATUS_ASSOCIATED;
                 case WIFIMODE_CANNOTCONNECT:
+                    wifi_connect_state = WIFI_CONNECT_ERROR;
                     return ASSOCSTATUS_CANNOTCONNECT;
             }
             return ASSOCSTATUS_DISCONNECTED;
@@ -367,6 +368,7 @@ int Wifi_AssocStatus(void)
         }
 
         default:
+            wifi_connect_state = WIFI_CONNECT_ERROR;
             break;
     }
 
