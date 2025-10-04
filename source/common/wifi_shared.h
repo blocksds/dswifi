@@ -66,13 +66,13 @@ enum WIFI_MODE
     // The ARM7 is iterating through all channels looking for access points.
     WIFIMODE_SCAN,
     // The ARM7 is trying to connect to an AP
-    WIFIMODE_ASSOCIATE,
+    WIFIMODE_CONNECTING,
     // The ARM7 is connected to the AP.
-    WIFIMODE_ASSOCIATED,
+    WIFIMODE_CONNECTED,
     // The ARM7 is disconnecting from an AP (TWL).
     WIFIMODE_DISCONNECTING,
     // The ARM7 is unable to connect to the AP.
-    WIFIMODE_CANNOTASSOCIATE,
+    WIFIMODE_CANNOTCONNECT,
     // The WiFi hardware is on and acting as an AP (multiplayer host).
     WIFIMODE_ACCESSPOINT,
 };

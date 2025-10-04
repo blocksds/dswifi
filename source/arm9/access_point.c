@@ -232,7 +232,7 @@ int Wifi_AssocStatus(void)
                 // provided by the user.
                 WifiData->curAp = found;
 
-                WifiData->reqMode = WIFIMODE_ASSOCIATED;
+                WifiData->reqMode = WIFIMODE_CONNECTED;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
             }
             return ASSOCSTATUS_SEARCHING;
@@ -245,10 +245,10 @@ int Wifi_AssocStatus(void)
                 case WIFIMODE_NORMAL:
                     return ASSOCSTATUS_DISCONNECTED;
                 case WIFIMODE_SCAN:
-                    if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
+                    if (WifiData->reqMode == WIFIMODE_CONNECTED)
                         return ASSOCSTATUS_AUTHENTICATING;
                     return ASSOCSTATUS_DISCONNECTED;
-                case WIFIMODE_ASSOCIATE:
+                case WIFIMODE_CONNECTING:
                     switch (WifiData->authlevel)
                     {
                         case WIFI_AUTHLEVEL_DISCONNECTED:
@@ -288,7 +288,7 @@ int Wifi_AssocStatus(void)
                             return ASSOCSTATUS_ASSOCIATED;
                     }
                     break;
-                case WIFIMODE_ASSOCIATED:
+                case WIFIMODE_CONNECTED:
 #ifdef DSWIFI_ENABLE_LWIP
                     if (wifi_lwip_enabled)
                     {
@@ -315,7 +315,7 @@ int Wifi_AssocStatus(void)
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     WifiData->flags9 |= WFLAG_ARM9_NETREADY;
                     return ASSOCSTATUS_ASSOCIATED;
-                case WIFIMODE_CANNOTASSOCIATE:
+                case WIFIMODE_CANNOTCONNECT:
                     return ASSOCSTATUS_CANNOTCONNECT;
             }
             return ASSOCSTATUS_DISCONNECTED;
@@ -398,7 +398,7 @@ int Wifi_AssocStatus(void)
                            (const void *)WifiData->wfc[n].wepkey, len);
                 }
 
-                WifiData->reqMode = WIFIMODE_ASSOCIATED;
+                WifiData->reqMode = WIFIMODE_CONNECTED;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;
                 return ASSOCSTATUS_SEARCHING;
             }

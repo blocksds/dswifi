@@ -70,13 +70,13 @@ void Wifi_TWL_Update(void)
                 break;
             }
 
-            if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode == WIFIMODE_CONNECTED)
             {
                 WifiData->txbufRead = 0; // Empty TX buffer
                 WifiData->txbufWrite = 0;
 
                 wmi_connect();
-                WifiData->curMode = WIFIMODE_ASSOCIATE;
+                WifiData->curMode = WIFIMODE_CONNECTING;
             }
 
             break;
@@ -92,12 +92,12 @@ void Wifi_TWL_Update(void)
             wmi_scan_mode_tick();
             break;
         }
-        case WIFIMODE_ASSOCIATE:
+        case WIFIMODE_CONNECTING:
         {
             if (!wmi_is_ap_connecting())
             {
                 wmi_disconnect_cmd();
-                WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                WifiData->curMode = WIFIMODE_CANNOTCONNECT;
                 WLOG_PUTS("T: Can't connect to AP\n");
                 WLOG_FLUSH();
                 break;
@@ -105,7 +105,7 @@ void Wifi_TWL_Update(void)
 
             if (wmi_is_ap_connected())
             {
-                WifiData->curMode = WIFIMODE_ASSOCIATED;
+                WifiData->curMode = WIFIMODE_CONNECTED;
                 WLOG_PUTS("T: Connected to AP\n");
                 WLOG_FLUSH();
                 break;
@@ -113,7 +113,7 @@ void Wifi_TWL_Update(void)
 
             // If we have been asked to stop trying to connect, send a
             // disconnect request and go back to idle
-            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 wmi_disconnect_cmd();
                 WifiData->curMode = WIFIMODE_DISCONNECTING;
@@ -122,9 +122,9 @@ void Wifi_TWL_Update(void)
 
             break;
         }
-        case WIFIMODE_ASSOCIATED:
+        case WIFIMODE_CONNECTED:
         {
-            if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode == WIFIMODE_CONNECTED)
             {
                 // If the ARM9 has asked us to stay connected, but we're
                 // disconnected, that's an error.
@@ -132,7 +132,7 @@ void Wifi_TWL_Update(void)
                 if (!wmi_is_ap_connected())
                 {
                     wmi_disconnect_cmd();
-                    WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+                    WifiData->curMode = WIFIMODE_CANNOTCONNECT;
                     WLOG_PUTS("T: Connection lost\n");
                     WLOG_FLUSH();
                     break;
@@ -162,10 +162,10 @@ void Wifi_TWL_Update(void)
             }
             break;
         }
-        case WIFIMODE_CANNOTASSOCIATE:
+        case WIFIMODE_CANNOTCONNECT:
         {
             // Stay in this mode until the ARM9 asks us to stop connecting
-            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 WifiData->curMode = WIFIMODE_NORMAL;
                 WLOG_PUTS("T: Leaving error mode\n");

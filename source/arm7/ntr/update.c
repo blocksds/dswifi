@@ -71,7 +71,7 @@ static void Wifi_UpdateAssociate(void)
     WifiData->authctr++;
     if (WifiData->authctr > WIFI_MAX_ASSOC_RETRY)
     {
-        WifiData->curMode = WIFIMODE_CANNOTASSOCIATE;
+        WifiData->curMode = WIFIMODE_CANNOTCONNECT;
         return;
     }
 
@@ -95,7 +95,7 @@ static void Wifi_UpdateAssociate(void)
         case WIFI_AUTHLEVEL_ASSOCIATED:
             // We should have reached this point when authlevel was set to
             // WIFI_AUTHLEVEL_ASSOCIATED. Refresh curMode anyway.
-            WifiData->curMode = WIFIMODE_ASSOCIATED;
+            WifiData->curMode = WIFIMODE_CONNECTED;
             break;
     }
 }
@@ -202,7 +202,7 @@ void Wifi_NTR_Update(void)
                 break;
             }
 
-            if (WifiData->reqMode == WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode == WIFIMODE_CONNECTED)
             {
                 // Latch BSSID we're connecting to. We can only receive packets
                 // from it and from the broadcast address.
@@ -238,7 +238,7 @@ void Wifi_NTR_Update(void)
                 WifiData->txbufWrite = 0;
 
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
-                WifiData->curMode  = WIFIMODE_ASSOCIATE;
+                WifiData->curMode  = WIFIMODE_CONNECTING;
                 WifiData->authctr  = 0;
             }
             break;
@@ -269,7 +269,7 @@ void Wifi_NTR_Update(void)
             }
             break;
         }
-        case WIFIMODE_ASSOCIATE:
+        case WIFIMODE_CONNECTING:
         {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
@@ -282,14 +282,14 @@ void Wifi_NTR_Update(void)
 
             if (WifiData->authlevel == WIFI_AUTHLEVEL_ASSOCIATED)
             {
-                WifiData->curMode = WIFIMODE_ASSOCIATED;
+                WifiData->curMode = WIFIMODE_CONNECTED;
                 break;
             }
 
             Wifi_UpdateAssociate();
 
             // If we have been asked to stop trying to connect, go back to idle
-            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
@@ -297,7 +297,7 @@ void Wifi_NTR_Update(void)
             }
             break;
         }
-        case WIFIMODE_ASSOCIATED:
+        case WIFIMODE_CONNECTED:
         {
             Wifi_SetLedState(LED_BLINK_FAST);
 
@@ -324,7 +324,7 @@ void Wifi_NTR_Update(void)
             }
 #endif
             // If we have been asked to stop trying to connect, go back to idle
-            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 Wifi_SendDeauthentication(REASON_THIS_STATION_LEFT_DEAUTH);
                 // Set AID to 0 to stop receiving packets from the host
@@ -337,12 +337,12 @@ void Wifi_NTR_Update(void)
 
             if (WifiData->authlevel != WIFI_AUTHLEVEL_ASSOCIATED)
             {
-                WifiData->curMode = WIFIMODE_ASSOCIATE;
+                WifiData->curMode = WIFIMODE_CONNECTING;
                 break;
             }
             break;
         }
-        case WIFIMODE_CANNOTASSOCIATE:
+        case WIFIMODE_CANNOTCONNECT:
         {
             Wifi_SetLedState(LED_BLINK_SLOW);
 
@@ -354,7 +354,7 @@ void Wifi_NTR_Update(void)
             }
 
             // If the user has stopped trying to connect, exit error state
-            if (WifiData->reqMode != WIFIMODE_ASSOCIATED)
+            if (WifiData->reqMode != WIFIMODE_CONNECTED)
             {
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_IDLE);
                 WifiData->curMode = WIFIMODE_NORMAL;
