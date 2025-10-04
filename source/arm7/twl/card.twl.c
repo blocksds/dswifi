@@ -13,7 +13,6 @@
 #include <nds/arm7/serial.h>
 
 #include "arm7/debug.h"
-#include "arm7/flash.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/ndma.h"
 #include "arm7/twl/rx_queue.h"

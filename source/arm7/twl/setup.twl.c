@@ -3,9 +3,9 @@
 // Copyright (C) 2025 Antonio Niño Díaz
 
 #include "arm7/debug.h"
-#include "arm7/flash.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
+#include "arm7/wfc.h"
 #include "arm7/twl/card.h"
 
 void Wifi_TWL_Start(void)
