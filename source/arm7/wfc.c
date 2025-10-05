@@ -69,13 +69,10 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
             if (ap_data.wep_mode > 7) // Invalid WEP mode
                 continue;
 
+            // The BSSID isn't saved in the WFC settings, only the SSID
+
             for (int n = 0; n < 6; n++)
                 WifiData->wfc_ap[c].bssid[n] = 0;
-
-            WifiData->wfc[c].wepmode = ap_data.wep_mode;
-
-            for (size_t n = 0; n < Wifi_WepKeySizeFromMode(ap_data.wep_mode); n++)
-                WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
             for (int n = 0; n < 32; n++)
                 WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
@@ -87,6 +84,15 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
                     break;
             }
             WifiData->wfc_ap[c].ssid_len = len;
+
+            // Load WEP settings
+
+            size_t key_len = Wifi_WepKeySizeFromMode(ap_data.wep_mode);
+            for (size_t n = 0; n < key_len; n++)
+                WifiData->wfc[c].pass[n] = ap_data.wep_key1[n];
+            WifiData->wfc[c].pass_len = key_len;
+
+            // IP settings
 
             WifiData->wfc[c].ip            = *(u32 *)&ap_data.ip[0];
             WifiData->wfc[c].gateway       = *(u32 *)&ap_data.gateway[0];
@@ -164,13 +170,10 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
         if ((ap_data.wpa_mode != 0) && !allow_wpa)
             continue;
 
+        // The BSSID isn't saved in the WFC settings, only the SSID
+
         for (int n = 0; n < 6; n++)
             WifiData->wfc_ap[c].bssid[n] = 0;
-
-        WifiData->wfc[c].wepmode = ap_data.wep_mode;
-
-        for (size_t n = 0; n < Wifi_WepKeySizeFromMode(ap_data.wep_mode); n++)
-            WifiData->wfc[c].wepkey[n] = ap_data.wep_key1[n];
 
         for (int n = 0; n < 32; n++)
             WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
@@ -182,6 +185,19 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
                 break;
         }
         WifiData->wfc_ap[c].ssid_len = len;
+
+        // Load WEP settings
+
+        int wepmode = ap_data.wep_mode;
+        if (wepmode != WEPMODE_NONE)
+        {
+            size_t key_len = Wifi_WepKeySizeFromMode(wepmode);
+            for (size_t n = 0; n < key_len; n++)
+                WifiData->wfc[c].pass[n] = ap_data.wep_key1[n];
+            WifiData->wfc[c].pass_len = key_len;
+        }
+
+        // IP settings
 
         WifiData->wfc[c].ip            = *(u32 *)&ap_data.ip[0];
         WifiData->wfc[c].gateway       = *(u32 *)&ap_data.gateway[0];

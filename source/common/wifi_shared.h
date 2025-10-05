@@ -186,7 +186,7 @@ typedef struct WIFI_MAINSTRUCT
     // Security information about the AP
     struct {
         u8 pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
-        u8 pass[64]; // Max size for WPA is 63 bytes
+        u8 pass[64]; // Max size for WPA is 64 bytes
     } curApSecurity;
 
     u8 maxrate7;
@@ -209,8 +209,8 @@ typedef struct WIFI_MAINSTRUCT
         u32 subnet_mask;
         u32 dns_primary;
         u32 dns_secondary;
-        u8  wepkey[13]; // Max size: 13 bytes (WEPMODE_128BIT)
-        u8  wepmode;
+        u8  pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
+        u8  pass[64]; // Max size for WPA is 64 bytes
     } wfc[6];
 
     // ARM9 <-> ARM7 transfer circular buffers

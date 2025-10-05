@@ -353,11 +353,11 @@ int Wifi_AssocStatus(void)
                 }
                 else if (found.security_type == AP_SECURITY_WEP)
                 {
-                    size_t len = Wifi_WepKeySizeFromMode(WifiData->wfc[n].wepmode);
+                    size_t len = WifiData->wfc[n].pass_len;
 
                     WifiData->curApSecurity.pass_len = len;
                     memcpy((void *)WifiData->curApSecurity.pass,
-                           (const void *)WifiData->wfc[n].wepkey, len);
+                           (const void *)WifiData->wfc[n].pass, len);
                 }
 
                 WifiData->reqMode = WIFIMODE_CONNECTED;
