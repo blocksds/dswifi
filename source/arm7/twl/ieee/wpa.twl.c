@@ -115,8 +115,6 @@ void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *o
 
     mbedtls_nist_kw_free(&kw_ctx);
 
-    //hexdump(gtk_dec, 0x40);
-
     memset(out, 0, sizeof(gtk_keyinfo));
 
     size_t i = 0;
@@ -127,8 +125,8 @@ void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *o
 
         const u8 expected_keytype[4] = {0x00, 0x0f, 0xAC, 0x01};
 
-        if (ent_type == 0xDD && !memcmp(&gtk_dec[i], expected_keytype, 4) &&
-            (ent_size == 0x16 || ent_size == 0x26))
+        if ((ent_type == 0xDD) && !memcmp(&gtk_dec[i], expected_keytype, 4) &&
+            ((ent_size == 0x16) || (ent_size == 0x26)))
         {
             memcpy(out, &gtk_dec[i], ent_size);
         }
@@ -141,7 +139,6 @@ void wpa_calc_mic(const u8 *kck, const u8 *pkt_data, u32 pkt_len, u8 *mic_out)
     uint8_t out[0x20];
     sha1_hmac(kck, 0x10, pkt_data, pkt_len, out);
 
-    //hexdump(out, 16);
     memcpy(mic_out, out, 16);
 }
 
@@ -157,36 +154,35 @@ void wpa_calc_ptk(const u8 *dev_mac, const u8 *ap_mac, const u8 *dev_nonce, cons
     get_arr_min(dev_mac, ap_mac, 6, mac_min);
     get_arr_max(dev_mac, ap_mac, 6, mac_max);
 
-    //hexdump(mac_min, 6);
-    //hexdump(mac_max, 6);
-
     get_arr_min(ap_nonce, dev_nonce, 32, nonce_min);
     get_arr_max(ap_nonce, dev_nonce, 32, nonce_max);
 
     // Generate PTK
-    char ptk_data[512];
-    memset(ptk_data, 0, sizeof(ptk_data));
-
+    char ptk_data[512] = { 0 };
     int ptk_data_pos = 0;
     strcpy(ptk_data, "Pairwise key expansion");
     ptk_data_pos += strlen("Pairwise key expansion") + 1;
-    memcpy(ptk_data + ptk_data_pos, mac_min, 6); ptk_data_pos += 6;
-    memcpy(ptk_data + ptk_data_pos, mac_max, 6); ptk_data_pos += 6;
-    memcpy(ptk_data + ptk_data_pos, nonce_min, 32); ptk_data_pos += 32;
-    memcpy(ptk_data + ptk_data_pos, nonce_max, 32); ptk_data_pos += 32;
-    ptk_data[ptk_data_pos] = 0; ptk_data_pos += 1; // key iteration
+    memcpy(ptk_data + ptk_data_pos, mac_min, 6);
+    ptk_data_pos += 6;
+    memcpy(ptk_data + ptk_data_pos, mac_max, 6);
+    ptk_data_pos += 6;
+    memcpy(ptk_data + ptk_data_pos, nonce_min, 32);
+    ptk_data_pos += 32;
+    memcpy(ptk_data + ptk_data_pos, nonce_max, 32);
+    ptk_data_pos += 32;
+    ptk_data[ptk_data_pos] = 0;
+    ptk_data_pos += 1; // key iteration
 
     sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out);
 
-    ptk_data[ptk_data_pos-1] = 1;
+    ptk_data[ptk_data_pos - 1] = 1;
     sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out + 0x14);
 
-    ptk_data[ptk_data_pos-1] = 2;
-    sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out + 0x14*2);
+    ptk_data[ptk_data_pos - 1] = 2;
+    sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out + 0x14 * 2);
 
-    ptk_data[ptk_data_pos-1] = 3;
-    sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out + 0x14*3);
+    ptk_data[ptk_data_pos - 1] = 3;
+    sha1_hmac(pmk, 0x20, (u8*)ptk_data, ptk_data_pos, ptk_out + 0x14 * 3);
 
     memcpy(ptk, ptk_out, sizeof(ptk_keyinfo));
-    //hexdump(ptk_out, 16);
 }
