@@ -380,21 +380,7 @@ int Wifi_AssocStatus(void)
                 WifiData->curAp = found;
 
                 // Load security settings from WFC settings
-
-                memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
-
-                if (found.security_type == AP_SECURITY_OPEN)
-                {
-                    // Nothing to do
-                }
-                else if (found.security_type == AP_SECURITY_WEP)
-                {
-                    size_t len = WifiData->wfc[n].pass_len;
-
-                    WifiData->curApSecurity.pass_len = len;
-                    memcpy((void *)WifiData->curApSecurity.pass,
-                           (const void *)WifiData->wfc[n].pass, len);
-                }
+                WifiData->curApSecurity = WifiData->wfc[n].security;
 
                 WifiData->reqMode = WIFIMODE_CONNECTED;
                 wifi_connect_state = WIFI_CONNECT_ASSOCIATING;

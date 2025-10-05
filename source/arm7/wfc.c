@@ -86,8 +86,8 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
             size_t key_len = Wifi_WepKeySizeFromMode(ap_data.wep_mode);
             for (size_t n = 0; n < key_len; n++)
-                WifiData->wfc[c].pass[n] = ap_data.wep_key1[n];
-            WifiData->wfc[c].pass_len = key_len;
+                WifiData->wfc[c].security.pass[n] = ap_data.wep_key1[n];
+            WifiData->wfc[c].security.pass_len = key_len;
 
             // IP settings
 
@@ -187,8 +187,8 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
         {
             size_t key_len = Wifi_WepKeySizeFromMode(wepmode);
             for (size_t n = 0; n < key_len; n++)
-                WifiData->wfc[c].pass[n] = ap_data.wep_key1[n];
-            WifiData->wfc[c].pass_len = key_len;
+                WifiData->wfc[c].security.pass[n] = ap_data.wep_key1[n];
+            WifiData->wfc[c].security.pass_len = key_len;
         }
 
         // IP settings

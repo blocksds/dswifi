@@ -143,6 +143,12 @@ typedef struct {
     u32 spinlock;
 } Wifi_ClientsInfoIpc;
 
+// Security information about an AP
+typedef struct {
+    u8 pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
+    u8 pass[64]; // Max size for WPA is 64 bytes
+} Wifi_ApSecurity;
+
 // This struct is allocated in main RAM, but it is only accessed through an
 // uncached mirror. We use aligned_alloc() to ensure that the beginning of the
 // struct isn't in the same cache line as other variables, but we need to pad
@@ -186,11 +192,8 @@ typedef struct WIFI_MAINSTRUCT
     // the ARM7.
     Wifi_AccessPoint curAp;
 
-    // Security information about the AP
-    struct {
-        u8 pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
-        u8 pass[64]; // Max size for WPA is 64 bytes
-    } curApSecurity;
+    // Security information of the current AP
+    Wifi_ApSecurity curApSecurity;
 
     u8 maxrate7;
     bool realRates;
@@ -213,8 +216,7 @@ typedef struct WIFI_MAINSTRUCT
         u32 subnet_mask;
         u32 dns_primary;
         u32 dns_secondary;
-        u8  pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
-        u8  pass[64]; // Max size for WPA is 64 bytes
+        Wifi_ApSecurity security;
     } wfc[WIFI_MAX_WFC];
 
     // ARM9 <-> ARM7 transfer circular buffers
