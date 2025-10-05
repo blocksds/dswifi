@@ -986,6 +986,8 @@ void wifi_card_init(void)
     wifi_sdio_controller_init();
 
     wifi_card_device_init();
+
+    wpa_mbedtls_init();
 }
 
 void wifi_card_send_command(wifi_sdio_command cmd, u32 args)

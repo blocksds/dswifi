@@ -1,14 +1,27 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2021 Max Thomas
+// Copyright (C) 2025 Antonio Niño Díaz
 
+#include <string.h>
+
+#include "arm7/twl/crypto/sha1_hmac.h"
 #include "arm7/twl/ieee/wpa.h"
 
-#if 0
-#include "crypto/sha1.h"
-#include "crypto/md.h"
-#include "crypto/pkcs5.h"
-#include "crypto/nist_kw.h"
+#include "mbedtls/md.h"
+#include "mbedtls/memory_buffer_alloc.h"
+#include "mbedtls/nist_kw.h"
+#include "mbedtls/pkcs5.h"
+#include "mbedtls/sha1.h"
+
+// TODO: 1 KB seems to be enough, can we reduce this more?
+static unsigned char mbedtls_heap[1024];
+
+void wpa_mbedtls_init(void)
+{
+    // Initialize the mbed TLS heap
+    mbedtls_memory_buffer_alloc_init(mbedtls_heap, sizeof(mbedtls_heap));
+}
 
 static int PBKDF2_HMAC_SHA_1(const char *pass, const char *salt, int32_t iterations,
                              uint32_t outputBytes, uint8_t *out)
@@ -38,7 +51,7 @@ static int PBKDF2_HMAC_SHA_1(const char *pass, const char *salt, int32_t iterati
 static void get_arr_min(const uint8_t *a, const uint8_t *b, size_t len, uint8_t *out)
 {
     int a_is_max = 0;
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
         if (a[i] == b[i])
             continue;
@@ -58,7 +71,7 @@ static void get_arr_min(const uint8_t *a, const uint8_t *b, size_t len, uint8_t 
 static void get_arr_max(const uint8_t *a, const uint8_t *b, size_t len, uint8_t *out)
 {
     int a_is_max = 0;
-    for (int i = 0; i < len; i++)
+    for (size_t i = 0; i < len; i++)
     {
         if (a[i] == b[i])
             continue;
@@ -74,28 +87,17 @@ static void get_arr_max(const uint8_t *a, const uint8_t *b, size_t len, uint8_t 
 
     memcpy(out, a_is_max ? a : b, len);
 }
-#endif
 
 // !! This takes about 3 seconds on the 3DS ARM11 !!
 // Use the cached version in NVRAM if you can.
 void wpa_calc_pmk(const char *ssid, const char *pass, u8 *pmk)
 {
-    (void)ssid;
-    (void)pass;
-    (void)pmk;
-#if 0
     // Generate PMK
     PBKDF2_HMAC_SHA_1(pass, ssid, 4096, 32, pmk);
-#endif
 }
 
 void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *out)
 {
-    (void)kek;
-    (void)data;
-    (void)data_len;
-    (void)out;
-#if 0
     mbedtls_nist_kw_context kw_ctx;
     uint8_t gtk_dec[0x200];
     size_t decrypted_length;
@@ -117,7 +119,7 @@ void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *o
 
     memset(out, 0, sizeof(gtk_keyinfo));
 
-    int i = 0;
+    size_t i = 0;
     while (i < decrypted_length)
     {
         u8 ent_type = gtk_dec[i++];
@@ -132,34 +134,20 @@ void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *o
         }
         i += ent_size;
     }
-#endif
 }
 
 void wpa_calc_mic(const u8 *kck, const u8 *pkt_data, u32 pkt_len, u8 *mic_out)
 {
-    (void)kck;
-    (void)pkt_data;
-    (void)pkt_len;
-    (void)mic_out;
-#if 0
     uint8_t out[0x20];
     sha1_hmac(kck, 0x10, pkt_data, pkt_len, out);
 
     //hexdump(out, 16);
     memcpy(mic_out, out, 16);
-#endif
 }
 
 void wpa_calc_ptk(const u8 *dev_mac, const u8 *ap_mac, const u8 *dev_nonce, const u8 *ap_nonce,
                   const u8 *pmk, ptk_keyinfo *ptk)
 {
-    (void)dev_mac;
-    (void)ap_mac;
-    (void)dev_nonce;
-    (void)ap_nonce;
-    (void)pmk;
-    (void)ptk;
-#if 0
     uint8_t ptk_out[0x60];
     uint8_t mac_min[6];
     uint8_t mac_max[6];
@@ -201,5 +189,4 @@ void wpa_calc_ptk(const u8 *dev_mac, const u8 *ap_mac, const u8 *dev_nonce, cons
 
     memcpy(ptk, ptk_out, sizeof(ptk_keyinfo));
     //hexdump(ptk_out, 16);
-#endif
 }

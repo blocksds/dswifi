@@ -30,6 +30,8 @@ ptk_keyinfo;
 #define PTK_KEK (0x10)
 #define PTK_TK  (0x20)
 
+void wpa_mbedtls_init(void);
+
 void wpa_calc_pmk(const char *ssid, const char *pass, u8 *pmk);
 void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *out);
 void wpa_calc_mic(const u8 *kck, const u8 *pkt_data, u32 pkt_len, u8 *mic_out);

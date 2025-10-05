@@ -11,8 +11,8 @@ ARM_NONE_EABI_PATH	?= $(WONDERFUL_TOOLCHAIN)/toolchain/gcc-arm-none-eabi/bin/
 # Source code paths
 # -----------------
 
-SOURCEDIRS	:= source/arm7 source/common
-INCLUDEDIRS	:= include source
+SOURCEDIRS	:= source/arm7 source/common mbedtls/library
+INCLUDEDIRS	:= include source mbedtls/include source/arm7/twl/crypto
 
 # Defines passed to all files
 # ---------------------------

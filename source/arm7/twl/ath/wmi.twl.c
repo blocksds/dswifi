@@ -1096,10 +1096,11 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     putbe16(data_hdr.keylen_be, 0);
     putbe64(data_hdr.replay_counter_be, replay_cnt);
 
-    // TODO this probably needs a good srand -- maybe use hardware sources?
+    // TODO: This probably needs a good srand -- maybe use hardware sources?
+    // Also, it can't use TLS, so rand() isn't an option.
     u8 test_nonce[32] = {0};
     for (int i = 0; i < 32; i++)
-        test_nonce[i] = rand();
+        test_nonce[i] = i * 0xCAFE;
 
     memcpy(data_hdr.wpa_nonce, test_nonce, 32);
     putbe16(data_hdr.wpa_keydata_len_be, 0x16);
@@ -1107,9 +1108,17 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     memcpy(device_nonce, data_hdr.wpa_nonce, 32);
 
 #if 0
-    hexdump(WifiData->curApSecurity.pmk, 0x8);
-    wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
-    hexdump(WifiData->curApSecurity.pmk, 0x8);
+    // TODO: Get this working. It takes a few seconds, though
+    WLOG_PUTS("T: Calculating PMK\n");
+    WLOG_FLUSH();
+    //hexdump(WifiData->curApSecurity.pmk, 0x8);
+    //wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
+    wpa_calc_pmk((const char *)WifiData->curAp.ssid,
+                 (const char *)WifiData->curApSecurity.pass,
+                 (u8 *)WifiData->curApSecurity.pmk);
+    //hexdump(WifiData->curApSecurity.pmk, 0x8);
+    WLOG_PUTS("T: Calculated PMK\n");
+    WLOG_FLUSH();
 #endif
 
     wpa_calc_ptk(src_bssid, dst_bssid, device_nonce, device_ap_nonce,
