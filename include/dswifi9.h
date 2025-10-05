@@ -45,9 +45,9 @@ enum WIFIGETDATA
 /// If the program isn't running on a DSi it will fall back to DS mode. Note
 /// that local multiplayer mode isn't supported in DSi mode.
 ///
-/// @warning
-///     This doesn't work yet, it's a work-in-progress feature.
-#define WIFI_ENABLE_DSI_MODE    (1 << 3)
+/// @note
+///     This flag is incompatible with WIFI_LOCAL_ONLY.
+#define WIFI_ATTEMPT_DSI_MODE   (1 << 3)
 
 /// Initialize DSWiFi in DS mode, even in DSi consoles. Local multiplayer mode
 /// is supported.
@@ -60,6 +60,9 @@ enum WIFIGETDATA
 ///
 /// If your game only uses local multiplayer mode, you can use this option to
 /// save RAM.
+///
+/// @note
+///     This flag is incompatible with WIFI_ATTEMPT_DSI_MODE.
 #define WIFI_LOCAL_ONLY         (1 << 2)
 
 /// Initialize both internet and local multiplayer modes.
@@ -73,10 +76,10 @@ enum WIFIGETDATA
 /// Allow the library to control how the LED blinks (DS and DS Lite only).
 #define WIFI_ENABLE_LED         (0 << 1)
 
-/// Init library and try to connect to firmware AP. Used by Wifi_InitDefault().
+/// Init library and try to connect to firmware AP.
 #define WFC_CONNECT             (1 << 0)
 
-/// Init library only, don't try to connect to AP. Used by Wifi_InitDefault().
+/// Init library only, don't try to connect to AP.
 #define INIT_ONLY               (0 << 0)
 
 /// Initializes WiFi library.
@@ -112,9 +115,7 @@ enum WIFIGETDATA
 /// @note
 ///     WFC_CONNECT is generally discouraged outside of simple demos because
 ///     Wifi_InitDefault() can't return for a few seconds until the connection
-///     has succeeded or failed. Also, it doesn't let the user select an AP, or
-///     change the password. It relies on official games setting up an AP in the
-///     firmware settings.
+///     has succeeded or failed.
 ///
 ///     Check the examples of DSWiFi to see how to connect to an AP in a more
 ///     manual way that allows your application to do other things while waiting

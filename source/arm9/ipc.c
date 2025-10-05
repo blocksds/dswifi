@@ -81,7 +81,7 @@ static bool Wifi_InitIPC(unsigned int flags)
         WifiData->reqFlags |= WFLAG_REQ_USELED;
 
     // Use DSi mode only if has been requested and we're running on a DSi
-    if ((flags & WIFI_ENABLE_DSI_MODE) && isDSiMode())
+    if ((flags & WIFI_ATTEMPT_DSI_MODE) && isDSiMode())
         WifiData->reqFlags |= WFLAG_REQ_DSI_MODE;
 
     // Set the default host name from the firmware settings
@@ -113,6 +113,10 @@ bool Wifi_InitDefault(unsigned int flags)
 {
     // You can't connect to WFC APs if the IP stack isn't initialized
     if ((flags & WIFI_LOCAL_ONLY) && (flags & WFC_CONNECT))
+        return false;
+
+    // DSi mode works only in Internet mode.
+    if ((flags & WIFI_ATTEMPT_DSI_MODE) && (flags & WIFI_LOCAL_ONLY))
         return false;
 
     // Initialize the ARM7 side of the library and wait until it's ready
