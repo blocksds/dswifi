@@ -16,13 +16,22 @@ typedef struct
 }
 wifi_card_ctx;
 
+// Values in nvram_cfg_twl.wpa_type
 enum wpa_type_t
 {
-    WPATYPE_NONE = 0,
-    WPATYPE_WPA_TKIP = 4,
+    WPATYPE_NONE      = 0,
+
+    // TODO: Not supported
+    WPATYPE_WPA_TKIP  = 4,
+
+    // security=AP_SECURITY_WPA2, auth=AP_AUTH_PSK, group=AP_CRYPT_TKIP, pair=AP_CRYPT_AES
     WPATYPE_WPA2_TKIP = 5,
-    WPATYPE_WPA_AES = 6,
-    WPATYPE_WPA2_AES = 7,
+
+    // TODO: Not supported
+    WPATYPE_WPA_AES   = 6,
+
+    // security=AP_SECURITY_WPA2, auth=AP_AUTH_PSK, group=AP_CRYPT_AES, pair=AP_CRYPT_AES
+    WPATYPE_WPA2_AES  = 7,
 };
 
 #define F1_HOST_INT_STATUS      (0x400)

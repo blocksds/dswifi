@@ -85,9 +85,9 @@ typedef struct
     u8 unk_F0[0xE];
     u16 crc16_0_to_FD;
     u8 pmk[0x20];     // Precomputed PSK (based on WPA/WPA2 password and SSID)
-    char pass[0x40];  // WPA/WPA2 password (ASCII string, padded with zeroes
-    u8 unk_160[0x21]; // 0=None/WEP, 4=WPA-TKIP, 5=WPA2-TKIP, 6=WPA-AES, 7=WPA2-AES
-    u8 wpa_type;
+    char pass[0x40];  // WPA/WPA2 password (ASCII string, padded with zeroes)
+    u8 unk_160[0x21];
+    u8 wpa_type;      // wpa_type_t: 0=None/WEP, 4=WPA-TKIP, 5=WPA2-TKIP, 6=WPA-AES, 7=WPA2-AES
     u8 proxy_en;
     u8 proxy_auth_en;
     char proxy_name[0x30];
