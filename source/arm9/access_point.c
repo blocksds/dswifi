@@ -95,7 +95,9 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
     if (apdata == NULL)
         return -1;
 
-    for (int i = 0; i < Wifi_GetNumAP(); i++)
+    int num_ap = Wifi_GetNumAP();
+
+    for (int i = 0; i < num_ap; i++)
     {
         Wifi_AccessPoint ap = { 0 };
         Wifi_GetAPData(i, &ap);
@@ -135,6 +137,41 @@ int Wifi_FindMatchingAP(int numaps, Wifi_AccessPoint *apdata, Wifi_AccessPoint *
                 *match_dest = ap;
 
             return j;
+        }
+    }
+
+    return -1;
+}
+
+// This returns the AP information in match_dest and the WFC config index as the
+// return value. It returns -1 on error.
+static int Wifi_FindMatchingAPFromWFC(Wifi_AccessPoint *match_dest)
+{
+    int num_ap = Wifi_GetNumAP();
+
+    for (int i = 0; i < num_ap; i++)
+    {
+        Wifi_AccessPoint ap = { 0 };
+        Wifi_GetAPData(i, &ap);
+
+        if (ap.ssid_len == 0)
+            continue;
+
+        for (int j = 0; j < WifiData->wfc_number_of_configs; j++)
+        {
+            if (ap.ssid_len != WifiData->wfc[j].ssid_len)
+                continue;
+
+            if (memcmp(ap.ssid, (const char *)WifiData->wfc[j].ssid,
+                       WifiData->wfc[j].ssid_len) != 0)
+                continue;
+
+            // If there's a match, this is the right AP, ignore the rest.
+            if (match_dest)
+            {
+                *match_dest = ap;
+                return j;
+            }
         }
     }
 
@@ -319,12 +356,11 @@ int Wifi_AssocStatus(void)
         {
             // TODO: Wait for at least a few frames before trying to connect to
             // any AP. This will let us find the best one available.
-            int numap = WifiData->wfc_number_of_configs;
 
             // Check if we have found any AP stored in the WFC settings. The
             // security settings can be obtained from the WFC settings.
             Wifi_AccessPoint found;
-            int n = Wifi_FindMatchingAP(numap, (Wifi_AccessPoint *)WifiData->wfc_ap, &found);
+            int n = Wifi_FindMatchingAPFromWFC(&found);
             if (n != -1)
             {
 #ifdef DSWIFI_ENABLE_LWIP

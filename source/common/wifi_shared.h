@@ -19,6 +19,9 @@
 // Max number of Access Points that the library will keep track of
 #define WIFI_MAX_AP          32
 
+// Max number of saved WFC configurations
+#define WIFI_MAX_WFC        6
+
 // In scan mode, whenever there is a channel switch, the timeout counter in each
 // AP is incremented. When WIFI_AP_TIMEOUT is reached, the AP is removed from
 // the list. The timeout value lets us scan all 13 channels twice (plus a switch
@@ -202,8 +205,9 @@ typedef struct WIFI_MAINSTRUCT
 
     // WFC data
     u8 wfc_number_of_configs; // Total number of configs loaded
-    Wifi_AccessPoint wfc_ap[6];
     struct {
+        u8  ssid[33];
+        u8  ssid_len;
         u32 ip;
         u32 gateway;
         u32 subnet_mask;
@@ -211,7 +215,7 @@ typedef struct WIFI_MAINSTRUCT
         u32 dns_secondary;
         u8  pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
         u8  pass[64]; // Max size for WPA is 64 bytes
-    } wfc[6];
+    } wfc[WIFI_MAX_WFC];
 
     // ARM9 <-> ARM7 transfer circular buffers
     // ---------------------------------------

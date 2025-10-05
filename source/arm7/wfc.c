@@ -71,11 +71,8 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
             // The BSSID isn't saved in the WFC settings, only the SSID
 
-            for (int n = 0; n < 6; n++)
-                WifiData->wfc_ap[c].bssid[n] = 0;
-
             for (int n = 0; n < 32; n++)
-                WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
+                WifiData->wfc[c].ssid[n] = ap_data.ssid[n];
 
             int len;
             for (len = 0; len < 32; len++)
@@ -83,7 +80,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
                 if (!ap_data.ssid[len])
                     break;
             }
-            WifiData->wfc_ap[c].ssid_len = len;
+            WifiData->wfc[c].ssid_len = len;
 
             // Load WEP settings
 
@@ -107,7 +104,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
 
             WifiData->wfc[c].subnet_mask = s;
 
-            WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc_ap[c].ssid);
+            WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc[c].ssid);
 
             // Start filling next DSWiFi slot
             c++;
@@ -172,11 +169,8 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
 
         // The BSSID isn't saved in the WFC settings, only the SSID
 
-        for (int n = 0; n < 6; n++)
-            WifiData->wfc_ap[c].bssid[n] = 0;
-
         for (int n = 0; n < 32; n++)
-            WifiData->wfc_ap[c].ssid[n] = ap_data.ssid[n];
+            WifiData->wfc[c].ssid[n] = ap_data.ssid[n];
 
         int len;
         for (len = 0; len < 32; len++)
@@ -184,7 +178,7 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
             if (!ap_data.ssid[len])
                 break;
         }
-        WifiData->wfc_ap[c].ssid_len = len;
+        WifiData->wfc[c].ssid_len = len;
 
         // Load WEP settings
 
@@ -212,7 +206,7 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
 
         WifiData->wfc[c].subnet_mask = s;
 
-        WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc_ap[c].ssid);
+        WLOG_PRINTF("W: [%d] %s\n", i, WifiData->wfc[c].ssid);
 
         // Start filling next DSWiFi slot
         c++;
