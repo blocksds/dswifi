@@ -26,6 +26,15 @@ starts by default in Internet mode, not multiplayer mode):
 Wifi_InitDefault(INIT_ONLY);
 ```
 
+If all you want to do is to use Internet mode you can use this to use the
+additional DSi WiFi capabilities (like WPA2 support):
+
+```c
+Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE);
+```
+
+Without `WIFI_ATTEMPT_DSI_MODE` the library will start in DS compatibility mode.
+
 Hardware timer 3 will be used by the WiFi library after this call.
 
 ### 1.1 Connect to WFC settings
@@ -59,7 +68,7 @@ while (1)
         Wifi_AccessPoint ap;
         Wifi_GetAPData(i, &ap);
 
-        // WPA isn't supported!
+        // WPA isn't supported when selecting APs by hand!
 
         printf("[%.24s]\n", ap.ssid)
         printf("%s | Channel %2d | RSSI %d\n",
@@ -77,15 +86,16 @@ After you have decided which AP to connect to:
 // set the settings manually if you want.
 Wifi_SetIP(0, 0, 0, 0, 0);
 
-// If the access point requires a WEP password, ask the user to provide it
+// If the access point requires a WEP password, ask the user to provide it.
 if (AccessPoint.flags & WFLAG_APDATA_WEP)
 {
     // WEP passwords can be 5 or 13 characters long
     const char *password = "MyPassword123";
     Wifi_ConnectSecureAP(&AccessPoint, (u8 *)password, strlen(password));
 }
-else
+else if (!(AccessPoint.flags & WFLAG_APDATA_WPA))
 {
+    // WPA isn't supported when selecting APs by hand, only open and WEP networks
     Wifi_ConnectAP(&AccessPoint, WEPMODE_NONE, 0, 0);
 }
 ```

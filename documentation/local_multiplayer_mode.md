@@ -51,8 +51,10 @@ Wifi_InitDefault(INIT_ONLY);
 ```
 
 This is required even if your application needs to switch between Internet and
-local multiplayer mode, you can't use `WFC_CONNECT`. Note that hardware timer 3
-will be used by the WiFi library after this call.
+local multiplayer mode, you can't use `WFC_CONNECT`. Also, you can't use the
+DSi driver in multiplayer mode, it will use the DS compatibility mode.
+
+Note that hardware timer 3 will be used by the WiFi library after this call.
 
 After using multiplayer mode you can call this to switch to Internet mode:
 
