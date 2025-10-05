@@ -159,7 +159,8 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
         if (ap_data.wep_mode > 7) // Invalid WEP mode
             continue;
 
-        // Only load WPA settings if requested by the caller
+        // Only load WPA settings if requested by the caller (so that we can
+        // ignore them in DS mode, for example).
         if ((ap_data.wpa_mode != 0) && !allow_wpa)
             continue;
 

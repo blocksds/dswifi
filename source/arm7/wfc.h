@@ -43,7 +43,7 @@ typedef struct
     u8 status;              // 00 = Normal, 01 = AOSS, FF = not configured/deleted
     u8 unk_E8;
     u8 unk_E9;
-    u16 mtu;
+    u16 mtu;                // TODO: Use this in lwIP?
     u8 unk_EC[3];
     u8 slot_idx;            // Bits 0..2 = Connection 1..3 configured
     u8 wfc_uid[6];          // 43 bits
@@ -54,6 +54,10 @@ nvram_cfg_ntr;
 
 // DSi Firmware Wifi Internet Access Points
 // ========================================
+
+// Connection data 1: Address F_USER_SETTINGS_OFFSET * 8 - 0xA00
+// Connection data 2: Address F_USER_SETTINGS_OFFSET * 8 - 0x800
+// Connection data 3: Address F_USER_SETTINGS_OFFSET * 8 - 0x600
 
 typedef struct
 {
@@ -71,18 +75,18 @@ typedef struct
     u8 secondary_dns[4];
     u8 subnet_mask;
     u8 unk_D1[0x15];
-    u8 wep_mode;
-    u8 wpa_mode;
+    u8 wep_mode;      // Same as on DS
+    u8 wpa_mode;      // 0x00=Normal, 0x10=WPA/WPA2, 0x13=WPS+WPA/WPA2, 0xFF=Unused
     u8 ssid_len;
     u8 unk_E9;
-    u16 mtu;
+    u16 mtu;          // TODO: Use this in lwIP?
     u8 unk_EC[3];
     u8 slot_idx;
     u8 unk_F0[0xE];
     u16 crc16_0_to_FD;
-    u8 pmk[0x20];
-    char pass[0x40];
-    u8 unk_160[0x21];
+    u8 pmk[0x20];     // Precomputed PSK (based on WPA/WPA2 password and SSID)
+    char pass[0x40];  // WPA/WPA2 password (ASCII string, padded with zeroes
+    u8 unk_160[0x21]; // 0=None/WEP, 4=WPA-TKIP, 5=WPA2-TKIP, 6=WPA-AES, 7=WPA2-AES
     u8 wpa_type;
     u8 proxy_en;
     u8 proxy_auth_en;
