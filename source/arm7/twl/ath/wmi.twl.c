@@ -32,8 +32,6 @@ static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
 static u16 num_rounds_scanned = 0;
 
-static u16 ap_snr = 0; // TODO: Move to IPC struct
-
 u16 wmi_idk = 0;
 static bool wmi_bIsReady;
 
@@ -971,11 +969,6 @@ void wmi_scan_mode_tick(void)
         {
             device_cur_channel_idx = 0;
             num_rounds_scanned++;
-        }
-
-        if (num_rounds_scanned && (num_rounds_scanned % 5 == 0))
-        {
-            ap_snr = 0;
         }
 
         if (!mhz)
