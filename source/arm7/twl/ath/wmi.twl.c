@@ -1021,6 +1021,21 @@ void wmi_connect(void)
     tmp8 = 0;
     wmi_send_pkt(WMI_SET_KEEPALIVE_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8));
 
+#if 0
+    // TODO: If the PMK in WifiData->curApSecurity.pmk isn't set, calculate it
+    // here. It takes a few seconds, though
+    WLOG_PUTS("T: Calculating PMK\n");
+    WLOG_FLUSH();
+    //hexdump(WifiData->curApSecurity.pmk, 0x8);
+    //wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
+    wpa_calc_pmk((const char *)WifiData->curAp.ssid,
+                 (const char *)WifiData->curApSecurity.pass,
+                 (u8 *)WifiData->curApSecurity.pmk);
+    //hexdump(WifiData->curApSecurity.pmk, 0x8);
+    WLOG_PUTS("T: Calculated PMK\n");
+    WLOG_FLUSH();
+#endif
+
     wmi_connect_cmd();
 }
 
@@ -1120,20 +1135,6 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     putbe16(data_hdr.wpa_keydata_len_be, 0x16);
 
     memcpy(device_nonce, data_hdr.wpa_nonce, 32);
-
-#if 0
-    // TODO: Get this working. It takes a few seconds, though
-    WLOG_PUTS("T: Calculating PMK\n");
-    WLOG_FLUSH();
-    //hexdump(WifiData->curApSecurity.pmk, 0x8);
-    //wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
-    wpa_calc_pmk((const char *)WifiData->curAp.ssid,
-                 (const char *)WifiData->curApSecurity.pass,
-                 (u8 *)WifiData->curApSecurity.pmk);
-    //hexdump(WifiData->curApSecurity.pmk, 0x8);
-    WLOG_PUTS("T: Calculated PMK\n");
-    WLOG_FLUSH();
-#endif
 
     wpa_calc_ptk(src_bssid, dst_bssid, device_nonce, device_ap_nonce,
                  (const void *)WifiData->curApSecurity.pmk, &device_ptk);
