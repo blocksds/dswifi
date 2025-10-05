@@ -1253,7 +1253,11 @@ skip_opcond:
     ioDelay(0x10000);
 
     // RESET_CAUSE, expecting 0x02
-    WLOG_PRINTF("T: Reset cause: 0x%x\n", (unsigned int)wifi_card_read_intern_word(0x40C0));
+    unsigned int reset_cause = wifi_card_read_intern_word(0x40C0);
+    if (reset_cause != 2)
+    {
+        WLOG_PRINTF("T: Reset cause: 0x%x\n", reset_cause);
+    }
 
     // FIFOs are weird after reset?
     //wifi_card_bmi_wait_count4();
