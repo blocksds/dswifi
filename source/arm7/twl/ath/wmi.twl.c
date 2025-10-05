@@ -35,16 +35,16 @@ static u16 num_rounds_scanned = 0;
 static u16 ap_snr = 0; // TODO: Move to IPC struct
 
 u16 wmi_idk = 0;
-static bool wmi_bIsReady = false; // TODO: Initialize to false
+static bool wmi_bIsReady;
 
 // Set to true between WMI_START_SCAN_CMD and WMI_SCAN_COMPLETE_EVENT
-static bool wmi_is_scanning = false;
+static bool wmi_is_scanning;
 
-static bool ap_connected = false;
-static bool ap_connecting = true;
+static bool ap_connected;
+static bool ap_connecting;
 
-static bool has_sent_hs2 = false; // TODO: Initialize to false
-static bool has_sent_hs4 = false; // TODO: Initialize to false
+static bool has_sent_hs2;
+static bool has_sent_hs4;
 
 static u8 device_ap_nonce[32];
 static u8 device_nonce[32];
@@ -73,13 +73,31 @@ static int wmi_ieee_to_crypt(u32 ieee)
     }
 }
 
+void wmi_init(void)
+{
+    wmi_bIsReady = false;
+
+    wmi_is_scanning = false;
+
+    ap_connected = false;
+    ap_connecting = false;
+}
+
 bool wmi_is_ap_connected(void)
 {
+    // WPA2 needs to complete its handshake before doing anything else
+    if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
+        return ap_connected && wmi_handshake_done();
+
     return ap_connected;
 }
 
 bool wmi_is_ap_connecting(void)
 {
+    // If the WPA2 handshake isn't complete we are still connecting
+    if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
+        return ap_connecting || !wmi_handshake_done();
+
     return ap_connecting;
 }
 
@@ -639,6 +657,8 @@ void wmi_connect_cmd(void)
                 (const char *)&WifiData->curAp.ssid[0]);
     WLOG_FLUSH();
 
+    ap_connecting = true;
+
     if (WifiData->curAp.security_type == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->curAp.ssid_len;
@@ -668,8 +688,6 @@ void wmi_connect_cmd(void)
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
         memcpy(wmi_params.bssid, (const char *)&WifiData->curAp.bssid[0], 6);
-
-        ap_connecting = true;
 
         wmi_send_pkt(WMI_CONNECT_CMD, MBOXPKT_REQACK, &wmi_params, sizeof(wmi_params));
     }
@@ -711,7 +729,6 @@ void wmi_connect_cmd(void)
     }
     else //if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
     {
-        // TODO: Support WPA APs
         size_t ssid_len = WifiData->curAp.ssid_len;
         u32 mhz = wifi_channel_to_mhz(WifiData->curAp.channel);
 
@@ -974,6 +991,10 @@ void wmi_scan_mode_tick(void)
 
 void wmi_connect(void)
 {
+    // Reset WPA handshake state
+    has_sent_hs2 = false;
+    has_sent_hs4 = false;
+
     wmi_set_bss_filter(4, 0); // current beacon
     wmi_set_scan_params(5, 200, 200, 200);
 
@@ -1325,7 +1346,7 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
         //hexdump(pkt_data, len);
     }
 
-    WLOG_PUTS("T: Done auth\n");
+    WLOG_PUTS("T: Handshake step done\n");
     WLOG_FLUSH();
 }
 

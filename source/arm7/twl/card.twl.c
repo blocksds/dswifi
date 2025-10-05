@@ -987,6 +987,8 @@ void wifi_card_init(void)
 
     wifi_card_device_init();
 
+    wmi_init();
+
     wpa_mbedtls_init();
 }
 

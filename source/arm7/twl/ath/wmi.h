@@ -64,6 +64,8 @@
 
 typedef struct gtk_keyinfo gtk_keyinfo;
 
+void wmi_init(void);
+
 void wmi_handle_pkt(u16 pkt_cmd, u8 *pkt_data, u32 len, u32 ack_len);
 void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len);
 
