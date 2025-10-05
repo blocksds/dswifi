@@ -3,6 +3,8 @@
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <string.h>
+
 #include <nds.h>
 
 #include "arm7/debug.h"
@@ -189,6 +191,18 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool a
             for (size_t n = 0; n < key_len; n++)
                 WifiData->wfc[c].security.pass[n] = ap_data.wep_key1[n];
             WifiData->wfc[c].security.pass_len = key_len;
+        }
+
+        int wpamode = ap_data.wpa_mode;
+        if (wpamode != 0)
+        {
+            size_t key_len = 64;
+            for (size_t n = 0; n < key_len; n++)
+                WifiData->wfc[c].security.pass[n] = ap_data.pass[n];
+            WifiData->wfc[c].security.pass_len = key_len;
+
+            memcpy((void *)WifiData->wfc[c].security.pmk, ap_data.pmk,
+                   sizeof(ap_data.pmk));
         }
 
         // IP settings

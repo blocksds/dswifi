@@ -32,7 +32,6 @@ static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
 static u16 num_rounds_scanned = 0;
 
-static u8 ap_pmk[0x20]; // TODO: Move to IPC struct
 static u16 ap_snr = 0; // TODO: Move to IPC struct
 
 u16 wmi_idk = 0;
@@ -1108,12 +1107,13 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     memcpy(device_nonce, data_hdr.wpa_nonce, 32);
 
 #if 0
-    hexdump(ap_pmk, 0x8);
-    wpa_calc_pmk(ap_name, ap_pass, ap_pmk);
-    hexdump(ap_pmk, 0x8);
+    hexdump(WifiData->curApSecurity.pmk, 0x8);
+    wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
+    hexdump(WifiData->curApSecurity.pmk, 0x8);
 #endif
 
-    wpa_calc_ptk(src_bssid, dst_bssid, device_nonce, device_ap_nonce, ap_pmk, &device_ptk);
+    wpa_calc_ptk(src_bssid, dst_bssid, device_nonce, device_ap_nonce,
+                 (const void *)WifiData->curApSecurity.pmk, &device_ptk);
 
     wpa_calc_mic(device_ptk.kck, (u8*)&data_hdr.version, auth_len + 4, mic_out);
     memcpy(data_hdr.wpa_key_mic, mic_out, 16);

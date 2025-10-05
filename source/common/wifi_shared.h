@@ -147,6 +147,7 @@ typedef struct {
 typedef struct {
     u8 pass_len; // Length of the password. For WEP it must be 5, 13 or 16.
     u8 pass[64]; // Max size for WPA is 64 bytes
+    u8 pmk[32];  // For WPA and WPA2
 } Wifi_ApSecurity;
 
 // This struct is allocated in main RAM, but it is only accessed through an
