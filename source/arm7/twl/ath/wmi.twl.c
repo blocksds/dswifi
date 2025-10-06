@@ -92,7 +92,17 @@ bool wmi_is_ap_connecting(void)
 {
     // If the WPA2 handshake isn't complete we are still connecting
     if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
-        return ap_connecting || !wmi_handshake_done();
+    {
+        // If we're connecting to the AP
+        if (ap_connecting)
+            return true;
+
+        // If we're connected to the AP but the handshake isn't finished
+        if (ap_connected && !wmi_handshake_done())
+            return true;
+
+        return false;
+    }
 
     return ap_connecting;
 }
