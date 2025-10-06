@@ -97,7 +97,6 @@ typedef enum {
     AP_AUTH_NONE = 0,
     AP_AUTH_8021X = 1,
     AP_AUTH_PSK = 2,
-    AP_AUTH_FT = 3,
 }
 Wifi_ApAuthType;
 

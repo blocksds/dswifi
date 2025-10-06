@@ -49,8 +49,6 @@ const char *Wifi_ApAuthTypeString(Wifi_ApAuthType type)
             return "802.1X";
         case AP_AUTH_PSK:
             return "PSK";
-        case AP_AUTH_FT:
-            return "FT";
         default:
             return "Unk";
     }
