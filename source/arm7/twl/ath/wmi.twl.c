@@ -564,7 +564,8 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0}, 0
+            1, 1, 1, 1, 0, 1, 0, ssid_len, {0}, mhz, {0},
+            DEFAULT_WMI_CONNECT_CTRL_FLAGS
         };
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
@@ -600,7 +601,8 @@ void wmi_connect_cmd(void)
         }
         wmi_params =
         {
-            1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, ssid_len, {0}, mhz, {0}, 0
+            1, 2, 1, AP_CRYPT_WEP, 0, AP_CRYPT_WEP, 0, ssid_len, {0}, mhz, {0},
+            DEFAULT_WMI_CONNECT_CTRL_FLAGS
         };
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);
@@ -631,7 +633,8 @@ void wmi_connect_cmd(void)
         wmi_params =
         {
             1, 1, 5, WifiData->curAp.pair_crypt_type, 0,
-            WifiData->curAp.group_crypt_type, 0, ssid_len, {0}, mhz, {0}, 0
+            WifiData->curAp.group_crypt_type, 0, ssid_len, {0}, mhz, {0},
+            DEFAULT_WMI_CONNECT_CTRL_FLAGS
         };
 
         strcpy(wmi_params.ssid, (const char *)&WifiData->curAp.ssid[0]);

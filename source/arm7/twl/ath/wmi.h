@@ -62,6 +62,17 @@
 #define WMI_EXTENSION_EVENT             (0x1010)
 #define WMI_ACL_DATA_EVENT              (0x1025)
 
+// WMI_CONNECT_CMD
+
+#define WMI_CONNECT_ASSOC_POLICY_USER           0x0001
+#define WMI_CONNECT_SEND_REASSOC                0x0002
+#define WMI_CONNECT_IGNORE_WPAX_GROUP_CIPHER    0x0004
+#define WMI_CONNECT_PROFILE_MATCH_DONE          0x0008
+#define WMI_CONNECT_IGNORE_AAC_BEACON           0x0010
+#define WMI_CONNECT_CSA_FOLLOW_BSS              0x0020
+
+#define DEFAULT_WMI_CONNECT_CTRL_FLAGS          WMI_CONNECT_CSA_FOLLOW_BSS
+
 typedef struct gtk_keyinfo gtk_keyinfo;
 
 void wmi_init(void);
