@@ -33,13 +33,6 @@ extern "C" {
 #define WFLAG_APDATA_NINTENDO_TAG  0x0040 // Beacon frames have a Nintendo tag
 #define WFLAG_APDATA_ACTIVE        0x8000
 
-#define WFLAG_PACKET_DATA   0x0001
-#define WFLAG_PACKET_MGT    0x0002
-#define WFLAG_PACKET_BEACON 0x0004
-#define WFLAG_PACKET_CTRL   0x0008
-
-#define WFLAG_PACKET_ALL 0xFFFF
-
 /// List of which devices to add to the AP list while scanning for APs.
 typedef enum {
     /// List unprotected and WEP APs to the list (excluding NDS hosts).

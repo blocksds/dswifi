@@ -94,4 +94,14 @@
 #define MAC_RXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_RXBUF_START_OFFSET)
 #define MAC_RXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_RXBUF_END_OFFSET)
 
+// Types of packets that can be received by the DS
+// ===============================================
+
+#define WFLAG_PACKET_DATA           0x0001
+#define WFLAG_PACKET_MGT            0x0002
+#define WFLAG_PACKET_BEACON         0x0004
+#define WFLAG_PACKET_CTRL           0x0008
+
+#define WFLAG_PACKET_ALL            0xFFFF
+
 #endif // DSWIFI_COMMON_NTR_DEFS_H__
