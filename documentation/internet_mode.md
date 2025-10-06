@@ -87,15 +87,16 @@ After you have decided which AP to connect to:
 Wifi_SetIP(0, 0, 0, 0, 0);
 
 // If the access point requires a WEP password, ask the user to provide it.
-if (AccessPoint.flags & WFLAG_APDATA_WEP)
+if (AccessPoint.flags & (WFLAG_APDATA_WEP | WFLAG_APDATA_WPA))
 {
-    // WEP passwords can be 5 or 13 characters long
+    // WEP passwords can be 5 or 13 characters long, WPA passwords must be at
+    // most 64 characters long.
     const char *password = "MyPassword123";
     Wifi_ConnectSecureAP(&AccessPoint, (u8 *)password, strlen(password));
 }
-else if (!(AccessPoint.flags & WFLAG_APDATA_WPA))
+else
 {
-    // WPA isn't supported when selecting APs by hand, only open and WEP networks
+    // Open network
     Wifi_ConnectAP(&AccessPoint, WEPMODE_NONE, 0, 0);
 }
 ```

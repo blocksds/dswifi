@@ -864,9 +864,49 @@ void wmi_connect(void)
 
     ap_connecting = true;
 
-    // Reset WPA handshake state
-    has_sent_hs2 = false;
-    has_sent_hs4 = false;
+    if (WifiData->curAp.security_type == AP_SECURITY_WPA2)
+    {
+        // Check if we have a PMK. If we're connecting to a WFC Access Point
+        // this will be set, but it won't be set if the user has given us the
+        // password directly.
+        bool has_pmk = false;
+        for (size_t i = 0; i < sizeof(WifiData->curApSecurity.pmk); i++)
+        {
+            if (WifiData->curApSecurity.pmk[i] != 0)
+            {
+                has_pmk = true;
+                break;
+            }
+        }
+
+        if (has_pmk)
+        {
+            WLOG_PUTS("T: PMK provided\n");
+            WLOG_FLUSH();
+        }
+        else
+        {
+            WLOG_PUTS("T: Calculating PMK\n");
+            WLOG_FLUSH();
+
+            // This calculation takes about 5 seconds, let's allow interrupts
+            u32 old_ime = REG_IME;
+            REG_IME = 1;
+
+            wpa_calc_pmk((const char *)WifiData->curAp.ssid,
+                         (const char *)WifiData->curApSecurity.pass,
+                         (u8 *)WifiData->curApSecurity.pmk);
+
+            REG_IME = old_ime;
+
+            WLOG_PUTS("T: PMK calculated\n");
+            WLOG_FLUSH();
+        }
+
+        // Reset WPA handshake state
+        has_sent_hs2 = false;
+        has_sent_hs4 = false;
+    }
 
     wmi_set_bss_filter(4, 0); // current beacon
     wmi_set_scan_params(5, 200, 200, 200);
@@ -900,21 +940,6 @@ void wmi_connect(void)
 
     tmp8 = 0;
     wmi_send_pkt(WMI_SET_KEEPALIVE_CMD, MBOXPKT_REQACK, &tmp8, sizeof(tmp8));
-
-#if 0
-    // TODO: If the PMK in WifiData->curApSecurity.pmk isn't set, calculate it
-    // here. It takes a few seconds, though
-    WLOG_PUTS("T: Calculating PMK\n");
-    WLOG_FLUSH();
-    //hexdump(WifiData->curApSecurity.pmk, 0x8);
-    //wpa_calc_pmk(ap_name, ap_pass, WifiData->curApSecurity.pmk);
-    wpa_calc_pmk((const char *)WifiData->curAp.ssid,
-                 (const char *)WifiData->curApSecurity.pass,
-                 (u8 *)WifiData->curApSecurity.pmk);
-    //hexdump(WifiData->curApSecurity.pmk, 0x8);
-    WLOG_PUTS("T: Calculated PMK\n");
-    WLOG_FLUSH();
-#endif
 
     wmi_connect_cmd();
 }

@@ -355,7 +355,8 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned
 ///     the ssid and ssid_len fields. Other fields are ignored.
 /// @param key
 ///     The key to be used. For WEP networks it must be 5, 13 or 16 bytes long.
-///     For open networks use NULL.
+///     For WPA networks it must be at most 64 bytes long. For open networks use
+///     NULL.
 /// @param key_len
 ///     The size of the key in bytes. For open networks use 0.
 ///
