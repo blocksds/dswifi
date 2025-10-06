@@ -191,6 +191,9 @@ int Wifi_ConnectSecureAP(Wifi_AccessPoint *apdata, const void *key, size_t key_l
     if ((key == NULL) && (key_len > 0))
         return -1;
 
+    if (key_len > sizeof(WifiData->curApSecurity.pass))
+        return -1;
+
     Wifi_DisconnectAP();
 
     wifi_connect_state = WIFI_CONNECT_SEARCHING;
