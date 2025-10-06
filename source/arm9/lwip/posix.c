@@ -145,6 +145,17 @@ struct hostent *gethostbyname(const char *name)
     return lwip_gethostbyname(name);
 }
 
+void freeaddrinfo(struct addrinfo *ai)
+{
+    lwip_freeaddrinfo(ai);
+}
+
+int getaddrinfo(const char *nodename, const char *servname,
+                const struct addrinfo *hints, struct addrinfo **res)
+{
+    return lwip_getaddrinfo(nodename, servname, hints, res);
+}
+
 // ============================================================================
 
 // This is defined by lwIP headers and it will cause conflicts here

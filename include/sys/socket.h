@@ -26,6 +26,15 @@ extern "C" {
 #define AF_INET   PF_INET
 #define AF_INET6  PF_INET6
 
+#define IPPROTO_IP      0
+#define IPPROTO_ICMP    1
+#define IPPROTO_TCP     6
+#define IPPROTO_UDP     17
+#define IPPROTO_IPV6    41
+#define IPPROTO_ICMPV6  58
+#define IPPROTO_UDPLITE 136
+#define IPPROTO_RAW     255
+
 #define SOCK_STREAM 1
 #define SOCK_DGRAM  2
 
@@ -86,11 +95,21 @@ struct sockaddr
     char        sa_data[14];
 };
 
+struct sockaddr_storage
+{
+    uint8_t     s2_len;
+    sa_family_t ss_family;
+    char        s2_data1[2];
+    uint32_t    s2_data2[3];
+    uint32_t    s2_data3[3]; // Required for IPv6
+};
+
 #ifndef ntohs
 #define ntohs(num) htons(num)
 #define ntohl(num) htonl(num)
 #endif
 
+#define _SOCKLEN_T_DECLARED
 typedef uint32_t socklen_t;
 typedef unsigned int nfds_t;
 
