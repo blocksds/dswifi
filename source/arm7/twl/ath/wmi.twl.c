@@ -20,8 +20,6 @@
 #include "arm7/twl/utils.h"
 #include "common/ieee_defs.h"
 
-#pragma pack(push, 1)
-
 #define IEEE_CRYPT_TKIP     (0x000FAC02)
 #define IEEE_CRYPT_AES_CCMP (0x000FAC04)
 
@@ -128,7 +126,7 @@ static void wmi_handle_scan_complete(u8* pkt_data, u32 len)
     (void)pkt_data;
     (void)len;
 #if 0
-    struct
+    struct __attribute__((packed))
     {
         u32 status;
     }
@@ -677,7 +675,7 @@ static void wmi_create_pstream(void)
 #if 0
 static void wmi_set_bitrate(void)
 {
-    struct
+    struct __attribute__((packed))
     {
         u8 rateIndex;
         u8 mgmtRateIndex;
@@ -693,7 +691,7 @@ static void wmi_set_bitrate(void)
 
 static void wmi_set_framerate(void)
 {
-    struct
+    struct __attribute__((packed))
     {
         u8 bEnableMask;
         u8 frameType;
@@ -709,7 +707,7 @@ static void wmi_set_framerate(void)
 
 static void wmi_set_tx_power(void)
 {
-    struct
+    struct __attribute__((packed))
     {
         u8 dbm;
     }
@@ -724,7 +722,7 @@ static void wmi_set_tx_power(void)
 
 void wmi_dbgoff(void)
 {
-    struct
+    struct __attribute__((packed))
     {
         u32 cmd;
         u32 param;
@@ -752,7 +750,7 @@ static void wmi_add_cipher_key(u8 idx, u8 usage, const u8 *key, const u8 *rsc)
         crypt_keylen = WifiData->curApSecurity.pass_len;
     }
 
-    struct
+    struct __attribute__((packed))
     {
         u8 keyIndex;
         u8 keyType;
@@ -804,7 +802,7 @@ void wmi_scan_mode_start(void)
 
     wmi_set_bss_filter(0, 0); // scan for beacons
 
-    const struct
+    const struct __attribute__((packed))
     {
         u8 entryIndex;
         u8 flag;
@@ -1219,5 +1217,3 @@ bool wmi_handshake_done(void)
 {
     return has_sent_hs4;
 }
-
-#pragma pack(pop)
