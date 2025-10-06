@@ -373,6 +373,7 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
             WLOG_FLUSH();
 
             ap_connected = true;
+            ap_connecting = false;
 
             if ((WifiData->curAp.security_type == AP_SECURITY_OPEN) ||
                 (WifiData->curAp.security_type == AP_SECURITY_WEP))
@@ -529,8 +530,6 @@ void wmi_connect_cmd(void)
                 (const char *)&WifiData->curAp.ssid[0]);
     WLOG_FLUSH();
 
-    ap_connecting = true;
-
     if (WifiData->curAp.security_type == AP_SECURITY_OPEN)
     {
         size_t ssid_len = WifiData->curAp.ssid_len;
@@ -634,6 +633,8 @@ void wmi_connect_cmd(void)
 
 void wmi_disconnect_cmd(void)
 {
+    ap_connecting = false;
+
     // This command doesn't have any parameter. If any parameter is passed to it
     // the command won't work.
     wmi_send_pkt(WMI_DISCONNECT_CMD, MBOXPKT_REQACK, NULL, 0);
@@ -858,6 +859,11 @@ void wmi_scan_mode_tick(void)
 
 void wmi_connect(void)
 {
+    if (ap_connecting)
+        return;
+
+    ap_connecting = true;
+
     // Reset WPA handshake state
     has_sent_hs2 = false;
     has_sent_hs4 = false;

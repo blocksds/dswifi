@@ -94,19 +94,19 @@ void Wifi_TWL_Update(void)
         }
         case WIFIMODE_CONNECTING:
         {
+            if (wmi_is_ap_connected())
+            {
+                WifiData->curMode = WIFIMODE_CONNECTED;
+                WLOG_PUTS("T: Connected to AP\n");
+                WLOG_FLUSH();
+                break;
+            }
+
             if (!wmi_is_ap_connecting())
             {
                 wmi_disconnect_cmd();
                 WifiData->curMode = WIFIMODE_CANNOTCONNECT;
                 WLOG_PUTS("T: Can't connect to AP\n");
-                WLOG_FLUSH();
-                break;
-            }
-
-            if (wmi_is_ap_connected())
-            {
-                WifiData->curMode = WIFIMODE_CONNECTED;
-                WLOG_PUTS("T: Connected to AP\n");
                 WLOG_FLUSH();
                 break;
             }
