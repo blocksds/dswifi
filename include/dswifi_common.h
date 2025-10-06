@@ -25,12 +25,19 @@ extern "C" {
 /// Size in bytes reserved in beacon frames for the multiplayer host player name.
 #define DSWIFI_BEACON_NAME_SIZE 20
 
-#define WFLAG_APDATA_ADHOC         0x0001 // TODO: Not supported
+/// This AP is an ad hoc AP. Not used.
+#define WFLAG_APDATA_ADHOC         0x0001 // TODO: Unused
+/// This AP uses WEP encryption.
 #define WFLAG_APDATA_WEP           0x0002
+/// This AP uses WPA or WPA2 encryption.
 #define WFLAG_APDATA_WPA           0x0004
+/// This AP is compatible with DSWiFI.
 #define WFLAG_APDATA_COMPATIBLE    0x0008
+/// This AP is compatible with DSWiFI, with tricks. Not unused.
 #define WFLAG_APDATA_EXTCOMPATIBLE 0x0010 // TODO: Unused
-#define WFLAG_APDATA_NINTENDO_TAG  0x0040 // Beacon frames have a Nintendo tag
+/// This AP contains Nintendo AP information, it's likely a multiplayer host.
+#define WFLAG_APDATA_NINTENDO_TAG  0x0040
+/// This AP is active.
 #define WFLAG_APDATA_ACTIVE        0x8000
 
 /// List of which devices to add to the AP list while scanning for APs.
@@ -52,6 +59,10 @@ typedef enum {
 ///
 /// - 64 bit (40 bit) WEP mode:   5 ASCII characters (or 10 hex numbers).
 /// - 128 bit (104 bit) WEP mode: 13 ASCII characters (or 26 hex numbers).
+/// - 152 bit (128 bit) WEP mode: 16 ASCII characters (or 32 hex numbers).
+///
+/// @warning
+///     152 bit mode is untested/unsupported.
 enum WEPMODES
 {
     WEPMODE_NONE         = 0, ///< No WEP security is used.
@@ -64,35 +75,59 @@ enum WEPMODES
     WEPMODE_40BIT        = WEPMODE_64BIT, ///< Compatibility define
 };
 
+/// Types of encryption used in an Access Point.
 typedef enum
 {
-    AP_SECURITY_OPEN,
-    AP_SECURITY_WEP,
-    AP_SECURITY_WPA,
-    AP_SECURITY_WPA2,
+    AP_SECURITY_OPEN, ///< Open AP (no security).
+    AP_SECURITY_WEP,  ///< This AP uses WEP encryption.
+    AP_SECURITY_WPA,  ///< This AP uses WPA encryption. Currently unsupported.
+    AP_SECURITY_WPA2, ///< This AP uses WPA2 encryption.
 }
 Wifi_ApSecurityType;
 
+/// Returns a short string that describes the AP security type.
+///
+/// @param type
+///     Security type.
+///
+/// @return
+///     A string that describes the security type or "Unk" if it's unknown.
 const char *Wifi_ApSecurityTypeString(Wifi_ApSecurityType type);
 
+/// Encryption algorithm.
 typedef enum
 {
-    AP_CRYPT_NONE = 1,
-    AP_CRYPT_WEP = 2,
-    AP_CRYPT_TKIP = 3, // WPA, and WPA/WPA2 hotspots
-    AP_CRYPT_AES = 4,
+    AP_CRYPT_NONE = 1, ///< None. Used for open networks.
+    AP_CRYPT_WEP = 2,  ///< Used for WEP networks.
+    AP_CRYPT_TKIP = 3, ///< TKIP. Used for WPA, and WPA/WPA2 hotspots.
+    AP_CRYPT_AES = 4,  ///< AES. Used for WPA2 netowrks.
 }
 Wifi_ApCryptType;
 
+/// Returns a short string that describes the crypt type.
+///
+/// @param type
+///     Crypt type.
+///
+/// @return
+///     A string that describes the crypt type or "Unk" if it's unknown.
 const char *Wifi_ApCryptString(Wifi_ApCryptType type);
 
+/// Authentication type for WPA networks.
 typedef enum {
-    AP_AUTH_NONE = 0,
-    AP_AUTH_8021X = 1,
-    AP_AUTH_PSK = 2,
+    AP_AUTH_NONE = 0,  ///< None. Used for open and WEP networks.
+    AP_AUTH_8021X = 1, ///< 802.1X
+    AP_AUTH_PSK = 2,   ///< PSK (Pre-Shared Key/Personal)
 }
 Wifi_ApAuthType;
 
+/// Returns a short string that describes the authentication type.
+///
+/// @param type
+///     Authentication type.
+///
+/// @return
+///     A string that describes the authentication type or "Unk" if it's unknown.
 const char *Wifi_ApAuthTypeString(Wifi_ApAuthType type);
 
 /// List of available WiFi statistics.
