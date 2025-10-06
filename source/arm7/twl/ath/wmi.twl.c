@@ -1168,13 +1168,14 @@ void data_handle_auth(u8 *pkt_data, u32 len, const u8* dev_bssid, const u8 *ap_b
 
     if (keyinfo == 0x008A)
     {
+        WLOG_PUTS("T: WPA2 Handshake 1/4\n");
+        WLOG_FLUSH();
+
         memcpy(device_ap_nonce, auth_hdr->wpa_nonce, 32);
 
         data_send_wpa_handshake2(ap_bssid_, dev_bssid, replay);
 
         //hexdump(mbox_out_buffer, 0x90);
-
-        WLOG_PUTS("T: WPA2 Handshake 1/4\n");
     }
     else if (keyinfo == 0x13CA)
     {
