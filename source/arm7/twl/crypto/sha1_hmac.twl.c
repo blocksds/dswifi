@@ -2,8 +2,11 @@
 //
 //  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
 
-// Extracted from https://github.com/Mbed-TLS/mbedtls/blob/v2.25.0/library/sha1.c
-// and modified to extract "ipad" and "opad" from the mbedtls_sha1_context.
+// This was originally removed from Mbed TLS in the following commit:
+// https://github.com/Mbed-TLS/mbedtls/commit/4da88c50c13e1d459b11009e8280bf0efc4954d2
+//
+// The code has been extracted and modified to extract "ipad" and "opad" from
+// the mbedtls_sha1_context.
 
 #include <string.h>
 
