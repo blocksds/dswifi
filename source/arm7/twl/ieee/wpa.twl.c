@@ -5,7 +5,6 @@
 
 #include <string.h>
 
-#include "arm7/twl/crypto/sha1_hmac.h"
 #include "arm7/twl/ieee/wpa.h"
 
 #include "mbedtls/md.h"
@@ -21,6 +20,17 @@ void wpa_mbedtls_init(void)
 {
     // Initialize the mbed TLS heap
     mbedtls_memory_buffer_alloc_init(mbedtls_heap, sizeof(mbedtls_heap));
+}
+
+// output = HMAC-SHA-1( hmac key, input buffer )
+static void sha1_hmac(const unsigned char *key, size_t keylen,
+                      const unsigned char *input, size_t ilen,
+                      unsigned char output[20])
+{
+    const mbedtls_md_type_t alg = MBEDTLS_MD_SHA1;
+    const mbedtls_md_info_t *md_info = mbedtls_md_info_from_type(alg);
+
+    mbedtls_md_hmac(md_info, key, keylen, input, ilen, output);
 }
 
 static int PBKDF2_HMAC_SHA_1(const char *pass, const char *salt, int32_t iterations,
@@ -136,7 +146,7 @@ void wpa_decrypt_gtk(const u8 *kek, const u8 *data, u32 data_len, gtk_keyinfo *o
 
 void wpa_calc_mic(const u8 *kck, const u8 *pkt_data, u32 pkt_len, u8 *mic_out)
 {
-    uint8_t out[0x20];
+    uint8_t out[20];
     sha1_hmac(kck, 0x10, pkt_data, pkt_len, out);
 
     memcpy(mic_out, out, 16);
