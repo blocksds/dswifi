@@ -45,9 +45,12 @@ You can start autoconnect mode by calling:
 Wifi_AutoConnect();
 ```
 
+In this case, skip the step of manually looking for access points.
+
 ### 1.2 Manually look for access points
 
-You can manually look for access points like this, for example:
+If you don't want to autoconnect to WFC settings you can manually look for
+access points like this, for example:
 
 ```c
 // Set the library in scan mode
@@ -68,13 +71,19 @@ while (1)
         Wifi_AccessPoint ap;
         Wifi_GetAPData(i, &ap);
 
-        // WPA isn't supported when selecting APs by hand!
-
         printf("[%.24s]\n", ap.ssid)
         printf("%s | Channel %2d | RSSI %d\n",
                Wifi_ApSecurityTypeString(ap.security_type),
                ap.channel, ap.rssi);
         printf("\n");
+
+        if (ap.flags & WFLAG_APDATA_COMPATIBLE)
+        {
+            // This AP is supported in the current execution mode. WPA2 networks
+            // are only supported in DSi.
+
+            // ...
+        }
     }
 }
 ```
@@ -87,7 +96,7 @@ After you have decided which AP to connect to:
 Wifi_SetIP(0, 0, 0, 0, 0);
 
 // If the access point requires a WEP password, ask the user to provide it.
-if (AccessPoint.flags & (WFLAG_APDATA_WEP | WFLAG_APDATA_WPA))
+if (AccessPoint.security_type != AP_SECURITY_OPEN)
 {
     // WEP passwords can be 5 or 13 characters long, WPA passwords must be at
     // most 64 characters long.
@@ -97,11 +106,11 @@ if (AccessPoint.flags & (WFLAG_APDATA_WEP | WFLAG_APDATA_WPA))
 else
 {
     // Open network
-    Wifi_ConnectAP(&AccessPoint, WEPMODE_NONE, 0, 0);
+    Wifi_ConnectSecureAP(&AccessPoint, NULL, 0);
 }
 ```
 
-`Wifi_DisconnectAP()` expects WEP keys as a string (usually called "ASCII"
+`Wifi_ConnectSecureAP()` expects WEP keys as a string (usually called "ASCII"
 key). If you have an hexadecimal key you have to save it as a string of
 hexadecimal values. For example, `6162636465` needs to be passed to the function
 as `{ 0x61, 0x62, 0x63, 0x64, 0x65 }`, not as `"6162636465"`.
@@ -153,6 +162,9 @@ Wifi_Deinit();
 
 It will free all RAM used by the library and hardware timer 3. You can call
 `Wifi_InitDefault()` at a later time to re-initialize it.
+
+Important note: `Wifi_Deinit()` doesn't currently work after starting DSWiFi in
+Internet mode.
 
 ## 2. Get connection settings
 
@@ -212,3 +224,6 @@ int rc = ioctl(my_socket, FIONBIO, (char *)&opt);
 
 If you use non-blocking sockets, remember to call `cothread_yield()` or
 `cothread_yield_irq()` in your loop to give the socket thread CPU time.
+
+Also, it is a good idea to check the value returned by `Wifi_AssocStatus()`
+every now and then to see if the connection is lost at some point.
