@@ -215,6 +215,18 @@ typedef struct
 #define REASON_THIS_STATION_LEFT_DISASSOC           8
 #define REASON_ASSOCIATION_BEFORE_AUTH              9
 
+// 802.2 LLC Header + SNAP extension
+// =================================
+
+// TODO: Use this in every place were we create IEEE 802.11 packets
+typedef struct {
+    u8 dsap;    // 0xAA
+    u8 ssap;    // 0xAA
+    u8 control; // 0x03
+    u8 oui[3];  // 0x00, 0x00, 0x00
+    u16 ether_type; // Big endian
+} LLC_SNAP_Header;
+
 // Nintendo vendor information
 // ===========================
 
