@@ -419,6 +419,11 @@ void wmi_handle_pkt(u16 pkt_cmd, u8* pkt_data, u32 len, u32 ack_len)
 
             break;
         }
+        case WMI_NEIGHBOR_REPORT_EVENT:
+            // This is sent when the BSS we're connecting to has been found.
+            // WLOG_PRINTF("T: NEIGHBOR_REPORT_EVENT (%u B)", len);
+            // WLOG_FLUSH();
+            break;
         case WMI_ACL_DATA_EVENT:
             // WLOG_PRINTF("T: ACL_DATA_EVENT (%u, %u B)", len, ack_len);
             // hexdump(pkt_data, len);
