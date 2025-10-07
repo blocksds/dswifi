@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <nds.h>
 
@@ -1043,11 +1044,22 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     putbe16(data_hdr.keylen_be, 0);
     putbe64(data_hdr.replay_counter_be, replay_cnt);
 
-    // TODO: This probably needs a good srand -- maybe use hardware sources?
-    // Also, it can't use TLS, so rand() isn't an option.
     u8 test_nonce[32] = {0};
-    for (int i = 0; i < 32; i++)
-        test_nonce[i] = i * 0xCAFE;
+    {
+        // TODO: Use a better randomization system. Note that rand() can't be
+        // used here because it uses TLS.
+        struct timeval tp;
+        gettimeofday(&tp, NULL);
+
+        u32 seed = tp.tv_sec;
+
+        for (size_t i = 0; i < sizeof(test_nonce); i++)
+        {
+            u32 new_seed = seed * 0x3377 + 0xAA55;
+            test_nonce[i] = seed;
+            seed = new_seed;
+        }
+    }
 
     memcpy(data_hdr.wpa_nonce, test_nonce, 32);
     putbe16(data_hdr.wpa_keydata_len_be, 0x16);
