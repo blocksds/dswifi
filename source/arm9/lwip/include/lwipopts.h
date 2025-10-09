@@ -118,8 +118,14 @@
 
 #define LWIP_NETCONN_FULLDUPLEX     0
 
+// Maxmimum number of sockets
+#define MEMP_NUM_NETCONN            8
+
 // Skip values 0, 1 and 2 because they are used for stdin, stdout and stderr.
 #define LWIP_SOCKET_OFFSET          3
+
+#define SO_REUSE                    1
+#define LWIP_SO_RCVBUF              1
 
 // lwIP system integration settings
 // ================================
