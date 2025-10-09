@@ -39,47 +39,91 @@ static bool dswifi_use_dhcp = true;
 
 static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
 {
+    // We need to pass a "Ethernet II" frame to Wifi_TransmitFunctionLink(), and
+    // lwIP is passing us that format.
     (void)netif;
 
-    assert(p->len == p->tot_len);
-
-    uint8_t *src = p->payload;
-    size_t len = p->len;
-
-    if (len == 0)
+    if (p->tot_len == 0)
         return ERR_OK;
 
-    // Data in "src" is a "Ethernet II" frame
-    if (Wifi_TransmitFunctionLink(src, len) != 0)
-        return ERR_CONN; // Not connected yet. TODO: Should we fail with ERR_MEM?
+    if (p->tot_len == p->len)
+    {
+        // If we get a list with one element pass it directly.
+        if (Wifi_TransmitFunctionLink(p->payload, p->tot_len) != 0)
+            return ERR_MEM;
 
-    return ERR_OK;
+        return ERR_OK;
+    }
+    else
+    {
+        // We have a split buffer, we need to reconstruct it.
+        uint8_t *buf = malloc(p->tot_len);
+        if (buf == NULL)
+            return ERR_MEM;
+
+        uint8_t *wr_ptr = buf;
+        while (1)
+        {
+            memcpy(wr_ptr, p->payload, p->len);
+            wr_ptr += p->len;
+
+            // This is the last node in the list
+            if (p->tot_len == p->len)
+                break;
+
+            p = p->next;
+        }
+
+        if (Wifi_TransmitFunctionLink(buf, p->tot_len) != 0)
+        {
+            free(buf);
+            return ERR_MEM;
+        }
+
+        free(buf);
+        return ERR_OK;
+    }
 }
 
 void dswifi_send_data_to_lwip(void *data, u32 len)
 {
+    // pbuf_alloc(xx, xx, PBUF_POOL) returns a list of pbuf structs. We need to
+    // iterate through all of them and split our data. The total amount of space
+    // in the pbuf array should match the requested length. It is recommended
+    // for RX packets.
+    //
+    // pbuf_alloc(xx, xx, PBUF_RAM) returns always a single chunk, but it is
+    // recommended for TX packets.
+
     struct pbuf *p = pbuf_alloc(PBUF_IP, len, PBUF_POOL);
     if (!p)
         return;
 
-    // pbuf_alloc() returns a list of pbuf structs. We need to iterate through
-    // all of them and split our data. The total amount of space in the pbuf
-    // array should match the requested length.
-
-    assert(p->tot_len == len);
+    // pbuf_alloc() returns a linked list of nodes. Each node has fields "tot_len" and
+    // "len". "len" is the total size contained in that chunk, and "tot_len" is
+    // the total size in that chunk plus all following chunks. The last node in
+    // the list contains as much data as the remaining size in the list, so our
+    // end condition for the loop is "tot_len == len".
 
     u8 *src = data;
     struct pbuf *iter = p;
 
-    while (len > 0)
+    while (1)
     {
         memcpy(iter->payload, src, iter->len);
 
         len -= iter->len;
         src += iter->len;
 
+        // This is the last node in the list
+        if (iter->tot_len == iter->len)
+            break;
+
         iter = iter->next;
     }
+
+    // Make sure all data has been copied
+    assert(len == 0);
 
     // If it doesn't return ERR_OK it means that the packet wasn't handled and
     // we need to free it ourselves.
