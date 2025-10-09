@@ -18,13 +18,13 @@ extern "C" {
 #define SOL_SOCKET 0xfff // options for socket level
 #define SOL_TCP    6     // TCP level
 
-#define PF_UNSPEC 0
-#define PF_INET   2
-#define PF_INET6  10
+#define AF_UNSPEC       0
+#define AF_INET         2
+#define AF_INET6        10
 
-#define AF_UNSPEC PF_UNSPEC
-#define AF_INET   PF_INET
-#define AF_INET6  PF_INET6
+#define PF_INET         AF_INET
+#define PF_INET6        AF_INET6
+#define PF_UNSPEC       AF_UNSPEC
 
 #define IPPROTO_IP      0
 #define IPPROTO_ICMP    1
@@ -35,8 +35,32 @@ extern "C" {
 #define IPPROTO_UDPLITE 136
 #define IPPROTO_RAW     255
 
-#define SOCK_STREAM 1
-#define SOCK_DGRAM  2
+// send()/recv()/etc flags
+#define MSG_PEEK        0x01
+#define MSG_WAITALL     0x02
+#define MSG_OOB         0x04
+#define MSG_DONTWAIT    0x08
+#define MSG_MORE        0x10
+#define MSG_NOSIGNAL    0x20
+
+// Options for level IPPROTO_IP
+#define IP_TOS          1
+#define IP_TTL          2
+#define IP_PKTINFO      8
+
+// Options for level IPPROTO_TCP
+#define TCP_NODELAY     0x01
+#define TCP_KEEPALIVE   0x02
+#define TCP_KEEPIDLE    0x03
+#define TCP_KEEPINTVL   0x04
+#define TCP_KEEPCNT     0x05
+
+// Options for level IPPROTO_IPV6
+#define IPV6_CHECKSUM   7
+#define IPV6_V6ONLY     27
+
+#define SOCK_STREAM     1
+#define SOCK_DGRAM      2
 
 #define IOC_OUT         0x40000000UL // Copy out parameters
 #define IOC_IN          0x80000000UL // Copy in parameters
@@ -48,19 +72,23 @@ extern "C" {
 
 #define SOCKET_ERROR    -1
 
-// send()/recv()/etc flags
-#define MSG_WAITALL     0x40000000
-#define MSG_TRUNC       0x20000000
-#define MSG_PEEK        0x10000000
-#define MSG_OOB         0x08000000
-#define MSG_EOR         0x04000000
-#define MSG_DONTROUTE   0x02000000
-#define MSG_CTRUNC      0x01000000
-
-// shutdown() flags:
+// shutdown() flags
 #define SHUT_RD         0
 #define SHUT_WR         1
 #define SHUT_RDWR       2
+
+// poll-related defines and types
+#define POLLIN          0x1
+#define POLLOUT         0x2
+#define POLLERR         0x4
+#define POLLNVAL        0x8
+// Below values are unimplemented
+#define POLLRDNORM      0x10
+#define POLLRDBAND      0x20
+#define POLLPRI         0x40
+#define POLLWRNORM      0x80
+#define POLLWRBAND      0x100
+#define POLLHUP         0x200
 
 // Option flags per-socket.
 #define SO_DEBUG        0x0001 // turn on debugging info recording
@@ -138,6 +166,10 @@ struct msghdr
     socklen_t     msg_controllen;
     int           msg_flags;
 };
+
+// struct msghdr->msg_flags bit field values
+#define MSG_TRUNC   0x04
+#define MSG_CTRUNC  0x08
 
 int socket(int domain, int type, int protocol);
 int bind(int socket, const struct sockaddr *addr, socklen_t addrlen);

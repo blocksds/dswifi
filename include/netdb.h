@@ -34,6 +34,17 @@ struct addrinfo
     struct addrinfo *ai_next;
 };
 
+// Errors used by the DNS API functions, h_errno can be one of them
+#define EAI_NONAME      200
+#define EAI_SERVICE     201
+#define EAI_FAIL        202
+#define EAI_MEMORY      203
+#define EAI_FAMILY      204
+#define HOST_NOT_FOUND  210
+#define NO_DATA         211
+#define NO_RECOVERY     212
+#define TRY_AGAIN       213
+
 // input flags for struct addrinfo
 #define AI_PASSIVE      0x01
 #define AI_CANONNAME    0x02
