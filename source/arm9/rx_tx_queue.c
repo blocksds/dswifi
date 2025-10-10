@@ -371,6 +371,7 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
 
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
 {
+    // TODO: Change this so that base is simply a pointer to the data, not an offset
     const u8 *rxbufData = (const u8*)WifiData->rxbufData;
     // TODO: Make sure that it doesn't read over the limit of the RX buffer
     memcpy(dst, rxbufData + base, size_bytes);
