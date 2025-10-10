@@ -257,9 +257,6 @@ void Wifi_NTR_Update(void)
                 WifiData->reqChannel = WifiData->curAp.channel;
                 Wifi_SetChannel(WifiData->curAp.channel);
 
-                WifiData->txbufRead = 0; // Empty TX buffer
-                WifiData->txbufWrite = 0;
-
                 WifiData->counter7 = W_US_COUNT1; // timer hword 2 (each tick is 65.5ms)
                 WifiData->curMode  = WIFIMODE_CONNECTING;
 

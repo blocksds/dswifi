@@ -13,11 +13,14 @@
 #include <dswifi_common.h>
 
 // Space reserved for incoming and outgoing packets
-#define WIFI_RXBUFFER_SIZE   (1024 * 12)
-#define WIFI_TXBUFFER_SIZE   (1024 * 24)
+#define WIFI_RXBUFFER_SIZE  (1024 * 12)
+#define WIFI_TXBUFFER_SIZE  (1024 * 24)
+
+// Value written in RX/TX buffers to restart the pointer to the beginning
+#define WIFI_SIZE_WRAP      0xFFFFFFFF
 
 // Max number of Access Points that the library will keep track of
-#define WIFI_MAX_AP          32
+#define WIFI_MAX_AP         32
 
 // Max number of saved WFC configurations
 #define WIFI_MAX_WFC        6
@@ -223,20 +226,20 @@ typedef struct WIFI_MAINSTRUCT
     // ARM9 <-> ARM7 transfer circular buffers
     // ---------------------------------------
 
-    // They have a 2-byte granularity.
+    // They have a 2-byte granularity. TODO: This is changing to just bytes
     // rxbufIn/rxbufOut/txbufIn/txbufOut count halfwords, not bytes.
 
     // RX buffer. It sends received packets from other devices from the ARM7
     // to the ARM9.
     u32 rxbufWrite; // We will write starting from this entry in rxbufData[]
     u32 rxbufRead;  // And we will read starting from this entry in rxbufData[]
-    u16 rxbufData[WIFI_RXBUFFER_SIZE / 2];
+    ALIGN(4) u16 rxbufData[WIFI_RXBUFFER_SIZE / 2]; // TODO: Turn into u8
 
     // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
     // transferred to other devices.
     u32 txbufWrite; // We will write starting from this entry in txbufData[]
     u32 txbufRead;  // And we will read starting from this entry in txbufData[]
-    u16 txbufData[WIFI_TXBUFFER_SIZE / 2];
+    ALIGN(4) u16 txbufData[WIFI_TXBUFFER_SIZE / 2]; // TODO: Turn into u8
 
     // Local multiplay information (NTR mode only)
     // ---------------------------
@@ -266,5 +269,20 @@ typedef struct WIFI_MAINSTRUCT
 
     u8 padding[CACHE_LINE_SIZE]; // See comment at top of struct
 } Wifi_MainStruct;
+
+static inline u32 round_up_32(u32 value)
+{
+    return (value + 3) & ~3;
+}
+
+static inline u32 read_u32(const u8 *ptr)
+{
+    return *(u32 *)ptr;
+}
+
+static inline void write_u32(u8 *ptr, u32 val)
+{
+    *(u32 *)ptr = val;
+}
 
 #endif // DSWIFI_ARM9_WIFI_SHARED_H__

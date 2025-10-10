@@ -5,6 +5,8 @@
 
 #ifdef DSWIFI_ENABLE_LWIP
 
+#include <string.h>
+
 #include <nds.h>
 #include <dswifi9.h>
 
@@ -177,19 +179,27 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
     // Copy data to buffer
     // ===================
 
-    // Before the packet we will store a u16 with the total packet size
-    // (excluding the u16).
-    size_t total_size = 2 + sizeof(mbox_hdr_tx_data_packet) + data_size;
+    // Before the packet we will store a u32 with the total data size, so we
+    // need to check that everything fits. Also, we need to ensure that a new
+    // size will fit after this packet.
+    size_t total_size = sizeof(u32)
+                      + sizeof(tx_header) + round_up_32(data_size)
+                      + sizeof(u32);
 
     // TODO: Replace this by a mutex?
     int oldIME = enterCriticalSection();
 
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
     u32 write_idx = WifiData->txbufWrite;
     u32 read_idx = WifiData->txbufRead;
 
+    assert((read_idx & 3) == 0); // Packets must be aligned to 32 bit
+    assert((write_idx & 3) == 0);
+
     if (read_idx <= write_idx)
     {
-        if (write_idx + (total_size / 2) > (WIFI_TXBUFFER_SIZE / 2))
+        if ((write_idx + total_size) > WIFI_TXBUFFER_SIZE)
         {
             // The packet doesn't fit at the end of the buffer:
             //
@@ -199,7 +209,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
             //            RD      WR
 
             // Try to fit it at the beginning. Don't wrap it.
-            if ((total_size / 2) >= read_idx)
+            if (total_size >= read_idx)
             {
                 // The packet doesn't fit anywhere:
 
@@ -213,7 +223,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
                 return -1;
             }
 
-            WifiData->txbufData[write_idx] = 0xFFFF; // Mark to reset pointer
+            write_u32(txbufData + write_idx, WIFI_SIZE_WRAP);
             write_idx = 0;
         }
         else
@@ -228,7 +238,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
     }
     else
     {
-        if (write_idx + (total_size / 2) >= read_idx)
+        if ((write_idx + total_size) >= read_idx)
         {
             //      | NEW |
             //
@@ -246,17 +256,21 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
         //     WR          RD
     }
 
-    WifiData->txbufData[write_idx] = total_size - 2;
-    write_idx++;
+    // Write real size of data without padding or the size of the size tags
+    write_u32(txbufData + write_idx, sizeof(tx_header) + data_size);
+    write_idx += sizeof(u32);
 
-    Wifi_TxBufferWrite(write_idx * 2, sizeof(tx_header), &tx_header);
-    write_idx += sizeof(tx_header) / 2;
+    // Write data
+    memcpy(txbufData + write_idx, &tx_header, sizeof(tx_header));
+    write_idx += sizeof(tx_header); // This is a multiple of 32 bits
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += round_up_32(data_size); // Pad to 32 bit
 
-    Wifi_TxBufferWrite(write_idx * 2, data_size, data_src);
-    write_idx += (data_size + 1) / 2; // Pad to 16 bit
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_u32(txbufData + write_idx, 0);
 
-    if (write_idx == (WIFI_TXBUFFER_SIZE / 2))
-        write_idx = 0;
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
 
     // Only update the pointer after the whole packet has been writen to RAM or
     // the ARM7 may see that the pointer has changed and send whatever is in the
@@ -375,7 +389,7 @@ static void Wifi_NTR_SendPacketToLwip(int base, int len)
 
 TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
 {
-    void *packet = (void *)&(WifiData->rxbufData[base]);
+    void *packet = (void *)(((u8 *)WifiData->rxbufData) + base);
 
     // Build Ethernet header from MBOX header
 
@@ -401,6 +415,7 @@ TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
 
 void Wifi_SendPacketToLwip(int base, int len)
 {
+    // TODO: Update this so that it uses a pointer instead of a buffer base
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_SendPacketToLwip(base, len);
     else

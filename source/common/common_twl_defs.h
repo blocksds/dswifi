@@ -5,6 +5,8 @@
 #ifndef DSWIFI_COMMON_TWL_DEFS_H__
 #define DSWIFI_COMMON_TWL_DEFS_H__
 
+#include <assert.h>
+
 #include <nds/ndstypes.h>
 
 // MBOX TX Header
@@ -23,6 +25,9 @@ typedef struct __attribute__((packed))
 }
 mbox_hdr_tx_data_packet;
 
+// Assert that this is a multiple of 32 bit
+static_assert(sizeof(mbox_hdr_tx_data_packet) == 24);
+
 // MBOX RX Header
 // ==============
 
@@ -39,5 +44,8 @@ typedef struct __attribute__((packed))
     u16 ether_type;
 }
 mbox_hdr_rx_data_packet;
+
+// Assert that this is a multiple of 32 bit
+static_assert(sizeof(mbox_hdr_rx_data_packet) == 24);
 
 #endif // DSWIFI_COMMON_TWL_DEFS_H__

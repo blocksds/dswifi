@@ -8,32 +8,40 @@
 
 void Wifi_TWL_TxArm9QueueFlush(void)
 {
+    const u8 *txbufData = (const u8 *)WifiData->txbufData;
+
     int oldIME = enterCriticalSection();
 
-    while (WifiData->txbufRead != WifiData->txbufWrite)
-    {
-        u32 read_idx = WifiData->txbufRead;
+    u32 read_idx = WifiData->txbufRead;
 
-        size_t size = WifiData->txbufData[read_idx];
-        if (size == 0xFFFF) // Mark to reset pointer
+    assert((read_idx & 3) == 0);
+
+    while (1)
+    {
+        // Read packet size
+        size_t size = read_u32(txbufData + read_idx);
+        if (size == 0)
+        {
+            // No more packets to process
+            break;
+        }
+        else if (size == 0xFFFFFFFF) // Mark to reset pointer
         {
             read_idx = 0;
-            size = WifiData->txbufData[read_idx];
+            size = read_u32(txbufData + read_idx);
         }
-        read_idx++;
+        read_idx += sizeof(uint32_t);
 
-        size_t total_size = 2 + size;
+        // Read packet data
+        data_send_pkt_idk(txbufData + read_idx, size);
+        read_idx += round_up_32(size);
 
-        data_send_pkt_idk((const void *)&(WifiData->txbufData[read_idx]), size);
-        read_idx += (size + 1) / 2; // Round up to 16 bit
-
-        if (read_idx == (WIFI_TXBUFFER_SIZE / 2))
-            read_idx = 0;
+        assert(read_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
 
         WifiData->txbufRead = read_idx;
 
         WifiData->stats[WSTAT_TXPACKETS]++;
-        WifiData->stats[WSTAT_TXBYTES] += total_size;
+        WifiData->stats[WSTAT_TXBYTES] += size;
         WifiData->stats[WSTAT_TXDATABYTES] += size;
     }
 

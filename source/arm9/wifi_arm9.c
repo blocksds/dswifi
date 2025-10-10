@@ -72,21 +72,29 @@ static void Wifi_NTR_Update(void)
 
 TWL_CODE static void Wifi_TWL_Update(void)
 {
-    // check for received packets, forward to whatever wants them.
-    int cnt = 0;
-    while (WifiData->rxbufWrite != WifiData->rxbufRead)
-    {
-        u32 read_idx = WifiData->rxbufRead;
+    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
 
-        size_t size = WifiData->rxbufData[read_idx];
-        if (size == 0xFFFF) // Mark to reset pointer
+    u32 read_idx = WifiData->rxbufRead;
+
+    assert((read_idx & 3) == 0);
+
+    // Check for received packets, forward to whatever wants them.
+    int cnt = 0;
+    while (1)
+    {
+        // Read packet size
+        size_t size = read_u32(rxbufData + read_idx);
+        if (size == 0)
+        {
+            // No more packets to process
+            break;
+        }
+        else if (size == WIFI_SIZE_WRAP)
         {
             read_idx = 0;
-            size = WifiData->rxbufData[read_idx];
+            size = read_u32(rxbufData + read_idx);
         }
-        read_idx++;
-
-        size_t total_size = 2 + size;
+        read_idx += sizeof(uint32_t);
 
 #ifdef DSWIFI_ENABLE_LWIP
         if (wifi_lwip_enabled)
@@ -99,20 +107,18 @@ TWL_CODE static void Wifi_TWL_Update(void)
             }
         }
 #endif
+        read_idx += round_up_32(size);
 
-        read_idx += (size + 1) / 2; // Round up to 16 bit
-
-        if (read_idx == (WIFI_RXBUFFER_SIZE / 2))
-            read_idx = 0;
+        assert(read_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));
 
         WifiData->rxbufRead = read_idx;
 
         WifiData->stats[WSTAT_TXPACKETS]++;
-        WifiData->stats[WSTAT_TXBYTES] += total_size;
+        WifiData->stats[WSTAT_TXBYTES] += size;
         WifiData->stats[WSTAT_TXDATABYTES] += size;
 
         // Exit if we have already handled a lot of packets
-        if (cnt++ > 80)
+        if (cnt++ > 20)
             break;
     }
 }
