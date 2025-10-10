@@ -52,6 +52,7 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
         // TODO: This could return an error code, but we can also rely on the
         // code retrying to send the message later.
         //printf("Transmit:err_space");
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
         return 0;
     }
 
@@ -218,7 +219,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
                 // | . | XXXXXXXXXXXX | . |
                 //     RD             WR
 
-                // TODO: Add lost data to the stats
+                WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
                 leaveCriticalSection(oldIME);
                 return -1;
             }
@@ -245,7 +246,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
             // | XX | . | XXXXXXXXXXX |
             //     WR   RD
 
-            // TODO: Add lost data to the stats
+            WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
             leaveCriticalSection(oldIME);
             return -1;
         }

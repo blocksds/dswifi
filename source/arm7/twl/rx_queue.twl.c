@@ -49,7 +49,7 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
                 // | . | XXXXXXXXXXXX | . |
                 //     RD             WR
 
-                // TODO: Add lost data to the stats
+                WifiData->stats[WSTAT_RXQUEUEDLOST]++;
                 leaveCriticalSection(oldIME);
                 return -1;
             }
@@ -76,7 +76,7 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
             // | XX | . | XXXXXXXXXXX |
             //     WR   RD
 
-            // TODO: Add lost data to the stats
+            WifiData->stats[WSTAT_RXQUEUEDLOST]++;
             leaveCriticalSection(oldIME);
             return -1;
         }
