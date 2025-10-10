@@ -299,83 +299,73 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size)
 
 // =============================================================================
 
-static void Wifi_NTR_SendPacketToLwip(int base, int len)
+static void Wifi_NTR_SendPacketToLwip(int base, int size)
 {
     // Do lwIP interfacing for RX packets here.
     //
     // Note that when WEP is enabled the IV and ICV (and FCS) are removed by
     // the hardware. We can treat all received packets the same way.
 
-    // Only check packets if they are of non-null data type, and if they are
-    // coming from the AP (toDS=0).
-    u16 frame_control = Wifi_RxReadHWordOffset(base, HDR_MGT_FRAME_CONTROL);
-    // TODO: Check from DS bit?
-    if ((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) != TYPE_DATA)
-        return;
+    u8 *packet = ((u8 *)WifiData->rxbufData) + base;
 
-    // Read IEEE header and LLC/SNAP
-    u16 framehdr[(HDR_DATA_MAC_SIZE + 8) / sizeof(u16)];
-    Wifi_RxRawReadPacket(base, sizeof(framehdr), framehdr);
+    const IEEE_DataFrameHeader *ieee = (const void *)packet;
+    const LLC_SNAP_Header *snap = (const void *)(packet + sizeof(IEEE_DataFrameHeader));
 
-    IEEE_DataFrameHeader *ieee = (void *)framehdr;
-    u16 *snap = (u16*)(((u8 *)framehdr) + sizeof(IEEE_DataFrameHeader));
+    {
+        // Only check packets if they are of non-null data type, and if they are
+        // coming from the AP (toDS=0).
+        // TODO: Check from DS bit?
+        if ((ieee->frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) != TYPE_DATA)
+            return;
 
-    // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
-    // (Receiver Address / Destination Address), which is the final recipient of
-    // the frame. Only accept messages addressed to our MAC address or to all
-    // devices.
+        // With toDS=0, regardless of the value of fromDS, Address 1 is RA/DA
+        // (Receiver Address / Destination Address), which is the final
+        // recipient of the frame. Only accept messages addressed to our MAC
+        // address or to all devices.
+        if (!(Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr) ||
+            Wifi_CmpMacAddr(ieee->addr_1, (void *)&wifi_broadcast_addr)))
+            return;
 
-    // ethhdr_print('!', ieee->addr_1);
-    if (!(Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr) ||
-          Wifi_CmpMacAddr(ieee->addr_1, (void *)&wifi_broadcast_addr)))
-        return;
+        // Check LLC/SNAP header.
+        if ((snap->dsap != 0xAA) || (snap->ssap != 0xAA) || (snap->control != 0x03) ||
+            (snap->oui[0] != 0) || (snap->oui[1] != 0) || (snap->oui[2] != 0))
+            return;
+    }
 
-    // Okay, the frame is addressed to us (or to everyone). Let's parse it.
+    // Create new Ethernet header. We need to pass a buffer to lwIP with the
+    // Ethernet header instead of the WiFi header. The Ethernet header is
+    // smaller than the WiFi headers so we can just overwrite the memory in the
+    // RX buffer and avoid allocating a new buffer.
 
-    // Check for LLC/SNAP header. Assume it exists. It's 6 bytes for the SNAP
-    // header plus 2 bytes for the type (8 bytes in total). It goes right after
-    // the IEEE data frame header.
-    if ((snap[0] != 0xAAAA) || (snap[1] != 0x0003) || (snap[2] != 0x0000))
-        return;
+    EthernetFrameHeader eth_header;
+    {
+        eth_header.ether_type = snap->ether_type;
 
-    u16 eth_protocol = snap[3];
+        // The destination address is always address 1.
+        Wifi_CopyMacAddr(eth_header.dest_mac, ieee->addr_1);
 
-    // Calculate size in bytes of the actual contents received in the data frame
-    // (excluding the IEEE 802.11 header and the SNAP header).
-    size_t datalen = len - (HDR_DATA_MAC_SIZE + 8);
+        // The source address is in address 3 if "From DS" is set. Otherwise,
+        // it's in address 2.
+        if (ieee->frame_control & FC_FROM_DS)
+            Wifi_CopyMacAddr(eth_header.src_mac, ieee->addr_3);
+        else
+            Wifi_CopyMacAddr(eth_header.src_mac, ieee->addr_2);
+    }
 
-    size_t lwip_buffer_size = sizeof(EthernetFrameHeader) + datalen;
+    // Calculate start and size of the lwIP packet
+    void *lwip_buffer = packet
+                      + sizeof(IEEE_DataFrameHeader) + sizeof(LLC_SNAP_Header)
+                      - sizeof(EthernetFrameHeader);
 
-    // The buffer will need to contain the ethernet header and the data.
-    void *lwip_buffer = malloc(lwip_buffer_size);
-    if (lwip_buffer == NULL)
-        return;
+    size_t data_size = size - sizeof(IEEE_DataFrameHeader) - sizeof(LLC_SNAP_Header);
 
-    EthernetFrameHeader *eth_header = lwip_buffer;
-    void *data_buffer = ((u8*)lwip_buffer) + sizeof(EthernetFrameHeader);
+    size_t lwip_buffer_size = sizeof(EthernetFrameHeader) + data_size;
 
-    eth_header->ether_type = eth_protocol;
-
-    // The destination address is always address 1.
-    Wifi_CopyMacAddr(eth_header->dest_mac, ieee->addr_1);
-
-    // The source address is in address 3 if "From DS" is set. Otherwise, it's
-    // in address 2.
-    if (frame_control & FC_FROM_DS)
-        Wifi_CopyMacAddr(eth_header->src_mac, ieee->addr_3);
-    else
-        Wifi_CopyMacAddr(eth_header->src_mac, ieee->addr_2);
-
-    // Copy data
-
-    // Index to the start of the data, after the LLC/SNAP header
-    int data_base = base + (HDR_DATA_MAC_SIZE + 8);
-    Wifi_RxRawReadPacket(data_base, datalen, data_buffer);
+    // Copy Ethernet header
+    memcpy(lwip_buffer, &eth_header, sizeof(EthernetFrameHeader));
 
     // Done generating recieved data packet... now distribute it.
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
-
-    free(lwip_buffer);
 }
 
 TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
@@ -404,13 +394,13 @@ TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
 }
 
-void Wifi_SendPacketToLwip(int base, int len)
+void Wifi_SendPacketToLwip(int base, int size)
 {
     // TODO: Update this so that it uses a pointer instead of a buffer base
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
-        Wifi_TWL_SendPacketToLwip(base, len);
+        Wifi_TWL_SendPacketToLwip(base, size);
     else
-        Wifi_NTR_SendPacketToLwip(base, len);
+        Wifi_NTR_SendPacketToLwip(base, size);
 }
 
 #endif // DSWIFI_ENABLE_LWIP

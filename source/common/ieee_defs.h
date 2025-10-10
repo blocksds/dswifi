@@ -218,7 +218,6 @@ typedef struct
 // 802.2 LLC Header + SNAP extension
 // =================================
 
-// TODO: Use this in every place were we create IEEE 802.11 packets
 typedef struct {
     u8 dsap;    // 0xAA
     u8 ssap;    // 0xAA
