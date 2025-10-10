@@ -308,14 +308,14 @@ static void Wifi_NTR_SendPacketToLwip(int base, int len)
 
     // Only check packets if they are of non-null data type, and if they are
     // coming from the AP (toDS=0).
-    u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
+    u16 frame_control = Wifi_RxReadHWordOffset(base, HDR_MGT_FRAME_CONTROL);
     // TODO: Check from DS bit?
     if ((frame_control & (FC_TO_DS | FC_TYPE_SUBTYPE_MASK)) != TYPE_DATA)
         return;
 
     // Read IEEE header and LLC/SNAP
     u16 framehdr[(HDR_DATA_MAC_SIZE + 8) / sizeof(u16)];
-    Wifi_RxRawReadPacket(base * 2, sizeof(framehdr), framehdr);
+    Wifi_RxRawReadPacket(base, sizeof(framehdr), framehdr);
 
     IEEE_DataFrameHeader *ieee = (void *)framehdr;
     u16 *snap = (u16*)(((u8 *)framehdr) + sizeof(IEEE_DataFrameHeader));
@@ -369,18 +369,8 @@ static void Wifi_NTR_SendPacketToLwip(int base, int len)
     // Copy data
 
     // Index to the start of the data, after the LLC/SNAP header
-    int data_base = base + ((HDR_DATA_MAC_SIZE + 8) / 2);
-
-    // This will read all data into the memory block. It's done in halfwords,
-    // so it will skip the last byte if the size isn't a multiple of 16 bits.
-    Wifi_RxRawReadPacket(data_base * 2, datalen & ~1, data_buffer);
-
-    // Read the last byte
-    if (datalen & 1)
-    {
-        u8 *dst = data_buffer + datalen - 1;
-        *dst = Wifi_RxReadHWordOffset(data_base * 2, datalen & ~1) & 255;
-    }
+    int data_base = base + (HDR_DATA_MAC_SIZE + 8);
+    Wifi_RxRawReadPacket(data_base, datalen, data_buffer);
 
     // Done generating recieved data packet... now distribute it.
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);

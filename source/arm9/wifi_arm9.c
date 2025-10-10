@@ -24,18 +24,29 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc)
 
 static void Wifi_NTR_Update(void)
 {
-    // check for received packets, forward to whatever wants them.
+    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
+
+    u32 read_idx = WifiData->rxbufRead;
+
+    assert((read_idx & 3) == 0);
+
+    // Check for received packets, forward to whatever wants them.
     int cnt = 0;
-    while (WifiData->rxbufWrite != WifiData->rxbufRead)
+    while (1)
     {
-        u32 read_idx = WifiData->rxbufRead;
-
-        int len     = Wifi_RxReadHWordOffset(read_idx * 2, HDR_RX_IEEE_FRAME_SIZE);
-        int fulllen = ((len + 3) & ~3) + HDR_RX_SIZE;
-
-        u32 data_idx = read_idx + HDR_RX_SIZE / 2;
-        if (data_idx >= (WIFI_RXBUFFER_SIZE / 2))
-            data_idx -= WIFI_RXBUFFER_SIZE / 2;
+        // Read packet size
+        size_t size = read_u32(rxbufData + read_idx);
+        if (size == 0)
+        {
+            // No more packets to process
+            break;
+        }
+        else if (size == WIFI_SIZE_WRAP)
+        {
+            read_idx = 0;
+            size = read_u32(rxbufData + read_idx);
+        }
+        read_idx += sizeof(uint32_t);
 
 #ifdef DSWIFI_ENABLE_LWIP
         if (wifi_lwip_enabled)
@@ -44,28 +55,32 @@ static void Wifi_NTR_Update(void)
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
             {
                 if (wifi_netif_is_up())
-                    Wifi_SendPacketToLwip(data_idx, len);
+                    Wifi_SendPacketToLwip(read_idx, size);
             }
         }
 #endif
 
         if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_HOST)
-            Wifi_MultiplayerHandlePacketFromClient(data_idx, len);
+            Wifi_MultiplayerHandlePacketFromClient(read_idx, size);
         else if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-            Wifi_MultiplayerHandlePacketFromHost(data_idx, len);
+            Wifi_MultiplayerHandlePacketFromHost(read_idx, size);
 
         // Check if we have a handler of raw packets
         if (wifi_rawpackethandler)
-            (*wifi_rawpackethandler)(data_idx * 2, len);
+            (*wifi_rawpackethandler)(read_idx, size);
 
-        read_idx += fulllen / 2;
-        if (read_idx >= (WIFI_RXBUFFER_SIZE / 2))
-            read_idx -= (WIFI_RXBUFFER_SIZE / 2);
+        read_idx += round_up_32(size);
+
+        assert(read_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));
 
         WifiData->rxbufRead = read_idx;
 
+        WifiData->stats[WSTAT_TXPACKETS]++;
+        WifiData->stats[WSTAT_TXBYTES] += size;
+        WifiData->stats[WSTAT_TXDATABYTES] += size;
+
         // Exit if we have already handled a lot of packets
-        if (cnt++ > 80)
+        if (cnt++ > 20)
             break;
     }
 }

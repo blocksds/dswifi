@@ -371,47 +371,20 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
 
 void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
 {
-    if (base & 1)
-    {
-        sassert(0, "Unaligned base address");
-        return;
-    }
-
-    while (base >= WIFI_RXBUFFER_SIZE)
-        base -= WIFI_RXBUFFER_SIZE;
-
-    u16 *out = dst;
-
-    // Convert to halfwords
-    base = base / 2;
-    size_t read_hwords = (size_bytes + 1) / 2; // Round up
-
-    while (read_hwords > 0)
-    {
-        size_t len = read_hwords;
-        if (len > (WIFI_RXBUFFER_SIZE / 2) - base)
-            len = (WIFI_RXBUFFER_SIZE / 2) - base;
-
-        read_hwords -= len;
-
-        while (len > 0)
-        {
-            *out = WifiData->rxbufData[base++];
-            out++;
-            len--;
-        }
-
-        base = 0;
-    }
+    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
+    // TODO: Make sure that it doesn't read over the limit of the RX buffer
+    memcpy(dst, rxbufData + base, size_bytes);
 }
 
 u16 Wifi_RxReadHWordOffset(u32 base, u32 offset)
 {
     sassert(((base | offset) & 1) == 0, "Unaligned arguments");
 
-    base = (base + offset) / 2;
-    if (base >= (WIFI_RXBUFFER_SIZE / 2))
-        base -= (WIFI_RXBUFFER_SIZE / 2);
+    base = base + offset;
+    while (base >= WIFI_RXBUFFER_SIZE)
+        base -= WIFI_RXBUFFER_SIZE;
 
-    return WifiData->rxbufData[base];
+    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
+
+    return read_u16(rxbufData + base);
 }

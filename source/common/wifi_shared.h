@@ -275,6 +275,11 @@ static inline u32 round_up_32(u32 value)
     return (value + 3) & ~3;
 }
 
+static inline u16 read_u16(const u8 *ptr)
+{
+    return *(u16 *)ptr;
+}
+
 static inline u32 read_u32(const u8 *ptr)
 {
     return *(u32 *)ptr;

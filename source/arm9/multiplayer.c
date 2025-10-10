@@ -162,7 +162,7 @@ void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int len)
         return;
 
     const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
-    u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
+    u16 frame_control = Wifi_RxReadHWordOffset(base, HDR_MGT_FRAME_CONTROL);
 
     Wifi_MPPacketType type = WIFI_MPTYPE_INVALID;
 
@@ -176,7 +176,7 @@ void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int len)
 
     MultiplayerClientIeeeDataFrame header;
 
-    Wifi_RxRawReadPacket(base * 2, sizeof(header), &header);
+    Wifi_RxRawReadPacket(base, sizeof(header), &header);
 
     if (type == WIFI_MPTYPE_REPLY)
     {
@@ -197,7 +197,7 @@ void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int len)
     if (!Wifi_MultiplayerClientMatchesMacAndAID(aid, header.ieee.addr_2))
         return;
 
-    (*wifi_from_client_packet_handler)(type, aid, base * 2 + sizeof(header),
+    (*wifi_from_client_packet_handler)(type, aid, base + sizeof(header),
                                        len - sizeof(header));
 }
 
@@ -210,7 +210,7 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len)
         return;
 
     const u16 mask = FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK;
-    u16 frame_control = Wifi_RxReadHWordOffset(base * 2, HDR_MGT_FRAME_CONTROL);
+    u16 frame_control = Wifi_RxReadHWordOffset(base, HDR_MGT_FRAME_CONTROL);
 
     Wifi_MPPacketType type = WIFI_MPTYPE_INVALID;
 
@@ -224,7 +224,7 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len)
 
     // Read basic information from the data header
     IEEE_DataFrameHeader ieee;
-    Wifi_RxRawReadPacket(base * 2, sizeof(ieee), &ieee);
+    Wifi_RxRawReadPacket(base, sizeof(ieee), &ieee);
 
     size_t header_size;
 
@@ -249,6 +249,6 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len)
     if (Wifi_CmpMacAddr(ieee.addr_3, WifiData->curAp.bssid) == 0)
         return;
 
-    (*wifi_from_host_packet_handler)(type, base * 2 + header_size,
+    (*wifi_from_host_packet_handler)(type, base + header_size,
                                      len - header_size);
 }
