@@ -54,7 +54,7 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
                 return -1;
             }
 
-            *(u32 *)(rxbufData + write_idx) = WIFI_SIZE_WRAP;
+            write_u32(rxbufData + write_idx, WIFI_SIZE_WRAP);
             write_idx = 0;
         }
         else
@@ -88,7 +88,7 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
     }
 
     // Write real size of data without padding or the size of the size tags
-    *(u32 *)(rxbufData + write_idx) = size;
+    write_u32(rxbufData + write_idx, size);
     write_idx += sizeof(u32);
 
     // Write data
@@ -97,7 +97,7 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
 
     // Mark the next block as empty, but don't move pointer so that the size of
     // the next block is written here eventually.
-    *(u32 *)(rxbufData + write_idx) = 0;
+    write_u32(rxbufData + write_idx, 0);
 
     assert(write_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));
 
