@@ -3,15 +3,14 @@ DSWifi documentation {#mainpage}
 
 ## Introduction
 
-A library written in C to use the WiFi hardware of the Nintendo DS. At the
-moment it only supports DS mode WiFi (on a DSi it will run in compatibility
-mode).
+A library written in C to use the WiFi hardware of the Nintendo DS.
 
 Features:
 
 - It supports accessing the Internet using IPv4.
 
   - Open networks and WEP-encrypted networks are supported.
+  - In DSi mode, WPA2-encrypted networks are also supported.
   - TCP and UDP supported.
 
 - It supports local multiplayer mode:
@@ -19,6 +18,14 @@ Features:
   - Up to 15 consoles can connect to the host (the limit can be adjusted).
   - It supports direct host <-> client transfers or optimized group transfers.
   - Client connections to the host are handled by the ARM7 automatically.
+
+This library contains code of two other open source libraries:
+
+- [lwIP](https://savannah.nongnu.org/projects/lwip/): It contains the IP stack,
+  the code that interprets the data packets sent and received over the network.
+
+- [Mbed TLS](https://github.com/Mbed-TLS/mbedtls): It contains code to handle
+  cryptographic operations. This is used in DSi mode to handle WPA2 encryption.
 
 ## Usage guides
 
