@@ -19,7 +19,8 @@ typedef struct
 EthernetFrameHeader;
 
 int Wifi_TransmitFunctionLink(const void *src, size_t size);
-void Wifi_SendPacketToLwip(int base, int size);
+// Not const, we need to overwrite the data for speed
+void Wifi_SendPacketToLwip(u8 *packet, size_t size);
 
 extern bool wifi_lwip_enabled;
 

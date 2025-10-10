@@ -153,8 +153,7 @@ void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func
     wifi_from_client_packet_handler = func;
 }
 
-// TODO: Change this so that it takes a pointer as input, not an offset
-void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int size)
+void Wifi_MultiplayerHandlePacketFromClient(const u8 *packet, size_t size)
 {
     if (wifi_from_client_packet_handler == NULL)
         return;
@@ -164,7 +163,6 @@ void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int size
 
     // Pointers to access the data
 
-    const u8 *packet = ((u8 *)WifiData->rxbufData) + base;
     const IEEE_DataFrameHeader *ieee = (const void *)packet;
 
     // Check packet type from header
@@ -203,12 +201,11 @@ void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int size
     if (!Wifi_MultiplayerClientMatchesMacAndAID(aid, ieee->addr_2))
         return;
 
-    (*wifi_from_client_packet_handler)(type, aid, base + header_size,
+    (*wifi_from_client_packet_handler)(type, aid, (u32)(packet + header_size),
                                        size - header_size);
 }
 
-// TODO: Change this so that it takes a pointer as input, not an offset
-void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int size)
+void Wifi_MultiplayerHandlePacketFromHost(const u8 *packet, size_t size)
 {
     if (wifi_from_host_packet_handler == NULL)
         return;
@@ -218,7 +215,6 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int size)
 
     // Pointers to access the data
 
-    const u8 *packet = ((u8 *)WifiData->rxbufData) + base;
     const IEEE_DataFrameHeader *ieee = (const void *)packet;
 
     // Check packet type from header
@@ -259,6 +255,6 @@ void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int size)
     if (Wifi_CmpMacAddr(ieee->addr_3, WifiData->curAp.bssid) == 0)
         return;
 
-    (*wifi_from_host_packet_handler)(type, base + header_size,
+    (*wifi_from_host_packet_handler)(type, (u32)(packet + header_size),
                                      size - header_size);
 }

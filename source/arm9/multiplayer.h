@@ -55,7 +55,7 @@ bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, const void *macaddr);
 // Handlers that need to be called from the loop that processes packets.
 // Internally they check if there is a user handler or not. If there is a
 // handler, it will send the packets to that handler.
-void Wifi_MultiplayerHandlePacketFromClient(unsigned int base, unsigned int len);
-void Wifi_MultiplayerHandlePacketFromHost(unsigned int base, unsigned int len);
+void Wifi_MultiplayerHandlePacketFromClient(const u8 *packet, size_t size);
+void Wifi_MultiplayerHandlePacketFromHost(const u8 *packet, size_t size);
 
 #endif // DSWIFI_MULTIPLAYER_H__

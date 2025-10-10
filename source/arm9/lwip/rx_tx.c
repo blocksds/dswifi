@@ -299,14 +299,12 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size)
 
 // =============================================================================
 
-static void Wifi_NTR_SendPacketToLwip(int base, int size)
+static void Wifi_NTR_SendPacketToLwip(u8 *packet, size_t size)
 {
     // Do lwIP interfacing for RX packets here.
     //
     // Note that when WEP is enabled the IV and ICV (and FCS) are removed by
     // the hardware. We can treat all received packets the same way.
-
-    u8 *packet = ((u8 *)WifiData->rxbufData) + base;
 
     const IEEE_DataFrameHeader *ieee = (const void *)packet;
     const LLC_SNAP_Header *snap = (const void *)(packet + sizeof(IEEE_DataFrameHeader));
@@ -368,13 +366,11 @@ static void Wifi_NTR_SendPacketToLwip(int base, int size)
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
 }
 
-TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
+TWL_CODE static void Wifi_TWL_SendPacketToLwip(u8 *packet, size_t size)
 {
-    void *packet = (void *)(((u8 *)WifiData->rxbufData) + base);
-
     // Build Ethernet header from MBOX header
 
-    mbox_hdr_rx_data_packet *mbox_hdr = packet;
+    mbox_hdr_rx_data_packet *mbox_hdr = (void *)packet;
 
     EthernetFrameHeader eth_hdr;
     memcpy(&eth_hdr.dest_mac[0], mbox_hdr->dst_mac, 6);
@@ -388,19 +384,18 @@ TWL_CODE static void Wifi_TWL_SendPacketToLwip(int base, int len)
 
     memcpy(lwip_buffer, &eth_hdr, sizeof(EthernetFrameHeader));
 
-    size_t lwip_buffer_size = len - sizeof(mbox_hdr_rx_data_packet)
+    size_t lwip_buffer_size = size - sizeof(mbox_hdr_rx_data_packet)
                             + sizeof(EthernetFrameHeader);
 
     dswifi_send_data_to_lwip(lwip_buffer, lwip_buffer_size);
 }
 
-void Wifi_SendPacketToLwip(int base, int size)
+void Wifi_SendPacketToLwip(u8 *packet, size_t size)
 {
-    // TODO: Update this so that it uses a pointer instead of a buffer base
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
-        Wifi_TWL_SendPacketToLwip(base, size);
+        Wifi_TWL_SendPacketToLwip(packet, size);
     else
-        Wifi_NTR_SendPacketToLwip(base, size);
+        Wifi_NTR_SendPacketToLwip(packet, size);
 }
 
 #endif // DSWIFI_ENABLE_LWIP

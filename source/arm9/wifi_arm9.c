@@ -55,19 +55,19 @@ static void Wifi_NTR_Update(void)
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
             {
                 if (wifi_netif_is_up())
-                    Wifi_SendPacketToLwip(read_idx, size);
+                    Wifi_SendPacketToLwip((u8*)(rxbufData + read_idx), size);
             }
         }
 #endif
 
         if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_HOST)
-            Wifi_MultiplayerHandlePacketFromClient(read_idx, size);
+            Wifi_MultiplayerHandlePacketFromClient(rxbufData + read_idx, size);
         else if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
-            Wifi_MultiplayerHandlePacketFromHost(read_idx, size);
+            Wifi_MultiplayerHandlePacketFromHost(rxbufData + read_idx, size);
 
         // Check if we have a handler of raw packets
         if (wifi_rawpackethandler)
-            (*wifi_rawpackethandler)(read_idx, size);
+            (*wifi_rawpackethandler)((u32)(rxbufData + read_idx), size);
 
         read_idx += round_up_32(size);
 
@@ -118,7 +118,7 @@ TWL_CODE static void Wifi_TWL_Update(void)
             if (WifiData->curLibraryMode == DSWIFI_INTERNET)
             {
                 if (wifi_netif_is_up())
-                    Wifi_SendPacketToLwip(read_idx, size);
+                    Wifi_SendPacketToLwip((u8*)(rxbufData + read_idx), size);
             }
         }
 #endif

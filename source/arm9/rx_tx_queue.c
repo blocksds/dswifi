@@ -369,23 +369,17 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
 // RX functions
 // ============
 
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst)
+void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst)
 {
-    // TODO: Change this so that base is simply a pointer to the data, not an offset
-    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
-    // TODO: Make sure that it doesn't read over the limit of the RX buffer
-    memcpy(dst, rxbufData + base, size_bytes);
-}
+    u32 rxbufEnd = (u32)(((u8*)WifiData->rxbufData) + sizeof(WifiData->rxbufData));
 
-u16 Wifi_RxReadHWordOffset(u32 base, u32 offset)
-{
-    sassert(((base | offset) & 1) == 0, "Unaligned arguments");
+    // If they have asked for too much memory, return. We could return a partial
+    // result but that would be way more confusing.
+    if (address + size > rxbufEnd)
+    {
+        assert(0);
+        return;
+    }
 
-    base = base + offset;
-    while (base >= WIFI_RXBUFFER_SIZE)
-        base -= WIFI_RXBUFFER_SIZE;
-
-    const u8 *rxbufData = (const u8*)WifiData->rxbufData;
-
-    return read_u16(rxbufData + base);
+    memcpy(dst, (const void *)address, size);
 }

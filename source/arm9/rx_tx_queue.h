@@ -23,13 +23,7 @@ u32 Wifi_TxBufferBytesAvailable(void);
 // the rest with 0?
 void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src);
 
-// Both the base address and size are in bytes. However, the base needs to be
-// aligned to 16 bit, and the output buffer needs to be a multiple of 16 bits
-// because the last read and write will always be a halfword.
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
-
-// The base address and offset are specified in bytes. The base must be aligned
-// to 16 bit and the offset must be a multiple of 16 bits.
-u16 Wifi_RxReadHWordOffset(u32 base, u32 offset);
+// The size is in bytes
+void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst);
 
 #endif // DSWIFI_ARM9_RX_TX_QUEUE_H__
