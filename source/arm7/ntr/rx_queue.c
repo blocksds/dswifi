@@ -94,8 +94,8 @@ static int Wifi_RxArm9QueueAdd(u32 base, int size)
         //     WR          RD
     }
 
-    // Write real size of data without padding or the size of the size tags
-    write_u32(rxbufData + write_idx, size);
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
     write_idx += sizeof(u32);
 
     // Write data
@@ -108,10 +108,11 @@ static int Wifi_RxArm9QueueAdd(u32 base, int size)
 
     assert(write_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));
 
-    // Only update the pointer after the whole packet has been writen to RAM or
-    // the ARM7 may see that the pointer has changed and send whatever is in the
-    // buffer at that point.
     WifiData->rxbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(rxbufData + size_idx, size);
 
     leaveCriticalSection(oldIME);
 

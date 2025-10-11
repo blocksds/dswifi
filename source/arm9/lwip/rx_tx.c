@@ -257,8 +257,8 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
         //     WR          RD
     }
 
-    // Write real size of data without padding or the size of the size tags
-    write_u32(txbufData + write_idx, sizeof(tx_header) + data_size);
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
     write_idx += sizeof(u32);
 
     // Write data
@@ -273,10 +273,11 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
 
     assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
 
-    // Only update the pointer after the whole packet has been writen to RAM or
-    // the ARM7 may see that the pointer has changed and send whatever is in the
-    // buffer at that point.
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, sizeof(tx_header) + data_size);
 
     leaveCriticalSection(oldIME);
 
