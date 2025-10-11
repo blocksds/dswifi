@@ -11,9 +11,9 @@
 #include <dswifi9.h>
 
 #include "arm9/ipc.h"
-#include "arm9/lwip/lwip_nds.h"
-#include "arm9/rx_tx_queue.h"
 #include "arm9/wifi_arm9.h"
+#include "arm9/lwip/lwip_nds.h"
+#include "arm9/ntr/rx_tx_queue.h"
 #include "common/common_ntr_defs.h"
 #include "common/common_twl_defs.h"
 #include "common/ieee_defs.h"

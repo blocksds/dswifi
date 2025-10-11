@@ -6,8 +6,8 @@
 #include <nds.h>
 
 #include "arm9/ipc.h"
-#include "arm9/multiplayer.h"
 #include "arm9/wifi_arm9.h"
+#include "arm9/ntr/multiplayer.h"
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"

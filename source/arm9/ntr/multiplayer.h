@@ -2,8 +2,8 @@
 //
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#ifndef DSWIFI_MULTIPLAYER_H__
-#define DSWIFI_MULTIPLAYER_H__
+#ifndef DSWIFI_ARM9_NTR_MULTIPLAYER_H__
+#define DSWIFI_ARM9_NTR_MULTIPLAYER_H__
 
 #include <dswifi_common.h>
 
@@ -58,4 +58,4 @@ bool Wifi_MultiplayerClientMatchesMacAndAID(int aid, const void *macaddr);
 void Wifi_MultiplayerHandlePacketFromClient(const u8 *packet, size_t size);
 void Wifi_MultiplayerHandlePacketFromHost(const u8 *packet, size_t size);
 
-#endif // DSWIFI_MULTIPLAYER_H__
+#endif // DSWIFI_ARM9_NTR_MULTIPLAYER_H__
