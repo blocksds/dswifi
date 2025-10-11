@@ -10,4 +10,11 @@
 
 void Wifi_CallSyncHandler(void);
 
+// Tries to allocate the specified size in bytes in the TX buffer. If there is
+// no space it returns -1. If there's space it returns a positive number (or
+// zero) that represents an offset into the txbufData[] array.
+//
+// It writes WIFI_SIZE_WRAP in the buffer if required.
+int Wifi_TxBufferAllocBuffer(size_t total_size);
+
 #endif // DSWIFI_ARM9_IPC_H__

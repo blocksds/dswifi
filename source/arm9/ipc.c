@@ -351,3 +351,70 @@ void Wifi_SetChannel(int channel)
 
     WifiData->reqChannel = channel;
 }
+
+int Wifi_TxBufferAllocBuffer(size_t total_size)
+{
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
+    u32 write_idx = WifiData->txbufWrite;
+    u32 read_idx = WifiData->txbufRead;
+
+    assert((read_idx & 3) == 0); // Packets must be aligned to 32 bit
+    assert((write_idx & 3) == 0);
+
+    if (read_idx <= write_idx)
+    {
+        if ((write_idx + total_size) > WIFI_TXBUFFER_SIZE)
+        {
+            // The packet doesn't fit at the end of the buffer:
+            //
+            //                    | NEW |
+            //
+            // | ......... | XXXX | . |           ("X" = Used, "." = Empty)
+            //            RD      WR
+
+            // Try to fit it at the beginning. Don't wrap it.
+            if (total_size >= read_idx)
+            {
+                // The packet doesn't fit anywhere:
+
+                // | NEW |            | NEW |
+                //
+                // | . | XXXXXXXXXXXX | . |
+                //     RD             WR
+                return -1;
+            }
+
+            write_u32(txbufData + write_idx, WIFI_SIZE_WRAP);
+            write_idx = 0;
+        }
+        else
+        {
+            // The packet fits at the end:
+            //
+            //               | NEW |
+            //
+            // | .... | XXXX | ...... |
+            //       RD      WR
+        }
+    }
+    else
+    {
+        if ((write_idx + total_size) >= read_idx)
+        {
+            //      | NEW |
+            //
+            // | XX | . | XXXXXXXXXXX |
+            //     WR   RD
+
+            return -1;
+        }
+
+        //      | NEW |
+        //
+        // | XX | ........ | XXXX |
+        //     WR          RD
+    }
+
+    return write_idx;
+}
