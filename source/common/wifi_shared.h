@@ -226,14 +226,14 @@ typedef struct WIFI_MAINSTRUCT
     // ARM9 <-> ARM7 transfer circular buffers
     // ---------------------------------------
 
-    // They have a 2-byte granularity. TODO: This is changing to just bytes
-    // rxbufIn/rxbufOut/txbufIn/txbufOut count halfwords, not bytes.
-
     // RX buffer. It sends received packets from other devices from the ARM7
     // to the ARM9.
     u32 rxbufWrite; // We will write starting from this entry in rxbufData[]
     u32 rxbufRead;  // And we will read starting from this entry in rxbufData[]
-    ALIGN(4) u16 rxbufData[WIFI_RXBUFFER_SIZE / 2]; // TODO: Turn into u8
+    ALIGN(4) u8 rxbufData[WIFI_RXBUFFER_SIZE];
+
+    // The variables below are in halfwords in DS mode, and bytes in DSi mode.
+    // TODO: Finish the migration to use bytes
 
     // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
     // transferred to other devices.

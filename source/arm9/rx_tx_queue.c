@@ -371,7 +371,7 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
 
 void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst)
 {
-    u32 rxbufEnd = (u32)(((u8*)WifiData->rxbufData) + sizeof(WifiData->rxbufData));
+    u32 rxbufEnd = (u32)(WifiData->rxbufData + sizeof(WifiData->rxbufData));
 
     // If they have asked for too much memory, return. We could return a partial
     // result but that would be way more confusing.
