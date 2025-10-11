@@ -55,6 +55,8 @@ typedef struct
     u8 body[0];
 } IEEE_DataFrameHeader;
 
+static_assert(sizeof(IEEE_DataFrameHeader) == 24);
+
 // Frame control bitfields
 // =======================
 
@@ -225,6 +227,8 @@ typedef struct {
     u8 oui[3];  // 0x00, 0x00, 0x00
     u16 ether_type; // Big endian
 } LLC_SNAP_Header;
+
+static_assert(sizeof(LLC_SNAP_Header) == 8);
 
 // Nintendo vendor information
 // ===========================

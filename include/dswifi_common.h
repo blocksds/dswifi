@@ -202,6 +202,8 @@ typedef struct WIFI_TXHEADER
     u16 tx_length; // Full IEEE frame size (including checksums) in bytes
 } Wifi_TxHeader;
 
+static_assert(sizeof(Wifi_TxHeader) == 12);
+
 typedef struct WIFI_RXHEADER
 {
     u16 a;
@@ -211,6 +213,8 @@ typedef struct WIFI_RXHEADER
     u16 byteLength;
     u16 rssi_;
 } Wifi_RxHeader;
+
+static_assert(sizeof(Wifi_RxHeader) == 12);
 
 /// Information send by Nintendo DS hosts in beacon frames.
 ///
