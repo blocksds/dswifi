@@ -25,7 +25,7 @@ void Wifi_TWL_TxArm9QueueFlush(void)
             // No more packets to process
             break;
         }
-        else if (size == 0xFFFFFFFF) // Mark to reset pointer
+        else if (size == WIFI_SIZE_WRAP) // Mark to reset pointer
         {
             read_idx = 0;
             size = read_u32(txbufData + read_idx);

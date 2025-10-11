@@ -46,7 +46,7 @@ static bool Wifi_TxReplyIsEnqueued(void)
 
 void Wifi_TxRaw(u16 *data, int datalen)
 {
-    datalen = (datalen + 3) & (~3);
+    datalen = round_up_32(datalen);
     Wifi_MACWrite(data, MAC_TXBUF_START_OFFSET, datalen);
 
     // Start transfer. Set the number of retries before starting.
@@ -78,16 +78,16 @@ bool Wifi_TxArm7QueueIsEmpty(void)
 // Overwrite the current data in the queue with the newly provided data. If the
 // new buffer is too big it will return 0. If the data fits in the buffer, it
 // will return 1.
-static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, int datalen)
+static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, size_t datalen)
 {
     // Convert to halfords, rounding up
-    int hwords = (datalen + 1) >> 1;
-    if (hwords > 1024)
+    size_t hwords = (datalen + 1) >> 1;
+    if (hwords > sizeof(wifi_tx_queue))
         return 0;
 
     // TODO: Check this doesn't go over MAC_TXBUF_END_OFFSET
 
-    for (int i = 0; i < hwords; i++)
+    for (size_t i = 0; i < hwords; i++)
         wifi_tx_queue[i] = data[i];
 
     wifi_tx_queue_len = datalen;
@@ -136,7 +136,7 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
             // client fails (in multiplayer mode) or that the DS can't connect
             // to an Internet AP (in internet mode). The library can recover
             // from both errors.
-            WLOG_PUTS("W: ARM7 queue full\n");
+            WLOG_PUTS("W: ARM7 TX queue full\n");
             WLOG_FLUSH();
             return 0;
         }
