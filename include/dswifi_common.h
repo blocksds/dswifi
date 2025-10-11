@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#include <assert.h>
+
 #include <nds/ndstypes.h>
 
 /// Maxmimum number of multiplayer clients that can connect to a host.
