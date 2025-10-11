@@ -570,7 +570,7 @@ typedef enum {
 /// The second argument is the packet address. It is only valid while the called
 /// function is executing. The third argument is the packet length.
 ///
-/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// Call Wifi_RxRawReadPacket(address, length, buffer) while in the packet
 /// handler function to retreive the data to a local buffer.
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
@@ -585,7 +585,7 @@ typedef void (*WifiFromHostPacketHandler)(Wifi_MPPacketType, int, int);
 /// packet. The third argument is the packet address. It is only valid while
 /// the called function is executing. The fourth argument is packet length.
 ///
-/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// Call Wifi_RxRawReadPacket(address, length, buffer) while in the packet
 /// handler function to retreive the data to a local buffer.
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
@@ -745,7 +745,7 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 /// The first parameter is the packet address. It is only valid while the called
 /// function is executing. The second parameter is packet length.
 ///
-/// Call Wifi_RxRawReadPacket(adddress, length, buffer) while in the packet
+/// Call Wifi_RxRawReadPacket(address, length, buffer) while in the packet
 /// handler function to retreive the data to a local buffer.
 ///
 /// From this handler The IEEE 802.11 header can be read, followed by the packet
@@ -780,13 +780,13 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
 /// Allows user code to read a packet from within the WifiPacketHandler function.
 ///
-/// @param base
+/// @param address
 ///     The base address of the packet in the internal buffer.
-/// @param size_bytes
-///     Number of bytes to read. It actually reads ((number + 1) & ~1) bytes
+/// @param size
+///     Number of bytes to read.
 /// @param dst
-///     Location for the data to be read into. It must be aligned to 16 bits.
-void Wifi_RxRawReadPacket(u32 base, u32 size_bytes, void *dst);
+///     Location for the data to be read into.
+void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst);
 
 /// @}
 
