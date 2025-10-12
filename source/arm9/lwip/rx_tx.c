@@ -27,121 +27,116 @@ static int Wifi_NTR_TransmitFunctionLink(const void *src, size_t size)
     size_t data_size = size - sizeof(EthernetFrameHeader);
     const void *data_src = ((u8 *)src) + sizeof(EthernetFrameHeader);
 
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader) +
+        (WifiData->curAp.security_type == AP_SECURITY_WEP ? 4 : 0) + // WEP IV
+        sizeof(LLC_SNAP_Header) +
+        data_size + // Actual size of the data in the memory block
+        (WifiData->curAp.security_type == AP_SECURITY_WEP ? 4 : 0) + // WEP ICV
+        4; // FCS
+
+    // Space required in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
+    {
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
+        return -1;
+    }
+
+    u32 write_idx = alloc_idx;
+
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
     // Convert ethernet frame into wireless frame
     // ==========================================
 
-    const EthernetFrameHeader *eth = src;
-
-    // Max size for the combined headers plus the WEP IV
-    u16 framehdr[(HDR_TX_SIZE + HDR_DATA_MAC_SIZE + 4) / sizeof(u16)];
-
-    // Total amount of bytes to be written to TX buffer after the IEEE header
-    // (and after the WEP IV)
-    size_t body_size =
-        (WifiData->curAp.security_type == AP_SECURITY_WEP ? 4 : 0) // WEP IV (exclude ICV)
-        + 8 // LLC/SNAP header
-        + data_size; // Actual size of the data in the memory block
-
-    size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
-
-    // We need space for the FCS in the TX buffer even if we don't write it to
-    // the buffer (it gets filled in by the hardware in RAM).
-    if ((hdr_size + body_size + 4) > Wifi_TxBufferBytesAvailable())
-    {
-        // Error, can't send this much!
-        // TODO: This could return an error code, but we can also rely on the
-        // code retrying to send the message later.
-        //printf("Transmit:err_space");
-        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
-        return 0;
-    }
-
-    // Create hardware TX and IEEE headers
-    // -----------------------------------
-
-    Wifi_TxHeader *tx = (void *)framehdr;
-    IEEE_DataFrameHeader *ieee = (void *)(((u8 *)framehdr) + sizeof(Wifi_TxHeader));
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
 
     // Hardware TX header
     // ------------------
 
-    // Let the ARM7 fill in the data transfer rate. We will only fill the IEEE
-    // frame length later.
-    memset(tx, 0, sizeof(Wifi_TxHeader));
+    Wifi_TxHeader tx_header = { 0 }; // Let the ARM7 fill in the data transfer rate
+    // This includes everything after the TX header, including the FCS
+    tx_header.tx_length = frame_size - sizeof(Wifi_TxHeader);
+
+    memcpy(txbufData + write_idx, &tx_header, sizeof(tx_header));
+    write_idx += sizeof(tx_header);
 
     // IEEE 802.11 header
     // ------------------
 
-    int hdrlen = sizeof(Wifi_TxHeader) + sizeof(IEEE_DataFrameHeader);
+    const EthernetFrameHeader *eth = src;
 
-    ieee->frame_control = FC_TO_DS | TYPE_DATA;
-    ieee->duration = 0;
-    Wifi_CopyMacAddr(ieee->addr_1, WifiData->curAp.bssid);
-    Wifi_CopyMacAddr(ieee->addr_2, WifiData->MacAddr);
-    Wifi_CopyMacAddr(ieee->addr_3, eth->dest_mac);
-    ieee->seq_ctl = 0;
+    IEEE_DataFrameHeader ieee;
+
+    ieee.frame_control = FC_TO_DS | TYPE_DATA;
+    if (WifiData->curAp.security_type == AP_SECURITY_WEP)
+        ieee.frame_control |= FC_PROTECTED_FRAME;
+
+    ieee.duration = 0;
+    Wifi_CopyMacAddr(ieee.addr_1, WifiData->curAp.bssid);
+    Wifi_CopyMacAddr(ieee.addr_2, WifiData->MacAddr);
+    Wifi_CopyMacAddr(ieee.addr_3, eth->dest_mac);
+    ieee.seq_ctl = 0;
+
+    memcpy(txbufData + write_idx, &ieee, sizeof(ieee));
+    write_idx += sizeof(ieee);
 
     if (WifiData->curAp.security_type == AP_SECURITY_WEP)
     {
-        ieee->frame_control |= FC_PROTECTED_FRAME;
-
         // WEP IV, will be filled in if needed on the ARM7 side.
-        ((u16 *)ieee->body)[0] = 0;
-        ((u16 *)ieee->body)[1] = 0;
-
-        hdrlen += 4;
+        write_idx += 4;
     }
 
-    tx->tx_length = hdrlen - HDR_TX_SIZE + body_size + 4; // Checksum
+    // LLC/SNAP header
+    // ---------------
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    LLC_SNAP_Header snap = { 0 };
+    snap.dsap = 0xAA;
+    snap.ssap = 0xAA;
+    snap.control = 0x03;
+    snap.ether_type = eth->ether_type;
 
-    int write_idx = WifiData->txbufWrite;
+    memcpy(txbufData + write_idx, &snap, sizeof(snap));
+    write_idx += sizeof(snap);
 
-    Wifi_TxBufferWrite(write_idx * 2, hdrlen, framehdr);
-    write_idx += hdrlen / 2;
-    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-        write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // Data
+    // ----
 
-    // Copy LLC/SNAP encapsulation information
-    // =======================================
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
 
-    // Reuse the previous struct to generate SNAP header
-    framehdr[0] = 0xAAAA;
-    framehdr[1] = 0x0003;
-    framehdr[2] = 0x0000;
-
-    // After the SNAP header add the protocol type
-    framehdr[3] = eth->ether_type;
-
-    Wifi_TxBufferWrite(write_idx * 2, 8, framehdr);
-    write_idx += 8 / 2;
-    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-        write_idx -= WIFI_TXBUFFER_SIZE / 2;
-
-    // Now, write the data
-    if (data_size & 1) // Make sure we send an even number of bytes
-        data_size++;
-    Wifi_TxBufferWrite(write_idx * 2, data_size, data_src);
-    write_idx += data_size / 2;
-    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-        write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // ICV, FCS
+    // --------
 
     if (WifiData->curAp.security_type == AP_SECURITY_WEP)
-    {
-        // Allocate 4 more bytes for the WEP ICV in the TX buffer. However,
-        // don't write anything. We just need to remember to not fill it and to
-        // reserve that space so that the hardware can fill it.
-        write_idx += 4 / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+        write_idx += 8;
+    else
+        write_idx += 4;
 
-    // Only update the pointer after the whole packet has been writen to RAM or
-    // the ARM7 may see that the pointer has changed and send whatever is in the
-    // buffer at that point.
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_DATA);
 
     leaveCriticalSection(oldIME);
 

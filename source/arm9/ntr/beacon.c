@@ -40,7 +40,6 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     // ------------------
 
     memset(tx, 0, sizeof(Wifi_TxHeader));
-    tx->enable_flags = WFLAG_SEND_AS_BEACON; // This will be cleared by the ARM7
     tx->tx_rate = WIFI_TRANSFER_RATE_2MBPS; // This is always 2 Mbit/s
 
     // IEEE 802.11 header
@@ -56,7 +55,6 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     // Frame body
     // ----------
 
-    size_t hdr_size = sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader);
     size_t body_size = 0;
 
     // Timestamp
@@ -153,30 +151,72 @@ int Wifi_BeaconStart(const char *ssid, u32 game_id)
     for (u8 i = 0; i < PersonalData->nameLen; i++)
         WifiData->hostPlayerName[i] = PersonalData->name[i];
 
-
     body_size += sizeof(FieVendorNintendo);
 
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader) +
+        body_size + // Actual size of the data in the memory block
+        4; // FCS
+
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    tx->tx_length = frame_size - sizeof(Wifi_TxHeader);
+
     // Send frame to the ARM7
+    // ----------------------
 
-    tx->tx_length = sizeof(IEEE_MgtFrameHeader) + body_size + 4; // FCS
+    int oldIME = enterCriticalSection();
 
-    size_t required_buffer_size = sizeof(Wifi_TxHeader) + tx->tx_length;
-    if (required_buffer_size > MAC_BEACON_SIZE)
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
+    {
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
+    }
 
-    int write_idx = WifiData->txbufWrite;
+    u32 write_idx = alloc_idx;
 
-    Wifi_TxBufferWrite(write_idx * 2, hdr_size + body_size, data);
-    write_idx += (hdr_size + body_size + 1) / 2; // Round up to a halfword
-    if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-        write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    u8 *txbufData = (u8 *)WifiData->txbufData;
 
-    WifiData->txbufWrite = write_idx; // Update FIFO out pos, done sending packet.
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
 
-    // That's all!
+    // Data
+    // ----
+
+    memcpy(txbufData + write_idx, &data,
+           sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader) + body_size);
+    write_idx += sizeof(Wifi_TxHeader) + sizeof(IEEE_MgtFrameHeader) + body_size;
+
+    // FCS
+    // ---
+
+    write_idx += 4;
+
+    // Done
+    // ----
+
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
+    WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_BEACON);
+
+    leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += hdr_size + body_size;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += frame_size;
 
     Wifi_CallSyncHandler();
 

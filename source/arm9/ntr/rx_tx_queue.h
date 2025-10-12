@@ -8,9 +8,6 @@
 
 #include <nds/ndstypes.h>
 
-// Returns the number of bytes available in the TX buffer.
-u32 Wifi_TxBufferBytesAvailable(void);
-
 // Start and length are specified in bytes.
 //
 // The base address must be aligned to 16 bits.

@@ -86,6 +86,7 @@ static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, size_t datalen)
         return 0;
 
     // TODO: Check this doesn't go over MAC_TXBUF_END_OFFSET
+    // TODO: Use DMA
 
     for (size_t i = 0; i < hwords; i++)
         wifi_tx_queue[i] = data[i];
@@ -143,83 +144,62 @@ int Wifi_TxArm7QueueAdd(u16 *data, int datalen)
     }
 }
 
-// It returns a halfword. The offset is in bytes from the start of the first
-// packet in the queue.
-static int Wifi_TxArm9BufCheck(s32 offset)
-{
-    offset = WifiData->txbufRead + (offset / 2);
-    if (offset >= WIFI_TXBUFFER_SIZE / 2)
-        offset -= WIFI_TXBUFFER_SIZE / 2;
-
-    return WifiData->txbufData[offset];
-}
-
-// It writes a halfword. The offset is in bytes from the start of the first
-// packet in the queue.
-static void Wifi_TxArm9BufWrite(s32 offset, u16 data)
-{
-    offset = WifiData->txbufRead + (offset / 2);
-    if (offset >= WIFI_TXBUFFER_SIZE / 2)
-        offset -= WIFI_TXBUFFER_SIZE / 2;
-
-    WifiData->txbufData[offset] = data;
-}
-
 // Copies data from the ARM9 TX buffer to MAC RAM and updates stats. It
 // doesn't start the transfer because the header still requires some fields to
 // be filled in.
+//
+// Important: This only copies one packet!
 static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
 {
-    int packetlen = Wifi_TxArm9BufCheck(HDR_TX_IEEE_FRAME_SIZE);
-    // Length to be copied, rounded up to a halfword
-    int length = (packetlen + HDR_TX_SIZE - 4 + 1) / 2;
+    int ret = 0;
 
-    int max = WifiData->txbufWrite - WifiData->txbufRead;
-    if (max < 0)
-        max += WIFI_TXBUFFER_SIZE / 2;
-    if (max < length)
-        return 0;
+    const u8 *txbufData = (const u8 *)WifiData->txbufData;
 
-    // The FCS doesn't have to be copied, but it needs to fit in the buffer
-    // because the WiFi hardware edits it.
-    size_t required_buffer_size = length + 4;
-    if (macbase + required_buffer_size > buffer_end)
-        return 0;
+    int oldIME = enterCriticalSection();
 
-    // TODO: Do we need to check that this code isn't interrupted?
-    int read_idx = WifiData->txbufRead;
-    while (length > 0)
+    u32 read_idx = WifiData->txbufRead;
+
+    assert((read_idx & 3) == 0);
+
+    // Read packet size and remove the packet type flags. We know that this
+    // isn't a WIFI_SIZE_WRAP mark because this has already been checked in
+    // Wifi_TxArm9QueueFlush().
+    size_t size = read_u32(txbufData + read_idx) & WFLAG_SEND_SIZE_MASK;
+    read_idx += sizeof(uint32_t);
+
+    if (size <= buffer_end) // The ARM9 includes the space required by the FCS
     {
-        int seglen = length;
+        const u16 *source = (const u16 *)(txbufData + read_idx);
+        size_t halfwords = (size + 1) >> 1; // Halfwords, rounded up
 
-        if (read_idx + seglen > WIFI_TXBUFFER_SIZE / 2)
-            seglen = WIFI_TXBUFFER_SIZE / 2 - read_idx;
-
-        length -= seglen;
-        while (seglen--)
+        // TODO: Use DMA here
+        while (halfwords--)
         {
-            W_MACMEM(macbase) = WifiData->txbufData[read_idx++];
+            // MAC RAM can't be accessed in 8-bit units
+            W_MACMEM(macbase) = *source++;
             macbase += 2;
         }
 
-        if (read_idx >= WIFI_TXBUFFER_SIZE / 2)
-            read_idx -= WIFI_TXBUFFER_SIZE / 2;
+        read_idx += round_up_32(size);
+
+        WifiData->stats[WSTAT_TXPACKETS]++;
+        WifiData->stats[WSTAT_TXBYTES] += size;
+        WifiData->stats[WSTAT_TXDATABYTES] += size;
+
+        ret = size;
     }
+    else
+    {
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+    }
+
+    assert(read_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufRead = read_idx;
 
-    WifiData->stats[WSTAT_TXPACKETS]++;
-    WifiData->stats[WSTAT_TXBYTES] += packetlen + HDR_TX_SIZE - 4;
-    WifiData->stats[WSTAT_TXDATABYTES] += packetlen - 4;
+    leaveCriticalSection(oldIME);
 
-    return packetlen;
-}
-
-static bool Wifi_TxArm9QueueIsEmpty(void)
-{
-    if (WifiData->txbufRead == WifiData->txbufWrite)
-        return true;
-
-    return false;
+    return ret;
 }
 
 static int Wifi_TxArm9QueueFlushByLoc3(void)
@@ -363,15 +343,22 @@ static int Wifi_TxArm9QueueFlushByReply(void)
 
 int Wifi_TxArm9QueueFlush(void)
 {
+    u32 status = read_u32(((u8*)WifiData->txbufData) + WifiData->txbufRead);
+
     // If there is no data in the ARM9 queue, exit
-    if (Wifi_TxArm9QueueIsEmpty())
+    if (status == 0)
         return 0;
 
-    // The status field is used by the ARM9 to tell the ARM7 if the packet needs
-    // to be handled in a special way. Also, it is needed to Set it to 0 before
-    // handling the packet.
-    u16 status = Wifi_TxArm9BufCheck(HDR_TX_STATUS);
-    Wifi_TxArm9BufWrite(HDR_TX_STATUS, 0);
+    // If there is a wrap marker there is a new packet at the beginning of the
+    // circular buffer.
+    if (status == WIFI_SIZE_WRAP)
+    {
+        WifiData->txbufRead = 0;
+        status = read_u32(((u8*)WifiData->txbufData) + WifiData->txbufRead);
+    }
+
+    // The status field is also used by the ARM9 to tell the ARM7 if the packet
+    // needs to be handled in a special way.
 
     if (status & WFLAG_SEND_AS_REPLY)
     {
@@ -414,7 +401,7 @@ int Wifi_TxArm9QueueFlush(void)
             W_TX_RETRYLIMIT = 0x0707;
             return Wifi_TxArm9QueueFlushByCmd();
         }
-        else
+        else // if (status & WFLAG_SEND_AS_DATA)
         {
             return Wifi_TxArm9QueueFlushByLoc3();
         }

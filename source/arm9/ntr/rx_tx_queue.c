@@ -15,116 +15,118 @@
 // TX functions
 // ============
 
-u32 Wifi_TxBufferBytesAvailable(void)
-{
-    s32 size = WifiData->txbufRead - WifiData->txbufWrite - 1;
-    if (size < 0)
-        size += WIFI_TXBUFFER_SIZE / 2;
-
-    return size * 2;
-}
-
-void Wifi_TxBufferWrite(u32 base, u32 size_bytes, const void *src)
-{
-    sassert((base & 1) == 0, "Unaligned base address");
-
-    const u16 *in = src;
-
-    // Convert to halfwords
-    base = base / 2;
-    size_t write_halfwords = (size_bytes + 1) / 2; // Round up
-
-    while (write_halfwords > 0)
-    {
-        size_t writelen = write_halfwords;
-        if (writelen > (WIFI_TXBUFFER_SIZE / 2) - base)
-            writelen = (WIFI_TXBUFFER_SIZE / 2) - base;
-
-        write_halfwords -= writelen;
-
-        while (writelen)
-        {
-            WifiData->txbufData[base] = *in;
-            in++;
-            base++;
-            writelen--;
-        }
-
-        base = 0;
-    }
-}
-
 // Length specified in bytes.
-int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src)
+int Wifi_RawTxFrame(size_t data_size, u16 rate, const void *data_src)
 {
-    size_t sizeneeded = datalen + HDR_TX_SIZE + 1;
-    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(Wifi_TxHeader) +
+        data_size + // Actual size of the data in the memory block
+        4; // FCS
+
+    // Size in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
     {
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
     }
 
-    Wifi_TxHeader txh = { 0 };
+    u32 write_idx = alloc_idx;
 
-    txh.tx_rate   = rate;
-    txh.tx_length = datalen + 4; // FCS
+    u8 *txbufData = (u8 *)WifiData->txbufData;
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
 
-    int write_idx = WifiData->txbufWrite;
-    {
-        Wifi_TxBufferWrite(write_idx * 2, sizeof(txh), &txh);
+    // Generate frame
 
-        write_idx += sizeof(txh) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    Wifi_TxHeader frame = { 0 };
 
-        Wifi_TxBufferWrite(write_idx * 2, datalen, src);
+    frame.tx_rate   = rate;
+    frame.tx_length = frame_size - sizeof(Wifi_TxHeader);
 
-        write_idx += (datalen + 1) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+    memcpy(txbufData + write_idx, &frame, sizeof(frame));
+    write_idx += sizeof(frame);
+
+    // Data
+    // ----
+
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
+
+    // FCS
+    // ---
+
+    write_idx += 4;
+
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_DATA);
 
     leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += data_size;
 
     Wifi_CallSyncHandler();
 
     return 0;
 }
 
-int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
+int Wifi_MultiplayerHostCmdTxFrame(const void *data_src, size_t data_size)
 {
-    // Calculate size of IEEE frame (add client bits and client time)
-    size_t ieee_size = HDR_DATA_MAC_SIZE + 2 + 2 + datalen + 4;
-    if (ieee_size > WifiData->curCmdDataSize)
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(TxMultiplayerHostIeeeDataFrame) +
+        data_size + // Actual size of the data in the memory block
+        4; // FCS
+
+    // Size in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
     {
-        // This packet is bigger than what is advertised in beacon frames
+        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
     }
 
-    // Add TX header and round up to 2 bytes
-    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
-    if (sizeneeded > Wifi_TxBufferBytesAvailable())
-    {
-        // The packet won't fit in the ARM9->ARM7 circular buffer
-        WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
-        return -1;
-    }
+    u32 write_idx = alloc_idx;
+
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
 
     // Generate frame
 
     TxMultiplayerHostIeeeDataFrame frame = { 0 };
 
-    frame.tx.enable_flags = WFLAG_SEND_AS_CMD; // Cleared by the ARM7
-    //frame.tx.client_bits = 0; // Filled by ARM7
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
-    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+    frame.tx.tx_length = frame_size - sizeof(Wifi_TxHeader);
 
     frame.ieee.frame_control = TYPE_DATA_CF_POLL | FC_FROM_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
@@ -133,69 +135,85 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen)
     Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->MacAddr);
     frame.ieee.seq_ctl = 0;
 
-    // Multiplayer data
-
     //frame.client_time = 0; // Filled by ARM7
     //frame.client_bits = 0;
 
-    // Write packet to the circular buffer
+    memcpy(txbufData + write_idx, &frame, sizeof(frame));
+    write_idx += sizeof(frame);
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    // Data
+    // ----
 
-    int write_idx = WifiData->txbufWrite;
-    {
-        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
 
-        write_idx += sizeof(frame) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // FCS
+    // ---
 
-        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
+    write_idx += 4;
 
-        write_idx += (datalen + 1) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_CMD);
 
     leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += data_size;
 
     Wifi_CallSyncHandler();
 
     return 0;
 }
 
-int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
+int Wifi_MultiplayerClientReplyTxFrame(const void *data_src, size_t data_size)
 {
-    // Calculate size of IEEE frame (add client AID)
-    size_t ieee_size = HDR_DATA_MAC_SIZE + 1 + datalen + 4;
-    if (ieee_size > WifiData->curReplyDataSize)
-    {
-        // This packet is bigger than what is advertised in beacon frames
-        return -1;
-    }
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(TxMultiplayerClientIeeeDataFrame) +
+        data_size + // Actual size of the data in the memory block
+        4; // FCS
 
-    // Add TX header and round up to 2 bytes
-    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
-    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    // Size in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
     {
-        // The packet won't fit in the ARM9->ARM7 circular buffer
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
     }
 
-    // Generate frame
+    u32 write_idx = alloc_idx;
+
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
+
+    // Hardware TX header + IEEE header + Client info
+    // ----------------------------------------------
 
     TxMultiplayerClientIeeeDataFrame frame = { 0 };
 
-    frame.tx.enable_flags = WFLAG_SEND_AS_REPLY; // Cleared by the ARM7
-    //frame.tx.client_bits = 0; // Filled by ARM7
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
-    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+    frame.tx.tx_length = frame_size - sizeof(Wifi_TxHeader);
 
     frame.ieee.frame_control = TYPE_DATA_CF_ACK | FC_TO_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
@@ -208,62 +226,85 @@ int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen)
 
     frame.client_aid = WifiData->clients.curClientAID;
 
-    // Write packet to the circular buffer
+    memcpy(txbufData + write_idx, &frame, sizeof(frame));
+    write_idx += sizeof(frame);
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    // Data
+    // ----
 
-    int write_idx = WifiData->txbufWrite;
-    {
-        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
 
-        write_idx += sizeof(frame) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // FCS
+    // ---
 
-        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
+    write_idx += 4;
 
-        write_idx += (datalen + 1) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_REPLY);
 
     leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += data_size;
 
     Wifi_CallSyncHandler();
 
     return 0;
 }
 
-int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datalen)
+int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data_src, size_t data_size)
 {
-    // Calculate size of IEEE frame
-    size_t ieee_size = HDR_DATA_MAC_SIZE + datalen + 4;
+    u16 client_macaddr[3];
+    if (!Wifi_MultiplayerClientGetMacFromAID(aid, &client_macaddr))
+        return -1;
 
-    // Add TX header and round up to 2 bytes
-    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
-    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(TxIeeeDataFrame) +
+        data_size + // Actual size of the data in the memory block
+        4; // FCS
+
+    // Size in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
     {
-        // The packet won't fit in the ARM9->ARM7 circular buffer
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
     }
 
-    u16 client_macaddr[3];
+    u32 write_idx = alloc_idx;
 
-    if (!Wifi_MultiplayerClientGetMacFromAID(aid, &client_macaddr))
-        return -1;
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
 
     // Generate frame
 
     TxIeeeDataFrame frame = { 0 };
 
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
-    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+    frame.tx.tx_length = frame_size - sizeof(Wifi_TxHeader);
 
     frame.ieee.frame_control = TYPE_DATA | FC_FROM_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
@@ -272,57 +313,82 @@ int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datal
     Wifi_CopyMacAddr(frame.ieee.addr_3, WifiData->MacAddr);
     frame.ieee.seq_ctl = 0;
 
-    // Write packet to the circular buffer
+    memcpy(txbufData + write_idx, &frame, sizeof(frame));
+    write_idx += sizeof(frame);
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    // Data
+    // ----
 
-    int write_idx = WifiData->txbufWrite;
-    {
-        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
 
-        write_idx += sizeof(frame) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // FCS
+    // ---
 
-        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
+    write_idx += 4;
 
-        write_idx += (datalen + 1) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_DATA);
 
     leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += data_size;
 
     Wifi_CallSyncHandler();
 
     return 0;
 }
 
-int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
+int Wifi_MultiplayerClientToHostDataTxFrame(const void *data_src, size_t data_size)
 {
-    // Calculate size of IEEE frame (add the 1 byte AID)
-    size_t ieee_size = HDR_DATA_MAC_SIZE + 1 + datalen + 4;
+    // Total size to add to the buffer
+    size_t frame_size =
+        sizeof(TxMultiplayerClientIeeeDataFrame) +
+        data_size + // Actual size of the data in the memory block
+        4; // FCS
 
-    // Add TX header and round up to 2 bytes
-    size_t sizeneeded = (sizeof(Wifi_TxHeader) + ieee_size + 1) & ~1;
-    if (sizeneeded > Wifi_TxBufferBytesAvailable())
+    // Size in the circular buffer
+    size_t total_size = sizeof(u32) + round_up_32(frame_size) + sizeof(u32);
+
+    int oldIME = enterCriticalSection();
+
+    int alloc_idx = Wifi_TxBufferAllocBuffer(total_size);
+    if (alloc_idx == -1)
     {
-        // The packet won't fit in the ARM9->ARM7 circular buffer
         WifiData->stats[WSTAT_TXQUEUEDREJECTED]++;
+        leaveCriticalSection(oldIME);
         return -1;
     }
 
-    // Generate frame
+    u32 write_idx = alloc_idx;
+
+    u8 *txbufData = (u8 *)WifiData->txbufData;
+
+    // Skip writing the size until we've finished the packet
+    u32 size_idx = write_idx;
+    write_idx += sizeof(u32);
+
+    // Hardware TX header + IEEE header + Client info
+    // ----------------------------------------------
 
     TxMultiplayerClientIeeeDataFrame frame = { 0 };
 
     frame.tx.tx_rate = WIFI_TRANSFER_RATE_2MBPS; // Always 2 Mb/s
-    frame.tx.tx_length = sizeof(frame) - sizeof(frame.tx) + datalen + 4;
+    frame.tx.tx_length = frame_size - sizeof(Wifi_TxHeader);
 
     frame.ieee.frame_control = TYPE_DATA | FC_TO_DS;
     //frame.ieee.duration = 0; // Filled by ARM7
@@ -335,31 +401,40 @@ int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen)
 
     frame.client_aid = WifiData->clients.curClientAID;
 
-    // Write packet to the circular buffer
+    memcpy(txbufData + write_idx, &frame, sizeof(frame));
+    write_idx += sizeof(frame);
 
-    // TODO: Replace this by a mutex?
-    int oldIME = enterCriticalSection();
+    // Data
+    // ----
 
-    int write_idx = WifiData->txbufWrite;
-    {
-        Wifi_TxBufferWrite(write_idx * 2, sizeof(frame), &frame);
+    memcpy(txbufData + write_idx, data_src, data_size);
+    write_idx += data_size;
 
-        write_idx += sizeof(frame) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
+    // FCS
+    // ---
 
-        Wifi_TxBufferWrite(write_idx * 2, datalen, data);
+    write_idx += 4;
 
-        write_idx += (datalen + 1) / 2;
-        if (write_idx >= (WIFI_TXBUFFER_SIZE / 2))
-            write_idx -= WIFI_TXBUFFER_SIZE / 2;
-    }
+    // Done
+    // ----
+
+    // Mark the next block as empty, but don't move pointer so that the size of
+    // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
+    write_u32(txbufData + write_idx, 0);
+
+    assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
+
     WifiData->txbufWrite = write_idx;
+
+    // Now that the packet is finished, write real size of data without padding
+    // or the size of the size tags
+    write_u32(txbufData + size_idx, frame_size | WFLAG_SEND_AS_DATA);
 
     leaveCriticalSection(oldIME);
 
     WifiData->stats[WSTAT_TXQUEUEDPACKETS]++;
-    WifiData->stats[WSTAT_TXQUEUEDBYTES] += sizeneeded;
+    WifiData->stats[WSTAT_TXQUEUEDBYTES] += data_size;
 
     Wifi_CallSyncHandler();
 

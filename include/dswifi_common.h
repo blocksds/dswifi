@@ -77,6 +77,11 @@ enum WEPMODES
     WEPMODE_40BIT        = WEPMODE_64BIT, ///< Compatibility define
 };
 
+/// 1 Mbit/s transfer rate define in NDS mode.
+#define WIFI_TRANSFER_RATE_1MBPS    0x0A
+/// 2 Mbit/s transfer rate define in NDS mode.
+#define WIFI_TRANSFER_RATE_2MBPS    0x14
+
 /// Types of encryption used in an Access Point.
 typedef enum
 {

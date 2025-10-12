@@ -609,7 +609,7 @@ typedef void (*WifiFromClientPacketHandler)(Wifi_MPPacketType, int, int, int);
 ///
 /// @return
 ///     On success it returns 0, else it returns a negative value.
-int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
+int Wifi_MultiplayerHostCmdTxFrame(const void *data_src, size_t data_size);
 
 /// Prepares a multiplayer client reply frame to be sent.
 ///
@@ -623,15 +623,15 @@ int Wifi_MultiplayerHostCmdTxFrame(const void *data, u16 datalen);
 ///     If there is a pre-existing packet that hasn't been sent to the host yet,
 ///     it will be replaced by the new one.
 ///
-/// @param data
+/// @param data_src
 ///     Pointer to the data to be sent.
-/// @param datalen
+/// @param data_size
 ///     Size of the data in bytes. It can go up to the size defined when calling
 ///     Wifi_MultiplayerHostMode() and Wifi_MultiplayerClientMode().
 ///
 /// @return
 ///     On success it returns 0, else it returns a negative value.
-int Wifi_MultiplayerClientReplyTxFrame(const void *data, u16 datalen);
+int Wifi_MultiplayerClientReplyTxFrame(const void *data_src, size_t data_size);
 
 /// Set a handler on a client console for packets received from the host.
 ///
@@ -656,14 +656,14 @@ void Wifi_MultiplayerFromClientSetPacketHandler(WifiFromClientPacketHandler func
 ///
 /// @param aid
 ///     Association ID of the client that will receive the packet.
-/// @param data
+/// @param data_src
 ///     Pointer to the data to be sent.
-/// @param datalen
+/// @param data_size
 ///     Size of the data in bytes.
 ///
 /// @return
 ///     On success it returns 0, else it returns a negative value.
-int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datalen);
+int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data_src, size_t data_size);
 
 /// Sends a data frame to the host.
 ///
@@ -674,14 +674,14 @@ int Wifi_MultiplayerHostToClientDataTxFrame(int aid, const void *data, u16 datal
 /// packet handler for packets sent with Wifi_MultiplayerClientToHostDataTxFrame().
 /// They will be received with type WIFI_MPTYPE_DATA.
 ///
-/// @param data
+/// @param data_src
 ///     Pointer to the data to be sent.
-/// @param datalen
+/// @param data_size
 ///     Size of the data in bytes.
 ///
 /// @return
 ///     On success it returns 0, else it returns a negative value.
-int Wifi_MultiplayerClientToHostDataTxFrame(const void *data, u16 datalen);
+int Wifi_MultiplayerClientToHostDataTxFrame(const void *data_src, size_t data_size);
 
 /// @}
 /// @defgroup dswifi9_ip Utilities related to Internet access.
@@ -759,18 +759,18 @@ typedef void (*WifiPacketHandler)(int, int);
 ///     you need to make sure that your data is prefixed by a valid header
 ///     before calling this function.
 ///
-/// @param datalen
+/// @param data_size
 ///     The length in bytes of the frame to send from beginning of 802.11 header
 ///     to end, but not including CRC.
 /// @param rate
-///     The rate to transmit at (Specified as mbits/10, 1mbit=0x000A,
-///     2mbit=0x0014)
-/// @param src
+///     The rate to transmit at (WIFI_TRANSFER_RATE_1MBPS or
+///     WIFI_TRANSFER_RATE_2MBPS).
+/// @param data_src
 ///     Pointer to the data to send (should be halfword-aligned).
 ///
 /// @return
 ///     0 on success (not enough space in queue), -1 on error.
-int Wifi_RawTxFrame(u16 datalen, u16 rate, const void *src);
+int Wifi_RawTxFrame(size_t data_size, u16 rate, const void *data_src);
 
 /// Set a handler to process all raw incoming packets.
 ///
