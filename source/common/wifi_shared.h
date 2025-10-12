@@ -232,14 +232,11 @@ typedef struct WIFI_MAINSTRUCT
     u32 rxbufRead;  // And we will read starting from this entry in rxbufData[]
     ALIGN(4) u8 rxbufData[WIFI_RXBUFFER_SIZE];
 
-    // The variables below are in halfwords in DS mode, and bytes in DSi mode.
-    // TODO: Finish the migration to use bytes
-
     // TX buffer. It is used to send packets from the ARM9 to the ARM7 to be
     // transferred to other devices.
     u32 txbufWrite; // We will write starting from this entry in txbufData[]
     u32 txbufRead;  // And we will read starting from this entry in txbufData[]
-    ALIGN(4) u16 txbufData[WIFI_TXBUFFER_SIZE / 2]; // TODO: Turn into u8
+    ALIGN(4) u8 txbufData[WIFI_TXBUFFER_SIZE];
 
     // Local multiplay information (NTR mode only)
     // ---------------------------
