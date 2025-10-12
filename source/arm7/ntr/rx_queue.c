@@ -45,10 +45,11 @@ static int Wifi_RxArm9QueueAdd(u32 base, int size)
 
     // Write data
     Wifi_MACRead((u16 *)(rxbufData + write_idx), base, 0, size);
-    write_idx += round_up_32(size);
+    write_idx += size;
 
     // Mark the next block as empty, but don't move pointer so that the size of
     // the next block is written here eventually.
+    write_idx = round_up_32(write_idx);
     write_u32(rxbufData + write_idx, 0);
 
     assert(write_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));

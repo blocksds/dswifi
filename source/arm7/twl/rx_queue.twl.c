@@ -38,10 +38,11 @@ int Wifi_TWL_RxAddPacketToQueue(const void *src, size_t size)
 
     // Write data
     memcpy(rxbufData + write_idx, src, size);
-    write_idx += round_up_32(size);
+    write_idx += size;
 
     // Mark the next block as empty, but don't move pointer so that the size of
     // the next block is written here eventually.
+    write_idx = round_up_32(write_idx);
     write_u32(rxbufData + write_idx, 0);
 
     assert(write_idx <= (WIFI_RXBUFFER_SIZE - sizeof(u32)));

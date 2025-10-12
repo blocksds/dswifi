@@ -184,7 +184,7 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
     // need to check that everything fits. Also, we need to ensure that a new
     // size will fit after this packet.
     size_t total_size = sizeof(u32)
-                      + sizeof(tx_header) + round_up_32(data_size)
+                      + round_up_32(sizeof(tx_header) + data_size)
                       + sizeof(u32);
 
     // TODO: Replace this by a mutex?
@@ -208,12 +208,13 @@ TWL_CODE static int Wifi_TWL_TransmitFunctionLink(const void *src, size_t size)
 
     // Write data
     memcpy(txbufData + write_idx, &tx_header, sizeof(tx_header));
-    write_idx += sizeof(tx_header); // This is a multiple of 32 bits
+    write_idx += sizeof(tx_header);
     memcpy(txbufData + write_idx, data_src, data_size);
-    write_idx += round_up_32(data_size); // Pad to 32 bit
+    write_idx += data_size;
 
     // Mark the next block as empty, but don't move pointer so that the size of
     // the next block is written here eventually.
+    write_idx = round_up_32(write_idx); // Pad to 32 bit
     write_u32(txbufData + write_idx, 0);
 
     assert(write_idx <= (WIFI_TXBUFFER_SIZE - sizeof(u32)));
