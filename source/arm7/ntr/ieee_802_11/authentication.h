@@ -8,6 +8,7 @@
 
 #include <nds/ndstypes.h>
 
+#include "common/common_ntr_defs.h"
 #include "common/wifi_shared.h"
 
 int Wifi_SendOpenSystemAuthPacket(void);

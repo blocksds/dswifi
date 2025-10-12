@@ -7,6 +7,7 @@
 
 #include <dswifi_common.h>
 
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 
 // Sent by the host with CMD packets

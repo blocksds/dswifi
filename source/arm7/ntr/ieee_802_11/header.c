@@ -9,6 +9,7 @@
 #include "arm7/ipc.h"
 #include "arm7/ntr/mac.h"
 #include "arm7/ntr/registers.h"
+#include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
 

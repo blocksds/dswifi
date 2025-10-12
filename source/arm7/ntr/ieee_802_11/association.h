@@ -6,6 +6,7 @@
 #ifndef DSWIFI_ARM7_NTR_IEEE_802_11_ASSOCIATION_H__
 #define DSWIFI_ARM7_NTR_IEEE_802_11_ASSOCIATION_H__
 
+#include "common/common_ntr_defs.h"
 #include "common/wifi_shared.h"
 
 // Used when acting as a client

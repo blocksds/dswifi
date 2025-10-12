@@ -5,6 +5,10 @@
 #ifndef DSWIFI_COMMON_NTR_DEFS_H__
 #define DSWIFI_COMMON_NTR_DEFS_H__
 
+#include <assert.h>
+
+#include <nds/ndstypes.h>
+
 // Hardware TX Header (12 bytes)
 // =============================
 
@@ -19,6 +23,17 @@
 
 #define HDR_TX_SIZE             0xC
 
+typedef struct WIFI_TXHEADER {
+    u16 enable_flags;
+    u16 client_bits;
+    u16 countup;
+    u16 beaconfreq;
+    u16 tx_rate;
+    u16 tx_length; // Full IEEE frame size (including checksums) in bytes
+} Wifi_TxHeader;
+
+static_assert(sizeof(Wifi_TxHeader) == 12);
+
 // Hardware RX Header (12 bytes)
 // =============================
 
@@ -31,6 +46,17 @@
 #define HDR_RX_MIN_RSSI         0xB
 
 #define HDR_RX_SIZE             0xC
+
+typedef struct WIFI_RXHEADER {
+    u16 a;
+    u16 b;
+    u16 c;
+    u16 d;
+    u16 byteLength;
+    u16 rssi_;
+} Wifi_RxHeader;
+
+static_assert(sizeof(Wifi_RxHeader) == 12);
 
 // MAC RAM memory map
 // ==================
