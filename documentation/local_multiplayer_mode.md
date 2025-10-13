@@ -217,6 +217,14 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
 }
 ```
 
+Instead of using `Wifi_RxRawReadPacket(base, len, &buffer)` to copy the packet
+to your own buffer you can use `Wifi_RxRawReadPacketPointer(base)`. This returns
+a direct pointer to the data that you can use. However, this points to uncached
+RAM, which is slow to read. It may be faster to copy the whole packet to your
+own buffer in the stack (which is in DTCM, and it's very fast memory). Don't
+convert the uncached pointer to a cached pointer! DSWiFi assumes that all the
+memory in the buffer is uncached and it isn't prepared to manage the cache.
+
 Call this to setup the handler:
 
 ```c

@@ -778,7 +778,11 @@ int Wifi_RawTxFrame(size_t data_size, u16 rate, const void *data_src);
 ///     Pointer to packet handler (see WifiPacketHandler for info).
 void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 
-/// Allows user code to read a packet from within the WifiPacketHandler function.
+/// Allows user code to read a packet from inside a WifiPacketHandler function.
+///
+/// You can also get a pointer to the data with Wifi_RxRawReadPacketPointer().
+/// It's a pointer to uncached RAM, so using that function may not be as fast as
+/// copying the packet information to the stack with Wifi_RxRawReadPacket().
 ///
 /// @param address
 ///     The base address of the packet in the internal buffer.
@@ -787,6 +791,25 @@ void Wifi_RawSetPacketHandler(WifiPacketHandler wphfunc);
 /// @param dst
 ///     Location for the data to be read into.
 void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst);
+
+/// Returns a pointer to read a packet from inside a WifiPacketHandler function.
+///
+/// The returned pointer points to uncached RAM. Reading from this pointer can
+/// be slower than using Wifi_RxRawReadPacket() to copy the packet to a buffer
+/// in the stack, for example.
+///
+/// @warning
+///     Don't convert this uncached pointer to a cached pointer. DSWiFi assumes
+///     that the buffer never requires cache management. Accessing this memory
+///     from a cached mirror can cause corruption when the cached data is
+///     written back to RAM without DSWiFi knowing about it.
+///
+/// @param address
+///     The base address of the packet in the internal buffer.
+///
+/// @return
+///     It returns a pointer that can be used to access the data.
+const void *Wifi_RxRawReadPacketPointer(u32 address);
 
 /// @}
 

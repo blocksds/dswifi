@@ -458,3 +458,8 @@ void Wifi_RxRawReadPacket(u32 address, u32 size, void *dst)
 
     memcpy(dst, (const void *)address, size);
 }
+
+const void *Wifi_RxRawReadPacketPointer(u32 address)
+{
+    return (const void *)address;
+}
