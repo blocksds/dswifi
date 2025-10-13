@@ -5,8 +5,8 @@
 
 // Shared structures to be used by arm9 and arm7
 
-#ifndef DSWIFI_ARM9_WIFI_SHARED_H__
-#define DSWIFI_ARM9_WIFI_SHARED_H__
+#ifndef DSWIFI_COMMON_WIFI_SHARED_H__
+#define DSWIFI_COMMON_WIFI_SHARED_H__
 
 #include <nds.h>
 #include <nds/arm9/cp15_asm.h>
@@ -264,6 +264,9 @@ typedef struct WIFI_MAINSTRUCT
     // initial seeds and such.
     u32 random;
 
+    // End
+    // ---
+
     u8 padding[CACHE_LINE_SIZE]; // See comment at top of struct
 } Wifi_MainStruct;
 
@@ -287,4 +290,4 @@ static inline void write_u32(u8 *ptr, u32 val)
     *(u32 *)ptr = val;
 }
 
-#endif // DSWIFI_ARM9_WIFI_SHARED_H__
+#endif // DSWIFI_COMMON_WIFI_SHARED_H__

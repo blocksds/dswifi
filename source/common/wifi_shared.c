@@ -3,7 +3,7 @@
 // Copyright (C) 2021 Max Thomas
 // Copyright (C) 2025 Antonio Niño Díaz
 
-#include "dswifi_common.h"
+#include <dswifi_common.h>
 
 const char *Wifi_ApSecurityTypeString(Wifi_ApSecurityType type)
 {
