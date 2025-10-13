@@ -19,6 +19,11 @@ Features:
   - It supports direct host <-> client transfers or optimized group transfers.
   - Client connections to the host are handled by the ARM7 automatically.
 
+It uses the following hardware resources:
+
+- ARM9: Hardware timer 3.
+- ARM7: DMA channel 3 in DS mode, NDMA channel 3 in DSi mode.
+
 This library contains code of two other open source libraries:
 
 - [lwIP](https://savannah.nongnu.org/projects/lwip/): It contains the IP stack,

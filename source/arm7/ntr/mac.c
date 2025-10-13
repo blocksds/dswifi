@@ -57,15 +57,28 @@ u16 Wifi_MACReadHWord(u32 MAC_Base, u32 MAC_Offset)
 
 void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length)
 {
-    if (length & 1) // We can only read in blocks of 16 bits
-        length++;
+    MAC_Base += MAC_Offset;
 
     size_t endrange = (W_RXBUF_END & 0x1FFE);
-    int subval      = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
-
-    MAC_Base += MAC_Offset;
     if (MAC_Base >= endrange)
+    {
+        int subval = (W_RXBUF_END & 0x1FFE) - (W_RXBUF_BEGIN & 0x1FFE);
         MAC_Base -= subval;
+    }
+
+#if 1
+    // Reading from register W_RXBUF_RD_DATA returns the value in MAC RAM
+    // pointed by W_RXBUF_RD_ADDR. Then, it autoincrements it. If it reaches
+    // the value of W_RXBUF_END it will reload W_RXBUF_BEGIN automatically, so
+    // it isn't needed to handle it manually.
+    W_RXBUF_RD_ADDR = MAC_Base;
+
+    dmaSetParams(3, (void *)&W_RXBUF_RD_DATA, dest,
+                 DMA_SRC_FIX | DMA_16_BIT | DMA_START_NOW | DMA_ENABLE | ((length + 1) >> 1));
+    while (dmaBusy(3));
+#else
+    if (length & 1) // We can only read in blocks of 16 bits
+        length++;
 
     while (length > 0)
     {
@@ -83,6 +96,7 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length)
 
         MAC_Base -= subval;
     }
+#endif
 }
 
 void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length)
@@ -93,12 +107,22 @@ void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length)
         return;
     }
 
+#if 1
+    // Writing to register W_TXBUF_WR_DATA writes the value to the MAC RAM address
+    // pointed by W_TXBUF_WR_ADDR. Then, it autoincrements it.
+    W_TXBUF_WR_ADDR = MAC_Base;
+
+    dmaSetParams(3, src, (void *)&W_TXBUF_WR_DATA,
+                 DMA_DST_FIX | DMA_16_BIT | DMA_START_NOW | DMA_ENABLE | ((length + 1) >> 1));
+    while (dmaBusy(3));
+#else
     while (length > 0)
     {
         W_MACMEM(MAC_Base) = *(src++);
         MAC_Base += 2;
         length -= 2;
     }
+#endif
 }
 
 void Wifi_MacWriteByte(int address, int value)
