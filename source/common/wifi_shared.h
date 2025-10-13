@@ -261,8 +261,13 @@ typedef struct WIFI_MAINSTRUCT
     u32 stats[NUM_WIFI_STATS];
 
     // Semirandom number updated at the convenience of the ARM7. Used for
-    // initial seeds and such.
-    u32 random;
+    // initial seeds and such. Don't count on it being updated every frame.
+    u32 hardware_rng_seed;
+
+    // The following two values are normally used by each CPU when they
+    // generate random numbers. They are seeded from hardware_rng_seed by the
+    // ARM7. They must never be set to zero.
+    u32 random7, random9;
 
     // End
     // ---

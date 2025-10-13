@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common/random.h"
+
 // Standard library settings
 // =========================
 
@@ -25,7 +27,7 @@
 // Tell lwIP to use the system include for errno
 #define LWIP_ERRNO_STDINCLUDE       1
 
-#define LWIP_RAND()                 ((u32_t)rand())
+#define LWIP_RAND()                 ((u32_t)Wifi_Random())
 
 #define MEM_SIZE                    (128 * 1024)
 

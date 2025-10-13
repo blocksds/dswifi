@@ -12,6 +12,7 @@
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
+#include "common/random.h"
 
 // This returns the size in bytes that have been added to the body due to WEP
 // encryption. The size of the TX and IEEE 802.11 management frame headers is
@@ -44,9 +45,7 @@ size_t Wifi_GenMgtHeader(u8 *data, u16 headerflags)
     {
         u32 *iv_key_id = (u32 *)&(ieee->body[0]);
 
-        // TODO: This isn't done to spec
-        *iv_key_id = ((W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15)) & 0x0FFF)
-                   | (0 << 30); // WEP Key ID
+        *iv_key_id = (Wifi_Random() & 0x0FFF) | (0 << 30); // WEP Key ID
 
         // The body is already 4 bytes in size
         return 4;

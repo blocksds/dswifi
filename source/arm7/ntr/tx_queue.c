@@ -11,6 +11,7 @@
 #include "arm7/ntr/update.h"
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
+#include "common/random.h"
 
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
@@ -221,10 +222,11 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
     {
         int iv_base = ieee_base + HDR_MGT_MAC_SIZE;
 
+        u32 val = Wifi_Random();
+
         // WEP is enabled, fill in the IV.
-        W_MACMEM(iv_base + 0) = W_RANDOM ^ (W_RANDOM << 7) ^ (W_RANDOM << 15);
-        W_MACMEM(iv_base + 2) = ((W_RANDOM ^ (W_RANDOM >> 7)) & 0xFF)
-                              | (0 << 14); // WEP Key ID
+        W_MACMEM(iv_base + 0) = val & 0xFFFF;
+        W_MACMEM(iv_base + 2) = ((val >> 16) & 0xFF) | (0 << 14); // WEP Key ID
     }
 
     // The hardware fills in the duration field for us.

@@ -25,7 +25,7 @@
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
-#include "common/spinlock.h"
+#include "common/random.h"
 
 // Max number of retries when connecting to an Access Point
 #define WIFI_MAX_ASSOC_RETRY 5
@@ -155,7 +155,7 @@ void Wifi_NTR_Update(void)
     };
     const size_t scanlist_size = sizeof(scanlist) / sizeof(scanlist[0]);
 
-    WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
+    Wifi_RandomAddEntropy(W_RANDOM);
     WifiData->stats[WSTAT_ARM7_UPDATES]++;
 
     // check flags, to see if we need to change anything

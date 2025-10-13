@@ -15,6 +15,7 @@
 #include "arm7/ntr/rf.h"
 #include "arm7/ntr/setup.h"
 #include "common/common_ntr_defs.h"
+#include "common/random.h"
 
 void Wifi_NTR_SetWepKey(void *wepkey, int wepmode)
 {
@@ -415,7 +416,7 @@ void Wifi_NTR_Init(void)
     Wifi_BBWrite(REG_MM3218_CCA, 0x00);
     Wifi_BBWrite(REG_MM3218_ENERGY_DETECTION_THRESHOLD, 0x1F);
 
-    WifiData->random ^= (W_RANDOM ^ (W_RANDOM << 11) ^ (W_RANDOM << 22));
+    Wifi_RandomAddEntropy(W_RANDOM);
 
     // Setup WiFi interrupt after we have setup everything else
     irqSet(IRQ_WIFI, Wifi_Interrupt);

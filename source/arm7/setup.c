@@ -2,11 +2,14 @@
 //
 // Copyright (C) 2025 Antonio Niño Díaz
 
+#include <time.h>
+
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
 #include "arm7/ntr/setup.h"
 #include "arm7/twl/setup.h"
+#include "common/random.h"
 
 // Requires the data returned by the ARM9 WiFi init call.
 //
@@ -18,6 +21,8 @@
 void Wifi_Init(void *wifidata)
 {
     WifiData = (Wifi_MainStruct *)wifidata;
+
+    Wifi_RandomAddEntropy(time(NULL));
 
     if (WifiData->reqFlags & WFLAG_REQ_DSI_MODE)
         Wifi_TWL_Init();

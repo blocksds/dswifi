@@ -20,6 +20,7 @@
 #include "arm7/twl/card.h"
 #include "arm7/twl/utils.h"
 #include "common/ieee_defs.h"
+#include "common/random.h"
 
 #define IEEE_CRYPT_TKIP     (0x000FAC02)
 #define IEEE_CRYPT_AES_CCMP (0x000FAC04)
@@ -1044,22 +1045,9 @@ static void data_send_wpa_handshake2(const u8 *dst_bssid, const u8 *src_bssid, u
     putbe16(data_hdr.keylen_be, 0);
     putbe64(data_hdr.replay_counter_be, replay_cnt);
 
-    u8 test_nonce[32] = {0};
-    {
-        // TODO: Use a better randomization system. Note that rand() can't be
-        // used here because it uses TLS.
-        struct timeval tp;
-        gettimeofday(&tp, NULL);
-
-        u32 seed = tp.tv_sec;
-
-        for (size_t i = 0; i < sizeof(test_nonce); i++)
-        {
-            u32 new_seed = seed * 0x3377 + 0xAA55;
-            test_nonce[i] = seed;
-            seed = new_seed;
-        }
-    }
+    u8 test_nonce[32];
+    for (size_t i = 0; i < sizeof(test_nonce); i++)
+        test_nonce[i] = Wifi_Random();
 
     memcpy(data_hdr.wpa_nonce, test_nonce, 32);
     putbe16(data_hdr.wpa_keydata_len_be, 0x16);
