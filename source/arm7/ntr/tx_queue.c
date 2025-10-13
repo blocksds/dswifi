@@ -86,8 +86,6 @@ static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, size_t datalen)
         return 0;
 
     // TODO: Check this doesn't go over MAC_TXBUF_END_OFFSET
-    // TODO: Use DMA
-
     for (size_t i = 0; i < hwords; i++)
         wifi_tx_queue[i] = data[i];
 
@@ -170,15 +168,19 @@ static int Wifi_TxArm9QueueCopyFirstData(s32 macbase, u32 buffer_end)
     if (size <= buffer_end) // The ARM9 includes the space required by the FCS
     {
         const u16 *source = (const u16 *)(txbufData + read_idx);
+
+#if 1
+        Wifi_MACWrite(source, macbase, size);
+#else
         size_t halfwords = (size + 1) >> 1; // Halfwords, rounded up
 
-        // TODO: Use DMA here
         while (halfwords--)
         {
             // MAC RAM can't be accessed in 8-bit units
             W_MACMEM(macbase) = *source++;
             macbase += 2;
         }
+#endif
 
         read_idx += round_up_32(size);
 

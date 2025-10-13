@@ -99,7 +99,7 @@ void Wifi_MACRead(u16 *dest, u32 MAC_Base, u32 MAC_Offset, int length)
 #endif
 }
 
-void Wifi_MACWrite(u16 *src, u32 MAC_Base, int length)
+void Wifi_MACWrite(const u16 *src, u32 MAC_Base, int length)
 {
     if (MAC_Base + length > 0x2000)
     {
