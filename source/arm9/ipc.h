@@ -8,6 +8,12 @@
 
 #include <nds/ndstypes.h>
 
+#include "common/wifi_shared.h"
+
+// Uncached mirror of the WiFi struct. This needs to be used from the ARM9 so
+// that there aren't cache management issues.
+extern volatile Wifi_MainStruct *WifiData;
+
 void Wifi_CallSyncHandler(void);
 
 // Tries to allocate the specified size in bytes in the TX buffer. If there is

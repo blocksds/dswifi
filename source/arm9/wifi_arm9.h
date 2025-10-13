@@ -8,11 +8,7 @@
 
 #include <nds/ndstypes.h>
 
-#include "common/wifi_shared.h"
-
-// Uncached mirror of the WiFi struct. This needs to be used from the ARM9 so
-// that there aren't cache management issues.
-extern volatile Wifi_MainStruct *WifiData;
+#include "arm9/ipc.h"
 
 // Checks for new data from the ARM7 and initiates routing if data is available.
 void Wifi_Update(void);
