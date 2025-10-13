@@ -15,6 +15,9 @@
 static u16 wifi_tx_queue[1024];
 static u16 wifi_tx_queue_len = 0; // Length in halfwords
 
+// Make sure that the biggest packet we can store fits in MAC_TXBUF_END_OFFSET
+static_assert(sizeof(wifi_tx_queue) < MAC_TXBUF_END_OFFSET);
+
 // Returns true if there is an active transfer.
 static bool Wifi_TxLoc3IsBusy(void)
 {
@@ -85,7 +88,6 @@ static int Wifi_TxArm7QueueSetEnqueuedData(u16 *data, size_t datalen)
     if (hwords > sizeof(wifi_tx_queue))
         return 0;
 
-    // TODO: Check this doesn't go over MAC_TXBUF_END_OFFSET
     for (size_t i = 0; i < hwords; i++)
         wifi_tx_queue[i] = data[i];
 
