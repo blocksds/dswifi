@@ -9,6 +9,7 @@
 #include "arm7/ntr/registers.h"
 #include "arm7/ntr/rx_queue.h"
 #include "arm7/ntr/tx_queue.h"
+#include "common/random.h"
 
 void Wifi_Intr_RxEnd(void)
 {
@@ -61,6 +62,8 @@ void Wifi_Interrupt(void)
         REG_IF = IRQ_WIFI;
         return;
     }
+
+    Wifi_RandomAddEntropy(W_RANDOM);
 
     while (1)
     {

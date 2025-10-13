@@ -23,6 +23,7 @@
 #include "arm7/twl/ath/htc.h"
 #include "arm7/twl/ath/mbox.h"
 #include "arm7/twl/ieee/wpa.h"
+#include "common/random.h"
 
 static wifi_card_ctx wlan_ctx = {0};
 
@@ -1024,6 +1025,8 @@ void wifi_card_process_pkts(void)
 
 void wifi_card_irq(void)
 {
+    Wifi_RandomAddEntropy(REG_VCOUNT);
+
     wifi_card_process_pkts();
 
     //wmi_tick(); // TODO

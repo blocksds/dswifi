@@ -8,6 +8,7 @@
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
 #include "common/mac_addresses.h"
+#include "common/random.h"
 #include "common/spinlock.h"
 #include "common/wifi_shared.h"
 
@@ -38,6 +39,13 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
                          Wifi_ApCryptType pair_crypt_type, Wifi_ApAuthType auth_type,
                          bool compatible, Wifi_NintendoVendorInfo *nintendo_info)
 {
+    // Change seed whenever we receive a new beacon packet
+    {
+        const u8 *arr = bssid;
+        u32 seed = arr[3] | (arr[5] << 8) | (arr[6] << 16) | (rssi << 24);
+        Wifi_RandomAddEntropy(seed);
+    }
+
     // Now, check the list of APs that we have found so far. If the AP of this
     // frame is already in the list, store it there. If not, this loop will
     // finish without doing any work, and we will add it to the list later.
