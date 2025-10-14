@@ -26,12 +26,15 @@ typedef uintptr_t   mem_ptr_t;
 #define LWIP_ERR_T  int
 
 // Define (sn)printf formatters for these lwIP types
-#define U16_F PRIu16
-#define S16_F PRId16
-#define X16_F PRIx16
-#define U32_F PRIu32
-#define S32_F PRId32
-#define X32_F PRIx32
+#define U8_F    "u"
+#define S8_F    "d"
+#define X8_F    "02x"
+#define U16_F   "u"
+#define S16_F   "d"
+#define X16_F   "x"
+#define U32_F   "lu"
+#define S32_F   "ld"
+#define X32_F   "lx"
 
 // Compiler hints for packing structures
 #define PACK_STRUCT_FIELD(x)    x

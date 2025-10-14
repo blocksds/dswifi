@@ -19,8 +19,10 @@
 
 #include "lwip/init.h"
 #include "lwip/dhcp.h"
+#include "lwip/dhcp6.h"
 #include "lwip/dns.h"
 #include "lwip/etharp.h"
+#include "lwip/ethip6.h"
 #include "lwip/netif.h"
 #include "lwip/netifapi.h"
 #include "netif/ethernet.h"
@@ -133,7 +135,9 @@ void dswifi_send_data_to_lwip(void *data, u32 len)
 
 err_t dswifi_init_fn(struct netif *netif)
 {
-    netif->output = etharp_output; // High level output callback
+    netif->output = etharp_output; // High level output callbacks
+    netif->output_ip6 = ethip6_output;
+
     netif->linkoutput = dswifi_link_output; // Low level output callback
 
     netif->mtu = 1300; // GBATEK mentions that this is 1500 max
@@ -222,8 +226,9 @@ static void wifi_set_manual_ip(u32 ip_addr, u32 netmask, u32 gw)
         return;
 
     netifapi_dhcp_stop(&dswifi_netif);
+    dhcp6_disable(&dswifi_netif);
 
-    ip_addr_t new_ip_addr, new_netmask, new_gateway;
+    ip4_addr_t new_ip_addr, new_netmask, new_gateway;
 
     new_ip_addr.addr = ip_addr;
     new_netmask.addr = netmask;
@@ -242,8 +247,7 @@ static void wifi_set_dns(int index, u32 addr)
     if (!wifi_lwip_enabled)
         return;
 
-    ip_addr_t ip;
-    ip.addr = addr;
+    ip_addr_t ip = IPADDR4_INIT(addr);
 
     dns_setserver(index, &ip);
 }
@@ -256,7 +260,10 @@ u32 wifi_get_ip(void)
     //if (dhcp_supplied_address(&dswifi_netif) == 0)
     //    return INADDR_NONE;
 
-    return dswifi_netif.ip_addr.addr;
+    if (!IP_IS_V4_VAL(dswifi_netif.ip_addr))
+        return INADDR_NONE;
+
+    return dswifi_netif.ip_addr.u_addr.ip4.addr;
 }
 
 u32 wifi_get_gateway(void)
@@ -264,7 +271,10 @@ u32 wifi_get_gateway(void)
     if (!wifi_lwip_enabled)
         return INADDR_NONE;
 
-    return dswifi_netif.gw.addr;
+    if (!IP_IS_V4_VAL(dswifi_netif.gw))
+        return INADDR_NONE;
+
+    return dswifi_netif.gw.u_addr.ip4.addr;
 }
 
 u32 wifi_get_netmask(void)
@@ -272,7 +282,10 @@ u32 wifi_get_netmask(void)
     if (!wifi_lwip_enabled)
         return INADDR_NONE;
 
-    return dswifi_netif.netmask.addr;
+    if (!IP_IS_V4_VAL(dswifi_netif.netmask))
+        return INADDR_NONE;
+
+    return dswifi_netif.netmask.u_addr.ip4.addr;
 }
 
 u32 wifi_get_dns(int index)
@@ -281,10 +294,10 @@ u32 wifi_get_dns(int index)
         return INADDR_NONE;
 
     const ip_addr_t *ip = dns_getserver(index);
-    if (ip->addr == 0)
+    if (!IP_IS_V4_VAL(*ip))
         return INADDR_NONE;
 
-    return ip->addr;
+    return ip->u_addr.ip4.addr;
 }
 
 u32 Wifi_GetIP(void)
@@ -347,6 +360,9 @@ int wifi_lwip_init(void)
         return -1;
     }
 
+    // Generate an IPv6 address directly from the MAC address
+    netif_create_ip6_linklocal_address(&dswifi_netif, true);
+
     netif_set_default(&dswifi_netif);
 
     netif_set_up(&dswifi_netif);
@@ -388,7 +404,10 @@ void wifi_netif_set_up(void)
     netifapi_netif_set_link_up(&dswifi_netif);
 
     if (dswifi_use_dhcp)
+    {
         netifapi_dhcp_start(&dswifi_netif);
+        dhcp6_enable_stateless(&dswifi_netif);
+    }
 }
 
 void wifi_netif_set_down(void)

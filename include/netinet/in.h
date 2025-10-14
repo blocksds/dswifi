@@ -57,6 +57,8 @@ struct sockaddr_in6 {
 #define INET_ADDRSTRLEN     IP4ADDR_STRLEN_MAX
 #define INET6_ADDRSTRLEN    IP6ADDR_STRLEN_MAX
 
+extern const struct in6_addr in6addr_any;
+
 // actually from arpa/inet.h - but is included through netinet/in.h
 in_addr_t inet_addr(const char *cp);
 int inet_aton(const char *cp, struct in_addr *inp);

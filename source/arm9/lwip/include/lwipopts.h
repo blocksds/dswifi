@@ -61,10 +61,13 @@
 
 // Only enable IPv4 for now
 #define LWIP_IPV4                   1
-#define LWIP_IPV6                   0
+#define LWIP_IPV6                   1
+
+#define LWIP_IPV6_AUTOCONFIG        1
 
 #define LWIP_IGMP                   1
 #define LWIP_ICMP                   1
+#define LWIP_ICMP6                  1
 
 #define LWIP_ACD                    1
 #define LWIP_BROADCAST_PING         1
@@ -82,6 +85,9 @@
 // Enable DHCP
 #define LWIP_DHCP                   1
 #define LWIP_ARP                    1
+
+#define LWIP_IPV6_DHCP6             1
+#define LWIP_IPV6_DHCP6_STATELESS   1
 
 #define LWIP_DHCP_DOES_ACD_CHECK    0
 #define LWIP_NETIF_HOSTNAME         1
@@ -109,6 +115,8 @@
 // ============
 
 #define LWIP_DNS                    1
+
+#define LWIP_DNS_ADDRTYPE_DEFAULT   LWIP_DNS_ADDRTYPE_IPV6_IPV4
 
 // Socket settings
 // ===============
@@ -174,6 +182,7 @@
 #define ICMP_DEBUG                  LWIP_DBG_OFF
 #define INET_DEBUG                  LWIP_DBG_OFF
 #define IP_DEBUG                    LWIP_DBG_OFF
+#define IP6_DEBUG                   LWIP_DBG_OFF
 #define IP_REASS_DEBUG              LWIP_DBG_OFF
 #define RAW_DEBUG                   LWIP_DBG_OFF
 #define MEM_DEBUG                   LWIP_DBG_OFF
@@ -193,6 +202,7 @@
 #define PPP_DEBUG                   LWIP_DBG_OFF
 #define SLIP_DEBUG                  LWIP_DBG_OFF
 #define DHCP_DEBUG                  LWIP_DBG_OFF
+#define DHCP6_DEBUG                 LWIP_DBG_OFF
 #define DNS_DEBUG                   LWIP_DBG_OFF
 
 #endif // __LWIPOPTS_H__
