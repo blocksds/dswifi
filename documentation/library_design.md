@@ -58,11 +58,9 @@ buffer (at the moment, this buffer can only hold one packet).
 
 When transmitting packets from the ARM9 they are saved in a circular buffer in
 shared memory between the ARM7 and ARM9. Then, the ARM9 sends a sync FIFO
-message to the ARM7 to notify it that there are packets in that buffer.
-
-In DS mode packets wrap around when the end of the circular buffer is reached.
-In DSi mode if a packet doesn't fit at the end of the buffer it will be copied
-in one piece to the beginning of the buffer.
+message to the ARM7 to notify it that there are packets in that buffer. If a
+packet doesn't fit at the end of the buffer it will be copied in one piece to
+the beginning of the buffer so that it doesn't need to be reconstructed later.
 
 The ARM7 has priority transmitting packets over the ARM9. If there is any packet
 in the ARM7 queue, that one will be transmitted over the ones waiting to be
@@ -84,8 +82,8 @@ starts handling them.
 
 Some packets are handled directly by the ARM7 and they are never sent to the
 ARM9 (authentication and beacon packets, for example). Data packets are saved to
-a circular buffer in shared RAM between ARM7 and ARM9. Same as TX packets, only
-DS mode packets wrap around. DSi packets are copied in one piece.
+a circular buffer in shared RAM between ARM7 and ARM9. The buffer contains
+undivided packets like in the TX buffer.
 
 Whenever a packet is saved to this buffer, the ARM7 sends a sync FIFO message to
 the ARM9 to notify it. Eventually, the ARM9 will check the buffer and handle it.
