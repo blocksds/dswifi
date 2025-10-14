@@ -262,8 +262,9 @@ static void Wifi_NTR_SendPacketToLwip(u8 *packet, size_t size)
         // (Receiver Address / Destination Address), which is the final
         // recipient of the frame. Only accept messages addressed to our MAC
         // address or to all devices.
-        if (!(Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr) ||
-            Wifi_CmpMacAddr(ieee->addr_1, (void *)&wifi_broadcast_addr)))
+        bool same_mac = Wifi_CmpMacAddr(ieee->addr_1, WifiData->MacAddr);
+        bool is_multicast = ((const u8*)ieee->addr_1)[0] & BIT(0);
+        if (!(same_mac || is_multicast))
             return;
 
         // Check LLC/SNAP header.
