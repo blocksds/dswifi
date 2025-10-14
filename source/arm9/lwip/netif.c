@@ -148,7 +148,7 @@ err_t dswifi_init_fn(struct netif *netif)
 
     netif->flags = NETIF_FLAG_BROADCAST |
                    NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET |
-                   NETIF_FLAG_IGMP | NETIF_FLAG_MLD6 | NETIF_FLAG_LINK_UP;
+                   NETIF_FLAG_IGMP | NETIF_FLAG_MLD6 | NETIF_FLAG_UP;
 
     return ERR_OK;
 }
