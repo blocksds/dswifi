@@ -94,9 +94,9 @@ void Wifi_RxQueueFlush(void)
         // We need to pass the hardware header to this function, not just the
         // IEEE 802.11 header.
         int type = Wifi_ProcessReceivedFrame(base, full_packetlen);
-        const int reqPacketFlags = WFLAG_PACKET_ALL & ~WFLAG_PACKET_BEACON;
-
-        if ((type & reqPacketFlags) || (WifiData->reqFlags & WFLAG_REQ_PROMISC))
+        // Normally, only send data packets to the ARM9. If promiscuous mode is
+        // enabled, send everything.
+        if ((type & WFLAG_PACKET_DATA) || (WifiData->reqFlags & WFLAG_REQ_PROMISC))
         {
             // If the packet type is requested by the ARM9 (or promiscous mode
             // is enabled), forward it to the ARM9 RX queue. In this case we can
