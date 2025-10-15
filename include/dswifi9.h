@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+#include <netinet/in.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -250,7 +251,10 @@ enum WIFI_ASSOCSTATUS
     ASSOCSTATUS_AUTHENTICATING,
     /// Connecting...
     ASSOCSTATUS_ASSOCIATING,
-    /// Connected to AP, but getting IP data from DHCP
+    /// Connected to AP, but getting IP data from DHCP. This will finish when we
+    /// have an IPv4 or IPv6 address, it doesn't wait for both to be available.
+    /// Normally the IPv4 address is available first. Use Wifi_GetIPv6() to
+    /// verify if you have an IPv6 address or not.
     ASSOCSTATUS_ACQUIRINGDHCP,
     /// Connected! (COMPLETE if Wifi_ConnectAP was called to start)
     ASSOCSTATUS_ASSOCIATED,
@@ -698,8 +702,19 @@ void Wifi_InternetMode(void);
 /// manually.
 ///
 /// @return
-///     The current IP address of the DS
+///     The current IP address of the DS or INADDR_NONE on error.
 u32 Wifi_GetIP(void);
+
+/// It returns an array of 4 u32 values with the current IPv6 address of the DS.
+///
+/// The IP may not be valid before connecting to an AP.
+///
+/// @param
+///     addr The struct to be filled with the IPv6 address.
+///
+/// @return
+///     If there is a valid IPv6 address it returns true. Otherwise, false.
+bool Wifi_GetIPv6(struct in6_addr *addr);
 
 /// Returns IP information.
 ///

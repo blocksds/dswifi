@@ -330,7 +330,10 @@ int Wifi_AssocStatus(void)
 #ifdef DSWIFI_ENABLE_LWIP
             if (wifi_lwip_enabled)
             {
-                if ((wifi_get_ip() != 0) && (wifi_get_dns(0) != 0))
+                bool ipv4_ready = (wifi_get_ip() != 0) && (wifi_get_dns(0) != 0);
+                bool ipv6_ready = wifi_get_ip6(NULL);
+
+                if (ipv4_ready || ipv6_ready)
                 {
                     wifi_connect_state = WIFI_CONNECT_DONE;
                     return ASSOCSTATUS_ASSOCIATED;

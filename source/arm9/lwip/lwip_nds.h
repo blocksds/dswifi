@@ -7,6 +7,7 @@
 
 #ifdef DSWIFI_ENABLE_LWIP
 
+#include <netinet/in.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -39,6 +40,8 @@ bool wifi_using_dhcp(void);
 
 u32 wifi_get_ip(void);
 u32 wifi_get_dns(int index);
+
+bool wifi_get_ip6(struct in6_addr *addr);
 
 void dswifi_send_data_to_lwip(void *data, u32 len);
 

@@ -266,6 +266,29 @@ u32 wifi_get_ip(void)
     return dswifi_netif.ip_addr.u_addr.ip4.addr;
 }
 
+bool wifi_get_ip6(struct in6_addr *addr)
+{
+    if (!wifi_lwip_enabled)
+        return false;
+
+    // IPv6 address index 0 seems to be the loopback address
+
+    const ip_addr_t *ip6 = netif_ip_addr6(&dswifi_netif, 1);
+    if (!IP_IS_V6_VAL(*ip6))
+        return false;
+
+    if ((netif_ip6_addr_state(&dswifi_netif, 1) & IP6_ADDR_VALID) == 0)
+        return false;
+
+    if (addr != NULL)
+    {
+        for (int i = 0; i < 4; i++)
+            addr->un.u32_addr[i] = ip6->u_addr.ip6.addr[i];
+    }
+
+    return true;
+}
+
 u32 wifi_get_gateway(void)
 {
     if (!wifi_lwip_enabled)
@@ -306,6 +329,11 @@ u32 Wifi_GetIP(void)
         return INADDR_NONE;
 
     return wifi_get_ip();
+}
+
+bool Wifi_GetIPv6(struct in6_addr *addr)
+{
+    return wifi_get_ip6(addr);
 }
 
 struct in_addr Wifi_GetIPInfo(struct in_addr *pGateway, struct in_addr *pSnmask,
