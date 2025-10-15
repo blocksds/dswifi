@@ -364,7 +364,7 @@ int Wifi_TxBufferAllocBuffer(size_t total_size)
 
     if (read_idx <= write_idx)
     {
-        if ((write_idx + total_size) > WIFI_TXBUFFER_SIZE)
+        if ((write_idx + total_size) >= WIFI_TXBUFFER_SIZE)
         {
             // The packet doesn't fit at the end of the buffer:
             //
