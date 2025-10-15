@@ -48,6 +48,11 @@ static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
     if (p->tot_len == 0)
         return ERR_OK;
 
+    // We're going to iterate in the pbuf array, and the only element that has
+    // the full size of the packet is the first element. Save the size, we will
+    // need it later.
+    size_t total_size = p->tot_len;
+
     if (p->tot_len == p->len)
     {
         // If we get a list with one element pass it directly.
@@ -59,7 +64,7 @@ static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
     else
     {
         // We have a split buffer, we need to reconstruct it.
-        uint8_t *buf = malloc(p->tot_len);
+        uint8_t *buf = malloc(total_size);
         if (buf == NULL)
             return ERR_MEM;
 
@@ -76,7 +81,7 @@ static err_t dswifi_link_output(struct netif *netif, struct pbuf *p)
             p = p->next;
         }
 
-        if (Wifi_TransmitFunctionLink(buf, p->tot_len) != 0)
+        if (Wifi_TransmitFunctionLink(buf, total_size) != 0)
         {
             free(buf);
             return ERR_MEM;
