@@ -7,7 +7,7 @@ A library written in C to use the WiFi hardware of the Nintendo DS.
 
 Features:
 
-- It supports accessing the Internet using IPv4.
+- It supports accessing the Internet using IPv4 and IPv6.
 
   - Open networks and WEP-encrypted networks are supported.
   - In DSi mode, WPA2-encrypted networks are also supported.
