@@ -4,6 +4,7 @@
 
 #ifdef DSWIFI_ENABLE_LWIP
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <sys/types.h>
 
@@ -120,13 +121,27 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout)
     return lwip_poll(fds, nfds, timeout);
 }
 
-int ioctl(int s, long cmd, void *argp)
+int ioctl(int s, long cmd, ...)
 {
+    va_list ap;
+    void *argp;
+
+    va_start(ap, cmd);
+    argp = va_arg(ap, void*);
+    va_end(ap);
+
     return lwip_ioctl(s, cmd, argp);
 }
 
-int fcntl(int s, int cmd, int val)
+int fcntl(int s, int cmd, ...)
 {
+    va_list ap;
+    int val;
+
+    va_start(ap, cmd);
+    val = va_arg(ap, int);
+    va_end(ap);
+
     return lwip_fcntl(s, cmd, val);
 }
 
