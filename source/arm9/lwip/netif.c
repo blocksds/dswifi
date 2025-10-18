@@ -106,6 +106,8 @@ void dswifi_send_data_to_lwip(void *data, u32 len)
     if (!p)
         return;
 
+    assert(len <= p->tot_len);
+
     // pbuf_alloc() returns a linked list of nodes. Each node has fields "tot_len" and
     // "len". "len" is the total size contained in that chunk, and "tot_len" is
     // the total size in that chunk plus all following chunks. The last node in
@@ -117,10 +119,14 @@ void dswifi_send_data_to_lwip(void *data, u32 len)
 
     while (1)
     {
-        memcpy(iter->payload, src, iter->len);
+        size_t copy_size = len;
+        if (copy_size > iter->len)
+            copy_size = iter->len;
 
-        len -= iter->len;
-        src += iter->len;
+        memcpy(iter->payload, src, copy_size);
+
+        len -= copy_size;
+        src += copy_size;
 
         // This is the last node in the list
         if (iter->tot_len == iter->len)
