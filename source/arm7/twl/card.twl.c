@@ -1389,8 +1389,8 @@ skip_opcond:
     wifi_card_write_func0_u8(0x4, 0x3); // CCCR irq_enable, master+func1
 
     // 100ms timer
-    timerStart(3, ClockDivider_1024, TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), Wifi_TWL_Update);
-    //                               ((u64)TIMER_CLOCK * SDIO_TICK_INTERVAL_MS) / 1000
+    timerStart(LIBNDS_DEFAULT_TIMER_WIFI, ClockDivider_1024,
+               TIMER_FREQ_1024(1000 / SDIO_TICK_INTERVAL_MS), Wifi_TWL_Update);
 
     WLOG_PUTS("T: Waiting for WMI...\n");
     WLOG_FLUSH();
@@ -1406,7 +1406,7 @@ void wifi_card_deinit(void)
     wifi_sdio_enable_cardirq(false);
 
     irqDisableAUX(IRQ_WIFI_SDIO_CARDIRQ);
-    irqDisable(IRQ_TIMER3);
+    timerStop(LIBNDS_DEFAULT_TIMER_WIFI);
 
     if (wifi_card_bInitted)
     {

@@ -91,9 +91,9 @@ static int wifi_update_thread(void *arg)
 
 void sys_init(void)
 {
-    // Setup timer 3 to fire 1000 times per second (1 ms per tick). We don't
-    // need a resolution of 1 ms for the library.
-    timerStart(3, ClockDivider_64, TIMER_FREQ_64(1000), my_sys_counter);
+    // Setup a timer to fire 1000 times per second (1 ms per tick).
+    timerStart(LIBNDS_DEFAULT_TIMER_WIFI,
+               ClockDivider_64, TIMER_FREQ_64(1000), my_sys_counter);
 
     cothread_t ret = cothread_create(wifi_update_thread, NULL, 8 * 1024,
                                      COTHREAD_DETACHED);

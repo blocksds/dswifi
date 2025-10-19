@@ -86,7 +86,8 @@ enum WIFIGETDATA
 /// Initializes WiFi library.
 ///
 /// It initializes the WiFi hardware, sets up a FIFO handler to communicate with
-/// the ARM7 side of the library, and it sets up timer 3 to be used by DSWiFi.
+/// the ARM7 side of the library. The ARM7 sets up timer number
+/// LIBNDS_DEFAULT_TIMER_WIFI to be used by DSWiFi.
 ///
 /// You can pass a few options depending on your needs:
 ///

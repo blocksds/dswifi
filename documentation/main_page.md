@@ -19,10 +19,15 @@ Features:
   - It supports direct host <-> client transfers or optimized group transfers.
   - Client connections to the host are handled by the ARM7 automatically.
 
-It uses the following hardware resources:
+It uses the following hardware resources of the ARM7:
 
-- ARM9: Hardware timer 3.
-- ARM7: DMA channel 3 in DS mode, NDMA channel 3 in DSi mode.
+- DMA channel 3 in DS mode.
+- NDMA channel 3 in DSi mode.
+- Hardware timer number `LIBNDS_DEFAULT_TIMER_WIFI`.
+
+It uses the following hardware resources of the ARM9:
+
+- Hardware timer number `LIBNDS_DEFAULT_TIMER_WIFI`.
 
 This library contains code of two other open source libraries:
 

@@ -466,7 +466,7 @@ void wifi_netif_set_down(void)
 void wifi_lwip_deinit(void)
 {
     // Deinitialize the timer initialized in sys_init()
-    timerStop(3);
+    timerStop(LIBNDS_DEFAULT_TIMER_WIFI);
 
     libndsCrash("DSWifi can't be disabled if lwIP is active");
     // TODO: Make this work! Remember to stop thread wifi_update_thread() too.

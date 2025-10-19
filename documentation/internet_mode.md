@@ -35,7 +35,10 @@ Wifi_InitDefault(INIT_ONLY | WIFI_ATTEMPT_DSI_MODE);
 
 Without `WIFI_ATTEMPT_DSI_MODE` the library will start in DS compatibility mode.
 
-Hardware timer 3 will be used by the WiFi library after this call.
+On the ARM7, hardware timer number `LIBNDS_DEFAULT_TIMER_WIFI` will be used by
+the WiFi library after this call. On the ARM9, hardware timer number
+`LIBNDS_DEFAULT_TIMER_WIFI` will also be used. Note that both numbers may be
+different.
 
 ### 1.1 Connect to WFC settings
 
@@ -160,7 +163,7 @@ resources, you can call:
 Wifi_Deinit();
 ```
 
-It will free all RAM used by the library and hardware timer 3. You can call
+It will free all RAM used by the library and the hardware timers. You can call
 `Wifi_InitDefault()` at a later time to re-initialize it.
 
 Important note: `Wifi_Deinit()` doesn't currently work after starting DSWiFi in

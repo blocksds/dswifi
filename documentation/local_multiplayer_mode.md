@@ -54,7 +54,8 @@ This is required even if your application needs to switch between Internet and
 local multiplayer mode, you can't use `WFC_CONNECT`. Also, you can't use the
 DSi driver in multiplayer mode, it will use the DS compatibility mode.
 
-Note that hardware timer 3 will be used by the WiFi library after this call.
+On the ARM7, hardware timer number `LIBNDS_DEFAULT_TIMER_WIFI` will be used by
+the WiFi library after this call.
 
 After using multiplayer mode you can call this to switch to Internet mode:
 
@@ -86,8 +87,9 @@ resources, you can call:
 Wifi_Deinit();
 ```
 
-It will free all RAM used by the library and hardware timer 3. You can call
-`Wifi_InitDefault()` at a later time to re-initialize it.
+It will free all RAM used by the library and ARM7 hardware timer number
+`LIBNDS_DEFAULT_TIMER_WIFI`. You can call `Wifi_InitDefault()` at a later time
+to re-initialize it.
 
 ## 3. Host consoles
 
