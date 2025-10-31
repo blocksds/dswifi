@@ -106,7 +106,12 @@ void dswifi_send_data_to_lwip(void *data, u32 len)
     if (!p)
         return;
 
-    assert(len <= p->tot_len);
+    if (len > p->tot_len)
+    {
+        // If we can't allocate a buffer big enough for the packet, drop it
+        pbuf_free(p);
+        return;
+    }
 
     // pbuf_alloc() returns a linked list of nodes. Each node has fields "tot_len" and
     // "len". "len" is the total size contained in that chunk, and "tot_len" is
