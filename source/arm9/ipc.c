@@ -356,6 +356,10 @@ int Wifi_TxBufferAllocBuffer(size_t total_size)
 {
     u8 *txbufData = (u8 *)WifiData->txbufData;
 
+    // TODO: There is an overflow somewhere. This is a workaround until it's
+    // found and fixed properly.
+    total_size += sizeof(u32);
+
     u32 write_idx = WifiData->txbufWrite;
     u32 read_idx = WifiData->txbufRead;
 
