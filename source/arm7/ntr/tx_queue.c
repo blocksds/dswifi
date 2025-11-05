@@ -361,6 +361,8 @@ int Wifi_TxArm9QueueFlush(void)
     {
         WifiData->txbufRead = 0;
         status = read_u32(((u8*)WifiData->txbufData) + WifiData->txbufRead);
+        if (status == 0)
+            return 0;
     }
 
     // The status field is also used by the ARM9 to tell the ARM7 if the packet

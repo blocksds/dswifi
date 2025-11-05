@@ -45,6 +45,8 @@ static void Wifi_NTR_Update(void)
         {
             read_idx = 0;
             size = read_u32(rxbufData + read_idx);
+            if (size == 0)
+                break;
         }
         read_idx += sizeof(uint32_t);
 
@@ -108,6 +110,8 @@ TWL_CODE static void Wifi_TWL_Update(void)
         {
             read_idx = 0;
             size = read_u32(rxbufData + read_idx);
+            if (size == 0)
+                break;
         }
         read_idx += sizeof(uint32_t);
 

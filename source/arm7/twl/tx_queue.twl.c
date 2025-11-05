@@ -29,6 +29,8 @@ void Wifi_TWL_TxArm9QueueFlush(void)
         {
             read_idx = 0;
             size = read_u32(txbufData + read_idx);
+            if (size == 0)
+                break;
         }
         read_idx += sizeof(uint32_t);
 

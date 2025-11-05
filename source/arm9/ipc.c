@@ -356,10 +356,6 @@ int Wifi_TxBufferAllocBuffer(size_t total_size)
 {
     u8 *txbufData = (u8 *)WifiData->txbufData;
 
-    // TODO: There is an overflow somewhere. This is a workaround until it's
-    // found and fixed properly.
-    total_size += sizeof(u32);
-
     u32 write_idx = WifiData->txbufWrite;
     u32 read_idx = WifiData->txbufRead;
 
@@ -388,6 +384,9 @@ int Wifi_TxBufferAllocBuffer(size_t total_size)
                 //     RD             WR
                 return -1;
             }
+
+            // Write the stop marker before we write the wrap marker
+            write_u32(txbufData + 0, 0);
 
             write_u32(txbufData + write_idx, WIFI_SIZE_WRAP);
             write_idx = 0;
