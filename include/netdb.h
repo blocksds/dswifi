@@ -54,6 +54,8 @@ struct addrinfo
 #define AI_ALL          0x20
 #define AI_ADDRCONFIG   0x40
 
+// Don't use gethostbyname(), use getaddrinfo() instead.
+__attribute__((deprecated))
 struct hostent *gethostbyname(const char *name);
 
 void freeaddrinfo(struct addrinfo *ai);
