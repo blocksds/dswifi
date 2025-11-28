@@ -8,6 +8,7 @@
 #include <nds.h>
 
 #include "arm7/debug.h"
+#include "arm7/ipc.h"
 #include "arm7/wfc.h"
 #include "common/wifi_shared.h"
 
@@ -29,7 +30,7 @@ static int wifi_crc16_slow(u8 *data, int length)
     return crc;
 }
 
-void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
+void Wifi_NTR_GetWfcSettings(void)
 {
     WLOG_PUTS("W: Loading NTR WFC AP settings\n");
 
@@ -121,7 +122,7 @@ void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData)
     WifiData->wfc_number_of_configs = c;
 }
 
-TWL_CODE void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa)
+TWL_CODE void Wifi_TWL_GetWfcSettings(bool allow_wpa)
 {
     WLOG_PUTS("W: Loading TWL WFC AP settings\n");
 

@@ -377,12 +377,12 @@ void Wifi_NTR_Init(void)
         W_MACMEM(i) = 0;
 
     // Load WFC data from flash
-    Wifi_NTR_GetWfcSettings(WifiData);
+    Wifi_NTR_GetWfcSettings();
     if (isDSiMode())
     {
         // If this is a DSi, try to load the additional AP settings. However,
         // ignore all the APs that use WPA, only load open and WPE APs.
-        Wifi_TWL_GetWfcSettings(WifiData, false);
+        Wifi_TWL_GetWfcSettings(false);
     }
 
     WLOG_PRINTF("W: %d valid AP found\n", WifiData->wfc_number_of_configs);

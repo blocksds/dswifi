@@ -103,7 +103,7 @@ nvram_cfg_twl;
 
 // Ensure that WifiData is cleared before the functions are called. Then, call
 // the NTR and TWL functions one after the other.
-void Wifi_NTR_GetWfcSettings(volatile Wifi_MainStruct *WifiData);
-void Wifi_TWL_GetWfcSettings(volatile Wifi_MainStruct *WifiData, bool allow_wpa);
+void Wifi_NTR_GetWfcSettings(void);
+void Wifi_TWL_GetWfcSettings(bool allow_wpa);
 
 #endif // DSWIFI_ARM7_WFC_H__
