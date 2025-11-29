@@ -74,7 +74,10 @@ while (1)
         Wifi_AccessPoint ap;
         Wifi_GetAPData(i, &ap);
 
-        printf("[%.24s]\n", ap.ssid)
+        // We get the name, channel, security type, and even a flag telling us
+        // that this AP is configured in the WFC settings of the console.
+        printf("[%.20s]%s\n", ap.ssid,
+               (ap.flags & WFLAG_APDATA_CONFIG_IN_WFC) ? " WFC" : "");
         printf("%s | Channel %2d | RSSI %d\n",
                Wifi_ApSecurityTypeString(ap.security_type),
                ap.channel, ap.rssi);
@@ -98,18 +101,30 @@ After you have decided which AP to connect to:
 // set the settings manually if you want.
 Wifi_SetIP(0, 0, 0, 0, 0);
 
-// If the access point requires a WEP password, ask the user to provide it.
-if (AccessPoint.security_type != AP_SECURITY_OPEN)
+if (AccessPoint.flags & WFLAG_APDATA_CONFIG_IN_WFC)
 {
-    // WEP passwords can be 5 or 13 characters long, WPA passwords must be at
-    // most 64 characters long.
-    const char *password = "MyPassword123";
-    Wifi_ConnectSecureAP(&AccessPoint, (u8 *)password, strlen(password));
+    // If the AP is known, use the password stored in the WFC settings
+    Wifi_ConnectWfcAP(&AccessPoint);
 }
 else
 {
-    // Open network
-    Wifi_ConnectSecureAP(&AccessPoint, NULL, 0);
+    // This AP isn't in the WFC settings. If the access point requires a WEP/WPA
+    // password, ask the user to provide it. Note that you can still allow the
+    // user to call this function with an AP that is saved in the WFC settings,
+    // but the function will ignore the saved settings in the WFC configuration
+    // and use the provided password instead.
+    if (AccessPoint.security_type != AP_SECURITY_OPEN)
+    {
+        // WEP passwords can be 5 or 13 characters long, WPA passwords must be at
+        // most 64 characters long.
+        const char *password = "MyPassword123";
+        Wifi_ConnectSecureAP(&AccessPoint, (u8 *)password, strlen(password));
+    }
+    else
+    {
+        // Open network
+        Wifi_ConnectSecureAP(&AccessPoint, NULL, 0);
+    }
 }
 ```
 

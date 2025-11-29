@@ -11,6 +11,7 @@
 #include "arm7/access_point.h"
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
+#include "arm7/wfc.h"
 #include "arm7/twl/card.h"
 #include "arm7/twl/setup.h"
 #include "arm7/twl/tx_queue.h"
@@ -72,6 +73,25 @@ void Wifi_TWL_Update(void)
 
             if (WifiData->reqMode == WIFIMODE_CONNECTED)
             {
+                if (WifiData->reqFlags & WFLAG_REQ_LOAD_WFC_KEY)
+                {
+                    const void *ssid = (const void *)WifiData->curAp.ssid;
+                    size_t ssid_len = WifiData->curAp.ssid_len;
+                    int index = Wifi_GetWfcAccessPointIndex(ssid, ssid_len);
+                    if (index == -1)
+                    {
+                        // This AP isn't found in the WFC settings
+                        WifiData->curMode = WIFIMODE_CANNOTCONNECT;
+                        break;
+                    }
+                    else
+                    {
+                        memcpy((Wifi_ApSecurity *)&(WifiData->curApSecurity),
+                               (const Wifi_ApSecurity *)&(WifiData->wfc[index].security),
+                               sizeof(Wifi_ApSecurity));
+                    }
+                }
+
                 wmi_connect();
                 WifiData->curMode = WIFIMODE_CONNECTING;
             }

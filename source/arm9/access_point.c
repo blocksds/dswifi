@@ -198,15 +198,40 @@ int Wifi_ConnectSecureAP(Wifi_AccessPoint *apdata, const void *key, size_t key_l
 
     wifi_connect_state = WIFI_CONNECT_SEARCHING;
 
-    // Save password
-
+    // Save password and tell the ARM7 to ignore WFC settings
     memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
+    WifiData->reqFlags &= ~WFLAG_REQ_LOAD_WFC_KEY;
 
     if (key_len > 0)
     {
         WifiData->curApSecurity.pass_len = key_len;
         memcpy((void *)WifiData->curApSecurity.pass, key, key_len);
     }
+
+    // Ask the ARM7 to start scanning and the ARM9 to look for this specific AP
+    wifi_connect_point = *apdata;
+    Wifi_ScanMode();
+
+    return 0;
+}
+
+int Wifi_ConnectWfcAP(Wifi_AccessPoint *apdata)
+{
+    wifi_connect_state = WIFI_CONNECT_ERROR;
+
+    if (!apdata)
+        return -1;
+
+    if (apdata->ssid_len > 32)
+        return -1;
+
+    Wifi_DisconnectAP();
+
+    wifi_connect_state = WIFI_CONNECT_SEARCHING;
+
+    // Clear security settings and ask the ARM7 to fill them
+    memset((void *)&(WifiData->curApSecurity), 0, sizeof(WifiData->curApSecurity));
+    WifiData->reqFlags |= WFLAG_REQ_LOAD_WFC_KEY;
 
     // Ask the ARM7 to start scanning and the ARM9 to look for this specific AP
     wifi_connect_point = *apdata;

@@ -355,6 +355,11 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned
 
 /// Connect to an Access Point.
 ///
+/// That this function forces you to specify the password manually. If the AP
+/// is configured in the WFC settings the library will ignore the saved data
+/// and it will use the information passed to this function. If you want to use
+/// the saved WFC settings you have to use Wifi_ConnectWfcAP().
+///
 /// @param apdata
 ///     Basic data about the AP. The user must fill either the bssid field or
 ///     the ssid and ssid_len fields. Other fields are ignored.
@@ -368,6 +373,27 @@ int Wifi_ConnectAP(Wifi_AccessPoint *apdata, int wepmode, int wepkeyid, unsigned
 /// @return
 ///     0 for ok, -1 for error with input data.
 int Wifi_ConnectSecureAP(Wifi_AccessPoint *apdata, const void *key, size_t key_len);
+
+/// Connect to an AP that has been configured in the WFC settings.
+///
+/// This is useful if multiple APs have been configured but you want to let the
+/// user select which AP to connect to. It can also be useful if you want to
+/// prioritize APs with better security settings, like connecting to WPA2 APs
+/// instead of open ones. Wifi_AutoConnect() would make the library connect to
+/// the first known AP it finds regardless of the security settings.
+///
+/// Note that this function doesn't let you specify the password manually. If
+/// the AP isn't configured in the WFC settings the library will enter "cannot
+/// connect" state. If you want to use a password other than the WFC settings,
+/// use Wifi_ConnectSecureAP().
+///
+/// @param apdata
+///     Basic data about the AP. The user must fill either the ssid and ssid_len
+///     fields. Other fields are ignored.
+///
+/// @return
+///     0 for ok, -1 for error with input data.
+int Wifi_ConnectWfcAP(Wifi_AccessPoint *apdata);
 
 /// Connect to an AP without encryption (and NDS multiplayer hosts).
 ///

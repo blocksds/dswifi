@@ -40,6 +40,7 @@
 #define WFLAG_REQ_PROMISC       0x0010 // NTR only
 #define WFLAG_REQ_ALLOWCLIENTS  0x0040 // NTR only
 #define WFLAG_REQ_DSI_MODE      0x0080
+#define WFLAG_REQ_LOAD_WFC_KEY  0x0100 // Ask ARM7 to load the key from WFC data
 
 // Enum values for the FIFO WiFi commands (FIFO_DSWIFI).
 typedef enum
