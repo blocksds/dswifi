@@ -39,6 +39,8 @@ extern "C" {
 #define WFLAG_APDATA_EXTCOMPATIBLE 0x0010 // TODO: Unused
 /// This AP contains Nintendo AP information, it's likely a multiplayer host.
 #define WFLAG_APDATA_NINTENDO_TAG  0x0040
+/// The WFC settings of the console have configuration data for this AP.
+#define WFLAG_APDATA_CONFIG_IN_WFC 0x0080
 /// This AP is active.
 #define WFLAG_APDATA_ACTIVE        0x8000
 

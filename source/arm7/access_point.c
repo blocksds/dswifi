@@ -7,6 +7,7 @@
 
 #include "arm7/debug.h"
 #include "arm7/ipc.h"
+#include "arm7/wfc.h"
 #include "common/mac_addresses.h"
 #include "common/random.h"
 #include "common/spinlock.h"
@@ -150,6 +151,12 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
             for (int j = 0; j < ap->ssid_len; j++)
                 ap->ssid[j] = ssid_ptr[j];
             ap->ssid[ap->ssid_len] = '\0';
+
+            // Check if this AP is saved int he WFC settings. Currently we
+            // identify APs based on their SSID.
+            // TODO: Use the BSSID instead?
+            if (Wifi_GetWfcAccessPointIndex((const void *)ap->ssid, ap->ssid_len) != -1)
+                ap->flags |= WFLAG_APDATA_CONFIG_IN_WFC;
         }
 
         ap->channel = channel;

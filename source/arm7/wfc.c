@@ -229,3 +229,20 @@ TWL_CODE void Wifi_TWL_GetWfcSettings(bool allow_wpa)
 
     WifiData->wfc_number_of_configs = c;
 }
+
+int Wifi_GetWfcAccessPointIndex(const void *ssid, size_t ssid_len)
+{
+    for (int i = 0; i < WifiData->wfc_number_of_configs; i++)
+    {
+        if (ssid_len != WifiData->wfc[i].ssid_len)
+            continue;
+
+        if (memcmp(ssid, (const void*)(WifiData->wfc[i].ssid), ssid_len) != 0)
+            continue;
+
+        // Found
+        return i;
+    }
+
+    return -1;
+}

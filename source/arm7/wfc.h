@@ -106,4 +106,6 @@ nvram_cfg_twl;
 void Wifi_NTR_GetWfcSettings(void);
 void Wifi_TWL_GetWfcSettings(bool allow_wpa);
 
+int Wifi_GetWfcAccessPointIndex(const void *ssid, size_t ssid_len);
+
 #endif // DSWIFI_ARM7_WFC_H__
