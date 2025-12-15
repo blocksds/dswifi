@@ -153,8 +153,8 @@ void Wifi_AccessPointAdd(const void *bssid, const void *sa,
             ap->ssid[ap->ssid_len] = '\0';
 
             // Check if this AP is saved int he WFC settings. Currently we
-            // identify APs based on their SSID.
-            // TODO: Use the BSSID instead?
+            // identify APs based on their SSID because the WFC settings don't
+            // store the BSSID.
             if (Wifi_GetWfcAccessPointIndex((const void *)ap->ssid, ap->ssid_len) != -1)
                 ap->flags |= WFLAG_APDATA_CONFIG_IN_WFC;
         }
