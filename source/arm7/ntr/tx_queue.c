@@ -53,6 +53,15 @@ void Wifi_TxRaw(u16 *data, int datalen)
     datalen = round_up_32(datalen);
     Wifi_MACWrite(data, MAC_TXBUF_START_OFFSET, datalen);
 
+    // If the frame has the FC_PWR_MGT bit set we need to set the power duration
+    // to manual mode. If not, the hardware will set the bit to 0.
+    u16 frame_control = Wifi_MACReadHWord(MAC_TXBUF_START_OFFSET,
+                                          HDR_TX_SIZE + HDR_MGT_FRAME_CONTROL);
+    if (frame_control & FC_PWR_MGT)
+        W_TX_HDR_CNT |= TX_HDR_CNT_POWER_DURATION_MANUAL;
+    else
+        W_TX_HDR_CNT &= ~TX_HDR_CNT_POWER_DURATION_MANUAL;
+
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
