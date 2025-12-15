@@ -263,7 +263,6 @@ void Wifi_ProcessBeaconOrProbeResponse(Wifi_RxHeader *packetheader, int macbase)
         curloc += seglen;
     }
 
-
     Wifi_ApCryptType group_crypt_type = AP_CRYPT_NONE;
     Wifi_ApCryptType pair_crypt_type = AP_CRYPT_NONE;
     Wifi_ApAuthType auth_type = AP_AUTH_NONE;

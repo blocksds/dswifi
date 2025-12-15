@@ -23,6 +23,7 @@
 #include "arm7/ntr/ieee_802_11/association.h"
 #include "arm7/ntr/ieee_802_11/authentication.h"
 #include "arm7/ntr/ieee_802_11/other.h"
+#include "arm7/ntr/ieee_802_11/probe_request.h"
 #include "common/common_ntr_defs.h"
 #include "common/ieee_defs.h"
 #include "common/mac_addresses.h"
@@ -137,6 +138,8 @@ void Wifi_NTR_Update(void)
 
     // Index of the current WiFi channel to be scanned.
     static size_t wifi_scan_index = 0;
+    // Index of the next WFC setting to be probed
+    static u8 wfc_probe_index = 0;
 
     // This array defines the order in which channels are scanned. It makes
     // sense to start with the most common channels and try the others next.
@@ -226,6 +229,7 @@ void Wifi_NTR_Update(void)
                 WifiData->curMode  = WIFIMODE_SCAN;
                 Wifi_SetupFilterMode(WIFI_FILTERMODE_SCAN);
                 wifi_scan_index = 0;
+                wfc_probe_index = 0;
                 break;
             }
 
@@ -297,16 +301,64 @@ void Wifi_NTR_Update(void)
             }
             if ((W_US_COUNT1 - WifiData->counter7) > 1)
             {
-                // Request changing channel
-                WifiData->counter7   = W_US_COUNT1;
-                WifiData->reqChannel = scanlist[wifi_scan_index];
-                Wifi_SetChannel(WifiData->reqChannel);
+                bool change_channel = false;
 
-                Wifi_AccessPointTick();
+                if (WifiData->curLibraryMode == DSWIFI_MULTIPLAYER_CLIENT)
+                {
+                    // In multiplayer mode we don't need to probe anything.
+                    change_channel = true;
+                }
+                else // if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+                {
+                    // First, see if there are more WFC AP settings to probe (or
+                    // if there are no configured APs at all).
+                    if (wfc_probe_index > WifiData->wfc_number_of_configs)
+                    {
+                        // If there are no more APs to probe, change the channel
+                        change_channel = true;
+                        wfc_probe_index = 0;
+                    }
+                    else if (wfc_probe_index == WifiData->wfc_number_of_configs)
+                    {
+                        // If we have finished the WFC settings, check if the
+                        // user has requested to connect to an AP manually. If
+                        // so, send a probe request. This is required if the
+                        // developer wants to allow the player to manually type
+                        // the SSID of a hidden network.
+                        if (WifiData->curAp.ssid_len > 0)
+                        {
+                            Wifi_SendProbeRequestPacket(true,
+                                            (const char *)WifiData->curAp.ssid,
+                                            WifiData->curAp.ssid_len);
+                        }
 
-                wifi_scan_index++;
-                if (wifi_scan_index == scanlist_size)
-                    wifi_scan_index = 0;
+                        wfc_probe_index++;
+                    }
+                    else
+                    {
+                        // If there are more APs to probe, send a probe request
+                        // and wait for the next scan update to receive a reply.
+                        Wifi_SendProbeRequestPacket(true,
+                                (const char *)WifiData->wfc[wfc_probe_index].ssid,
+                                WifiData->wfc[wfc_probe_index].ssid_len);
+
+                        wfc_probe_index++;
+                    }
+                }
+
+                if (change_channel)
+                {
+                    // Request changing channel
+                    WifiData->counter7   = W_US_COUNT1;
+                    WifiData->reqChannel = scanlist[wifi_scan_index];
+                    Wifi_SetChannel(WifiData->reqChannel);
+
+                    Wifi_AccessPointTick();
+
+                    wifi_scan_index++;
+                    if (wifi_scan_index == scanlist_size)
+                        wifi_scan_index = 0;
+                }
             }
             break;
         }
