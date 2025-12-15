@@ -184,6 +184,28 @@ It will free all RAM used by the library and the hardware timers. You can call
 Important note: `Wifi_Deinit()` doesn't currently work after starting DSWiFi in
 Internet mode.
 
+### 1.5 Notes about APs with hidden SSID
+
+APs generally support an option to "hide" the network. This means that they
+don't openly broadcast their name, and they need to be probed before a client
+can connect to them.
+
+DSWiFi supports hidden networks that are configured in the WFC settings, and it
+also supports connecting to networks if the user provides the SSID manually.
+
+However, hiding the SSID isn't part of the WiFi standard.
+[This blog post](https://goodwi.fi/posts/2023/12/hunt-for-hidden-probe/) goes
+into more detail. The important part is:
+
+> (CWSP-206 2019)
+> SSID hiding is a technique implemented by WLAN device manufacturers that will
+> remove the information found in the SSID information element from Beacon
+> management frames. Depending on the implementation, SSID hiding may also
+> remove it from Probe Response frames sent from the AP.
+
+APs that don't provide their SSID in their probe responses aren't supported by
+DSWiFi.
+
 ## 2. Get connection settings
 
 You can get information like the IP address like this:
