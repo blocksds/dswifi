@@ -35,13 +35,11 @@ int Wifi_ProcessReceivedFrame(int macbase, int framelen)
         // -----------------
 
         case TYPE_BEACON: // 1000 00 Beacon
-        case TYPE_PROBE_RESPONSE: // 0101 00 Probe Response // process probe responses too.
-            // Mine data from the beacon...
             Wifi_ProcessBeaconOrProbeResponse(&packetheader, macbase);
-
-            if ((control_802 & control_802_type_mask) == TYPE_PROBE_RESPONSE)
-                return WFLAG_PACKET_MGT;
             return WFLAG_PACKET_BEACON;
+        case TYPE_PROBE_RESPONSE: // 0101 00 Probe Response
+            Wifi_ProcessBeaconOrProbeResponse(&packetheader, macbase);
+            return WFLAG_PACKET_MGT;
 
         case TYPE_ASSOC_RESPONSE: // 0001 00 Assoc Response
         case TYPE_REASSOC_RESPONSE: // 0011 00 Reassoc Response

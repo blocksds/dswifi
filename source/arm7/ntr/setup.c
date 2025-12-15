@@ -135,8 +135,12 @@ void Wifi_NTR_SetupFilterMode(Wifi_FilterMode mode)
             break;
 
         case WIFI_FILTERMODE_SCAN:
-            // Receive beacon frames and DS to STA frames
-            W_RXFILTER  = RXFILTER_MGMT_BEACON_OTHER_BSSID;
+            W_RXFILTER  =
+                // Receive beacon frames and DS to STA frames
+                RXFILTER_MGMT_BEACON_OTHER_BSSID |
+                // Receive probe requests
+                RXFILTER_MGMT_NONBEACON_OTHER_BSSID |
+                RXFILTER_MGMT_NONBEACON_OTHER_BSSID_EX;
             W_RXFILTER2 = RXFILTER2_IGNORE_DS_DS | RXFILTER2_IGNORE_STA_STA
                         | RXFILTER2_IGNORE_STA_DS;
             break;
