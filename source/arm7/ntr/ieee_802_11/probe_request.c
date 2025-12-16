@@ -42,7 +42,7 @@ int Wifi_SendProbeRequestPacket(bool real_rates, const char *ssid, size_t ssid_l
     // IEEE 802.11 header
     // ------------------
 
-    ieee->frame_control = TYPE_PROBE_REQUEST | FC_PWR_MGT;
+    ieee->frame_control = TYPE_PROBE_REQUEST;
     ieee->duration = 0;
     Wifi_CopyMacAddr(ieee->da, wifi_broadcast_addr);
     Wifi_CopyMacAddr(ieee->sa, WifiData->MacAddr);
