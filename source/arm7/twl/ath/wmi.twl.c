@@ -30,7 +30,6 @@
 static u8 device_num_channels = 0;
 static u8 device_cur_channel_idx = 0;
 static u16 channel_freqs[32];
-static u16 num_rounds_scanned = 0;
 
 u16 wmi_idk = 0;
 static bool wmi_bIsReady;
@@ -119,14 +118,11 @@ static void wmi_handle_get_channel_list(u8 *pkt_data, u32 len)
     WLOG_FLUSH();
 
     device_num_channels = num_entries;
-    //device_cur_channel_idx = 0;
 
     if (num_entries > 32)
         num_entries = 32;
 
     memcpy(channel_freqs, channel_entries, num_entries * sizeof(u16));
-
-    //channel_freqs[0] = 5825;
 
     // for (int i = 0; i < num_entries; i++)
     //     WLOG_PRINTF("T: %d: 0x%x\n", i, (unsigned int)channel_entries[i]);
@@ -807,7 +803,7 @@ void wmi_scan_mode_start(void)
     WLOG_PUTS("T: Scan mode init\n");
     WLOG_FLUSH();
 
-    num_rounds_scanned = 0;
+    device_cur_channel_idx = 0;
 
     int lock = enterCriticalSection();
 
@@ -855,11 +851,8 @@ void wmi_scan_mode_tick(void)
         // WLOG_FLUSH();
 
         device_cur_channel_idx++;
-        if (device_cur_channel_idx > device_num_channels)
-        {
+        if (device_cur_channel_idx >= device_num_channels)
             device_cur_channel_idx = 0;
-            num_rounds_scanned++;
-        }
 
         if (!mhz)
             return;
