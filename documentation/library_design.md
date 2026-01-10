@@ -133,7 +133,7 @@ consoleArm7Setup(&myConsole, 1024);
   ARM7ELF := $(BLOCKSDS)/sys/arm7/main_core/arm7_dswifi_maxmod_debug.elf
   ```
 
-  This [example](https://github.com/blocksds/sdk/tree/master/examples/dswifi/full_ap_demo_debug)
+  This [example](https://codeberg.org/blocksds/sdk/src/branch/master/examples/dswifi/full_ap_demo)
   shows you how to have a Makefile that can enable and disable DSWiFi debug
   output.
 
