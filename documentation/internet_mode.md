@@ -208,14 +208,16 @@ DSWiFi.
 
 ## 2. Get connection settings
 
-You can get information like the IP address like this:
+You can get information like the IPv4 and IPv6 addresses of the console like
+this:
 
 ```c
-struct in_addr ip, gateway, mask, dns1, dns2;
+struct in_addr ip = { 0 }, gateway = { 0 }, mask = { 0 };
+struct in_addr dns1 = { 0 }, dns2 = { 0 };
 ip = Wifi_GetIPInfo(&gateway, &mask, &dns1, &dns2);
 
 printf("\n");
-printf("Connection information:\n");
+printf("IPv4 information:\n");
 printf("\n");
 printf("IP:      %s\n", inet_ntoa(ip));
 printf("Gateway: %s\n", inet_ntoa(gateway));
@@ -223,23 +225,107 @@ printf("Mask:    %s\n", inet_ntoa(mask));
 printf("DNS1:    %s\n", inet_ntoa(dns1));
 printf("DNS2:    %s\n", inet_ntoa(dns2));
 printf("\n");
+printf("IPv6 information:\n");
+printf("\n");
+char buf[128];
+printf("IP: %s\n", inet_ntop(AF_INET6, &ipv6, buf, sizeof(buf)));
 ```
 
 ### 3. Use libc to access the Internet
 
 ### 3.1 Resolve host IPs
 
-You can obtain the IP of a host like this:
+Function `gethostbyname()` is deprecated and it shouldn't be used, as it only
+supports IPv4 addresses. `getaddrinfo()` is more flexible and it supports IPv4
+and IPv6. It is more complicated, so BlocksDS comes with some examples that show
+how to do it. This is the relevant part of the code:
 
 ```c
 const char *url = "www.wikipedia.com";
+const char *port = "80";
 
-struct hostent *host = gethostbyname(url);
+// This value will try to get IPv4 and IPv6 addresses. If you only want to get
+// IPv4, use AF_INET. If you only want to use IPv6, use AF_INET6.
+int family = AF_UNSPEC;
 
-if (host)
-    printf("IP: %s\n", inet_ntoa(*(struct in_addr *)host->h_addr_list[0]));
-else
-    printf("Could not get IP\n");
+struct addrinfo hint;
+
+hint.ai_flags = AI_CANONNAME;
+hint.ai_family = family;
+hint.ai_socktype = SOCK_STREAM; // TCP
+hint.ai_protocol = 0;
+hint.ai_addrlen = 0;
+hint.ai_canonname = NULL;
+hint.ai_addr = NULL;
+hint.ai_next = NULL;
+
+struct addrinfo *result, *rp;
+
+int err = getaddrinfo(url, port, &hint, &result);
+if (err != 0)
+{
+    printf("getaddrinfo(): %d\n", err);
+    return;
+}
+
+struct addrinfo *found_rp = NULL;
+
+for (rp = result; rp != NULL; rp = rp->ai_next)
+{
+    struct sockaddr_in *sinp;
+    const char *addr;
+    char buf[1024];
+
+    printf("- Canonical Name:\n  %s\n", rp->ai_canonname);
+    if (rp->ai_family == AF_INET)
+    {
+        // This should never happen if we have asked for IPv6 addresses
+        printf("- AF_INET\n");
+
+        sinp = (struct sockaddr_in *)rp->ai_addr;
+        addr = inet_ntop(AF_INET, &sinp->sin_addr, buf, sizeof(buf));
+
+        printf("  %s:%d\n", addr, ntohs(sinp->sin_port));
+
+        if ((family == AF_INET) || (family == AF_UNSPEC))
+        {
+            found_rp = rp;
+            break;
+        }
+    }
+    else if (rp->ai_family == AF_INET6)
+    {
+        printf("- AF_INET6\n");
+
+        sinp = (struct sockaddr_in *)rp->ai_addr;
+        addr = inet_ntop(AF_INET6, &sinp->sin_addr, buf, sizeof(buf));
+
+        printf("  [%s]:%d\n", addr, ntohs(sinp->sin_port));
+
+        if ((family == AF_INET6) || (family == AF_UNSPEC))
+        {
+            found_rp = rp;
+            break;
+        }
+    }
+}
+
+if (found_rp == NULL)
+{
+    printf("Can't find IP info!\n");
+    freeaddrinfo(result);
+    return;
+}
+
+printf("IP info found!\n");
+
+int sfd = socket(found_rp->ai_family, found_rp->ai_socktype, found_rp->ai_protocol);
+if (sfd == -1)
+{
+    perror("socket");
+    freeaddrinfo(result);
+    return;
+}
 ```
 
 ### 3.2 Communicate using sockets
