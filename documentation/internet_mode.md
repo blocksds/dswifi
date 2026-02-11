@@ -252,7 +252,7 @@ struct addrinfo hint;
 
 hint.ai_flags = AI_CANONNAME;
 hint.ai_family = family;
-hint.ai_socktype = SOCK_STREAM; // TCP
+hint.ai_socktype = SOCK_STREAM; // SOCK_STREAM = TCP, SOCK_DGRAM =  UDP
 hint.ai_protocol = 0;
 hint.ai_addrlen = 0;
 hint.ai_canonname = NULL;
@@ -318,7 +318,13 @@ if (found_rp == NULL)
 }
 
 printf("IP info found!\n");
+```
 
+### 3.2 Communicate using sockets
+
+You can create TCP or UDP sockets with the information obtained before:
+
+```c
 int sfd = socket(found_rp->ai_family, found_rp->ai_socktype, found_rp->ai_protocol);
 if (sfd == -1)
 {
@@ -326,15 +332,6 @@ if (sfd == -1)
     freeaddrinfo(result);
     return;
 }
-```
-
-### 3.2 Communicate using sockets
-
-You can create TCP or UDP sockets with:
-
-```c
-socket(AF_INET, SOCK_STREAM, 0); // TCP
-socket(AF_INET, SOCK_DGRAM, 0); // UDP
 ```
 
 Then, you can use standard socket functions to use it, like `connect()`,
