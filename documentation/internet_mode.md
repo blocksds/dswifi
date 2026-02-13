@@ -1,8 +1,9 @@
 # Internet mode guide
 
-DSWifi supports Internet communications. However, DSi mode WiFi isn't supported
-yet, so it is restricted to open and WEP-encrypted networks. DSWifi includes the
-library lwIP to handle connections. It supports IPv4, as well as TCP and UDP.
+DSWifi supports Internet communications in both DS and DSi mode. In DS mode it
+supports Access Points with WEP encryption (or open); in DSi mode it also
+supports WPA2 encryption. DSWifi includes the library lwIP to handle
+communications. It supports IPv4 and IPv6, as well as TCP and UDP.
 
 ## 1. Initialization
 
