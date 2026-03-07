@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
