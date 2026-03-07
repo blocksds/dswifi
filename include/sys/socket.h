@@ -191,8 +191,7 @@ int closesocket(int socket);
 //     ssize_t write(int fd, const void *ptr, size_t len);
 //     int close(int fd);
 
-int ioctl(int s, long cmd, ...);
-int fcntl(int s, int cmd, ...);
+int fcntl(int s, int cmd, ...); // TODO: This isn't the right header for fcntl()
 
 int setsockopt(int socket, int level, int option_name, const void *data, socklen_t data_len);
 int getsockopt(int socket, int level, int option_name, void *data, socklen_t *data_len);
