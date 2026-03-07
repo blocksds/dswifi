@@ -132,11 +132,6 @@ struct sockaddr_storage
     uint32_t    s2_data3[3]; // Required for IPv6
 };
 
-#ifndef ntohs
-#define ntohs(num) htons(num)
-#define ntohl(num) htonl(num)
-#endif
-
 #define _SOCKLEN_T_DECLARED
 typedef uint32_t socklen_t;
 typedef unsigned int nfds_t;
@@ -207,9 +202,6 @@ int getsockname(int socket, struct sockaddr *addr, socklen_t *addrlen);
 
 int gethostname(char *name, size_t len);
 int sethostname(const char *name, size_t len);
-
-unsigned short htons(unsigned short num);
-unsigned long htonl(unsigned long num);
 
 int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
 int poll(struct pollfd *fds, nfds_t nfds, int timeout);

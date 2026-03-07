@@ -59,12 +59,7 @@ struct sockaddr_in6 {
 
 extern const struct in6_addr in6addr_any;
 
-// actually from arpa/inet.h - but is included through netinet/in.h
-in_addr_t inet_addr(const char *cp);
-int inet_aton(const char *cp, struct in_addr *inp);
-char *inet_ntoa(struct in_addr in);
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
-int inet_pton(int af, const char *src, void *dst);
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 }

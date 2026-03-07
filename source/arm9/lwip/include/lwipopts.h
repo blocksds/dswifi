@@ -34,6 +34,9 @@
 // Use "struct timeval" from <sys/time.h>
 #define LWIP_TIMEVAL_PRIVATE        0
 
+// Don't duplicate htons/htonl
+#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS	1
+
 // Memory pool settings
 // ====================
 

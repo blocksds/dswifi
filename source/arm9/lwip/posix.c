@@ -192,18 +192,6 @@ in_addr_t inet_addr(const char *cp)
     return ipaddr_addr(cp);
 }
 
-#undef htons
-unsigned short htons(unsigned short num)
-{
-    return lwip_htons(num);
-}
-
-#undef htonl
-unsigned long htonl(unsigned long num)
-{
-    return lwip_htonl(num);
-}
-
 // ============================================================================
 
 void dswifi_lwip_setup_io_posix(void)
