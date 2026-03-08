@@ -50,6 +50,13 @@ static u8 mbox_buffer[MBOX_TMPBUF_SIZE] ALIGN(16);
 // Uncomment to send all data bytewise, helpful for debugging.
 //#define SDIO_NO_BLOCKRW // MelonDS needs this uncommented... hangs on wifi_ndma_wait after write
 
+#ifdef SDIO_NO_BLOCKRW
+#define SDIO_FORCE_NO_BLOCKRW 1
+#else
+#define SDIO_FORCE_NO_BLOCKRW 0
+#endif
+
+
 #define WRITE_FOUT_1  0x72
 #define READ_FOUT_1   0x73
 #define WRITE_FOUT_2  0x74
@@ -222,7 +229,12 @@ int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
             BIT(31) /* write flag */ | (funcnum << 28) | (1 << 27) | (1 << 26) |
             ((addr & 0x1FFFF) << 9) | (blkcnt));
 
-    wifi_ndma_wait();
+    if (!wifi_ndma_wait())
+    {
+        WLOG_PUTS("T: NDMA t/o, fallbck to nrml wr\n");
+        WLOG_FLUSH();
+        wlan_ctx.is_melonds = true;
+    }
     wifi_sdio_stop();
 
     if (wlan_ctx.tmio.status & 4)
@@ -429,13 +441,15 @@ void wifi_card_bmi_wait_count4(void)
     }
 }
 
-void wifi_card_write_mbox0_u32(u32 val)
+void wifi_card_write_mbox0_u32(u32 val, bool send_irq)
 {
     for (int i = 0; i < 4; i++)
     {
         //while (1)
         {
-            wifi_card_write_func1_u8(0xFF, val & 0xFF);
+            u32 addr = 0;
+            if (i == 3 && send_irq) addr = 0xff;
+            wifi_card_write_func1_u8(addr, val & 0xFF);
             val >>= 8;
 
             /*
@@ -466,13 +480,13 @@ u32 wifi_card_read_mbox0_u32(void)
     return val;
 }
 
-u32 wifi_card_read_mbox0_u32_timeout()
+u32 wifi_card_read_mbox0_u32_timeout_def(u32 def)
 {
     u32 timeout = 0;
     while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1) && ++timeout < 10);
 
     if (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1))
-        return 0xFFFFFFFF;
+        return def;
 
     u32 val = 0;
     for (int i = 0; i < 4; i++)
@@ -485,6 +499,10 @@ u32 wifi_card_read_mbox0_u32_timeout()
 
     return val;
 }
+u32 wifi_card_read_mbox0_u32_timeout()
+{
+    return wifi_card_read_mbox0_u32_timeout_def(0xFFFFFFFF);
+}
 
 // TODO: Move this to block transfers.
 // This could get tricky since we'd be unable to failsafe on TX overflows.
@@ -494,18 +512,19 @@ void wifi_card_mbox0_sendbytes(const u8 *data, u32 len)
 {
     u16 send_addr = 0x4000 - len;
 
-#ifdef SDIO_NO_BLOCKRW
-    for (int i = 0; i < len; i++)
+    if (wlan_ctx.is_melonds || SDIO_FORCE_NO_BLOCKRW)
     {
-        wifi_card_write_func1_u8(send_addr, data[i]);
-        send_addr++;
+        for (u32 i = 0; i < len; i++)
+        {
+            wifi_card_write_func1_u8(send_addr, data[i]);
+            send_addr++;
 
-        if (send_addr >= 0x4000)
-            send_addr = 0x3F80;
+            if (send_addr >= 0x4000)
+                send_addr = 0x3F80;
+        }
     }
-#else
-    wifi_card_write_func1_block(send_addr, (void*)data, len);
-#endif
+    else
+        wifi_card_write_func1_block(send_addr, (void*)data, len);
     u32 intval = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
     if (intval & 0x00010000) // tx overflow
     {
@@ -657,7 +676,7 @@ u16 wifi_card_mbox0_readpkt(void)
 
     // Try and wait for mailbox data to arrive
     int timeout = 100;
-    while (timeout--)
+    for (; timeout > 0; --timeout)
     {
         u8 sts = wifi_card_read_func1_u8(F1_HOST_INT_STATUS);
         if (sts & 1) // RX FIFO is not empty
@@ -665,7 +684,7 @@ u16 wifi_card_mbox0_readpkt(void)
     }
 
     // Timed out
-    if (!timeout)
+    if (timeout <= 0)
         return 0;
 
     u32 header = 0;
@@ -704,6 +723,7 @@ u16 wifi_card_mbox0_readpkt(void)
         WLOG_FLUSH();
         return 0;
     }
+
 
 #ifdef SDIO_NO_BLOCKRW
     // Read out all data that we can
@@ -837,7 +857,7 @@ u16 wifi_card_mbox0_readpkt(void)
 void wifi_card_bmi_start_firmware(void)
 {
     //wifi_card_bmi_wait_count4();
-    wifi_card_write_mbox0_u32(BMI_DONE);
+    wifi_card_write_mbox0_u32(BMI_DONE, true);
 }
 
 void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
@@ -849,15 +869,18 @@ void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
         return;
     }
 
-    wifi_card_write_mbox0_u32(BMI_READ_MEMORY);
-    wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(len + (len % 4));
+    u32 len_aligned = len + ((len & 3) ? (4 - (len & 3)) : 0);
 
-    for (size_t i = 0; i < len; i++)
+    wifi_card_write_mbox0_u32(BMI_READ_MEMORY, false);
+    wifi_card_write_mbox0_u32(addr, false);
+    wifi_card_write_mbox0_u32(len_aligned, true);
+
+    size_t i = 0;
+    for (; i < len; i++)
         out[i] = wifi_card_read_func1_u8(0xFF);
 
      // Data must be u32 aligned
-    for (size_t i = 0; i < len % 4; i++)
+    for (; i < len_aligned; i++)
         wifi_card_read_func1_u8(0xFF);
 }
 
@@ -870,47 +893,56 @@ void wifi_card_bmi_cmd_write_memory(u32 addr, u8* data, u32 len)
         return;
     }
 
-    wifi_card_write_mbox0_u32(BMI_WRITE_MEMORY);
-    wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(len + (len % 4));
+    u32 len_aligned = len + ((len & 3) ? (4 - (len & 3)) : 0);
 
-    for (size_t i = 0; i < len; i++)
-        wifi_card_write_func1_u8(0xFF, data[i]);
+    wifi_card_write_mbox0_u32(BMI_WRITE_MEMORY, false);
+    wifi_card_write_mbox0_u32(addr, false);
+    wifi_card_write_mbox0_u32(len_aligned, false);
 
-    for (size_t i = 0; i < len % 4; i++)
-        wifi_card_write_func1_u8(0xFF, 0);
+    size_t i = 0;
+    for (; i < len_aligned; i++)
+    {
+        bool last = i == len_aligned - 1;
+        u8 bytev = 0;
+        if (i < len) bytev = data[i];
+        wifi_card_write_func1_u8(last ? 0xFF : 0, bytev);
+    }
 }
 
 u32 wifi_card_bmi_execute(u32 addr, u32 arg)
 {
-    wifi_card_write_mbox0_u32(BMI_EXECUTE);
-    wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(arg);
+    wifi_card_write_mbox0_u32(BMI_EXECUTE, false);
+    wifi_card_write_mbox0_u32(addr, false);
+    wifi_card_write_mbox0_u32(arg, true);
 
-    return wifi_card_read_mbox0_u32();
+    return wifi_card_read_mbox0_u32_timeout();
 }
 
 u32 wifi_card_bmi_read_register(u32 addr)
 {
-    wifi_card_write_mbox0_u32(BMI_READ_SOC_REGISTER);
-    wifi_card_write_mbox0_u32(addr);
+    wifi_card_write_mbox0_u32(BMI_READ_SOC_REGISTER, false);
+    wifi_card_write_mbox0_u32(addr, true);
 
     return wifi_card_read_mbox0_u32();
 }
 
 void wifi_card_bmi_write_register(u32 addr, u32 val)
 {
-    wifi_card_write_mbox0_u32(BMI_WRITE_SOC_REGISTER);
-    wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(val);
+    wifi_card_write_mbox0_u32(BMI_WRITE_SOC_REGISTER, false);
+    wifi_card_write_mbox0_u32(addr, false);
+    wifi_card_write_mbox0_u32(val, true);
 }
 
 u32 wifi_card_bmi_get_version(void)
 {
-    wifi_card_write_mbox0_u32(BMI_GET_TARGET_ID);
+    wifi_card_write_mbox0_u32(BMI_GET_TARGET_ID, true);
 
-    u32 ret = wifi_card_read_mbox0_u32();
-    if (ret == 0xFFFFFFFF) // Extended
+    u32 ret = wifi_card_read_mbox0_u32_timeout_def(0xFEFEFEFE);
+    if (ret == 0xFEFEFEFE) // timeout
+    {
+        return 0xFFFFFFFF;
+    }
+    else if (ret == 0xFFFFFFFF) // Extended
     {
         u32 len = wifi_card_read_mbox0_u32(); // len
         if (len != 0xFFFFFFFF)
@@ -928,29 +960,29 @@ u32 wifi_card_bmi_get_version(void)
 
 void wifi_card_bmi_lz_start(u32 addr)
 {
-    wifi_card_write_mbox0_u32(BMI_LZ_STREAM_START);
-    wifi_card_write_mbox0_u32(addr);
+    wifi_card_write_mbox0_u32(BMI_LZ_STREAM_START, false);
+    wifi_card_write_mbox0_u32(addr, true);
 }
 
 void wifi_card_bmi_lz_data(const u8* data, u32 len)
 {
-    wifi_card_write_mbox0_u32(BMI_LZ_DATA);
-    wifi_card_write_mbox0_u32(len + len % 4);
+    wifi_card_write_mbox0_u32(BMI_LZ_DATA, false);
+    wifi_card_write_mbox0_u32(len + len % 4, false);
 
     //u32 len_aligned = len + len % 4;
     u32 len_bulk = len - (len % 0x80);
 
     wifi_card_mbox0_sendbytes(data, len_bulk);
 
-    for (size_t i = len_bulk; i < len; i++)
-    {
-        wifi_card_write_func1_u8(0xFF, data[i]);
-    }
+    u32 len_aligned = len + ((len & 3) ? (4 - (len & 3)) : 0);
 
-     // Data must be u32 aligned
-    for (size_t i = 0; i < len % 4; i++)
+    for (size_t i = len_bulk; i < len_aligned; i++)
     {
-        wifi_card_write_func1_u8(0xFF, 0);
+        u8 bytev = 0;
+        u32 addr = 0;
+        if (i < len) bytev = data[i];
+        if (i == len_aligned - 1) addr = 0xff;
+        wifi_card_write_func1_u8(addr, bytev);
     }
 }
 
@@ -1020,7 +1052,7 @@ void wifi_card_process_pkts(void)
     u32 int_sts = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
     wifi_card_write_func1_u32(F1_HOST_INT_STATUS, int_sts);
 
-    wifi_card_mbox0_readpkt();
+    while (wifi_card_mbox0_readpkt());
 }
 
 void wifi_card_irq(void)
@@ -1126,6 +1158,7 @@ int wifi_card_wlan_init(void)
             if (ctx->tmio.resp[0] & 0x80000000)
                 break;
         }
+
 
         // CMD3 - SEND_RELATIVE_ADDR (assign relative address to card).
         wifi_sdio_command cmd3 =
@@ -1270,8 +1303,14 @@ skip_opcond:
     //wifi_card_bmi_wait_count4();
 
     // Begin talking to bootloader
-    WLOG_PRINTF("T: BMI version: 0x%x\n", (unsigned int)wifi_card_bmi_get_version());
+    u32 bmi_ver = wifi_card_bmi_get_version();
+    WLOG_PRINTF("T: BMI version: 0x%x\n", (unsigned int)bmi_ver);
     WLOG_FLUSH();
+
+    if (bmi_ver == 0xFFFFFFFF) // timeout happened
+    {
+        return -1;
+    }
 
     u32 mem_write32 = 0x2;
     wifi_card_bmi_cmd_write_memory(device_host_interest_addr, (u8*)&mem_write32, sizeof(u32));

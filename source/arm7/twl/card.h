@@ -13,6 +13,7 @@
 typedef struct
 {
     wifi_sdio_ctx tmio;
+    bool is_melonds;
 }
 wifi_card_ctx;
 

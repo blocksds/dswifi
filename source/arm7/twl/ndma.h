@@ -10,7 +10,7 @@
 #define WIFI_NDMA_CHAN (3)
 
 void wifi_ndma_init(void);
-void wifi_ndma_wait(void);
+bool wifi_ndma_wait(void);
 void wifi_ndma_read(void *dst, u32 len);
 void wifi_ndma_write(const void *src, u32 len);
 
