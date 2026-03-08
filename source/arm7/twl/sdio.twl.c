@@ -172,8 +172,24 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
     }
 #endif
 
+    size_t timer = 0, timeout_tgt = 256*1024 /* should be about a second */;
     while (true)
     {
+        ++timer;
+        if (timer == timeout_tgt)
+        {
+            // timeout reached, bail out
+#ifdef WIFI_SDIO_DEBUG
+            if (ctx->debug)
+            {
+                WLOG_PUTS("T: timeout in SDIO xfer\n");
+                WLOG_FLUSH();
+            }
+#endif
+            ctx->status |= 4;
+            return;
+        }
+
         stat1 = wifi_sdio_read16(WIFI_SDIO_OFFS_IRQ_STAT1);
 
         cnt32 = wifi_sdio_read16(WIFI_SDIO_OFFS_IRQ32);
@@ -186,6 +202,7 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
             {
                 // ACK ready state.
                 wifi_sdio_mask16(WIFI_SDIO_OFFS_IRQ_STAT1, WIFI_SDIO_STAT1_RXRDY, 0);
+                timer = 0;
 
                 if (size > (size_t)(ctx->block_size - 1))
                 {
@@ -203,6 +220,7 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
                         // WLOG_FLUSH();
 
                         buffer += sizeof(u32);
+
                     }
 //#endif
                     size -= ctx->block_size;
@@ -219,6 +237,7 @@ void wifi_sdio_send_command(wifi_sdio_ctx *ctx, wifi_sdio_command cmd, u32 args)
             {
                 // ACK request.
                 wifi_sdio_mask16(WIFI_SDIO_OFFS_IRQ_STAT1, WIFI_SDIO_STAT1_TXRQ, 0);
+                timer = 0;
 
                 if (size > (size_t)(ctx->block_size - 1))
                 {
