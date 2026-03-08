@@ -849,15 +849,18 @@ void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
         return;
     }
 
+    u32 len_aligned = len + ((len & 3) ? (4 - (len & 3)) : 0);
+
     wifi_card_write_mbox0_u32(BMI_READ_MEMORY);
     wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(len + (len % 4));
+    wifi_card_write_mbox0_u32(len_aligned);
 
-    for (size_t i = 0; i < len; i++)
+    size_t i = 0;
+    for (; i < len; i++)
         out[i] = wifi_card_read_func1_u8(0xFF);
 
      // Data must be u32 aligned
-    for (size_t i = 0; i < len % 4; i++)
+    for (; i < len_aligned; i++)
         wifi_card_read_func1_u8(0xFF);
 }
 
@@ -870,14 +873,17 @@ void wifi_card_bmi_cmd_write_memory(u32 addr, u8* data, u32 len)
         return;
     }
 
+    u32 len_aligned = len + ((len & 3) ? (4 - (len & 3)) : 0);
+
     wifi_card_write_mbox0_u32(BMI_WRITE_MEMORY);
     wifi_card_write_mbox0_u32(addr);
-    wifi_card_write_mbox0_u32(len + (len % 4));
+    wifi_card_write_mbox0_u32(len_aligned);
 
-    for (size_t i = 0; i < len; i++)
+    size_t i = 0;
+    for (; i < len; i++)
         wifi_card_write_func1_u8(0xFF, data[i]);
 
-    for (size_t i = 0; i < len % 4; i++)
+    for (; i < len_aligned; i++)
         wifi_card_write_func1_u8(0xFF, 0);
 }
 
