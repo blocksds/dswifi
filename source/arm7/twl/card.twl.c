@@ -50,6 +50,13 @@ static u8 mbox_buffer[MBOX_TMPBUF_SIZE] ALIGN(16);
 // Uncomment to send all data bytewise, helpful for debugging.
 //#define SDIO_NO_BLOCKRW // MelonDS needs this uncommented... hangs on wifi_ndma_wait after write
 
+#ifdef SDIO_NO_BLOCKRW
+#define SDIO_FORCE_NO_BLOCKRW 1
+#else
+#define SDIO_FORCE_NO_BLOCKRW 0
+#endif
+
+
 #define WRITE_FOUT_1  0x72
 #define READ_FOUT_1   0x73
 #define WRITE_FOUT_2  0x74
@@ -222,7 +229,12 @@ int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
             BIT(31) /* write flag */ | (funcnum << 28) | (1 << 27) | (1 << 26) |
             ((addr & 0x1FFFF) << 9) | (blkcnt));
 
-    wifi_ndma_wait();
+    if (!wifi_ndma_wait())
+    {
+        WLOG_PUTS("T: NDMA t/o, fallbck to nrml wr\n");
+        WLOG_FLUSH();
+        wlan_ctx.is_melonds = true;
+    }
     wifi_sdio_stop();
 
     if (wlan_ctx.tmio.status & 4)
@@ -500,18 +512,19 @@ void wifi_card_mbox0_sendbytes(const u8 *data, u32 len)
 {
     u16 send_addr = 0x4000 - len;
 
-#ifdef SDIO_NO_BLOCKRW
-    for (int i = 0; i < len; i++)
+    if (wlan_ctx.is_melonds || SDIO_FORCE_NO_BLOCKRW)
     {
-        wifi_card_write_func1_u8(send_addr, data[i]);
-        send_addr++;
+        for (u32 i = 0; i < len; i++)
+        {
+            wifi_card_write_func1_u8(send_addr, data[i]);
+            send_addr++;
 
-        if (send_addr >= 0x4000)
-            send_addr = 0x3F80;
+            if (send_addr >= 0x4000)
+                send_addr = 0x3F80;
+        }
     }
-#else
-    wifi_card_write_func1_block(send_addr, (void*)data, len);
-#endif
+    else
+        wifi_card_write_func1_block(send_addr, (void*)data, len);
     u32 intval = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
     if (intval & 0x00010000) // tx overflow
     {
@@ -663,7 +676,7 @@ u16 wifi_card_mbox0_readpkt(void)
 
     // Try and wait for mailbox data to arrive
     int timeout = 100;
-    while (timeout--)
+    for (; timeout > 0; --timeout)
     {
         u8 sts = wifi_card_read_func1_u8(F1_HOST_INT_STATUS);
         if (sts & 1) // RX FIFO is not empty
@@ -671,7 +684,7 @@ u16 wifi_card_mbox0_readpkt(void)
     }
 
     // Timed out
-    if (!timeout)
+    if (timeout <= 0)
         return 0;
 
     u32 header = 0;
@@ -710,6 +723,7 @@ u16 wifi_card_mbox0_readpkt(void)
         WLOG_FLUSH();
         return 0;
     }
+
 
 #ifdef SDIO_NO_BLOCKRW
     // Read out all data that we can
@@ -1038,7 +1052,7 @@ void wifi_card_process_pkts(void)
     u32 int_sts = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
     wifi_card_write_func1_u32(F1_HOST_INT_STATUS, int_sts);
 
-    wifi_card_mbox0_readpkt();
+    while (wifi_card_mbox0_readpkt());
 }
 
 void wifi_card_irq(void)

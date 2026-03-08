@@ -13,9 +13,15 @@ void wifi_ndma_init(void)
     REG_NDMA_GCR = NDMA_GCR_FIXED_METHOD;
 }
 
-void wifi_ndma_wait(void)
+bool wifi_ndma_wait(void)
 {
-    while (ndmaBusy(WIFI_NDMA_CHAN));
+    //while (ndmaBusy(WIFI_NDMA_CHAN));
+    //return true;
+    for (size_t i = 0; i < 1000*1000; ++i)
+    {
+        if (!ndmaBusy(WIFI_NDMA_CHAN)) return true;
+    }
+    return false;
 }
 
 void wifi_ndma_read(void *dst, u32 len)
