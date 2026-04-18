@@ -396,3 +396,11 @@ u16 wifi_sdio_get_cardirq_stat(void)
 {
     return wifi_sdio_read16(WIFI_SDIO_OFFS_CARDIRQ_STAT);
 }
+
+// ----------------------------------------------------------------------------
+// dsiwifi7_bmi.h implementation follows here
+// ----------------------------------------------------------------------------
+
+void SDIO_enable_cardirq(bool en) __attribute__((__alias__("wifi_sdio_enable_cardirq")));
+u16 SDIO_get_cardirq_stat(void) __attribute__((__alias__("wifi_sdio_get_cardirq_stat")));
+

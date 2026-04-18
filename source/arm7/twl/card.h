@@ -48,6 +48,8 @@ enum wpa_type_t
 #define F1_INT_STATUS_ENABLE    (0x418)
 #define F1_COUNT4               (0x450)
 
+#include "dsiwifi7_bmi.h"
+
 u32 wifi_card_read_func1_u32(u32 addr);
 void wifi_card_write_func1_u32(u32 addr, u32 val);
 

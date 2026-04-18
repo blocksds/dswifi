@@ -480,13 +480,14 @@ u32 wifi_card_read_mbox0_u32(void)
     return val;
 }
 
-u32 wifi_card_read_mbox0_u32_timeout_def(u32 def)
+bool wifi_card_read_mbox0_u32_timeout(u32* retv, u32 timeout_max)
 {
     u32 timeout = 0;
-    while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1) && ++timeout < 10);
+    while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1) && ++timeout < timeout_max);
 
-    if (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1))
-        return def;
+    if (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1)) {
+        return false;
+    }
 
     u32 val = 0;
     for (int i = 0; i < 4; i++)
@@ -497,11 +498,8 @@ u32 wifi_card_read_mbox0_u32_timeout_def(u32 def)
         val |= (wifi_card_read_func1_u8(0xFF) << i * 8);
     }
 
-    return val;
-}
-u32 wifi_card_read_mbox0_u32_timeout()
-{
-    return wifi_card_read_mbox0_u32_timeout_def(0xFFFFFFFF);
+    *retv = val;
+    return true;
 }
 
 // TODO: Move this to block transfers.
@@ -670,6 +668,44 @@ void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len)
 static bool mbox_has_lookahead = false;
 static u32 mbox_lookahead = 0;
 
+u16 wifi_card_mbox0_readbytes(u8 *read_buffer, u32 sz_buf, u32 len_read)
+{
+#ifdef SDIO_NO_BLOCKRW
+    // Read out all data that we can
+    //int end_cnt = 0;
+    u16 actual_len = 0;
+    while (1) // Read until we see the EOM bit thrice
+    {
+        while (!(wifi_card_read_func1_u8(F1_HOST_INT_STATUS) & 1)); // We don't have data...
+
+        u8 val = wifi_card_read_func1_u8(0xFF); // (0x1000 - full_len)+actual_len
+
+        if (actual_len < sz_buf)
+            read_buffer[actual_len] = val;
+
+        actual_len++;
+
+        if (actual_len >= read_len)
+            break;
+
+        // We've reached the last few bytes of the packet
+        /*
+        if (wifi_card_read_func1_u8(F1_MBOX_FRAME) & 0x10)
+            end_cnt++;
+
+        if (end_cnt > 3)
+            break;
+        */
+    }
+#else
+    u16 actual_len = len_read;
+    u16 send_addr = 0x4000 - len_read;
+    wifi_card_read_func1_block(send_addr, read_buffer, len_read);
+#endif
+
+    return actual_len;
+}
+
 u16 wifi_card_mbox0_readpkt(void)
 {
     //memset(mbox_buffer, 0, MBOX_TMPBUF_SIZE);
@@ -724,39 +760,7 @@ u16 wifi_card_mbox0_readpkt(void)
         return 0;
     }
 
-
-#ifdef SDIO_NO_BLOCKRW
-    // Read out all data that we can
-    //int end_cnt = 0;
-    u16 actual_len = 0;
-    while (1) // Read until we see the EOM bit thrice
-    {
-        while (!(wifi_card_read_func1_u8(F1_HOST_INT_STATUS) & 1)); // We don't have data...
-
-        u8 val = wifi_card_read_func1_u8(0xFF); // (0x1000 - full_len)+actual_len
-
-        if (actual_len < MBOX_TMPBUF_SIZE)
-            read_buffer[actual_len] = val;
-
-        actual_len++;
-
-        if (actual_len >= full_len)
-            break;
-
-        // We've reached the last few bytes of the packet
-        /*
-        if (wifi_card_read_func1_u8(F1_MBOX_FRAME) & 0x10)
-            end_cnt++;
-
-        if (end_cnt > 3)
-            break;
-        */
-    }
-#else
-    u16 actual_len = full_len;
-    u16 send_addr = 0x4000 - full_len;
-    wifi_card_read_func1_block(send_addr, read_buffer, full_len);
-#endif
+    u16 actual_len = wifi_card_mbox0_readbytes(read_buffer, MBOX_TMPBUF_SIZE, full_len);
 
     if (!actual_len)
         return 0;
@@ -860,6 +864,13 @@ void wifi_card_bmi_start_firmware(void)
     wifi_card_write_mbox0_u32(BMI_DONE, true);
 }
 
+void wifi_card_bmi_set_entrypoint(u32 addr)
+{
+    //wifi_card_bmi_wait_count4();
+    wifi_card_write_mbox0_u32(BMI_SET_APP_START, false);
+    wifi_card_write_mbox0_u32(addr, true);
+}
+
 void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
 {
     // Possibly faster, does the same thing.
@@ -884,12 +895,12 @@ void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
         wifi_card_read_func1_u8(0xFF);
 }
 
-void wifi_card_bmi_cmd_write_memory(u32 addr, u8* data, u32 len)
+void wifi_card_bmi_cmd_write_memory(u32 addr, const u8* data, u32 len)
 {
     // Possibly faster, does the same thing.
-    if (len == 4)
+    if (len == 4 && ((uintptr_t)data & 3) == 0)
     {
-        wifi_card_write_intern_word(addr, *(u32*)&data[0]);
+        wifi_card_write_intern_word(addr, *(const u32*)&data[0]);
         return;
     }
 
@@ -915,7 +926,9 @@ u32 wifi_card_bmi_execute(u32 addr, u32 arg)
     wifi_card_write_mbox0_u32(addr, false);
     wifi_card_write_mbox0_u32(arg, true);
 
-    return wifi_card_read_mbox0_u32_timeout();
+    u32 v = 0xffffffff;
+    wifi_card_read_mbox0_u32_timeout(&v, 200);
+    return v;
 }
 
 u32 wifi_card_bmi_read_register(u32 addr)
@@ -937,10 +950,10 @@ u32 wifi_card_bmi_get_version(void)
 {
     wifi_card_write_mbox0_u32(BMI_GET_TARGET_ID, true);
 
-    u32 ret = wifi_card_read_mbox0_u32_timeout_def(0xFEFEFEFE);
-    if (ret == 0xFEFEFEFE) // timeout
+    u32 ret = 0;
+    if (!wifi_card_read_mbox0_u32_timeout(&ret, 10))
     {
-        return 0xFFFFFFFF;
+        return 0xffffffff; // timeout
     }
     else if (ret == 0xFFFFFFFF) // Extended
     {
@@ -988,7 +1001,17 @@ void wifi_card_bmi_lz_data(const u8* data, u32 len)
 
 // BMI helpers
 
-void wifi_card_bmi_write_memory(u32 addr, u8* data, u32 len)
+void wifi_card_bmi_read_memory(u32 addr, u32 len, u8* data)
+{
+    u32 chunk_size = 0x1F0;
+    for (size_t i = 0; i < len; i += chunk_size)
+    {
+        u32 frag_size = i+chunk_size > len ? len-i : chunk_size;
+        wifi_card_bmi_cmd_read_memory(addr + i, frag_size, &data[i]);
+    }
+}
+
+void wifi_card_bmi_write_memory(u32 addr, const u8* data, u32 len)
 {
     u32 chunk_size = 0x1F0;
     for (size_t i = 0; i < len; i += chunk_size)
@@ -1025,6 +1048,16 @@ void wifi_card_init(void)
     wpa_mbedtls_init();
 }
 
+int wifi_card_device_init_bmi(void);
+int wifi_card_wlan_init_bmi(void);
+int wifi_card_init_bmi(void)
+{
+    wifi_ndma_init();
+    wifi_sdio_controller_init();
+
+    return wifi_card_device_init_bmi();
+}
+
 void wifi_card_send_command(wifi_sdio_command cmd, u32 args)
 {
     wlan_ctx.tmio.buffer = NULL;
@@ -1046,6 +1079,16 @@ int wifi_card_device_init(void)
     return wifi_card_wlan_init();
 }
 
+int wifi_card_device_init_bmi(void)
+{
+    memset(&wlan_ctx, 0, sizeof(wlan_ctx));
+
+    wlan_ctx.tmio.clk_cnt = 0; // HCLK divider, 7=512 (largest possible) 0=2
+    wlan_ctx.tmio.bus_width = 1;
+
+    return wifi_card_wlan_init_bmi();
+}
+
 void wifi_card_process_pkts(void)
 {
     // Ack the interrupts
@@ -1064,7 +1107,7 @@ void wifi_card_irq(void)
     //wmi_tick(); // TODO
 }
 
-int wifi_card_wlan_init(void)
+int wifi_card_wlan_init_bmi(void)
 {
     wifi_card_ctx *ctx = &wlan_ctx;
 
@@ -1235,6 +1278,8 @@ skip_opcond:
     // Required?
     ioDelay(0xF000);
 
+    //WLOG_PUTS("I: read func0 again\n"); WLOG_FLUSH();
+
     // Read register 0x00 (Revision)
     u8 revision = wifi_card_read_func0_u8(0x00);
     (void)revision;
@@ -1376,6 +1421,11 @@ skip_opcond:
     wifi_card_write_intern_word(device_eeprom_addr+0x04, fix_check);
     */
 
+    return 0;
+}
+
+int wifi_card_wlan_init_bmifinish(void)
+{
     // BMI finish
     WLOG_PUTS("T: BMI finishing...\n");
     WLOG_FLUSH();
@@ -1391,7 +1441,7 @@ skip_opcond:
 
     // WLOG_PUTS("BMI finishing... a");
 
-    mem_write32 = 0x80;
+    u32 mem_write32 = 0x80;
     wifi_card_bmi_cmd_write_memory(device_host_interest_addr + 0x6C, (u8*)&mem_write32, sizeof(u32));
 
     mem_write32 = 0x63;
@@ -1440,6 +1490,14 @@ skip_opcond:
     return 0;
 }
 
+int wifi_card_wlan_init(void)
+{
+    int r = wifi_card_wlan_init_bmi();
+    if (r != 0) return r;
+
+    return wifi_card_wlan_init_bmifinish();
+}
+
 void wifi_card_deinit(void)
 {
     wifi_sdio_enable_cardirq(false);
@@ -1483,3 +1541,40 @@ void wifi_card_stop(void)
 {
     wifi_sdio_stop();
 }
+
+// ----------------------------------------------------------------------------
+// dsiwifi7_bmi.h implementation follows here
+// ----------------------------------------------------------------------------
+
+// currently, most externally-visible functions here can function simply as an
+// alias of one of the internal functions. in case the latter are to be
+// refactored, the functions below can simply be reimplemented as usual
+
+u8 SDIO_func0_read_u8(u32 addr) __attribute__((__alias__("wifi_card_read_func0_u8")));
+int SDIO_func0_write_u8(u32 addr, u8 val) __attribute__((__alias__("wifi_card_write_func0_u8")));
+u8 SDIO_func1_read_u8(u32 addr) __attribute__((__alias__("wifi_card_read_func1_u8")));
+int SDIO_func1_write_u8(u32 addr, u8 val) __attribute__((__alias__("wifi_card_write_func1_u8")));
+u32 SDIO_func1_read_u32(u32 addr) __attribute__((__alias__("wifi_card_read_func1_u32")));
+void SDIO_func1_write_u32(u32 addr, u32 val) __attribute__((__alias__("wifi_card_write_func1_u32")));
+
+void ath6k_mbox0_write_u32(u32 val, bool send_irq) __attribute__((__alias__("wifi_card_write_mbox0_u32")));
+bool ath6k_mbox0_read_u32_timeout(u32 *retv, u32 timeout) __attribute__((__alias__("wifi_card_read_mbox0_u32_timeout")));
+u16 ath6k_mbox0_readbytes(u8 *dat, u32 sz_buf, u32 len_read) __attribute__((__alias__("wifi_card_mbox0_readbytes")));
+void ath6k_mbox0_sendbytes(const u8 *dat, u32 len) __attribute__((__alias__("wifi_card_mbox0_sendbytes")));
+u32 ath6k_read_intern_word(u32 addr) __attribute__((__alias__("wifi_card_read_intern_word")));
+void ath6k_write_intern_word(u32 addr, u32 data) __attribute__((__alias__("wifi_card_write_intern_word")));
+
+void ath6k_bmi_wait_count4(void) __attribute__((__alias__("wifi_card_bmi_wait_count4")));
+void ath6k_bmi_set_entrypoint(u32 addr) __attribute__((__alias__("wifi_card_bmi_set_entrypoint")));
+void ath6k_bmi_start_firmware(void) __attribute__((__alias__("wifi_card_bmi_start_firmware")));
+u32 ath6k_bmi_execute(u32 addr, u32 arg) __attribute__((__alias__("wifi_card_bmi_execute")));
+u32 ath6k_bmi_read_register(u32 addr) __attribute__((__alias__("wifi_card_bmi_read_register")));
+void ath6k_bmi_write_register(u32 addr, u32 val) __attribute__((__alias__("wifi_card_bmi_write_register")));
+u32 ath6k_bmi_get_version(void) __attribute__((__alias__("wifi_card_bmi_get_version")));
+void ath6k_bmi_read_memory(u32 addr, u32 len, u8* data) __attribute__((__alias__("wifi_card_bmi_read_memory")));
+void ath6k_bmi_write_memory(u32 addr, const u8* data, u32 len) __attribute__((__alias__("wifi_card_bmi_write_memory")));
+void ath6k_bmi_lz_upload(u32 addr, const u8* data, u32 len) __attribute__((__alias__("wifi_card_bmi_lz_upload")));
+
+int ath6k_init_hw_to_bmi(void) __attribute__((__alias__("wifi_card_init_bmi")));
+void ath6k_deinit_hw(void) __attribute__((__alias__("wifi_card_deinit")));
+
