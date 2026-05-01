@@ -27,7 +27,7 @@
 
 static wifi_card_ctx wlan_ctx = {0};
 
-int wifi_card_wlan_init(void);
+static int wifi_card_wlan_init(void);
 
 #define ID_AR6002 (0x02000271)
 #define ID_AR601x (0x02010271)
@@ -137,7 +137,8 @@ static const wifi_sdio_command cmd53_write_single =
 
 // Device info
 
-const char *wifi_card_get_chip_str(void)
+#ifdef DSWIFI_LOGS
+static const char *wifi_card_get_chip_str(void)
 {
     switch (device_chip_id)
     {
@@ -151,10 +152,11 @@ const char *wifi_card_get_chip_str(void)
             return "Unknown";
     }
 }
+#endif
 
 // SDIO basics
 
-int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
+static int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
 {
     // Read register 0x02 (function enable) hibyte until it's ready
     wifi_card_send_command(cmd52,
@@ -165,7 +167,7 @@ int wifi_card_write_func_byte(u8 func, u32 addr, u8 val)
     return 0;
 }
 
-int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
+static int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
 {
     //wifi_sdio_stop();
 
@@ -192,7 +194,7 @@ int wifi_card_read_func1_32bit(u32 addr, void* buf, u32 len)
     return 0;
 }
 
-int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
+static int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
 {
     wifi_ndma_wait();
     wifi_sdio_stop();
@@ -214,7 +216,7 @@ int wifi_card_read_func1_block(u32 addr, void* buf, u32 len)
     return 0;
 }
 
-int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
+static int wifi_card_write_func1_block(u32 addr, void* buf, u32 len)
 {
     wifi_ndma_wait();
 
@@ -264,26 +266,14 @@ u8 wifi_card_read_func0_u8(u32 addr)
     return wifi_card_read_func_byte(0, addr);
 }
 
-u16 wifi_card_read_func0_u16(u32 addr)
+static u16 wifi_card_read_func0_u16(u32 addr)
 {
     return wifi_card_read_func0_u8(addr) | (wifi_card_read_func0_u8(addr + 1) << 8);
 }
 
-u32 wifi_card_read_func0_u32(u32 addr)
+static u32 wifi_card_read_func0_u32(u32 addr)
 {
     return wifi_card_read_func0_u16(addr) | (wifi_card_read_func0_u16(addr + 2) << 16);
-}
-
-u16 wifi_card_write_func0_u16(u32 addr, u16 val)
-{
-    return wifi_card_write_func0_u8(addr, val & 0xFF)
-                | (wifi_card_write_func0_u8(addr + 1, val >> 8) << 8);
-}
-
-u32 wifi_card_write_func0_u32(u32 addr, u32 val)
-{
-    return wifi_card_write_func0_u16(addr, val & 0xFFFF)
-                | (wifi_card_write_func0_u16(addr + 2, val >> 16) << 16);
 }
 
 // Func1 boilerplate
@@ -297,7 +287,7 @@ u8 wifi_card_read_func1_u8(u32 addr)
     return wifi_card_read_func_byte(1, addr);
 }
 
-u16 wifi_card_read_func1_u16(u32 addr)
+static u16 wifi_card_read_func1_u16(u32 addr)
 {
     return wifi_card_read_func1_u8(addr) | (wifi_card_read_func1_u8(addr + 1) << 8);
 }
@@ -307,14 +297,14 @@ u32 wifi_card_read_func1_u32(u32 addr)
     return wifi_card_read_func1_u16(addr) | (wifi_card_read_func1_u16(addr + 2) << 16);
 }
 
-u32 wifi_card_read_func1_u32_fast(u32 addr)
+static u32 wifi_card_read_func1_u32_fast(u32 addr)
 {
     // return wifi_card_read_func1_u16(addr) | (wifi_card_read_func1_u16(addr + 2) << 16);
     wifi_card_read_func1_32bit(addr, wifi_card_alignedbuf_small, sizeof(u32));
     return wifi_card_alignedbuf_small[0];
 }
 
-void wifi_card_write_func1_u16(u32 addr, u16 val)
+static void wifi_card_write_func1_u16(u32 addr, u16 val)
 {
     // Write from MSB to LSB
     wifi_card_write_func1_u8(addr + 1, val >> 8);
@@ -336,7 +326,7 @@ u32 wifi_card_read_intern_word(u32 addr)
     return ret;
 }
 
-u32 wifi_card_read_intern_word_fast(u32 addr)
+static u32 wifi_card_read_intern_word_fast(u32 addr)
 {
     wifi_card_write_func1_u32(0x0047C, addr); // WINDOW_READ_ADDR;
     u32 ret = wifi_card_read_func1_u32_fast(0x00474); // WINDOW_DATA
@@ -433,7 +423,7 @@ void wifi_card_mbox_clear(void)
 // Idk what this even is, no$ wifiboot does it before every BMI cmd,
 // but I suspect it's a workaround for writing too much to FIFOs w/
 // block transfers
-void wifi_card_bmi_wait_count4(void)
+static void wifi_card_bmi_wait_count4(void)
 {
     while (wifi_card_read_func1_u8(F1_COUNT4) == 0)
     {
@@ -441,7 +431,7 @@ void wifi_card_bmi_wait_count4(void)
     }
 }
 
-void wifi_card_write_mbox0_u32(u32 val, bool send_irq)
+static void wifi_card_write_mbox0_u32(u32 val, bool send_irq)
 {
     for (int i = 0; i < 4; i++)
     {
@@ -464,7 +454,7 @@ void wifi_card_write_mbox0_u32(u32 val, bool send_irq)
     }
 }
 
-u32 wifi_card_read_mbox0_u32(void)
+static u32 wifi_card_read_mbox0_u32(void)
 {
     while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1));
 
@@ -480,7 +470,7 @@ u32 wifi_card_read_mbox0_u32(void)
     return val;
 }
 
-bool wifi_card_read_mbox0_u32_timeout(u32* retv, u32 timeout_max)
+static bool wifi_card_read_mbox0_u32_timeout(u32* retv, u32 timeout_max)
 {
     u32 timeout = 0;
     while (!(wifi_card_read_func1_u8(F1_RX_LOOKAHEAD_VALID) & 1) && ++timeout < timeout_max);
@@ -506,7 +496,7 @@ bool wifi_card_read_mbox0_u32_timeout(u32* retv, u32 timeout_max)
 // This could get tricky since we'd be unable to failsafe on TX overflows.
 // Maybe it would be better to make a DMA330 driver specifically
 // for this? Or just ignore overflows/find a good way to manage them.
-void wifi_card_mbox0_sendbytes(const u8 *data, u32 len)
+static void wifi_card_mbox0_sendbytes(const u8 *data, u32 len)
 {
     u16 send_addr = 0x4000 - len;
 
@@ -562,7 +552,7 @@ void wifi_card_mbox0_send_packet(u8 type, u8 ack_type, const u8* data, u16 len, 
     wifi_card_mbox0_sendbytes(mbox_out_buffer, len); // len
 }
 
-void data_handle_pkt(u8 *pkt_data, u32 len)
+static void data_handle_pkt(u8 *pkt_data, u32 len)
 {
     struct __attribute__((packed)) {
         s16 rssi;
@@ -668,7 +658,7 @@ void wmi_send_pkt(u16 wmi_type, u8 ack_type, const void *data, u16 len)
 static bool mbox_has_lookahead = false;
 static u32 mbox_lookahead = 0;
 
-u16 wifi_card_mbox0_readbytes(u8 *read_buffer, u32 sz_buf, u32 len_read)
+static u16 wifi_card_mbox0_readbytes(u8 *read_buffer, u32 sz_buf, u32 len_read)
 {
 #ifdef SDIO_NO_BLOCKRW
     // Read out all data that we can
@@ -698,6 +688,7 @@ u16 wifi_card_mbox0_readbytes(u8 *read_buffer, u32 sz_buf, u32 len_read)
         */
     }
 #else
+    (void)sz_buf;
     u16 actual_len = len_read;
     u16 send_addr = 0x4000 - len_read;
     wifi_card_read_func1_block(send_addr, read_buffer, len_read);
@@ -858,20 +849,20 @@ u16 wifi_card_mbox0_readpkt(void)
 // BMI
 //
 
-void wifi_card_bmi_start_firmware(void)
+static void wifi_card_bmi_start_firmware(void)
 {
     //wifi_card_bmi_wait_count4();
     wifi_card_write_mbox0_u32(BMI_DONE, true);
 }
 
-void wifi_card_bmi_set_entrypoint(u32 addr)
+static void wifi_card_bmi_set_entrypoint(u32 addr)
 {
     //wifi_card_bmi_wait_count4();
     wifi_card_write_mbox0_u32(BMI_SET_APP_START, false);
     wifi_card_write_mbox0_u32(addr, true);
 }
 
-void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
+static void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
 {
     // Possibly faster, does the same thing.
     if (len == 4)
@@ -895,7 +886,7 @@ void wifi_card_bmi_cmd_read_memory(u32 addr, u32 len, u8* out)
         wifi_card_read_func1_u8(0xFF);
 }
 
-void wifi_card_bmi_cmd_write_memory(u32 addr, const u8* data, u32 len)
+static void wifi_card_bmi_cmd_write_memory(u32 addr, const u8* data, u32 len)
 {
     // Possibly faster, does the same thing.
     if (len == 4 && ((uintptr_t)data & 3) == 0)
@@ -920,7 +911,7 @@ void wifi_card_bmi_cmd_write_memory(u32 addr, const u8* data, u32 len)
     }
 }
 
-u32 wifi_card_bmi_execute(u32 addr, u32 arg)
+static u32 wifi_card_bmi_execute(u32 addr, u32 arg)
 {
     wifi_card_write_mbox0_u32(BMI_EXECUTE, false);
     wifi_card_write_mbox0_u32(addr, false);
@@ -931,7 +922,7 @@ u32 wifi_card_bmi_execute(u32 addr, u32 arg)
     return v;
 }
 
-u32 wifi_card_bmi_read_register(u32 addr)
+static u32 wifi_card_bmi_read_register(u32 addr)
 {
     wifi_card_write_mbox0_u32(BMI_READ_SOC_REGISTER, false);
     wifi_card_write_mbox0_u32(addr, true);
@@ -939,14 +930,14 @@ u32 wifi_card_bmi_read_register(u32 addr)
     return wifi_card_read_mbox0_u32();
 }
 
-void wifi_card_bmi_write_register(u32 addr, u32 val)
+static void wifi_card_bmi_write_register(u32 addr, u32 val)
 {
     wifi_card_write_mbox0_u32(BMI_WRITE_SOC_REGISTER, false);
     wifi_card_write_mbox0_u32(addr, false);
     wifi_card_write_mbox0_u32(val, true);
 }
 
-u32 wifi_card_bmi_get_version(void)
+static u32 wifi_card_bmi_get_version(void)
 {
     wifi_card_write_mbox0_u32(BMI_GET_TARGET_ID, true);
 
@@ -971,13 +962,13 @@ u32 wifi_card_bmi_get_version(void)
     return ret;
 }
 
-void wifi_card_bmi_lz_start(u32 addr)
+static void wifi_card_bmi_lz_start(u32 addr)
 {
     wifi_card_write_mbox0_u32(BMI_LZ_STREAM_START, false);
     wifi_card_write_mbox0_u32(addr, true);
 }
 
-void wifi_card_bmi_lz_data(const u8* data, u32 len)
+static void wifi_card_bmi_lz_data(const u8* data, u32 len)
 {
     wifi_card_write_mbox0_u32(BMI_LZ_DATA, false);
     wifi_card_write_mbox0_u32(len + len % 4, false);
@@ -1001,7 +992,7 @@ void wifi_card_bmi_lz_data(const u8* data, u32 len)
 
 // BMI helpers
 
-void wifi_card_bmi_read_memory(u32 addr, u32 len, u8* data)
+static void wifi_card_bmi_read_memory(u32 addr, u32 len, u8* data)
 {
     u32 chunk_size = 0x1F0;
     for (size_t i = 0; i < len; i += chunk_size)
@@ -1011,7 +1002,7 @@ void wifi_card_bmi_read_memory(u32 addr, u32 len, u8* data)
     }
 }
 
-void wifi_card_bmi_write_memory(u32 addr, const u8* data, u32 len)
+static void wifi_card_bmi_write_memory(u32 addr, const u8* data, u32 len)
 {
     u32 chunk_size = 0x1F0;
     for (size_t i = 0; i < len; i += chunk_size)
@@ -1021,7 +1012,7 @@ void wifi_card_bmi_write_memory(u32 addr, const u8* data, u32 len)
     }
 }
 
-void wifi_card_bmi_lz_upload(u32 addr, const u8* data, u32 len)
+static void wifi_card_bmi_lz_upload(u32 addr, const u8* data, u32 len)
 {
     wifi_card_bmi_lz_start(addr);
 
@@ -1048,9 +1039,9 @@ void wifi_card_init(void)
     wpa_mbedtls_init();
 }
 
-int wifi_card_device_init_bmi(void);
-int wifi_card_wlan_init_bmi(void);
-int wifi_card_init_bmi(void)
+static int wifi_card_device_init_bmi(void);
+static int wifi_card_wlan_init_bmi(void);
+static int wifi_card_init_bmi(void)
 {
     wifi_ndma_init();
     wifi_sdio_controller_init();
@@ -1079,7 +1070,7 @@ int wifi_card_device_init(void)
     return wifi_card_wlan_init();
 }
 
-int wifi_card_device_init_bmi(void)
+static int wifi_card_device_init_bmi(void)
 {
     memset(&wlan_ctx, 0, sizeof(wlan_ctx));
 
@@ -1089,7 +1080,7 @@ int wifi_card_device_init_bmi(void)
     return wifi_card_wlan_init_bmi();
 }
 
-void wifi_card_process_pkts(void)
+static void wifi_card_process_pkts(void)
 {
     // Ack the interrupts
     u32 int_sts = wifi_card_read_func1_u32(F1_HOST_INT_STATUS);
@@ -1098,7 +1089,7 @@ void wifi_card_process_pkts(void)
     while (wifi_card_mbox0_readpkt());
 }
 
-void wifi_card_irq(void)
+static void wifi_card_irq(void)
 {
     Wifi_RandomAddEntropy(REG_VCOUNT);
 
@@ -1107,7 +1098,7 @@ void wifi_card_irq(void)
     //wmi_tick(); // TODO
 }
 
-int wifi_card_wlan_init_bmi(void)
+static int wifi_card_wlan_init_bmi(void)
 {
     wifi_card_ctx *ctx = &wlan_ctx;
 
@@ -1424,7 +1415,7 @@ skip_opcond:
     return 0;
 }
 
-int wifi_card_wlan_init_bmifinish(void)
+static int wifi_card_wlan_init_bmifinish(void)
 {
     // BMI finish
     WLOG_PUTS("T: BMI finishing...\n");
@@ -1490,7 +1481,7 @@ int wifi_card_wlan_init_bmifinish(void)
     return 0;
 }
 
-int wifi_card_wlan_init(void)
+static int wifi_card_wlan_init(void)
 {
     int r = wifi_card_wlan_init_bmi();
     if (r != 0) return r;
