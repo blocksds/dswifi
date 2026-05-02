@@ -737,7 +737,7 @@ u16 wifi_card_mbox0_readpkt(void)
     // just discard in chunks of 4 and be loud about it.
     if (len > 0x2000)
     {
-        u16 actual_len = 0;
+        __attribute__((unused)) u16 actual_len = 0;
         for (int i = 0; i < 4; i++)
         {
             if (!(wifi_card_read_func1_u8(F1_HOST_INT_STATUS) & 1))
