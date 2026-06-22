@@ -53,7 +53,9 @@
 #include "lwip/inet.h"
 #include "lwip/errno.h"
 
+#include <fcntl.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -397,39 +399,6 @@ typedef struct ipv6_mreq {
 #define IPTOS_PREC_PRIORITY             0x20
 #define IPTOS_PREC_ROUTINE              0x00
 
-
-/*
- * Commands for ioctlsocket(),  taken from the BSD file fcntl.h.
- * lwip_ioctl only supports FIONREAD and FIONBIO, for now
- *
- * Ioctl's have the command encoded in the lower word,
- * and the size of any in or out parameters in the upper
- * word.  The high 2 bits of the upper word are used
- * to encode the in/out status of the parameter; for now
- * we restrict parameters to at most 128 bytes.
- */
-#if !defined(FIONREAD) || !defined(FIONBIO)
-#define IOCPARM_MASK    0x7fUL          /* parameters must be < 128 bytes */
-#define IOC_VOID        0x20000000UL    /* no parameters */
-#define IOC_OUT         0x40000000UL    /* copy out parameters */
-#define IOC_IN          0x80000000UL    /* copy in parameters */
-#define IOC_INOUT       (IOC_IN|IOC_OUT)
-                                        /* 0x20000000 distinguishes new &
-                                           old ioctl's */
-#define _IO(x,y)        ((long)(IOC_VOID|((x)<<8)|(y)))
-
-#define _IOR(x,y,t)     ((long)(IOC_OUT|((sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y)))
-
-#define _IOW(x,y,t)     ((long)(IOC_IN|((sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y)))
-#endif /* !defined(FIONREAD) || !defined(FIONBIO) */
-
-#ifndef FIONREAD
-#define FIONREAD    _IOR('f', 127, unsigned long) /* get # bytes to read */
-#endif
-#ifndef FIONBIO
-#define FIONBIO     _IOW('f', 126, unsigned long) /* set/clear non-blocking i/o */
-#endif
-
 /* Socket I/O Controls: unimplemented */
 #ifndef SIOCSHIWAT
 #define SIOCSHIWAT  _IOW('s',  0, unsigned long)  /* set high watermark */
@@ -437,32 +406,6 @@ typedef struct ipv6_mreq {
 #define SIOCSLOWAT  _IOW('s',  2, unsigned long)  /* set low watermark */
 #define SIOCGLOWAT  _IOR('s',  3, unsigned long)  /* get low watermark */
 #define SIOCATMARK  _IOR('s',  7, unsigned long)  /* at oob mark? */
-#endif
-
-/* commands for fnctl */
-#ifndef F_GETFL
-#define F_GETFL 3
-#endif
-#ifndef F_SETFL
-#define F_SETFL 4
-#endif
-
-/* File status flags and file access modes for fnctl,
-   these are bits in an int. */
-#ifndef O_NONBLOCK
-#define O_NONBLOCK  1 /* nonblocking I/O */
-#endif
-#ifndef O_NDELAY
-#define O_NDELAY    O_NONBLOCK /* same as O_NONBLOCK, for compatibility */
-#endif
-#ifndef O_RDONLY
-#define O_RDONLY    2
-#endif
-#ifndef O_WRONLY
-#define O_WRONLY    4
-#endif
-#ifndef O_RDWR
-#define O_RDWR      (O_RDONLY|O_WRONLY)
 #endif
 
 #ifndef SHUT_RD

@@ -63,14 +63,6 @@ extern "C" {
 #define SOCK_STREAM     1
 #define SOCK_DGRAM      2
 
-#define IOC_OUT         0x40000000UL // Copy out parameters
-#define IOC_IN          0x80000000UL // Copy in parameters
-#define _IOR(x,y,t)     ((long)(IOC_OUT | (sizeof(t) << 16) | ((x) << 8) | (y)))
-#define _IOW(x,y,t)     ((long)(IOC_IN | (sizeof(t) << 16) | ((x) << 8) | (y)))
-
-#define FIONREAD        _IOR('f', 127, unsigned long) // Get number of bytes to read
-#define FIONBIO         _IOW('f', 126, unsigned long) // Set/clear non-blocking I/O
-
 #define SOCKET_ERROR    -1
 
 // shutdown() flags

@@ -6,8 +6,10 @@
 #define __LWIPOPTS_H__
 
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 #include "common/random.h"
 
@@ -139,13 +141,6 @@
 
 #define SO_REUSE                    1
 #define LWIP_SO_RCVBUF              1
-
-// Defines taken from picolibc. By defining them here lwIP will use the values
-// provided by us instead of the default values of lwIP.
-#define O_RDONLY    0
-#define O_WRONLY    1
-#define O_RDWR      2
-#define O_NONBLOCK  0x4000
 
 // lwIP system integration settings
 // ================================

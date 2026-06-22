@@ -121,26 +121,16 @@ int poll(struct pollfd *fds, nfds_t nfds, int timeout)
     return lwip_poll(fds, nfds, timeout);
 }
 
-int ioctl(int s, long cmd, ...)
+int dswifi_ioctl(int s, unsigned long cmd, va_list ap)
 {
-    va_list ap;
-    void *argp;
-
-    va_start(ap, cmd);
-    argp = va_arg(ap, void*);
-    va_end(ap);
+    void *argp = va_arg(ap, void*);
 
     return lwip_ioctl(s, cmd, argp);
 }
 
-int fcntl(int s, int cmd, ...)
+int dswifi_fcntl(int s, int cmd, va_list ap)
 {
-    va_list ap;
-    int val;
-
-    va_start(ap, cmd);
-    val = va_arg(ap, int);
-    va_end(ap);
+    int val = va_arg(ap, int);
 
     return lwip_fcntl(s, cmd, val);
 }
@@ -200,10 +190,14 @@ void dswifi_lwip_setup_io_posix(void)
     extern ssize_t (*socket_fn_write)(int, const void *, size_t);
     extern ssize_t (*socket_fn_read)(int, void *, size_t);
     extern int (*socket_fn_close)(int);
+    extern int (*socket_fn_ioctl)(int, unsigned long, va_list);
+    extern int (*socket_fn_fcntl)(int, int, va_list);
 
     socket_fn_write = lwip_write;
     socket_fn_read = lwip_read;
     socket_fn_close = lwip_close;
+    socket_fn_ioctl = dswifi_ioctl;
+    socket_fn_fcntl = dswifi_fcntl;
 }
 
 #endif // DSWIFI_ENABLE_LWIP
