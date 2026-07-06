@@ -302,6 +302,39 @@ void Wifi_NTR_Start(void)
     W_TXSTATCNT      = 0;
     W_X_00A          = 0;
     W_MODE_RST       = 1;
+
+    // Arm the TSF compare if the firmware-inherited value is garbage.
+    //
+    // The beacon timeslot (TBTT) is generated from the US counter vs the
+    // W_US_COMPARE registers, and this code has always trusted whatever
+    // value the firmware left there. On DS-phat/lite that is reliably the
+    // all-ones-except-low-10-bits pattern and TBTT works. A DSi booting a
+    // flashcart in DS-compat mode, however, sometimes leaves junk here
+    // (e.g. 0x0000031f9275d000 observed on real hardware) — TBTT then
+    // never fires and host mode silently broadcasts no beacons at all:
+    // Wifi_MultiplayerHostMode() reports success, but no other console can
+    // ever see the room (intermittent across boots).
+    //
+    // Only rewrite a value that is neither zero nor already armed:
+    // rewriting an armed value is pointless, and at least one emulator
+    // (melonDS) reports the registers as zero while generating TBTT fine —
+    // and stops delivering beacons if they are overwritten.
+    {
+        u16 c0 = W_US_COMPARE0, c1 = W_US_COMPARE1;
+        u16 c2 = W_US_COMPARE2, c3 = W_US_COMPARE3;
+        int armed = (c0 == 0xFC00) && (c1 == 0xFFFF) &&
+                    (c2 == 0xFFFF) && (c3 == 0xFFFF);
+        int zero  = (c0 | c1 | c2 | c3) == 0;
+        if (!armed && !zero)
+        {
+            WLOG_PRINTF("W: arming TSF compare (was %x:%x:%x:%x)\n",
+                        c3, c2, c1, c0);
+            W_US_COUNT0 = 0; W_US_COUNT1 = 0; W_US_COUNT2 = 0; W_US_COUNT3 = 0;
+            W_US_COMPARE0 = 0xFC00; W_US_COMPARE1 = 0xFFFF;
+            W_US_COMPARE2 = 0xFFFF; W_US_COMPARE3 = 0xFFFF;
+        }
+    }
+
     W_US_COUNTCNT    = 1;
     W_US_COMPARECNT  = 1;
     // SetStaState(0x20);
