@@ -320,18 +320,29 @@ void Wifi_NTR_Start(void)
     // (melonDS) reports the registers as zero while generating TBTT fine —
     // and stops delivering beacons if they are overwritten.
     {
-        u16 c0 = W_US_COMPARE0, c1 = W_US_COMPARE1;
-        u16 c2 = W_US_COMPARE2, c3 = W_US_COMPARE3;
-        int armed = (c0 == 0xFC00) && (c1 == 0xFFFF) &&
-                    (c2 == 0xFFFF) && (c3 == 0xFFFF);
-        int zero  = (c0 | c1 | c2 | c3) == 0;
+        u16 c0 = W_US_COMPARE0;
+        u16 c1 = W_US_COMPARE1;
+        u16 c2 = W_US_COMPARE2;
+        u16 c3 = W_US_COMPARE3;
+
+        bool armed = (c0 == 0xFC00) && (c1 == 0xFFFF) &&
+                     (c2 == 0xFFFF) && (c3 == 0xFFFF);
+        bool zero  = (c0 | c1 | c2 | c3) == 0;
+
         if (!armed && !zero)
         {
             WLOG_PRINTF("W: arming TSF compare (was %x:%x:%x:%x)\n",
                         c3, c2, c1, c0);
-            W_US_COUNT0 = 0; W_US_COUNT1 = 0; W_US_COUNT2 = 0; W_US_COUNT3 = 0;
-            W_US_COMPARE0 = 0xFC00; W_US_COMPARE1 = 0xFFFF;
-            W_US_COMPARE2 = 0xFFFF; W_US_COMPARE3 = 0xFFFF;
+
+            W_US_COUNT0 = 0;
+            W_US_COUNT1 = 0;
+            W_US_COUNT2 = 0;
+            W_US_COUNT3 = 0;
+
+            W_US_COMPARE0 = 0xFC00;
+            W_US_COMPARE1 = 0xFFFF;
+            W_US_COMPARE2 = 0xFFFF;
+            W_US_COMPARE3 = 0xFFFF;
         }
     }
 
