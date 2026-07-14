@@ -66,7 +66,8 @@ static_assert(sizeof(Wifi_RxHeader) == 12);
 //
 //     Offsets     |    Addresses    | Size | Notes
 // ================+=================+======+=======================
-// 0x0000 - 0x09FF | 0x4000 - 0x49FF | 2560 | TX buffer: Not a circular buffer
+// 0x0000 - 0x08BF | 0x4000 - 0x48BF | 2240 | TX buffer: Not a circular buffer
+// 0x08C0 - 0x09FF | 0x48C0 - 0x49FF |  320 | Multiplayer CMD frame buffer
 // ----------------+-----------------+------+-----------------------
 // 0x0A00 - 0x0AFF | 0x4A00 - 0x4AFF |  256 | Client frame (buffer 1) / Beacon frame
 // 0x0B00 - 0x0BFF | 0x4B00 - 0x4BFF |  256 | Client frame (buffer 2) / Beacon frame
@@ -81,10 +82,20 @@ static_assert(sizeof(Wifi_RxHeader) == 12);
 // Definitions used in all modes
 
 #define MAC_TXBUF_START_OFFSET      0x0000
-#define MAC_TXBUF_END_OFFSET        0x0A00
+#define MAC_TXBUF_END_OFFSET        0x08C0
 
 #define MAC_TXBUF_START_ADDRESS     (MAC_BASE_ADDRESS + MAC_TXBUF_START_OFFSET)
 #define MAC_TXBUF_END_ADDRESS       (MAC_BASE_ADDRESS + MAC_TXBUF_END_OFFSET)
+
+// Buffer used for multiplayer CMD frames. It can't be shared with any other
+// kind of frame. When a CMD frame fails to be sent, Wifi_Intr_MultiplayCmdDone
+// rebuilds it in this buffer from an interrupt handler, which overwrites the
+// two halfwords right after the MAC header. In a CMD frame those are the
+// client time and client bits fields, but in any other frame they are user
+// data.
+#define MAC_CMDBUF_START_OFFSET     0x08C0
+#define MAC_CMDBUF_END_OFFSET       0x0A00
+#define MAC_CMDBUF_SIZE             (MAC_CMDBUF_END_OFFSET - MAC_CMDBUF_START_OFFSET)
 
 // Definitions used in multiplayer client mode
 

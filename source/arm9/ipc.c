@@ -309,6 +309,10 @@ int Wifi_MultiplayerHostMode(int max_clients, size_t host_packet_size,
     if (client_size > MAC_CLIENT_RX_SIZE)
         return -1;
 
+    // Make sure CMD frames would fit in the buffer reserved for them
+    if (HDR_TX_SIZE + host_size > MAC_CMDBUF_SIZE)
+        return -1;
+
     WifiData->reqLibraryMode = DSWIFI_MULTIPLAYER_HOST;
     WifiData->reqMaxClients = max_clients;
     WifiData->reqCmdDataSize = host_size;

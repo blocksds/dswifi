@@ -56,7 +56,6 @@ void Wifi_TxRaw(u16 *data, int datalen)
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXREQ_RESET   = TXBIT_CMD;
     W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
@@ -234,7 +233,6 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
     // Start transfer. Set the number of retries before starting.
     // W_TXSTAT       = 0x0001;
     W_TX_RETRYLIMIT = 0x0707;
-    W_TXREQ_RESET   = TXBIT_CMD;
     W_TXBUF_LOC3    = TXBUF_LOCN_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
 
@@ -243,9 +241,9 @@ static int Wifi_TxArm9QueueFlushByLoc3(void)
 
 static int Wifi_TxArm9QueueFlushByCmd(void)
 {
-    // Base addresses of the headers
-    u32 tx_base = MAC_TXBUF_START_OFFSET;
-    u32 ieee_base = MAC_TXBUF_START_OFFSET + HDR_TX_SIZE;
+    // Base addresses of the headers. CMD frames have their own buffer.
+    u32 tx_base = MAC_CMDBUF_START_OFFSET;
+    u32 ieee_base = MAC_CMDBUF_START_OFFSET + HDR_TX_SIZE;
 
     // Get some multiplayer information and calculate durations, the hardware
     // doesn't calculate the durations for multiplayer packets.
@@ -291,8 +289,7 @@ static int Wifi_TxArm9QueueFlushByCmd(void)
 
     // Start transfer. The number of retries should have been set before.
     // W_TXSTAT       = 0x0001;
-    W_TXREQ_RESET   = TXBIT_LOC3 | TXBIT_LOC2 | TXBIT_LOC1;
-    W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_TXBUF_START_OFFSET >> 1);
+    W_TXBUF_CMD     = TXBUF_CMD_ENABLE | (MAC_CMDBUF_START_OFFSET >> 1);
     W_TXREQ_SET     = TXBIT_CMD;
 
     return 1;
@@ -302,13 +299,24 @@ void Wifi_Intr_MultiplayCmdDone(void)
 {
     // Check if the packet failed to be sent and retry if so, up to the limit of
     // retries in W_TX_RETRYLIMIT.
-    if (W_MACMEM(MAC_TXBUF_START_OFFSET + HDR_TX_STATUS) == 5)
+    if (W_MACMEM(MAC_CMDBUF_START_OFFSET + HDR_TX_STATUS) == 5)
     {
         u8 retries_left = W_TX_RETRYLIMIT & 0xFF;
         if (retries_left > 0)
         {
+            // Only rebuild the frame if it really is a CMD frame. Rebuilding
+            // it overwrites the two halfwords after the MAC header, which are
+            // user data in any other kind of frame.
+            u16 fc = W_MACMEM(MAC_CMDBUF_START_OFFSET + HDR_TX_SIZE + HDR_DATA_FRAME_CONTROL);
+            if ((fc & (FC_TO_DS | FC_FROM_DS | FC_TYPE_SUBTYPE_MASK)) !=
+                (TYPE_DATA_CF_POLL | FC_FROM_DS))
+            {
+                W_TXBUF_CMD   = 0;
+                W_TXREQ_RESET = TXBIT_CMD;
+                return;
+            }
             W_TX_RETRYLIMIT = W_TX_RETRYLIMIT - 1;
-            W_MACMEM(MAC_TXBUF_START_OFFSET + HDR_TX_STATUS) = 0;
+            W_MACMEM(MAC_CMDBUF_START_OFFSET + HDR_TX_STATUS) = 0;
             Wifi_TxArm9QueueFlushByCmd();
         }
     }
@@ -392,24 +400,29 @@ int Wifi_TxArm9QueueFlush(void)
     }
     else
     {
-        // This is either a CMD frame or a regular frame. They can be placed in
-        // the regular TX buffer, but they are sent with different channels.
+        // This is either a CMD frame or a regular frame. They are sent with
+        // different channels, and each one has its own buffer.
 
-        // Try to copy data from the ARM9 buffer to the start of the TX buffer
-        // in MAC RAM.
-        if (Wifi_TxArm9QueueCopyFirstData(MAC_TXBUF_START_OFFSET, MAC_TXBUF_END_OFFSET) == 0)
+        bool is_cmd = status & WFLAG_SEND_AS_CMD;
+
+        u32 destination = is_cmd ? MAC_CMDBUF_START_OFFSET : MAC_TXBUF_START_OFFSET;
+        u32 end = is_cmd ? MAC_CMDBUF_END_OFFSET : MAC_TXBUF_END_OFFSET;
+
+        // Try to copy data from the ARM9 buffer to the start of the buffer in
+        // MAC RAM.
+        if (Wifi_TxArm9QueueCopyFirstData(destination, end) == 0)
             return 0;
 
         // Reset the keepalive count to not send unneeded frames
         Wifi_NTR_KeepaliveCountReset();
 
-        if (status & WFLAG_SEND_AS_CMD)
+        if (is_cmd)
         {
             // Set the number of retries before starting.
             W_TX_RETRYLIMIT = 0x0707;
             return Wifi_TxArm9QueueFlushByCmd();
         }
-        else // if (status & WFLAG_SEND_AS_DATA)
+        else
         {
             return Wifi_TxArm9QueueFlushByLoc3();
         }
