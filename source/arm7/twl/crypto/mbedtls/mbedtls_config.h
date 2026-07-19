@@ -15,4 +15,7 @@
 #define MBEDTLS_PLATFORM_MEMORY
 #define MBEDTLS_MEMORY_BUFFER_ALLOC_C
 
+// Use DSi BIOS SHA-1 implementation
+#define MBEDTLS_SHA1_ALT
+
 #define MBEDTLS_HAVE_ASM
