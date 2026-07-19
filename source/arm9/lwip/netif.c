@@ -400,7 +400,7 @@ int wifi_lwip_init(void)
                   NULL, // Private state
                   dswifi_init_fn, ethernet_input) == NULL)
     {
-        printf("netif_add failed\n");
+        libndsCrash("netif_add\n");
         return -1;
     }
 
