@@ -410,7 +410,7 @@ void Wifi_AutoConnect(void);
 
 /// Returns information about the status of connection to an AP.
 ///
-/// Continue polling this function until you receive ASSOCSTATUS_CONNECTED or
+/// Continue polling this function until you receive ASSOCSTATUS_ASSOCIATED or
 /// ASSOCSTATUS_CANNOTCONNECT.
 ///
 /// @return
