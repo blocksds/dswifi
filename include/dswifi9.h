@@ -632,9 +632,9 @@ typedef void (*WifiFromClientPacketHandler)(Wifi_MPPacketType, int, int, int);
 /// packet handler for packets sent with Wifi_MultiplayerHostCmdTxFrame(). They
 /// will be received with type WIFI_MPTYPE_CMD.
 ///
-/// @param data
+/// @param data_src
 ///     Pointer to the data to be sent.
-/// @param datalen
+/// @param data_size
 ///     Size of the data in bytes. It can go up to the size defined when calling
 ///     Wifi_MultiplayerHostMode().
 ///

@@ -35,11 +35,12 @@ extern "C" {
 /// @return
 ///     The byte value at the Function 0 address
 u8 SDIO_func0_read_u8(u32 addr);
+
 /// Write a byte to the SDIO Function 0 address space
 ///
 /// @param addr
 ///     Function 0 address to write to
-/// @param v
+/// @param val
 ///     value to write
 /// @return
 ///     nonzero on error
@@ -53,15 +54,17 @@ int SDIO_func0_write_u8(u32 addr, u8 val);
 /// @return
 ///     The byte value at the Function 1 address
 u8 SDIO_func1_read_u8(u32 addr);
+
 /// Write a byte to the SDIO Function 1 address space
 ///
 /// @param addr
 ///     Function 1 address to write to
-/// @param v
+/// @param val
 ///     value to write
 /// @return
 ///     nonzero on error
-int SDIO_func1_write_u8(u32 addr, u8 v);
+int SDIO_func1_write_u8(u32 addr, u8 val);
+
 /// Read a 32-bit word from the SDIO Function 1 address space
 ///
 /// @param addr
@@ -70,11 +73,12 @@ int SDIO_func1_write_u8(u32 addr, u8 v);
 /// @return
 ///     The word at the Function 1 address
 u32 SDIO_func1_read_u32(u32 addr);
+
 /// Write a 32-bit word to the SDIO Function 1 address space
 ///
 /// @param addr
 ///     Function 1 address to write to
-/// @param v
+/// @param val
 ///     value to write
 void SDIO_func1_write_u32(u32 addr, u32 val);
 
@@ -87,6 +91,7 @@ void SDIO_func1_write_u32(u32 addr, u32 val);
 /// @param send_irq
 ///     whether to interrupt the Xtensa core of the Wifi module
 void ath6k_mbox0_write_u32(u32 val, bool send_irq);
+
 /// Read a 32-bit word from the MBOX0 FIFO, with timeout
 ///
 /// @param retv
@@ -97,6 +102,7 @@ void ath6k_mbox0_write_u32(u32 val, bool send_irq);
 /// @return
 ///     true if the read succeeded, false if a timeout occurred
 bool ath6k_mbox0_read_u32_timeout(u32* retv, u32 timeout_max);
+
 /// Read a block of data from the MBOX0 FIFO
 ///
 /// @param dat
@@ -107,6 +113,7 @@ bool ath6k_mbox0_read_u32_timeout(u32* retv, u32 timeout_max);
 ///     number of bytes to read, must not exceed 0x1800!
 /// @return Number of bytes read
 u16 ath6k_mbox0_readbytes(u8 *dat, u32 sz_buf, u32 len_read);
+
 /// Send a block of data to the MBOX0 FIFO
 ///
 /// @param dat
@@ -122,6 +129,7 @@ void ath6k_mbox0_sendbytes(const u8 *dat, u32 len);
 /// @return
 ///     word read
 u32 ath6k_read_intern_word(u32 addr);
+
 /// Writes a 32-bit word into the Xtensa internal address space
 ///
 /// @param addr
@@ -134,13 +142,16 @@ void ath6k_write_intern_word(u32 addr, u32 data);
 
 /// Perform a busywait until it is possible to send more data via BMI
 void ath6k_bmi_wait_count4(void);
+
 /// Set the runtime Xtensa firmware entrypoint
 ///
 /// @param addr
 ///     firmware entrypoint address
 void ath6k_bmi_set_entrypoint(u32 addr);
+
 /// Start the firmware at the address specified by wifi_card_bmi_set_entrypoint()
 void ath6k_bmi_start_firmware(void);
+
 /// Call an Xtensa subroutine from BMI mode
 ///
 /// @param addr
@@ -150,6 +161,7 @@ void ath6k_bmi_start_firmware(void);
 /// @return
 ///     Function call return value
 u32 ath6k_bmi_execute(u32 addr, u32 arg);
+
 /// Reads an Xtensa-internal I/O register
 ///
 /// @param addr
@@ -157,6 +169,7 @@ u32 ath6k_bmi_execute(u32 addr, u32 arg);
 /// @return
 ///     I/O register value
 u32 ath6k_bmi_read_register(u32 addr);
+
 /// Writes an Xtensa-internal I/O register
 ///
 /// @param addr
@@ -164,15 +177,17 @@ u32 ath6k_bmi_read_register(u32 addr);
 /// @param val
 ///     I/O register value
 void ath6k_bmi_write_register(u32 addr, u32 val);
+
 /// Reads the wifi module version
+///
+/// DWM-W015 = 0x20000188
+/// DWM-W024 = 0x23000024
+/// DWM-W028 = 0x2300006F
 ///
 /// @return
 ///     module version
-///
-///     DWM-W015 = 0x20000188
-///     DWM-W024 = 0x23000024
-///     DWM-W028 = 0x2300006F
 u32 ath6k_bmi_get_version(void);
+
 /// Read a block of Xtensa-internal memory via BMI
 ///
 /// @param addr
@@ -210,24 +225,27 @@ void ath6k_bmi_lz_upload(u32 addr, const u8* data, u32 len);
 /// @return
 ///     nonzero on error
 int ath6k_init_hw_to_bmi(void);
+
 /// Deinitializes the Wifi SDIO card
 void ath6k_deinit_hw(void);
 
 /// Sets whether the SDIO card interrupt is enabled
 ///
-/// @note
-///     You need to do more work than just calling this function to use IRQs
-///     from the Xtensa MBOX SDIO interface. Initialize things as follows:
+/// You need to do more work than just calling this function to use IRQs
+/// from the Xtensa MBOX SDIO interface. Initialize things as follows:
 ///
-///         irqSetAUX(IRQ_WIFI_SDIO_CARDIRQ, YOUR_ISR_HERE);
-///         irqEnableAUX(IRQ_WIFI_SDIO_CARDIRQ);
-///         SDIO_enable_cardirq(true);
-///         SDIO_func1_write_u32(0x418, 0x010300D1);
-///         SDIO_func0_write_u8(0x4, 0x3); // CCCR irq_enable, main+func1
+/// ```c
+/// irqSetAUX(IRQ_WIFI_SDIO_CARDIRQ, YOUR_ISR_HERE);
+/// irqEnableAUX(IRQ_WIFI_SDIO_CARDIRQ);
+/// SDIO_enable_cardirq(true);
+/// SDIO_func1_write_u32(0x418, 0x010300D1);
+/// SDIO_func0_write_u8(0x4, 0x3); // CCCR irq_enable, main+func1
+/// ```
 ///
 /// @param en
 ///     True for enable the IRQ, false for disable
 void SDIO_enable_cardirq(bool en);
+
 /// Gets whether the SDIO card interrupt is pending
 ///
 /// @return
