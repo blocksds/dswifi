@@ -64,7 +64,7 @@ while (1)
 {
     cothread_yield_irq(IRQ_VBLANK);
 
-    // Get find out how many APs there are in the area
+    // Get number of APs in the area
     int count = Wifi_GetNumAP();
 
     printf("Number of AP: %d\n", count);

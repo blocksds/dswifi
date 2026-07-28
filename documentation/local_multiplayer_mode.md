@@ -289,7 +289,7 @@ points like this, for example, but note that you need to do this in an
 interactive menu so that the user can wait for access points to show up:
 
 ```c
-// Get find out how many APs there are in the area
+// Get number of APs in the area
 int count = Wifi_GetNumAP();
 
 printf("Number of AP: %d\n", count);
