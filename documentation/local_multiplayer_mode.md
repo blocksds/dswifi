@@ -193,7 +193,12 @@ packets:
 ```c
 void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
 {
-    printf("Client %d: ", aid);
+    // This function runs inside an IRQ handler, which doesn't have access to
+    // TLS (thread-local storage). Functions like malloc() or printf() use
+    // internal picolibc locks will cause corruption. In debug builds of libnds,
+    // they will hang on a fatal assertion.
+
+    customPrintf("Client %d: ", aid);
 
     if (type == WIFI_MPTYPE_REPLY)
     {
@@ -201,9 +206,9 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
         {
             u16 data = 0;
             Wifi_RxRawReadPacket(base + i, sizeof(data), (void *)&data);
-            printf("%04X ", data);
+            customPrintf("%04X ", data);
         }
-        printf("\n");
+        customPrintf("\n");
     }
     else if (type == WIFI_MPTYPE_DATA)
     {
@@ -212,9 +217,9 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
             char string[50];
             Wifi_RxRawReadPacket(base, len, &string);
             string[len] = 0;
-            printf("%s", string);
+            customPrintf("%s", string);
         }
-        printf("\n");
+        customPrintf("\n");
     }
 }
 ```
@@ -362,7 +367,12 @@ You also need to setup a handler for packets received from the host:
 ```c
 void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
 {
-    printf("Host (%d): ", len);
+    // This function runs inside an IRQ handler, which doesn't have access to
+    // TLS (thread-local storage). Functions like malloc() or printf() use
+    // internal picolibc locks will cause corruption. In debug builds of libnds,
+    // they will hang on a fatal assertion.
+
+    customPrintf("Host (%d): ", len);
 
     if (type == WIFI_MPTYPE_REPLY)
     {
@@ -370,9 +380,9 @@ void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
         {
             u16 data = 0;
             Wifi_RxRawReadPacket(base + i, sizeof(data), (void *)&data);
-            printf("%04X ", data);
+            customPrintf("%04X ", data);
         }
-        printf("\n");
+        customPrintf("\n");
     }
     else if (type == WIFI_MPTYPE_DATA)
     {
@@ -381,9 +391,9 @@ void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
             char string[50];
             Wifi_RxRawReadPacket(base, len, &string);
             string[len] = 0;
-            printf("%s", string);
+            customPrintf("%s", string);
         }
-        printf("\n");
+        customPrintf("\n");
     }
 }
 ```

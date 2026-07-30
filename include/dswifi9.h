@@ -606,6 +606,13 @@ typedef enum {
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
 /// header.
+///
+/// @warning
+///     This handler is run from inside an interrupt handler, which means that
+///     it isn't possible to use TLS (thread-local storage). If you use any libc
+///     function that requires locking (such as printf() or malloc()), this
+///     function will misbehave. In debug builds of libnds, it will crash with
+///     an error message.
 typedef void (*WifiFromHostPacketHandler)(Wifi_MPPacketType, int, int);
 
 /// Handler of WiFI packets received on the host from a client.
@@ -621,6 +628,13 @@ typedef void (*WifiFromHostPacketHandler)(Wifi_MPPacketType, int, int);
 ///
 /// Only user data of packets can be read from this handler, not the IEEE 802.11
 /// header.
+///
+/// @warning
+///     This handler is run from inside an interrupt handler, which means that
+///     it isn't possible to use TLS (thread-local storage). If you use any libc
+///     function that requires locking (such as printf() or malloc()), this
+///     function will misbehave. In debug builds of libnds, it will crash with
+///     an error message.
 typedef void (*WifiFromClientPacketHandler)(Wifi_MPPacketType, int, int, int);
 
 /// Sends a multiplayer host frame.
@@ -792,6 +806,13 @@ void Wifi_SetIP(u32 IPaddr, u32 gateway, u32 subnetmask, u32 dns1, u32 dns2);
 ///
 /// From this handler The IEEE 802.11 header can be read, followed by the packet
 /// data.
+///
+/// @warning
+///     This handler is run from inside an interrupt handler, which means that
+///     it isn't possible to use TLS (thread-local storage). If you use any libc
+///     function that requires locking (such as printf() or malloc()), this
+///     function will misbehave. In debug builds of libnds, it will crash with
+///     an error message.
 typedef void (*WifiPacketHandler)(int, int);
 
 /// Send a raw 802.11 frame at a specified rate.
