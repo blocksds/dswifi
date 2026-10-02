@@ -123,6 +123,10 @@ enum WIFIGETDATA
 ///     manual way that allows your application to do other things while waiting
 ///     for the function to return.
 ///
+/// @warning
+///     If this function hangs, make sure that you're using an ARM7 core with
+///     DSWifi support.
+///
 /// @param flags
 ///     This is a combination of OR'ed flags.
 ///

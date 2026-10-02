@@ -57,6 +57,9 @@ DSi driver in multiplayer mode, it will use the DS compatibility mode.
 On the ARM7, hardware timer number `LIBNDS_DEFAULT_TIMER_WIFI` will be used by
 the WiFi library after this call.
 
+**Note:** If `Wifi_InitDefault()` hangs, make sure that you're using an ARM7
+core with DSWifi support.
+
 After using multiplayer mode you can call this to switch to Internet mode:
 
 ```c

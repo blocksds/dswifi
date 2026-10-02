@@ -41,6 +41,9 @@ the WiFi library after this call. On the ARM9, hardware timer number
 `LIBNDS_DEFAULT_TIMER_WIFI` will also be used. Note that both numbers may be
 different.
 
+**Note:** If `Wifi_InitDefault()` hangs, make sure that you're using an ARM7
+core with DSWifi support.
+
 ### 1.1 Connect to WFC settings
 
 You can start autoconnect mode by calling:
