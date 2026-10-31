@@ -15,6 +15,9 @@ extern "C" {
 #include <sys/time.h>
 #include <sys/types.h>
 
+// Backwards compatibility
+#include <poll.h>
+
 // Level number for (get/set)sockopt() to apply to socket itself.
 #define SOL_SOCKET 0xfff // options for socket level
 #define SOL_TCP    6     // TCP level
@@ -70,19 +73,6 @@ extern "C" {
 #define SHUT_WR         1
 #define SHUT_RDWR       2
 
-// poll-related defines and types
-#define POLLIN          0x1
-#define POLLOUT         0x2
-#define POLLERR         0x4
-#define POLLNVAL        0x8
-// Below values are unimplemented
-#define POLLRDNORM      0x10
-#define POLLRDBAND      0x20
-#define POLLPRI         0x40
-#define POLLWRNORM      0x80
-#define POLLWRBAND      0x100
-#define POLLHUP         0x200
-
 // Option flags per-socket.
 #define SO_DEBUG        0x0001 // turn on debugging info recording
 #define SO_ACCEPTCONN   0x0002 // socket has had listen()
@@ -127,14 +117,6 @@ struct sockaddr_storage
 
 #define _SOCKLEN_T_DECLARED
 typedef uint32_t socklen_t;
-typedef unsigned int nfds_t;
-
-struct pollfd
-{
-    int fd;
-    short events;
-    short revents;
-};
 
 struct iovec
 {
@@ -194,7 +176,6 @@ int gethostname(char *name, size_t len);
 int sethostname(const char *name, size_t len);
 
 int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
-int poll(struct pollfd *fds, nfds_t nfds, int timeout);
 
 #ifdef __cplusplus
 }
