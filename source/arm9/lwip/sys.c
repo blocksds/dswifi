@@ -304,8 +304,10 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 
         // sys_arch_mbox_tryfetch() sends a signal to wake up all threads using
         // this mailbox. Go to sleep until one of them wakes us up and we can
-        // try to fetch a message again.
-        cothread_yield_signal((uintptr_t)mbox);
+        // try to fetch a message again. However, we also need to check for
+        // timeouts, so we need to be waken up by the timer.
+        cothread_yield_irq_or_signal(IRQ_TIMER(LIBNDS_DEFAULT_TIMER_WIFI),
+                                     (uintptr_t)mbox);
     }
 
     return 0;
@@ -423,7 +425,10 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
             if (diff >= timeout)
                 return SYS_ARCH_TIMEOUT;
 
-            cothread_yield_signal(cosema_to_signal_id(sem));
+            // Sleep until the semaphore is available, or until the next timer
+            // tick so that we can check for timeouts.
+            cothread_yield_irq_or_signal(IRQ_TIMER(LIBNDS_DEFAULT_TIMER_WIFI),
+                                         cosema_to_signal_id(sem));
         }
     }
 
