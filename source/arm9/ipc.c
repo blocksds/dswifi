@@ -24,6 +24,8 @@ static Wifi_MainStruct *WifiDataCached = NULL;
 // Uncached mirror. This must be used by ARM9 code communicating with the ARM7.
 volatile Wifi_MainStruct *WifiData = NULL;
 
+static volatile bool dswifi_running;
+
 void Wifi_CallSyncHandler(void)
 {
     fifoSendValue32(FIFO_DSWIFI, WIFI_SYNC);
@@ -49,6 +51,9 @@ static int Wifi_Update_Thread(void *arg)
 
     while (1)
     {
+        if (!dswifi_running)
+            break;
+
         Wifi_Update();
 
 #ifdef DSWIFI_ENABLE_LWIP
@@ -64,8 +69,6 @@ static int Wifi_Update_Thread(void *arg)
         // frame after the VBL.
         cothread_yield_irq_or_signal(IRQ_VBLANK, DSWIFI_ARM9_SIGNAL);
         // Should we yield for IRQ_TIMER(LIBNDS_DEFAULT_TIMER_WIFI) instead?
-
-        // TODO: We need a way to end this thread when DSWiFI is deinitialized
     }
 
     return 0;
@@ -161,6 +164,8 @@ bool Wifi_InitDefault(unsigned int flags)
     // Only start handling update events when everything else is ready
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
 
+    dswifi_running = true;
+
     // TODO: Do we really need 8 KB for this stack?
     cothread_t thread_id = cothread_create(Wifi_Update_Thread, NULL, 8 * 1024,
                                            COTHREAD_DETACHED);
@@ -203,6 +208,8 @@ bool Wifi_Deinit(void)
     if ((WifiData->reqMode != WIFIMODE_DISABLED) ||
         (WifiData->curMode != WIFIMODE_DISABLED))
         return false;
+
+    dswifi_running = false;
 
     fifoSetValue32Handler(FIFO_DSWIFI, NULL, 0);
 
