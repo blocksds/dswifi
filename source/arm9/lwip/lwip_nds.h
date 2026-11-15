@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Copyright (C) 2025 Antonio Niño Díaz
+// Copyright (C) 2025-2026 Antonio Niño Díaz
 
 #ifndef LWIP_NDS_H__
 #define LWIP_NDS_H__
@@ -24,6 +24,8 @@ int Wifi_TransmitFunctionLink(const void *src, size_t size);
 void Wifi_SendPacketToLwip(u8 *packet, size_t size);
 
 extern bool wifi_lwip_enabled;
+
+void wifi_lwip_update(void);
 
 int wifi_lwip_init(void);
 void wifi_lwip_deinit(void);

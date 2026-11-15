@@ -196,10 +196,8 @@ packets:
 ```c
 void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
 {
-    // This function runs inside an IRQ handler, which doesn't have access to
-    // TLS (thread-local storage). Functions like malloc() or printf() use
-    // internal picolibc locks will cause corruption. In debug builds of libnds,
-    // they will hang on a fatal assertion.
+    // This function runs from a secondary thread with a higher priority than
+    // main() by default. You can use malloc(), etc.
 
     customPrintf("Client %d: ", aid);
 
@@ -370,10 +368,8 @@ You also need to setup a handler for packets received from the host:
 ```c
 void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
 {
-    // This function runs inside an IRQ handler, which doesn't have access to
-    // TLS (thread-local storage). Functions like malloc() or printf() use
-    // internal picolibc locks will cause corruption. In debug builds of libnds,
-    // they will hang on a fatal assertion.
+    // This function runs from a secondary thread with a higher priority than
+    // main() by default. You can use malloc(), etc.
 
     customPrintf("Host (%d): ", len);
 

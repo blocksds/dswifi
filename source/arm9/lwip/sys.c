@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Copyright (C) 2025 Antonio Niño Díaz
+// Copyright (C) 2025-2026 Antonio Niño Díaz
 
 #ifdef DSWIFI_ENABLE_LWIP
 
@@ -17,8 +17,7 @@ static volatile uint32_t wifi_sys_ms_counter;
 
 void sys_msleep(u32_t ms)
 {
-    // This function doesn't seem to be used at all, so it doesn't make much
-    // sense to optimize it with waits for interrupts.
+    // This function doesn't seem to be used at all
 
     uint32_t start_time = wifi_sys_ms_counter;
 
@@ -27,6 +26,8 @@ void sys_msleep(u32_t ms)
         uint32_t diff = wifi_sys_ms_counter - start_time;
         if (diff >= ms)
             break;
+
+        cothread_yield_irq(IRQ_TIMER(LIBNDS_DEFAULT_TIMER_WIFI));
     }
 }
 
@@ -44,49 +45,27 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg,
     return ret;
 }
 
+void wifi_lwip_update(void)
+{
+    if (wifi_lwip_enabled)
+    {
+        if (WifiData->curMode == WIFIMODE_CONNECTED)
+        {
+            wifi_netif_set_up();
+
+            // Only update lwIP when we're connected to the access point.
+            sys_check_timeouts();
+        }
+        else
+        {
+            wifi_netif_set_down();
+        }
+    }
+}
+
 static void my_sys_counter(void)
 {
     wifi_sys_ms_counter++;
-}
-
-static int wifi_update_thread(void *arg)
-{
-    (void)arg;
-
-    while (1)
-    {
-        Wifi_Update();
-
-        if (WifiData->curLibraryMode == DSWIFI_INTERNET)
-        {
-            if (wifi_lwip_enabled)
-            {
-                if (WifiData->curMode == WIFIMODE_CONNECTED)
-                {
-                    wifi_netif_set_up();
-
-                    // Only update lwIP when we're connected to the access point.
-                    sys_check_timeouts();
-                }
-                else
-                {
-                    wifi_netif_set_down();
-                }
-            }
-        }
-
-        // Wait until we receive any FIFO message from the ARM7. The ARM7 sends
-        // sync messages when there are new messages for the ARM9 to handle.
-        //
-        // This works even if there is some issue with the FIFO library (like a
-        // missed sync event) because the ARM7 sends a message to the ARM9 with
-        // the key input every frame, which would cause this thread to wake up.
-        cothread_yield_irq(IRQ_RECV_FIFO);
-
-        // TODO: We need a way to end this thread when DSWiFI is deinitialized
-    }
-
-    return 0;
 }
 
 void sys_init(void)
@@ -94,11 +73,6 @@ void sys_init(void)
     // Setup a timer to fire 1000 times per second (1 ms per tick).
     timerStart(LIBNDS_DEFAULT_TIMER_WIFI,
                ClockDivider_64, TIMER_FREQ_64(1000), my_sys_counter);
-
-    cothread_t ret = cothread_create(wifi_update_thread, NULL, 8 * 1024,
-                                     COTHREAD_DETACHED);
-    if (ret == -1)
-        libndsCrash(__func__);
 }
 
 u32_t sys_now(void)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
 // Copyright (C) 2005-2006 Stephen Stair - sgstair@akkit.org - http://www.akkit.org
-// Copyright (C) 2025 Antonio Niño Díaz
+// Copyright (C) 2025-2026 Antonio Niño Díaz
 
 #include <netinet/in.h>
 #include <stdlib.h>
@@ -36,18 +36,39 @@ static void wifiValue32Handler(u32 value, void *data)
     switch (value)
     {
         case WIFI_SYNC:
-#if DSWIFI_ENABLE_LWIP
-            // Don't do anything here. Receiving this message is enough to
-            // activate the thread wifi_update_thread(), where we need to handle
-            // all received messages.
-#else
-            // If lwIP is disabled there are no other threads.
-            Wifi_Update();
-#endif
+            cothread_send_signal(DSWIFI_ARM9_SIGNAL);
             break;
         default:
             break;
     }
+}
+
+static int Wifi_Update_Thread(void *arg)
+{
+    (void)arg;
+
+    while (1)
+    {
+        Wifi_Update();
+
+#ifdef DSWIFI_ENABLE_LWIP
+        if (WifiData->curLibraryMode == DSWIFI_INTERNET)
+            wifi_lwip_update();
+#endif
+
+        // Wait until we receive any FIFO message from the ARM7. The ARM7 sends
+        // sync messages when there are new messages for the ARM9 to handle.
+        //
+        // This works even if there is some issue with the FIFO library (like a
+        // missed sync event) because the thread will wake up at least once per
+        // frame after the VBL.
+        cothread_yield_irq_or_signal(IRQ_VBLANK, DSWIFI_ARM9_SIGNAL);
+        // Should we yield for IRQ_TIMER(LIBNDS_DEFAULT_TIMER_WIFI) instead?
+
+        // TODO: We need a way to end this thread when DSWiFI is deinitialized
+    }
+
+    return 0;
 }
 
 static bool Wifi_InitIPC(unsigned int flags)
@@ -139,6 +160,16 @@ bool Wifi_InitDefault(unsigned int flags)
 
     // Only start handling update events when everything else is ready
     fifoSetValue32Handler(FIFO_DSWIFI, wifiValue32Handler, 0);
+
+    // TODO: Do we really need 8 KB for this stack?
+    cothread_t thread_id = cothread_create(Wifi_Update_Thread, NULL, 8 * 1024,
+                                           COTHREAD_DETACHED);
+    if (thread_id == -1)
+        libndsCrash("DSWiFi thread creation failed");
+
+    // Increase the priority of this thread so that it always runs before
+    // main(), which has priority 0
+    cothread_set_priority(thread_id, 32);
 
     if (flags & WFC_CONNECT)
     {
