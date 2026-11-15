@@ -118,7 +118,7 @@ Wifi_MultiplayerHostMode(number_of_players,
 
 // Wait for the library to enter host mode
 while (!Wifi_LibraryModeReady())
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
 ```
 
 Now we can start advertising this access point. For that, you need to setup the
@@ -277,7 +277,7 @@ Wifi_MultiplayerClientMode(sizeof(packet_client_to_host));
 
 // Wait for the library to enter client mode
 while (!Wifi_LibraryModeReady())
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
 ```
 
 The first step is to enter scan mode to look for access points. By default, only
@@ -344,7 +344,7 @@ Then, wait for the connection to be completed (or to fail!):
 ```c
 while (1)
 {
-    swiWaitForVBlank();
+    cothread_yield_irq(IRQ_VBLANK);
 
     int status = Wifi_AssocStatus();
 
