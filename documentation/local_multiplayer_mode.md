@@ -199,7 +199,7 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
     // This function runs from a secondary thread with a higher priority than
     // main() by default. You can use malloc(), etc.
 
-    customPrintf("Client %d: ", aid);
+    printf("Client %d: ", aid);
 
     if (type == WIFI_MPTYPE_REPLY)
     {
@@ -207,9 +207,9 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
         {
             u16 data = 0;
             Wifi_RxRawReadPacket(base + i, sizeof(data), (void *)&data);
-            customPrintf("%04X ", data);
+            printf("%04X ", data);
         }
-        customPrintf("\n");
+        printf("\n");
     }
     else if (type == WIFI_MPTYPE_DATA)
     {
@@ -218,9 +218,9 @@ void FromClientPacketHandler(Wifi_MPPacketType type, int aid, int base, int len)
             char string[50];
             Wifi_RxRawReadPacket(base, len, &string);
             string[len] = 0;
-            customPrintf("%s", string);
+            printf("%s", string);
         }
-        customPrintf("\n");
+        printf("\n");
     }
 }
 ```
@@ -371,7 +371,7 @@ void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
     // This function runs from a secondary thread with a higher priority than
     // main() by default. You can use malloc(), etc.
 
-    customPrintf("Host (%d): ", len);
+    printf("Host (%d): ", len);
 
     if (type == WIFI_MPTYPE_REPLY)
     {
@@ -379,9 +379,9 @@ void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
         {
             u16 data = 0;
             Wifi_RxRawReadPacket(base + i, sizeof(data), (void *)&data);
-            customPrintf("%04X ", data);
+            printf("%04X ", data);
         }
-        customPrintf("\n");
+        printf("\n");
     }
     else if (type == WIFI_MPTYPE_DATA)
     {
@@ -390,9 +390,9 @@ void FromHostPacketHandler(Wifi_MPPacketType type, int base, int len)
             char string[50];
             Wifi_RxRawReadPacket(base, len, &string);
             string[len] = 0;
-            customPrintf("%s", string);
+            printf("%s", string);
         }
-        customPrintf("\n");
+        printf("\n");
     }
 }
 ```
