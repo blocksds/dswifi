@@ -7,7 +7,6 @@
 
 #include "arm7/ipc.h"
 #include "arm7/setup.h"
-#include "arm7/update.h"
 
 volatile Wifi_MainStruct *WifiData = NULL;
 
@@ -25,11 +24,12 @@ static void wifiValue32Handler(u32 value, void *data)
     switch (value)
     {
         case WIFI_SYNC:
-            Wifi_Update();
+            cothread_send_signal(DSWIFI_ARM7_SIGNAL);
             break;
 
         case WIFI_DEINIT:
-            Wifi_Deinit();
+            Wifi_Request_Deinit();
+            cothread_send_signal(DSWIFI_ARM7_SIGNAL);
             break;
 
         default:

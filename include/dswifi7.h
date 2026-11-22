@@ -18,10 +18,11 @@ extern "C" {
 
 #include <dswifi_version.h>
 
-/// Sync function to ensure data continues to flow between the two CPUs smoothly.
-///
-/// It Should be called at a periodic interval, such as in VBlank.
-void Wifi_Update(void);
+/// Deprecated function with no effect.
+__attribute__((deprecated))
+static inline void Wifi_Update(void)
+{
+}
 
 /// Setup system FIFO handler for WiFi library messages.
 void installWifiFIFO(void);

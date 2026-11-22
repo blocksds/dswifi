@@ -8,6 +8,10 @@
 
 #include <nds/ndstypes.h>
 
+#define DSWIFI_ARM7_SIGNAL 0x80071F1
+
+void Wifi_Request_Deinit(void);
+
 void Wifi_Init(void *wifidata);
 void Wifi_Deinit(void);
 
